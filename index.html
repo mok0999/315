@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@400;600&family=Nanum+Myeongjo:wght@400;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 <style>
   :root{
     --bg:#ffffff;--canvas:#ebebed;--page:#ffffff;--panel:#fafafa;--panel-2:#f1f1f3;
@@ -258,15 +257,6 @@
     .export-body{flex-direction:column;}.export-controls{width:100%;flex:none;max-height:none;}
   }
 </style>
-  #viewerScreen{position:fixed;inset:0;z-index:200;background:var(--canvas);display:none;flex-direction:column;}
-  .viewer-top{height:54px;flex:0 0 54px;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--bg);border-bottom:1px solid var(--border);}
-  .vt-badge{font-size:11.5px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:5px 11px;border-radius:999px;flex:0 0 auto;}
-  .vt-title{font-size:14.5px;font-weight:600;color:var(--text-strong);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .vt-close{border:none;background:var(--panel-2);color:var(--text);font-family:inherit;font-weight:600;font-size:13px;border-radius:10px;padding:8px 13px;cursor:pointer;flex:0 0 auto;}
-  .vt-close:hover{filter:brightness(.96);}
-  #viewerReader{flex:1;overflow-y:auto;background:var(--canvas);}
-  #viewerReader::-webkit-scrollbar{width:10px;}#viewerReader::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:10px;border:3px solid var(--canvas);}
-  #viewerReader .turn:hover .turn-tools{opacity:0;}
 </head>
 <body>
   <aside class="sidebar" id="sidebar">
@@ -313,8 +303,6 @@
     <button id="mStkUrl">🔗 스티커: 주소 추가</button>
     <div class="sep"></div>
     <button id="mSelect">☑️ 여러 개 선택 (삭제/추출)</button>
-    <div class="sep"></div>
-    <button id="mShare">🔗 공유 링크 복사 (읽기 전용)</button>
     <div class="sep"></div>
     <button id="mUserName">👤 이 채팅 유저 이름</button>
   </div>
@@ -429,11 +417,6 @@
   </div>
 
   <div class="toast" id="toast"></div>
-
-  <div id="viewerScreen">
-    <div class="viewer-top"><span class="vt-badge">📖 공유된 로그</span><span class="vt-title" id="viewerTitle"></span><button class="vt-close" id="viewerClose">✕ 닫기</button></div>
-    <div id="viewerReader"></div>
-  </div>
 
 <script type="text/plain" id="extractorCode">javascript:(async()=>{const SWAP_ROLES=false;const ansT=prompt('최근 몇 턴? (유저+캐릭터=1턴, 전체는 0/비움)','');if(ansT===null)return;const limit=parseInt(ansT,10)||0;const s=ms=>new Promise(r=>setTimeout(r,ms));const bodies=()=>[...document.querySelectorAll('.wrtn-markdown')];const hc=(c,n)=>(' '+c+' ').indexOf(' '+n+' ')>=0;const rawIsUser=md=>{let el=md;for(let i=0;i<6&&el;i++){const c=typeof el.className==='string'?el.className:'';if(hc(c,'rounded-lg')||hc(c,'px-4')||hc(c,'py-2.5')||hc(c,'border-y'))return true;if(hc(c,'rounded-none')||hc(c,'px-0')||hc(c,'py-0'))return false;el=el.parentElement;}return false;};const isUser=md=>SWAP_ROLES?!rawIsUser(md):rawIsUser(md);const findScroller=()=>{let el=document.querySelector('.wrtn-markdown');if(!el)return document.scrollingElement||document.documentElement;el=el.parentElement;while(el&&el!==document.body){const cs=getComputedStyle(el);if(/(auto|scroll|overlay)/.test(cs.overflowY)&&el.scrollHeight>el.clientHeight+8)return el;el=el.parentElement;}return document.scrollingElement||document.documentElement;};const sc=findScroller();const enough=()=>limit>0&&bodies().filter(isUser).length>=limit;let loops=0,stable=0,last=bodies().length;while(loops<5000&&!enough()){sc.scrollTop=sc.scrollTop-Math.max(600,sc.clientHeight);sc.dispatchEvent(new Event('scroll',{bubbles:true}));sc.scrollTop=-1e7;sc.dispatchEvent(new Event('scroll',{bubbles:true}));try{sc.dispatchEvent(new WheelEvent('wheel',{deltaY:-2000,bubbles:true,cancelable:true}));}catch(e){}await s(700);const c=bodies().length;if(c>last){last=c;stable=0;}else{stable++;if(stable>=8)break;await s(900);}loops++;}let arr=bodies().map(md=>({md:md,y:md.getBoundingClientRect().top}));arr.sort((a,b)=>a.y-b.y);let msgs=arr.map(x=>({user:isUser(x.md),md:x.md}));let turns=[],cur=null;msgs.forEach(m=>{if(m.user){cur={items:[m]};turns.push(cur);}else{if(!cur){cur={items:[]};turns.push(cur);}cur.items.push(m);}});if(limit>0&&turns.length>limit)turns=turns.slice(turns.length-limit);let ordered=[];turns.forEach(t=>t.items.forEach(m=>ordered.push(m)));const inlineText=node=>{let out='';node.childNodes.forEach(n=>{if(n.nodeType===3){out+=n.textContent;return;}if(n.nodeType!==1)return;const tag=n.tagName.toLowerCase();if(tag==='br'){out+='\n';return;}if(tag==='em'||tag==='i'){out+='*'+inlineText(n).trim()+'*';return;}if(tag==='strong'||tag==='b'){out+='**'+inlineText(n).trim()+'**';return;}out+=inlineText(n);});return out;};const codeBlock=cb=>{let label='';const head=cb.querySelector('span');if(head)label=head.textContent.trim();const pre=cb.querySelector('pre');const body=pre?pre.textContent.replace(/\u00a0/g,' ').replace(/\n{3,}/g,'\n\n').trim():'';return (label?'['+label+']\n':'')+body;};const serialize=md=>{const parts=[];md.childNodes.forEach(n=>{if(n.nodeType!==1)return;const tag=n.tagName.toLowerCase();const cls=typeof n.className==='string'?n.className:'';if(cls.includes('wrtn-codeblock')||cls.includes('not-wrtn-markdown')){parts.push(codeBlock(n));return;}if(tag==='p'){parts.push(inlineText(n).replace(/\u00a0/g,' ').trim());return;}if(tag==='pre'){parts.push(n.textContent.trim());return;}parts.push(inlineText(n).replace(/\u00a0/g,' ').trim());});return parts.filter(x=>x&&x.trim()).join('\n\n').replace(/\n{3,}/g,'\n\n').trim();};let out=ordered.map(m=>(m.user?'[유저]\n':'[캐릭터]\n')+serialize(m.md)).filter(b=>b.replace('[유저]','').replace('[캐릭터]','').trim());const r=out.join('\n\n---\n\n');const wrap=document.createElement('div');wrap.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;background:rgba(0,0,0,0.4);display:flex;flex-direction:column;align-items:center;justify-content:center;';const bar=document.createElement('div');bar.style.cssText='width:90%;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;';const info=document.createElement('span');info.textContent='추출 완료! Ctrl+A → Ctrl+C 복사 ('+turns.length+'턴 / '+out.length+'개 · 위=과거, 아래=최신)';info.style.cssText='color:#fff;font-size:14px;font-weight:600;';const close=document.createElement('button');close.textContent='X 닫기';close.style.cssText='background:#fff;color:#2f6df0;border:none;border-radius:6px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer;';close.onclick=()=>wrap.remove();bar.appendChild(info);bar.appendChild(close);const bx=document.createElement('textarea');bx.value=r;bx.style.cssText='width:90%;height:80%;font-size:13px;padding:12px;border:3px solid #2f6df0;border-radius:8px;background:#fff;color:#000;';wrap.appendChild(bar);wrap.appendChild(bx);document.body.appendChild(wrap);bx.focus();bx.select();})();</script>
 
@@ -597,13 +580,6 @@ var LK=(function(){
 
   function loadDemo(){var demo="[캐릭터]\n[상태창]\n📅2005/08/17(Sun)｜🕛20:12｜📍LA 기지, B동 315호｜#210\n(파일럿)｜♂\n🔈｜세르게이\n🔗｜연인\n👥｜-\n\n*세르게이의 이마가 네이선의 이마에 닿아 있었다. 가로등 빛이 블라인드를 통해 두 사람의 얼굴을 줄무늬로 갈랐다. 세르게이의 녹안이 가까이에서 빛났다.*\n\n**세르게이 체르노프**｜\"You know what I think, Bennett? Hah.\"\n(내 생각 알아, 베넷? 하아.)\n\n*네이선의 턱이 미세하게 경직되었다.*\n\n**세르게이 체르노프**｜\"Hah. Come here.\"\n(하아. 이리 와.)\n\n---\n\n[유저]\nooc: 좋아. 네이선이 못 이기는 척 다가가는 걸로 이어가 줘.";var ex=chats.find(function(x){return x.title==="[샘플] 315호의 밤";});if(ex){selectChat(ex.id);return;}var nc={id:uid(),folderId:null,title:"[샘플] 315호의 밤",turns:parseLog(demo),stickers:[],updatedAt:Date.now()};chats.push(nc);activeId=nc.id;save();renderList();renderChat();}
 
-  function encodeShare(obj){var json=JSON.stringify(obj);if(window.LZString&&LZString.compressToEncodedURIComponent)return"L"+LZString.compressToEncodedURIComponent(json);return"U"+encodeURIComponent(json);}
-  function decodeShare(str){try{var mode=str.charAt(0),body=str.slice(1),json;if(mode==="L"){if(!window.LZString)return null;json=LZString.decompressFromEncodedURIComponent(body);}else if(mode==="U"){json=decodeURIComponent(body);}else return null;return json?JSON.parse(json):null;}catch(e){return null;}}
-  function shareActive(){var c=active();if(!c){toast("공유할 채팅을 먼저 열어주세요");return;}if(!c.turns.length){toast("내용이 없는 로그예요");return;}var obj={t:c.title,u:c.turns.map(function(t){var o={r:t.role==="user"?"u":"c",c:t.content};if(t.highlights&&t.highlights.length)o.h=t.highlights.map(function(h){return[h.start,h.end,h.color];});return o;})};var link=location.origin+location.pathname+"#view="+encodeShare(obj);function done(){toast(link.length>14000?"링크 복사됨! (길어서 일부 메신저에선 잘릴 수 있어요)":"공유 링크 복사됨! (읽기 전용·스티커 제외)");}try{navigator.clipboard.writeText(link).then(done,function(){prompt("아래 링크를 복사하세요",link);});}catch(e){prompt("아래 링크를 복사하세요",link);}}
-  function renderViewerTurn(t){var role=t.r==="u"?"user":"char";var tag=role==="user"?'<div class="utag">나 (유저)</div>':"";return'<div class="turn '+role+'">'+tag+turnInner({content:t.c||""})+"</div>";}
-  function openViewer(data){if(!data||!data.u){toast("공유 데이터를 읽을 수 없어요");return;}$("#viewerTitle").textContent=data.t||"공유된 로그";var vr=$("#viewerReader");var html='<div class="stage">';data.u.forEach(function(t){html+=renderViewerTurn(t);});html+="</div>";vr.innerHTML=html;var turnsEl=vr.querySelectorAll(".turn");data.u.forEach(function(t,i){if(t.h&&t.h.length&&turnsEl[i])applyHighlights(turnsEl[i],t.h.map(function(a){return{start:a[0],end:a[1],color:a[2]};}));});vr.querySelectorAll(".status .cp").forEach(function(btn){btn.addEventListener("click",function(){var b=btn.closest(".status").querySelector(".status-body");try{navigator.clipboard.writeText(b?b.innerText:"");}catch(e){}var o=btn.textContent;btn.textContent="✓";setTimeout(function(){btn.textContent=o;},900);});});$("#viewerScreen").style.display="flex";vr.scrollTop=0;}
-  function closeViewer(){$("#viewerScreen").style.display="none";try{history.replaceState(null,"",location.pathname+location.search);}catch(e){location.hash="";}}
-  function checkShareHash(){var h=location.hash||"";var idx=h.indexOf("view=");if(idx>=0){var data=decodeShare(h.slice(idx+5));if(data)openViewer(data);else toast("공유 링크가 손상되었어요");}}
   function init(){
     $("#newBtn").addEventListener("click",function(){openNew();});
     $("#folderBtn").addEventListener("click",function(){createFolder(null);});
@@ -643,7 +619,6 @@ var LK=(function(){
     $("#mStkFile").addEventListener("click",function(){menu.classList.remove("on");$("#stickerFile").click();});
     $("#mStkUrl").addEventListener("click",function(){menu.classList.remove("on");var u=prompt("이미지 주소(URL)를 붙여넣으세요\n(jpg/png/gif/webp)");if(u&&u.trim())addSticker(u.trim());});
     $("#mSelect").addEventListener("click",function(){menu.classList.remove("on");enterSel();});
-    $("#mShare").addEventListener("click",function(){menu.classList.remove("on");shareActive();});
     $("#mUserName").addEventListener("click",function(){menu.classList.remove("on");var c=active();if(!c)return;var n=prompt("이 채팅에 표시할 유저 이름\n(비우면 '나 (유저)'로 표시됨)",c.userName||"");if(n===null)return;c.userName=n.trim();c.updatedAt=Date.now();save();renderChat(true);});
     $("#stickerFile").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0];if(f)addStickerFromFile(f);e.target.value="";});
     document.addEventListener("click",function(e){if(!e.target.closest("#chatMenu")&&!e.target.closest("#menuBtn"))menu.classList.remove("on");if(!e.target.closest(".sticker"))document.querySelectorAll(".sticker.editing").forEach(function(s){s.classList.remove("editing");});});
@@ -684,8 +659,7 @@ var LK=(function(){
     $("#pgNext").addEventListener("click",function(){if(exDesign.page<exportPages.length-1){exDesign.page++;renderExportPage();}});
     $("#saveCur").addEventListener("click",saveCur);$("#saveAll").addEventListener("click",saveAll);
 
-    $("#viewerClose").addEventListener("click",closeViewer);
-    applyAll();updateHint();renderList();renderChat();checkShareHash();
+    applyAll();updateHint();renderList();renderChat();
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
   return{openNew:openNew,loadDemo:loadDemo};
