@@ -710,6 +710,7 @@ var LK=(function(){
     $("#scrimShare").addEventListener("click",function(e){if(e.target===this)$("#scrimShare").classList.remove("on");});
     $("#shareCopy").addEventListener("click",copyShareLink);
     $("#viewerClose").addEventListener("click",closeViewer);
+    window.addEventListener("hashchange",checkShareHash);
     applyAll();updateHint();renderList();renderChat();checkShareHash();
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
