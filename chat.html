@@ -1089,7 +1089,7 @@ body{min-width:0}
 <button id="toolBtn-layout" onclick="switchToolPanel('layout')" type="button"><span>↔</span>레이아웃</button>
 <button id="toolBtn-bubble" onclick="switchToolPanel('bubble')" type="button"><span>▰</span>말풍선</button>
 <button id="toolBtn-export" onclick="switchToolPanel('export')" type="button"><span>↓</span>저장</button>
-</div><div class="tool-panels" id="toolPanels"><section class="tool-panel" id="panel-members"><div class="tool-panel-head"><div><strong>멤버</strong><small>캐릭터를 만들고 발신자로 바로 선택해요</small><span class="cnt panel-count" id="memberCnt">0</span></div></div><div class="tool-panel-body" tabindex="0"><section class="member-list-section panel-section"><div class="section-title-row"><div><strong>등록된 멤버</strong><small>클릭 없이 발신자 목록에 바로 반영돼요</small></div><button class="btn sm member-new-btn" onclick="openMemberEditor()" type="button">+ 새 멤버</button></div><div class="mlist" id="memberList">
+</div><div class="tool-panels" id="toolPanels"><section class="tool-panel" id="panel-members"><div class="tool-panel-head"><div><strong>멤버</strong><span class="cnt panel-count" id="memberCnt">0</span></div></div><div class="tool-panel-body" tabindex="0"><section class="member-list-section panel-section"><div class="section-title-row"><div><strong>등록된 멤버</strong><small>클릭 없이 발신자 목록에 바로 반영돼요</small></div><button class="btn sm member-new-btn" onclick="openMemberEditor()" type="button">+ 새 멤버</button></div><div class="mlist" id="memberList">
 <div class="empty">아직 멤버가 없어요</div>
 </div></section><section class="member-editor panel-section" id="memberEditor"><div class="section-title-row member-editor-head"><div><strong id="memberEditorTitle">새 멤버</strong><small>이름만 입력해도 추가할 수 있어요</small></div><button class="panel-close" onclick="closeMemberEditor()" title="등록 폼 닫기" type="button">×</button></div><div class="member-form-grid"><div class="field">
 <label class="lb">이름</label>
@@ -1128,7 +1128,7 @@ body{min-width:0}
 </div>
 <div class="preset-chips" id="presetChips"></div>
 <div class="preset-hint" id="presetHint"></div>
-</div></div></div></div></section><section class="tool-panel" id="panel-style"><div class="tool-panel-head"><div><strong>스타일</strong><small>프로필, 색상과 배경 이미지를 조절해요</small></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accAppearance"><div class="flat-tool-title"><strong>색상 · 프로필</strong></div><div class="flat-tool-body"><div class="field">
+</div></div></div></div></section><section class="tool-panel" id="panel-style"><div class="tool-panel-head"><div><strong>스타일</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accAppearance"><div class="flat-tool-title"><strong>색상 · 프로필</strong></div><div class="flat-tool-body"><div class="field">
 <label class="lb">아바타 모양</label>
 <div class="seg" id="shapeSeg">
 <button class="on" onclick="setShape('circle')">● 원형</button>
@@ -1158,7 +1158,7 @@ body{min-width:0}
 </div>
 <div class="preset-chips" id="themeChips"></div>
 <div class="preset-hint" id="themeHint"></div>
-</div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>글꼴</strong><small>글꼴, 크기와 읽기 간격을 한곳에서 조절해요</small></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
+</div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>글꼴</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
 <div class="flat-tool-title"><strong>글꼴 · 텍스트</strong></div>
 <div class="flat-tool-body">
 <div class="field">
@@ -1195,7 +1195,7 @@ body{min-width:0}
                 </div>
 </div>
 </div>
-</div></div></section><section class="tool-panel" id="panel-layout"><div class="tool-panel-head"><div><strong>레이아웃</strong><small>바깥 여백과 캔버스 비율을 조절해요</small></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accMargin">
+</div></div></section><section class="tool-panel" id="panel-layout"><div class="tool-panel-head"><div><strong>레이아웃</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accMargin">
 <div class="flat-tool-title"><strong>바깥 여백</strong></div>
 <div class="flat-tool-body">
 <div class="field">
@@ -1221,7 +1221,7 @@ body{min-width:0}
 <option value="16:9">16 : 9 가로</option>
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
-</div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong><small>꼬리, 안쪽 여백과 메신저 색상을 조절해요</small></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양 · 간격</strong></div><div class="flat-tool-body"><div class="colorgrid">
+</div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양 · 간격</strong></div><div class="flat-tool-body"><div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
@@ -1238,7 +1238,7 @@ body{min-width:0}
 </div><div class="field">
 <label class="lb">내 계정 (오른쪽 정렬)</label>
 <select id="meSelect" onchange="state.meId=this.value; renderPreview()"></select>
-</div><div class="colorgrid"><div class="field"><label class="lb">내 말풍선</label><div class="colorrow" data-color="myBubble"></div></div><div class="field"><label class="lb">내 글자색</label><div class="colorrow" data-color="myText"></div></div><div class="field"><label class="lb">상대 말풍선</label><div class="colorrow" data-color="otBubble"></div></div><div class="field"><label class="lb">상대 글자색</label><div class="colorrow" data-color="otText"></div></div></div></div></details></div></section><section class="tool-panel" id="panel-export"><div class="tool-panel-head"><div><strong>저장 · 투명화 · 서명</strong><small>파일명, 투명화와 서명을 설정해요</small></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accCanvas">
+</div><div class="colorgrid"><div class="field"><label class="lb">내 말풍선</label><div class="colorrow" data-color="myBubble"></div></div><div class="field"><label class="lb">내 글자색</label><div class="colorrow" data-color="myText"></div></div><div class="field"><label class="lb">상대 말풍선</label><div class="colorrow" data-color="otBubble"></div></div><div class="field"><label class="lb">상대 글자색</label><div class="colorrow" data-color="otText"></div></div></div></div></details></div></section><section class="tool-panel" id="panel-export"><div class="tool-panel-head"><div><strong>저장 · 투명화 · 서명</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accCanvas">
 <div class="flat-tool-title"><strong>🖼 저장 옵션</strong></div>
 <div class="flat-tool-body">
 <div class="field save-name-field">
