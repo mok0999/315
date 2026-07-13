@@ -869,43 +869,35 @@ body{min-width:0}
 .canvas-bg-image{z-index:0;background-repeat:no-repeat;will-change:filter,transform,background-position,background-size}
 .canvas-bg-overlay{z-index:1}
 
-/* Simple messenger tail: one clean CSS triangle only.
-   It overlaps the bubble by a few pixels so it stays attached even at maximum radius. */
-.n-bubble,.m-bubble{position:relative;overflow:visible}
-
-/* received / normal bubble → left-pointing triangle */
-#chat:not(.bubble-tail-off) .n-bubble:before,
-#chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:before{
-  content:'';
+/* Independent messenger tail.
+   The triangle is a separate sibling outside the bubble, so every bubble corner keeps
+   the selected border-radius — including the corner next to the tail. */
+.bubble-wrap{position:relative;display:inline-block;vertical-align:top;max-width:100%}
+.m-msg>.bubble-wrap{max-width:78%}
+.bubble-wrap>.n-bubble,.bubble-wrap>.m-bubble{position:relative;display:block;max-width:100%;z-index:1}
+.bubble-tail{
   position:absolute;
-  top:8px;
-  left:calc(var(--bubble-tail-size,10px) * -0.56);
-  width:0;
-  height:0;
-  border-top:calc(var(--bubble-tail-size,10px) * .52) solid transparent;
-  border-bottom:calc(var(--bubble-tail-size,10px) * .52) solid transparent;
-  border-right:calc(var(--bubble-tail-size,10px) * .82) solid var(--bubble-bg);
+  top:clamp(6px,calc(var(--bubble-radius,14px) - 2px),14px);
+  width:calc(var(--bubble-tail-size,10px) - 1px);
+  height:calc(var(--bubble-tail-size,10px) - 2px);
+  background:var(--bubble-bg);
   pointer-events:none;
+  z-index:0;
 }
-
-/* sent bubble → right-pointing triangle */
-#chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:after{
-  content:'';
-  position:absolute;
-  top:8px;
-  right:calc(var(--bubble-tail-size,10px) * -0.56);
-  width:0;
-  height:0;
-  border-top:calc(var(--bubble-tail-size,10px) * .52) solid transparent;
-  border-bottom:calc(var(--bubble-tail-size,10px) * .52) solid transparent;
-  border-left:calc(var(--bubble-tail-size,10px) * .82) solid var(--bubble-bg);
-  pointer-events:none;
+/* The triangle ends exactly at the bubble box but never overlaps it. */
+.bubble-tail.left{
+  left:0;
+  transform:translateX(-100%);
+  clip-path:polygon(0 50%,100% 0,100% 100%);
+  -webkit-clip-path:polygon(0 50%,100% 0,100% 100%);
 }
-
-/* No rounded connector or extra pseudo-element. */
-#chat:not(.bubble-tail-off) .n-bubble:after,
-#chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:after,
-#chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:before{content:none}
+.bubble-tail.right{
+  right:0;
+  transform:translateX(100%);
+  clip-path:polygon(100% 50%,0 0,0 100%);
+  -webkit-clip-path:polygon(100% 50%,0 0,0 100%);
+}
+#chat.bubble-tail-off .bubble-tail{display:none}
 .bubble-tail-controls{margin-top:13px;padding-top:13px;border-top:1px solid var(--line-2)}
 
 .bg-image-load-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center}
@@ -1244,7 +1236,7 @@ body{min-width:0}
 <div class="field" style="margin:0"><label class="lb">메시지 간격</label><div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">채팅 ↔ 글 간격</label><div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="6"/><span class="val" id="lyTextGapV">6px</span></div></div>
 <div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div></div>
-</div><div class="colorgrid bubble-tail-controls"><div class="field"><div class="toggle"><div class="t-lb">말풍선 꼬리<span>SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요</span></div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div></div><div class="field"><label class="lb">꼬리 크기</label><div class="rangewrap"><input id="bubbleTailSize" max="18" min="6" oninput="setBubbleTailSize(this.value)" step="1" type="range" value="10"/><span class="val" id="bubbleTailSizeV">10px</span></div></div></div></div></div><details class="messenger-settings" id="messengerSettings"><summary><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></summary><div class="messenger-settings-body"><div class="field">
+</div><div class="colorgrid bubble-tail-controls"><div class="field"><div class="toggle"><div class="t-lb">말풍선 꼬리<span>말풍선 모서리를 건드리지 않는 별도의 세모 꼬리예요</span></div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div></div><div class="field"><label class="lb">꼬리 크기</label><div class="rangewrap"><input id="bubbleTailSize" max="18" min="6" oninput="setBubbleTailSize(this.value)" step="1" type="range" value="10"/><span class="val" id="bubbleTailSizeV">10px</span></div></div></div></div></div><details class="messenger-settings" id="messengerSettings"><summary><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></summary><div class="messenger-settings-body"><div class="field">
 <label class="lb">내 계정 (오른쪽 정렬)</label>
 <select id="meSelect" onchange="state.meId=this.value; renderPreview()"></select>
 </div><div class="colorgrid"><div class="field"><label class="lb">내 말풍선</label><div class="colorrow" data-color="myBubble"></div></div><div class="field"><label class="lb">내 글자색</label><div class="colorrow" data-color="myText"></div></div><div class="field"><label class="lb">상대 말풍선</label><div class="colorrow" data-color="otBubble"></div></div><div class="field"><label class="lb">상대 글자색</label><div class="colorrow" data-color="otText"></div></div></div></div></details></div></section><section class="tool-panel" id="panel-export"><div class="tool-panel-head"><div><strong>저장 · 투명화 · 서명</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accCanvas">
@@ -1694,10 +1686,12 @@ function wbStyle(){
 function bubbleStyle(bg,color,tailCorner){
   const L=state.layout;
   const r=Number(L.radius)||0;
-  /* Keep every corner at the selected radius. The CSS bridge behind the tail handles
-     attachment, so even a fully rounded bubble stays seamless. */
-  return `background:${bg};--bubble-bg:${bg};--bubble-radius:${r}px;color:${color};padding:${L.bpy}px ${L.bpx}px;`
+  return `background:${bg};color:${color};padding:${L.bpy}px ${L.bpx}px;`
     +`border-radius:${r}px;font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
+}
+function bubbleWrapStyle(bg){
+  const r=Number(state.layout.radius)||0;
+  return `--bubble-bg:${bg};--bubble-radius:${r}px;`;
 }
 function typographyStyle(align='left'){
   const L=state.layout;
@@ -2575,7 +2569,10 @@ function normalRow(m,mem,gap){
     ${av}
     <div class="n-body">
       <div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>
-      <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle(state.colors.nBubble,state.colors.nText,'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
+      <div class="bubble-wrap" style="${bubbleWrapStyle(state.colors.nBubble)}">
+        <span class="bubble-tail left" aria-hidden="true"></span>
+        <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle(state.colors.nBubble,state.colors.nText,'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
+      </div>
     </div>
   </div>`;
 }
@@ -2603,7 +2600,10 @@ function msgrRow(m,mem,gap){
     ${ctrlHTML(m.id)}
     ${avatar}
     ${name}
-    <div class="m-bubble editable" data-id="${m.id}" style="${bubbleStyle(bub,txt,mine?'tr':'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'',mine?'right':'left')}</div>
+    <div class="bubble-wrap" style="${bubbleWrapStyle(bub)}">
+      <span class="bubble-tail ${mine?'right':'left'}" aria-hidden="true"></span>
+      <div class="m-bubble editable" data-id="${m.id}" style="${bubbleStyle(bub,txt,mine?'tr':'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'',mine?'right':'left')}</div>
+    </div>
   </div>`;
 }
 
