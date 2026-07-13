@@ -265,7 +265,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .t-block .t-inner{white-space:pre-wrap}
 
 /* normal & log mode — flex flow so avatar sits inside the outer margin */
-.n-msg{display:flex;gap:10px;align-items:flex-start;position:relative}
+.n-msg{display:flex;gap:12px;align-items:flex-start;position:relative}
 .n-msg .av{flex:0 0 auto;width:40px;height:40px;object-fit:cover;background:#C7C7CC;
   display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;overflow:hidden}
 .n-msg.circle .av{border-radius:50%}.n-msg.rounded .av{border-radius:12px}
@@ -277,7 +277,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .n-plain .mimg{display:block;border-radius:8px}
 
 /* messenger mode — no flex; align via text-align + absolute avatar */
-.m-msg{position:relative;padding-left:46px}
+.m-msg{position:relative;padding-left:50px}
 .m-msg.mine{padding-left:0;text-align:right}
 .m-msg.no-av{padding-left:0}
 .m-msg .av{position:absolute;left:0;top:0;width:36px;height:36px;object-fit:cover;background:#C7C7CC;
@@ -841,6 +841,13 @@ body{min-width:0}
 .filename-ext{flex:0 0 auto;font:600 10.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);white-space:nowrap}
 .field-help{font-size:10px;color:var(--muted);margin:5px 0 0 2px}
 .save-name-field{margin-bottom:13px!important}
+.save-option-grid{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:10px;align-items:start}
+.save-option-grid .field{min-width:0;margin-bottom:0!important}
+.save-scale-row{display:flex;align-items:center;gap:6px}
+.save-scale-row select{min-width:0;height:38px;padding-top:0;padding-bottom:0;background-color:var(--panel-2)}
+.save-scale-unit{flex:0 0 auto;font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+.save-scale-help{font-size:9.5px;color:var(--muted);line-height:1.45;margin:5px 1px 0}
+@media(max-width:520px){.save-option-grid{grid-template-columns:1fr}.save-option-grid .save-scale-field{max-width:150px}}
 
 @media(max-width:1160px) and (min-width:861px){
   .tool-tabs button{font-size:9.5px!important;padding-left:1px!important;padding-right:1px!important}
@@ -869,29 +876,64 @@ body{min-width:0}
 .canvas-bg-image{z-index:0;background-repeat:no-repeat;will-change:filter,transform,background-position,background-size}
 .canvas-bg-overlay{z-index:1}
 
-/* Messenger-style pointed tail (beak at the TOP corner, next to the avatar). */
+/* Long, slim messenger tail — a single CSS triangle tucked BEHIND the bubble.
+   The narrow point pokes out past the bubble edge; the wide base is hidden under
+   the bubble body (z-index:-1), so the rounded corner is never covered and the
+   tail stays seamlessly attached even when 모서리 둥글기 is at maximum.
+   Base length scales with --bubble-radius so the overlap always outreaches the
+   corner curve. */
 .n-bubble,.m-bubble{position:relative;overflow:visible}
-#chat:not(.bubble-tail-off) .n-bubble:before,
-#chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:before,
-#chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:after{
-  content:'';position:absolute;top:7px;
-  width:calc(var(--bubble-tail-size,10px) * 1.16);height:calc(var(--bubble-tail-size,10px) * 1.24);
-  background:inherit;pointer-events:none;
-}
-/* received bubble → beak points out to the upper-left */
+
+/* Messenger mode: move the received name, bubble, and attached tail 2px toward the profile. */
+.m-msg:not(.mine) .m-name,
+.m-msg:not(.mine) .m-bubble{position:relative;left:-2px}
+
+/* received / normal bubble → left-pointing tail */
 #chat:not(.bubble-tail-off) .n-bubble:before,
 #chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:before{
-  left:calc(var(--bubble-tail-size,10px) * -0.72);
-  clip-path:polygon(100% 0, 100% 82%, 0 0);
-  -webkit-clip-path:polygon(100% 0, 100% 82%, 0 0);
+  content:'';
+  position:absolute;
+  z-index:-1;
+  /* Radius growth raises the whole tail only very gently. */
+  top:calc(7.6px - var(--bubble-tail-radius-delta,0px) * 0.02 + var(--bubble-tail-y,0px));
+  /* A larger visible protrusion is safe because both chat layouts now reserve a wider avatar gap. */
+  left:calc(var(--bubble-tail-size,10px) * -0.9 + var(--bubble-tail-inward-delta,0px) * 0.55 + var(--bubble-tail-x,0px) + 1px);
+  width:0;
+  height:0;
+  /* Slightly fuller base silhouette, while the avatar-facing tip remains nearly
+     level with the upper bubble-side vertex. Radius-based rise is softened. */
+  border-top:calc(var(--bubble-tail-size,10px) * 0.08 + 0.6px - var(--bubble-tail-radius-delta,0px) * 0.01) solid transparent;
+  border-bottom:calc(var(--bubble-tail-size,10px) * 1.48 + 3.6px + var(--bubble-tail-radius-delta,0px) * 0.31) solid transparent;
+  border-right:calc(var(--bubble-tail-size,10px) * 1.28 + var(--bubble-tail-radius-base,15px) - var(--bubble-tail-inward-delta,0px) * 0.45) solid var(--bubble-bg);
+  pointer-events:none;
 }
-/* sent bubble → beak points out to the upper-right */
+
+/* sent bubble → right-pointing tail (mirror) */
 #chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:after{
-  right:calc(var(--bubble-tail-size,10px) * -0.72);
-  clip-path:polygon(0 0, 0 82%, 100% 0);
-  -webkit-clip-path:polygon(0 0, 0 82%, 100% 0);
+  content:'';
+  position:absolute;
+  z-index:-1;
+  /* Radius growth raises the mirrored tail only very gently. */
+  top:calc(7.6px - var(--bubble-tail-radius-delta,0px) * 0.02 + var(--bubble-tail-y,0px));
+  /* Mirror the larger visible protrusion for sent bubbles. */
+  right:calc(var(--bubble-tail-size,10px) * -0.9 + var(--bubble-tail-inward-delta,0px) * 0.55 + var(--bubble-tail-x,0px) + 1px);
+  width:0;
+  height:0;
+  /* Mirrored fuller silhouette with the same softened radius-based rise. */
+  border-top:calc(var(--bubble-tail-size,10px) * 0.08 + 0.6px - var(--bubble-tail-radius-delta,0px) * 0.01) solid transparent;
+  border-bottom:calc(var(--bubble-tail-size,10px) * 1.48 + 3.6px + var(--bubble-tail-radius-delta,0px) * 0.31) solid transparent;
+  border-left:calc(var(--bubble-tail-size,10px) * 1.28 + var(--bubble-tail-radius-base,15px) - var(--bubble-tail-inward-delta,0px) * 0.45) solid var(--bubble-bg);
+  pointer-events:none;
 }
+
+/* No rounded connector or extra pseudo-element. */
+#chat:not(.bubble-tail-off) .n-bubble:after,
+#chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:after,
+#chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:before{content:none}
 .bubble-tail-controls{margin-top:13px;padding-top:13px;border-top:1px solid var(--line-2)}
+.bubble-tail-position-row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:0;padding-top:1px}
+.bubble-tail-position-row .field{margin:0}
+@media(max-width:520px){.bubble-tail-position-row{grid-template-columns:1fr}}
 
 .bg-image-load-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center}
 .bg-image-load-row input[type=text]{min-width:0}
@@ -903,11 +945,8 @@ body{min-width:0}
 .bg-overlay-color-field{grid-column:1/-1}
 
 .messenger-settings{margin:13px -14px -14px;border-top:1px solid var(--line-2);background:#F8F8F9}
-.messenger-settings>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;list-style:none;cursor:pointer;padding:12px 14px;font-weight:700;font-size:12.5px}
-.messenger-settings>summary::-webkit-details-marker{display:none}
-.messenger-settings>summary small{font-size:10px;color:var(--muted);font-weight:500}
-.messenger-settings>summary:after{content:'⌄';color:var(--muted);transition:.16s}
-.messenger-settings[open]>summary:after{transform:rotate(180deg)}
+.messenger-settings-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;font-weight:700;font-size:12.5px}
+.messenger-settings-head small{font-size:10px;color:var(--muted);font-weight:500}
 .messenger-settings-body{padding:2px 14px 14px;border-top:1px solid var(--line-2)}
 .messenger-settings-body>.field:first-child{margin-top:12px}
 
@@ -1229,16 +1268,23 @@ body{min-width:0}
 <div class="field" style="margin:0"><label class="lb">메시지 간격</label><div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">채팅 ↔ 글 간격</label><div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="6"/><span class="val" id="lyTextGapV">6px</span></div></div>
 <div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div></div>
-</div><div class="colorgrid bubble-tail-controls"><div class="field"><div class="toggle"><div class="t-lb">말풍선 꼬리<span>SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요</span></div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div></div><div class="field"><label class="lb">꼬리 크기</label><div class="rangewrap"><input id="bubbleTailSize" max="18" min="6" oninput="setBubbleTailSize(this.value)" step="1" type="range" value="10"/><span class="val" id="bubbleTailSizeV">10px</span></div></div></div></div></div><details class="messenger-settings" id="messengerSettings"><summary><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></summary><div class="messenger-settings-body"><div class="field">
+</div><div class="bubble-tail-controls"><div class="field" style="margin-bottom:0"><div class="toggle"><div class="t-lb">말풍선 꼬리<span>SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요</span></div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div></div></div></div></div><div class="messenger-settings" id="messengerSettings"><div class="messenger-settings-head"><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></div><div class="messenger-settings-body"><div class="field">
 <label class="lb">내 계정 (오른쪽 정렬)</label>
 <select id="meSelect" onchange="state.meId=this.value; renderPreview()"></select>
-</div><div class="colorgrid"><div class="field"><label class="lb">내 말풍선</label><div class="colorrow" data-color="myBubble"></div></div><div class="field"><label class="lb">내 글자색</label><div class="colorrow" data-color="myText"></div></div><div class="field"><label class="lb">상대 말풍선</label><div class="colorrow" data-color="otBubble"></div></div><div class="field"><label class="lb">상대 글자색</label><div class="colorrow" data-color="otText"></div></div></div></div></details></div></section><section class="tool-panel" id="panel-export"><div class="tool-panel-head"><div><strong>저장 · 투명화 · 서명</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accCanvas">
+</div><div class="colorgrid"><div class="field"><label class="lb">내 말풍선</label><div class="colorrow" data-color="myBubble"></div></div><div class="field"><label class="lb">내 글자색</label><div class="colorrow" data-color="myText"></div></div><div class="field"><label class="lb">상대 말풍선</label><div class="colorrow" data-color="otBubble"></div></div><div class="field"><label class="lb">상대 글자색</label><div class="colorrow" data-color="otText"></div></div></div></div></div></div></section><section class="tool-panel" id="panel-export"><div class="tool-panel-head"><div><strong>저장 · 투명화 · 서명</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accCanvas">
 <div class="flat-tool-title"><strong>🖼 저장 옵션</strong></div>
 <div class="flat-tool-body">
-<div class="field save-name-field">
+<div class="save-option-grid save-name-field">
+<div class="field">
 <label class="lb">파일 이름</label>
 <div class="filename-row"><input id="fileName" maxlength="100" oninput="setFilename(this.value)" placeholder="chat-발췌" type="text" value="chat-발췌"/><span class="filename-ext">.png / .html</span></div>
 <div class="field-help">확장자는 자동으로 붙어요.</div>
+</div>
+<div class="field save-scale-field">
+<label class="lb">저장 배율</label>
+<div class="save-scale-row"><select id="exportScale" onchange="setExportScale(this.value)"><option value="1">1</option><option value="1.5">1.5</option><option value="2">2</option><option selected value="2.5">2.5</option><option value="3">3</option><option value="4">4</option></select><span class="save-scale-unit">×</span></div>
+<div class="save-scale-help">배율이 높을수록 저장 시간이 더 걸릴 수 있어요.</div>
+</div>
 </div>
 <div class="field" style="margin-top:2px;margin-bottom:0">
 <div class="toggle">
@@ -1358,7 +1404,7 @@ const state = {
   draftAlign:'left',
   members:[],   // {id,name,image,color}
   messages:[],  // {id,type,senderId,content,...}  type: 'chat' | 'text'
-  export:{ ratio:'auto', hMargin:24, vMargin:24, linkMargin:false, filename:'chat-발췌' },
+  export:{ ratio:'auto', hMargin:24, vMargin:24, linkMargin:false, filename:'chat-발췌', scale:2.5 },
   transparentBg:false,
   backgroundImage:{src:'',size:100,x:50,y:50,blur:0,overlayOpacity:0},
   credit:{ on:false, maker:'', character:'', align:'right', size:12, gap:16 },
@@ -1378,7 +1424,7 @@ const state = {
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
     gap:12, textGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:8, nameSize:12, widthScale:100, letterSpacing:0,
-    tailOn:true, tailSize:10, linkV:false, linkH:false,
+    tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
     textPadL:0, textPadR:0, linkTextPad:true,   // 글(중간 삽입) 좌우 여백
     dividerMargin:8,   // 가름선 위·아래 여백
     dividerWidth:100,  // 선 가름선 길이(%)
@@ -1536,6 +1582,12 @@ function setCredit(field,val){
 function setRatio(v){ state.export.ratio=v; renderPreview(); }
 function setTransparent(on){ state.transparentBg=!!on; renderPreview(); }
 function setFilename(v){ state.export.filename=v; }
+function normalizedExportScale(v){
+  const n=Number(v);
+  return [1,1.5,2,2.5,3,4].includes(n)?n:2.5;
+}
+function setExportScale(v){ state.export.scale=normalizedExportScale(v); }
+function getExportScale(){ return normalizedExportScale(state.export.scale); }
 function safeFilename(v){
   const cleaned=String(v||'').trim()
     .replace(/[<>:"/\\|?*]/g,'_')
@@ -1676,10 +1728,18 @@ function wbStyle(){
     ? 'word-break:break-all;overflow-wrap:normal'
     : 'word-break:keep-all;overflow-wrap:break-word';
 }
-function bubbleStyle(bg,color){
+function bubbleStyle(bg,color,tailCorner){
   const L=state.layout;
-  return `background:${bg};--bubble-bg:${bg};color:${color};padding:${L.bpy}px ${L.bpx}px;`
-    +`border-radius:${L.radius}px;font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
+  const r=Number(L.radius)||0;
+  /* Keep the tail at the exact 15px geometry for radii 0–15.
+     Only the amount above 15 changes the tail: its bubble-side base widens,
+     while the outward point rises gradually toward the avatar. */
+  const tailRadiusBase=Math.max(15,r);
+  const tailRadiusDelta=Math.max(0,r-15);
+  /* Radius 22+ also retracts the outward tip slightly toward the bubble. */
+  const tailInwardDelta=Math.max(0,r-22);
+  return `background:${bg};--bubble-bg:${bg};--bubble-radius:${r}px;--bubble-tail-radius-base:${tailRadiusBase}px;--bubble-tail-radius-delta:${tailRadiusDelta}px;--bubble-tail-inward-delta:${tailInwardDelta}px;color:${color};padding:${L.bpy}px ${L.bpx}px;`
+    +`border-radius:${r}px;font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
 }
 function typographyStyle(align='left'){
   const L=state.layout;
@@ -1972,9 +2032,9 @@ let themeStorageOK=true;
 
 function defaultLayout(){
   return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:6,bpy:9,bpx:13,
-    radius:14,fs:16,lh:1.55,para:8,nameSize:12,widthScale:100,letterSpacing:0,wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
+    radius:14,fs:16,lh:1.55,para:8,nameSize:12,widthScale:100,letterSpacing:0,tailOn:true,tailSize:10,tailY:0,tailX:0,wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
-function defaultExport(){ return {ratio:'auto',hMargin:24,vMargin:24,linkMargin:false,filename:'chat-발췌'}; }
+function defaultExport(){ return {ratio:'auto',hMargin:24,vMargin:24,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
 function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16}; }
 function seedThemes(){
   return [
@@ -2126,6 +2186,9 @@ function syncControlsFromState(){
   if(exBtn){ exBtn.classList.toggle('on',!!state.export.linkMargin); exBtn.setAttribute('aria-pressed',state.export.linkMargin?'true':'false'); }
   transparentOn.checked=!!state.transparentBg;
   if(document.getElementById('fileName')) fileName.value=state.export.filename||'chat-발췌';
+  state.export.scale=getExportScale();
+  const exportScaleEl=document.getElementById('exportScale');
+  if(exportScaleEl) exportScaleEl.value=String(state.export.scale);
   // signature / credit
   creditOn.checked=!!state.credit.on;
   creditChar.value=state.credit.character||'';
@@ -2557,7 +2620,7 @@ function normalRow(m,mem,gap){
     ${av}
     <div class="n-body">
       <div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>
-      <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle(state.colors.nBubble,state.colors.nText)}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
+      <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle(state.colors.nBubble,state.colors.nText,'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
     </div>
   </div>`;
 }
@@ -2585,7 +2648,7 @@ function msgrRow(m,mem,gap){
     ${ctrlHTML(m.id)}
     ${avatar}
     ${name}
-    <div class="m-bubble editable" data-id="${m.id}" style="${bubbleStyle(bub,txt)}">${typeWrap(m.content.trim()?fmtText(m.content):'',mine?'right':'left')}</div>
+    <div class="m-bubble editable" data-id="${m.id}" style="${bubbleStyle(bub,txt,mine?'tr':'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'',mine?'right':'left')}</div>
   </div>`;
 }
 
@@ -2683,7 +2746,7 @@ async function saveImage(){
   }catch(_){}
   // make sure webfonts are loaded before snapshotting so the PNG wraps EXACTLY like the preview
   try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(_){}
-  const opts={pixelRatio:2};   // no cacheBust: images are already inline data URLs, re-fetching only slows saves
+  const opts={pixelRatio:getExportScale()};   // no cacheBust: images are already inline data URLs, re-fetching only slows saves
   if(!state.transparentBg) opts.backgroundColor=state.colors.bg;
   // Embed ONLY the font family actually in use (embedding every loaded font — esp. the huge
   // Noto Sans KR — is what made saves crawl). We DO embed it (not skip) so the saved text uses
@@ -2894,7 +2957,9 @@ if(!state.members.length) openMemberEditor(false);
 state.backgroundImage=state.backgroundImage||{src:'',size:100,x:50,y:50,blur:0,overlayOpacity:0};
 state.colors.bgOverlay=state.colors.bgOverlay||'#000000';
 state.layout.tailOn=state.layout.tailOn!==false;
-state.layout.tailSize=Number(state.layout.tailSize||10);
+state.layout.tailSize=Math.max(6,Math.min(18,Number(state.layout.tailSize||10)));
+state.layout.tailY=Math.max(-24,Math.min(24,Number(state.layout.tailY||0)));
+state.layout.tailX=Math.max(-20,Math.min(20,Number(state.layout.tailX||0)));
 state.layout.linkV=!!state.layout.linkV;
 state.layout.linkH=!!state.layout.linkH;
 
@@ -2951,6 +3016,12 @@ wrapColor=function(){wrapRichSelection('span','color:'+state.colors.partial);};
 
 function setBubbleTail(on){state.layout.tailOn=!!on;renderPreview();}
 function setBubbleTailSize(v){state.layout.tailSize=Math.max(6,Math.min(18,parseInt(v)||10));const e=document.getElementById('bubbleTailSizeV');if(e)e.textContent=state.layout.tailSize+'px';renderPreview();}
+function setBubbleTailPosition(axis,v){
+  const key=axis==='y'?'tailY':'tailX', min=axis==='y'?-24:-20, max=axis==='y'?24:20;
+  let n=parseInt(v);if(!Number.isFinite(n))n=0;n=Math.max(min,Math.min(max,n));state.layout[key]=n;
+  const e=document.getElementById(axis==='y'?'bubbleTailYV':'bubbleTailXV');if(e)e.textContent=n+'px';
+  renderPreview();
+}
 
 function updateBackgroundImageControls(){
   const B=state.backgroundImage;
@@ -2984,6 +3055,8 @@ function applyBackgroundLayers(){
   overlay.style.background=state.colors.bgOverlay;overlay.style.opacity=String(B.overlayOpacity/100);
   chat.classList.toggle('bubble-tail-off',!state.layout.tailOn);
   chat.style.setProperty('--bubble-tail-size',state.layout.tailSize+'px');
+  chat.style.setProperty('--bubble-tail-y',state.layout.tailY+'px');
+  chat.style.setProperty('--bubble-tail-x',state.layout.tailX+'px');
 }
 const __applyCanvasRich=applyCanvas;
 applyCanvas=function(){__applyCanvasRich();applyBackgroundLayers();};
@@ -3038,7 +3111,7 @@ currentTheme=function(name){const t=__currentThemeRich(name);t.backgroundImage=J
 const __applyThemeRich=applyThemeById;
 applyThemeById=function(id){const t=themes.find(x=>x.id===id);__applyThemeRich(id);if(t&&t.backgroundImage)state.backgroundImage=Object.assign({src:'',size:100,x:50,y:50,blur:0,overlayOpacity:0},JSON.parse(JSON.stringify(t.backgroundImage)));updateBackgroundImageControls();updateMarginLinkButtons();renderPreview();};
 const __syncControlsRich=syncControlsFromState;
-syncControlsFromState=function(){__syncControlsRich();const t=document.getElementById('bubbleTailOn'),s=document.getElementById('bubbleTailSize');if(t)t.checked=state.layout.tailOn;if(s)s.value=state.layout.tailSize;const sv=document.getElementById('bubbleTailSizeV');if(sv)sv.textContent=state.layout.tailSize+'px';updateBackgroundImageControls();updateMarginLinkButtons();};
+syncControlsFromState=function(){__syncControlsRich();const t=document.getElementById('bubbleTailOn'),s=document.getElementById('bubbleTailSize'),y=document.getElementById('bubbleTailY'),x=document.getElementById('bubbleTailX');if(t)t.checked=state.layout.tailOn;if(s)s.value=state.layout.tailSize;if(y)y.value=state.layout.tailY;if(x)x.value=state.layout.tailX;const sv=document.getElementById('bubbleTailSizeV'),yv=document.getElementById('bubbleTailYV'),xv=document.getElementById('bubbleTailXV');if(sv)sv.textContent=state.layout.tailSize+'px';if(yv)yv.textContent=state.layout.tailY+'px';if(xv)xv.textContent=state.layout.tailX+'px';updateBackgroundImageControls();updateMarginLinkButtons();};
 
 /* Export every style block, not only the first one, so tails/backgrounds/rich typography survive HTML export. */
 exportHTML=function(){
@@ -3056,9 +3129,9 @@ exportHTML=function(){
 initRichComposer();
 refreshColorRows();
 initPreciseControls();
-['bgImgSize','bgImgX','bgImgY','bgImgBlur','bgOverlayOpacity','bubbleTailSize'].forEach(id=>{
-  const map={bgImgSize:'bgImgSizeV',bgImgX:'bgImgXV',bgImgY:'bgImgYV',bgImgBlur:'bgImgBlurV',bgOverlayOpacity:'bgOverlayOpacityV',bubbleTailSize:'bubbleTailSizeV'};
-  const opts={bgImgSize:{min:40,max:240,step:1,nudge:5},bgImgX:{min:0,max:100,step:1,nudge:2},bgImgY:{min:0,max:100,step:1,nudge:2},bgImgBlur:{min:0,max:30,step:1,nudge:1},bgOverlayOpacity:{min:0,max:100,step:1,nudge:5},bubbleTailSize:{min:6,max:18,step:1,nudge:1}};
+['bgImgSize','bgImgX','bgImgY','bgImgBlur','bgOverlayOpacity','bubbleTailSize','bubbleTailY','bubbleTailX'].forEach(id=>{
+  const map={bgImgSize:'bgImgSizeV',bgImgX:'bgImgXV',bgImgY:'bgImgYV',bgImgBlur:'bgImgBlurV',bgOverlayOpacity:'bgOverlayOpacityV',bubbleTailSize:'bubbleTailSizeV',bubbleTailY:'bubbleTailYV',bubbleTailX:'bubbleTailXV'};
+  const opts={bgImgSize:{min:40,max:240,step:1,nudge:5},bgImgX:{min:0,max:100,step:1,nudge:2},bgImgY:{min:0,max:100,step:1,nudge:2},bgImgBlur:{min:0,max:30,step:1,nudge:1},bgOverlayOpacity:{min:0,max:100,step:1,nudge:5},bubbleTailSize:{min:6,max:18,step:1,nudge:1},bubbleTailY:{min:-24,max:24,step:1,nudge:1},bubbleTailX:{min:-20,max:20,step:1,nudge:1}};
   enhanceRange(id,map[id],opts[id]);
 });
 syncControlsFromState();
@@ -3292,7 +3365,7 @@ saveImage=async function(){
 
     showSaving('이미지 만드는 중...');
     const width=node.offsetWidth,height=node.offsetHeight;
-    const opts={pixelRatio:2,width,height,cacheBust:false};
+    const opts={pixelRatio:getExportScale(),width,height,cacheBust:false};
     if(!state.transparentBg) opts.backgroundColor=state.colors.bg;
 
     const fontCss=await __getTargetFontEmbedCSS(node);
@@ -3576,7 +3649,7 @@ else setTimeout(__idleLoadRenderer,1200);
 
       showSaving('이미지 만드는 중...');
       const width=Math.ceil(node.offsetWidth),height=Math.ceil(node.offsetHeight);
-      const base={pixelRatio:2,width,height,cacheBust:false,preferredFontFormat:'woff2'};
+      const base={pixelRatio:getExportScale(),width,height,cacheBust:false,preferredFontFormat:'woff2'};
       if(!state.transparentBg) base.backgroundColor=state.colors.bg;
 
       let fontCss='';
