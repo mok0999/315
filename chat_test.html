@@ -875,21 +875,21 @@ body{min-width:0}
 #chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:before,
 #chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:after{
   content:'';position:absolute;top:7px;
-  width:calc(var(--bubble-tail-size,10px) * 1.16);height:calc(var(--bubble-tail-size,10px) * 2.6);
+  width:calc(var(--bubble-tail-size,10px) * 1.16);height:calc(var(--bubble-tail-size,10px) * 1.24);
   background:inherit;pointer-events:none;
 }
 /* received bubble → beak points out to the upper-left */
 #chat:not(.bubble-tail-off) .n-bubble:before,
 #chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:before{
   left:calc(var(--bubble-tail-size,10px) * -0.72);
-  clip-path:polygon(0 0, 100% 0, 100% 100%, 62% 100%, 62% 24%);
-  -webkit-clip-path:polygon(0 0, 100% 0, 100% 100%, 62% 100%, 62% 24%);
+  clip-path:polygon(100% 0, 100% 82%, 0 0);
+  -webkit-clip-path:polygon(100% 0, 100% 82%, 0 0);
 }
 /* sent bubble → beak points out to the upper-right */
 #chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:after{
   right:calc(var(--bubble-tail-size,10px) * -0.72);
-  clip-path:polygon(100% 0, 0 0, 0 100%, 38% 100%, 38% 24%);
-  -webkit-clip-path:polygon(100% 0, 0 0, 0 100%, 38% 100%, 38% 24%);
+  clip-path:polygon(0 0, 0 82%, 100% 0);
+  -webkit-clip-path:polygon(0 0, 0 82%, 100% 0);
 }
 .bubble-tail-controls{margin-top:13px;padding-top:13px;border-top:1px solid var(--line-2)}
 
@@ -1676,10 +1676,19 @@ function wbStyle(){
     ? 'word-break:break-all;overflow-wrap:normal'
     : 'word-break:keep-all;overflow-wrap:break-word';
 }
-function bubbleStyle(bg,color){
+function bubbleStyle(bg,color,tailCorner){
   const L=state.layout;
+  const r=Number(L.radius)||0;
+  let radiusCss=`border-radius:${r}px;`;
+  /* The tail attaches to a squarish corner. If that corner rounds too much the tail
+     detaches (pops out) — so cap just that one corner while the other three stay round. */
+  if(state.layout.tailOn&&tailCorner){
+    const cap=Math.min(r,8);
+    if(tailCorner==='tl') radiusCss=`border-radius:${cap}px ${r}px ${r}px ${r}px;`;
+    else if(tailCorner==='tr') radiusCss=`border-radius:${r}px ${cap}px ${r}px ${r}px;`;
+  }
   return `background:${bg};--bubble-bg:${bg};color:${color};padding:${L.bpy}px ${L.bpx}px;`
-    +`border-radius:${L.radius}px;font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
+    +radiusCss+`font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
 }
 function typographyStyle(align='left'){
   const L=state.layout;
@@ -2557,7 +2566,7 @@ function normalRow(m,mem,gap){
     ${av}
     <div class="n-body">
       <div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>
-      <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle(state.colors.nBubble,state.colors.nText)}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
+      <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle(state.colors.nBubble,state.colors.nText,'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
     </div>
   </div>`;
 }
@@ -2585,7 +2594,7 @@ function msgrRow(m,mem,gap){
     ${ctrlHTML(m.id)}
     ${avatar}
     ${name}
-    <div class="m-bubble editable" data-id="${m.id}" style="${bubbleStyle(bub,txt)}">${typeWrap(m.content.trim()?fmtText(m.content):'',mine?'right':'left')}</div>
+    <div class="m-bubble editable" data-id="${m.id}" style="${bubbleStyle(bub,txt,mine?'tr':'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'',mine?'right':'left')}</div>
   </div>`;
 }
 
