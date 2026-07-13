@@ -3196,12 +3196,16 @@ async function __fetchAsDataURL(url){
   __fontBinaryCache.set(url,p);
   try{return await p;}catch(err){__fontBinaryCache.delete(url);throw err;}
 }
-async function __inlineUrlsInFontFace(block){
+async function __inlineUrlsInFontFace(block,baseUrl){
   const matches=[...block.matchAll(/url\((['"]?)([^)'"\s]+)\1\)/gi)];
   let out=block;
   for(const match of matches){
-    const url=match[2];
+    let url=match[2];
     if(/^data:/i.test(url)) continue;
+    /* Pretendard's dynamic-subset CSS uses relative woff2 paths like ./woff2-.../x.woff2 —
+       resolve them against the CDN CSS URL, otherwise they 404 against the page origin and
+       the whole font embed silently fails (export falls back to a system font). */
+    if(baseUrl){ try{ url=new URL(url,baseUrl).href; }catch(_){} }
     const data=await __fetchAsDataURL(url);
     out=out.replace(match[0],`url("${data}")`);
   }
@@ -3224,7 +3228,7 @@ async function __googleFontEmbedCSS(family,cfg,node){
     return __unicodeRangesMatch(ur,codePoints);
   });
   const inlined=[];
-  for(const block of selected) inlined.push(await __inlineUrlsInFontFace(block));
+  for(const block of selected) inlined.push(await __inlineUrlsInFontFace(block,cfg.css));
   return inlined.join('\n');
 }
 async function __pretendardEmbedCSS(family,cfg){
@@ -3400,7 +3404,7 @@ else setTimeout(__idleLoadRenderer,1200);
         const ur=(block.match(/unicode-range\s*:\s*([^;]+);/i)||[])[1]||'';
         return __unicodeRangesMatch(ur,codePoints);
       });
-      const inlined=await Promise.all(selected.map(block=>__inlineUrlsInFontFace(block).catch(()=>'')));
+      const inlined=await Promise.all(selected.map(block=>__inlineUrlsInFontFace(block,cfg.css).catch(()=>'')));
       return inlined.filter(Boolean).join('\n');
     };
   }
@@ -3765,7 +3769,7 @@ else setTimeout(__idleLoadRenderer,1200);
       const ur=(block.match(/unicode-range\s*:\s*([^;]+);/i)||[])[1]||'';
       return __unicodeRangesMatch(ur,cps);
     });
-    const inlined=await Promise.all(selected.map(block=>__inlineUrlsInFontFace(block).catch(()=>'')));
+    const inlined=await Promise.all(selected.map(block=>__inlineUrlsInFontFace(block,cfg.css).catch(()=>'')));
     return inlined.filter(Boolean).join('\n');
   }
   try{
