@@ -869,28 +869,43 @@ body{min-width:0}
 .canvas-bg-image{z-index:0;background-repeat:no-repeat;will-change:filter,transform,background-position,background-size}
 .canvas-bg-overlay{z-index:1}
 
-/* Messenger-style pointed tail (beak at the TOP corner, next to the avatar). */
+/* Simple messenger tail: one clean CSS triangle only.
+   It overlaps the bubble by a few pixels so it stays attached even at maximum radius. */
 .n-bubble,.m-bubble{position:relative;overflow:visible}
-#chat:not(.bubble-tail-off) .n-bubble:before,
-#chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:before,
-#chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:after{
-  content:'';position:absolute;top:7px;
-  width:calc(var(--bubble-tail-size,10px) * 1.16);height:calc(var(--bubble-tail-size,10px) * 1.24);
-  background:inherit;pointer-events:none;
-}
-/* received bubble → beak points out to the upper-left */
+
+/* received / normal bubble → left-pointing triangle */
 #chat:not(.bubble-tail-off) .n-bubble:before,
 #chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:before{
-  left:calc(var(--bubble-tail-size,10px) * -0.72);
-  clip-path:polygon(100% 0, 100% 82%, 0 0);
-  -webkit-clip-path:polygon(100% 0, 100% 82%, 0 0);
+  content:'';
+  position:absolute;
+  top:8px;
+  left:calc(var(--bubble-tail-size,10px) * -0.56);
+  width:0;
+  height:0;
+  border-top:calc(var(--bubble-tail-size,10px) * .52) solid transparent;
+  border-bottom:calc(var(--bubble-tail-size,10px) * .52) solid transparent;
+  border-right:calc(var(--bubble-tail-size,10px) * .82) solid var(--bubble-bg);
+  pointer-events:none;
 }
-/* sent bubble → beak points out to the upper-right */
+
+/* sent bubble → right-pointing triangle */
 #chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:after{
-  right:calc(var(--bubble-tail-size,10px) * -0.72);
-  clip-path:polygon(0 0, 0 82%, 100% 0);
-  -webkit-clip-path:polygon(0 0, 0 82%, 100% 0);
+  content:'';
+  position:absolute;
+  top:8px;
+  right:calc(var(--bubble-tail-size,10px) * -0.56);
+  width:0;
+  height:0;
+  border-top:calc(var(--bubble-tail-size,10px) * .52) solid transparent;
+  border-bottom:calc(var(--bubble-tail-size,10px) * .52) solid transparent;
+  border-left:calc(var(--bubble-tail-size,10px) * .82) solid var(--bubble-bg);
+  pointer-events:none;
 }
+
+/* No rounded connector or extra pseudo-element. */
+#chat:not(.bubble-tail-off) .n-bubble:after,
+#chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:after,
+#chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:before{content:none}
 .bubble-tail-controls{margin-top:13px;padding-top:13px;border-top:1px solid var(--line-2)}
 
 .bg-image-load-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center}
@@ -1679,16 +1694,10 @@ function wbStyle(){
 function bubbleStyle(bg,color,tailCorner){
   const L=state.layout;
   const r=Number(L.radius)||0;
-  let radiusCss=`border-radius:${r}px;`;
-  /* The tail attaches to a squarish corner. If that corner rounds too much the tail
-     detaches (pops out) — so cap just that one corner while the other three stay round. */
-  if(state.layout.tailOn&&tailCorner){
-    const cap=Math.min(r,8);
-    if(tailCorner==='tl') radiusCss=`border-radius:${cap}px ${r}px ${r}px ${r}px;`;
-    else if(tailCorner==='tr') radiusCss=`border-radius:${r}px ${cap}px ${r}px ${r}px;`;
-  }
-  return `background:${bg};--bubble-bg:${bg};color:${color};padding:${L.bpy}px ${L.bpx}px;`
-    +radiusCss+`font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
+  /* Keep every corner at the selected radius. The CSS bridge behind the tail handles
+     attachment, so even a fully rounded bubble stays seamless. */
+  return `background:${bg};--bubble-bg:${bg};--bubble-radius:${r}px;color:${color};padding:${L.bpy}px ${L.bpx}px;`
+    +`border-radius:${r}px;font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
 }
 function typographyStyle(align='left'){
   const L=state.layout;
@@ -2692,7 +2701,7 @@ async function saveImage(){
   }catch(_){}
   // make sure webfonts are loaded before snapshotting so the PNG wraps EXACTLY like the preview
   try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(_){}
-  const opts={pixelRatio:2};   // no cacheBust: images are already inline data URLs, re-fetching only slows saves
+  const opts={pixelRatio:2.5};   // no cacheBust: images are already inline data URLs, re-fetching only slows saves
   if(!state.transparentBg) opts.backgroundColor=state.colors.bg;
   // Embed ONLY the font family actually in use (embedding every loaded font — esp. the huge
   // Noto Sans KR — is what made saves crawl). We DO embed it (not skip) so the saved text uses
@@ -3301,7 +3310,7 @@ saveImage=async function(){
 
     showSaving('이미지 만드는 중...');
     const width=node.offsetWidth,height=node.offsetHeight;
-    const opts={pixelRatio:2,width,height,cacheBust:false};
+    const opts={pixelRatio:2.5,width,height,cacheBust:false};
     if(!state.transparentBg) opts.backgroundColor=state.colors.bg;
 
     const fontCss=await __getTargetFontEmbedCSS(node);
@@ -3585,7 +3594,7 @@ else setTimeout(__idleLoadRenderer,1200);
 
       showSaving('이미지 만드는 중...');
       const width=Math.ceil(node.offsetWidth),height=Math.ceil(node.offsetHeight);
-      const base={pixelRatio:2,width,height,cacheBust:false,preferredFontFormat:'woff2'};
+      const base={pixelRatio:2.5,width,height,cacheBust:false,preferredFontFormat:'woff2'};
       if(!state.transparentBg) base.backgroundColor=state.colors.bg;
 
       let fontCss='';
