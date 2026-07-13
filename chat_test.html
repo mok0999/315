@@ -877,19 +877,19 @@ body{min-width:0}
 #chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:before,
 #chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:after{
   content:'';position:absolute;top:7px;z-index:-2;
-  width:calc(var(--bubble-tail-size,10px) * 1.16);height:calc(var(--bubble-tail-size,10px) * 1.24);
+  width:calc(var(--bubble-tail-size,10px) * 1.10);height:calc(var(--bubble-tail-size,10px) * 1.18);
   background:inherit;pointer-events:none;
 }
 /* received bubble → beak points out to the upper-left */
 #chat:not(.bubble-tail-off) .n-bubble:before,
 #chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:before{
-  left:calc(var(--bubble-tail-size,10px) * -0.72);
+  left:calc(var(--bubble-tail-size,10px) * -0.68);
   clip-path:polygon(100% 0, 100% 82%, 0 0);
   -webkit-clip-path:polygon(100% 0, 100% 82%, 0 0);
 }
 /* sent bubble → beak points out to the upper-right */
 #chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:after{
-  right:calc(var(--bubble-tail-size,10px) * -0.72);
+  right:calc(var(--bubble-tail-size,10px) * -0.68);
   clip-path:polygon(0 0, 0 82%, 100% 0);
   -webkit-clip-path:polygon(0 0, 0 82%, 100% 0);
 }
@@ -899,7 +899,7 @@ body{min-width:0}
 #chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:before{
   content:'';position:absolute;top:6px;z-index:-1;
   width:calc(min(var(--bubble-radius,14px),28px) + 4px);
-  height:calc(var(--bubble-tail-size,10px) * 1.05);
+  height:calc(var(--bubble-tail-size,10px) * 0.98);
   background:inherit;border-radius:999px;pointer-events:none;
 }
 #chat:not(.bubble-tail-off) .n-bubble:after,
