@@ -856,6 +856,10 @@ body{min-width:0}
   .tool-tabs{grid-template-columns:repeat(6,minmax(54px,1fr))!important;overflow-x:auto}
 }
 </style>
+<style id="square-highlight-fix">
+/* 형광펜 시작과 끝을 둥글리지 않고 완전히 각지게 표시 */
+mark,.rich-composer mark,.editable mark{border-radius:0!important}
+</style>
 <style id="rich-background-tail-fixes">
 /* ===== 2026 rich composer, background image, soft bubble tails ===== */
 .rich-composer{
@@ -866,7 +870,7 @@ body{min-width:0}
 }
 .rich-composer:focus{border-color:var(--accent);background:var(--panel);box-shadow:0 0 0 3px var(--accent-soft)}
 .rich-composer:empty:before{content:attr(data-placeholder);color:#A5A5AA;pointer-events:none;white-space:pre-line}
-.rich-composer mark{padding:0 2px;border-radius:3px;color:inherit}
+.rich-composer mark{padding:0 2px;border-radius:0!important;color:inherit}
 @media(min-width:861px) and (max-height:800px){.rich-composer{height:110px;min-height:110px;max-height:110px}}
 @media(min-width:861px) and (max-height:700px){.rich-composer{height:90px;min-height:90px;max-height:90px}}
 
@@ -2489,7 +2493,7 @@ function fmtText(raw,edit){
   t=t.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<i>$1</i>');
   t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
   t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
-  t=t.replace(/==([^=]+)==/g,`<mark style="background:${state.colors.highlight};color:inherit;padding:0 2px;border-radius:3px">$1</mark>`);
+  t=t.replace(/==([^=]+)==/g,`<mark style="background:${state.colors.highlight};color:inherit;padding:0 2px;border-radius:0">$1</mark>`);
   // partial text color: [#RRGGBB]text[/]
   t=t.replace(/\[#([0-9A-Fa-f]{6})\]([\s\S]*?)\[\/\]/g,'<span style="color:#$1">$2</span>');
   if(edit){
@@ -3009,7 +3013,7 @@ function wrapRichSelection(tag,styleText){
   ed.focus();
 }
 wrapFmt=function(mark){
-  const spec={'**':['strong',''],'*':['em',''],'~~':['s',''],'++':['u',''],'==':['mark','background:'+state.colors.highlight+';color:inherit;padding:0 2px;border-radius:3px']};
+  const spec={'**':['strong',''],'*':['em',''],'~~':['s',''],'++':['u',''],'==':['mark','background:'+state.colors.highlight+';color:inherit;padding:0 2px;border-radius:0']};
   const [tag,style]=spec[mark]||spec['**'];wrapRichSelection(tag,style);
 };
 wrapColor=function(){wrapRichSelection('span','color:'+state.colors.partial);};
