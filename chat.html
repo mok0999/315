@@ -4809,5 +4809,123 @@ else setTimeout(__idleLoadRenderer,1200);
 })();
 </script>
 
+
+<script id="exact-live-preview-export-v4">
+
+/* ===== 미리보기 그대로 저장 v4 =====
+   저장 직전에 원본 #canvas를 다시 렌더링하거나, 줄바꿈용 <br>, 고정 폭,
+   제목 행간 보정을 삽입하지 않는다. 현재 화면의 DOM을 즉시 복제한 뒤
+   화면 밖 사본만 캡처하므로 긴 글에서도 저장 전용 여백이 생기지 않는다. */
+(function(){
+  let exactPreviewSaveBusy=false;
+
+  function nextTwoFrames(){
+    return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  }
+  function removeCaptureOnlyArtifacts(root){
+    root.querySelectorAll('[data-export-soft-break]').forEach(br=>br.remove());
+    root.querySelectorAll('.ctrl,#selToolbar').forEach(el=>el.remove());
+    root.querySelectorAll('.editable.editing').forEach(el=>el.classList.remove('editing'));
+  }
+  function makeExactPreviewClone(source){
+    const width=Math.ceil(source.offsetWidth);
+    const height=Math.ceil(source.offsetHeight);
+    const host=document.createElement('div');
+    host.setAttribute('aria-hidden','true');
+    Object.assign(host.style,{
+      position:'fixed',left:'-100000px',top:'0',
+      width:width+'px',height:height+'px',
+      overflow:'hidden',pointerEvents:'none',zIndex:'-2147483647'
+    });
+
+    const clone=source.cloneNode(true);
+    clone.removeAttribute('aria-live');
+    clone.style.zoom='1';
+    clone.style.transform='none';
+    clone.style.transformOrigin='top left';
+    clone.style.margin='0';
+    clone.style.boxShadow='none';
+    clone.style.width=width+'px';
+    clone.style.height=height+'px';
+    clone.style.minWidth=width+'px';
+    clone.style.maxWidth=width+'px';
+    clone.style.minHeight=height+'px';
+    clone.style.maxHeight=height+'px';
+    removeCaptureOnlyArtifacts(clone);
+    host.appendChild(clone);
+    document.body.appendChild(host);
+    return {host,clone,width,height};
+  }
+
+  window.saveImage=async function(){
+    if(exactPreviewSaveBusy) return;
+    if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+    exactPreviewSaveBusy=true;
+    let snapshot=null;
+    try{
+      /* 편집 중인 내용만 확정한다. 그 뒤에는 renderPreview/applyCanvas를
+         다시 호출하지 않아 현재 보이는 줄바꿈과 높이를 그대로 유지한다. */
+      if(editingId){
+        commitEdit();
+        renderPreview();
+        await nextTwoFrames();
+      }
+
+      const source=document.getElementById('canvas');
+      if(!source) throw new Error('preview canvas unavailable');
+
+      /* 렌더러를 기다리는 동안 원본 레이아웃이 달라지지 않도록 먼저 복제한다. */
+      snapshot=makeExactPreviewClone(source);
+      showSaving('미리보기 그대로 저장 중...');
+      await __loadHtmlToImage();
+      await nextTwoFrames();
+
+      const scale=(typeof safeCaptureScale==='function')
+        ? safeCaptureScale(snapshot.width,snapshot.height,getExportScale())
+        : getExportScale();
+      const base={
+        pixelRatio:scale,
+        width:snapshot.width,
+        height:snapshot.height,
+        cacheBust:false,
+        preferredFontFormat:'woff2'
+      };
+      if(!state.transparentBg) base.backgroundColor=state.colors.bg;
+
+      /* 현재 미리보기와 동일한 글꼴만 사본에 포함한다. 글꼴 삽입 실패 시에도
+         사본 DOM의 줄바꿈을 수정하지 않은 채 가볍게 재시도한다. */
+      let fontCss='';
+      try{
+        if(typeof __getTargetFontEmbedCSS==='function'){
+          fontCss=await __withTimeout(__getTargetFontEmbedCSS(snapshot.clone),9000,'');
+        }
+      }catch(_){fontCss='';}
+
+      let dataUrl;
+      try{
+        const opts=fontCss?{...base,fontEmbedCSS:fontCss}:{...base,skipFonts:true};
+        dataUrl=await __withQuietConsole(()=>window.htmlToImage.toPng(snapshot.clone,opts));
+      }catch(firstError){
+        console.warn('exact preview capture retry',firstError);
+        dataUrl=await __withQuietConsole(()=>window.htmlToImage.toPng(snapshot.clone,{...base,skipFonts:true}));
+      }
+      __downloadDataUrl(dataUrl,safeFilename(state.export.filename)+'.png');
+    }catch(err){
+      console.error('exact preview image export failed',err);
+      const detail=String(err&&err.message||'');
+      if(/renderer|script|timeout/i.test(detail)){
+        alert('이미지 저장 기능을 불러오지 못했어. 인터넷 연결을 확인한 뒤 다시 눌러줘.');
+      }else{
+        alert('이미지 저장 중 문제가 생겼어. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어줘.');
+      }
+    }finally{
+      if(snapshot&&snapshot.host) snapshot.host.remove();
+      hideSaving();
+      exactPreviewSaveBusy=false;
+    }
+  };
+})();
+
+</script>
 </body>
 </html>
