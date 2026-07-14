@@ -1069,7 +1069,9 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 #textHeadingSeg button{flex:0 0 auto!important;width:34px!important;height:34px!important;padding:0!important;
   display:flex!important;align-items:center;justify-content:center;font-size:12px!important;font-weight:800!important;line-height:1!important}
 #textHeadingSeg button:first-child{font-size:15px!important}
-.text-heading{display:inline;letter-spacing:-.02em}
+/* 제목 크기 span을 독립된 인라인 상자로 두어 큰 글자의 행 높이가
+   바로 앞 일반 문장의 line box까지 끌어올리지 않도록 한다. */
+.text-heading{display:inline-block;vertical-align:baseline;margin:0;padding:0;letter-spacing:-.02em}
 .text-heading-1{font-size:1.55em;line-height:1.22;font-weight:700}
 .text-heading-2{font-size:1.28em;line-height:1.28;font-weight:500}
 .rich-composer .text-heading-1{font-weight:700}
@@ -3860,12 +3862,32 @@ else setTimeout(__idleLoadRenderer,1200);
       else{const tail=p.node.splitText(p.offset);p.node.parentNode.insertBefore(br,tail);}
     }
   }
+  function freezeHeadingMetrics(root){
+    /* html-to-image의 foreignObject 복제에서 em 기반 제목 크기와 line-height가
+       다시 계산되며 앞 문단 간격이 달라지는 일을 막는다. 현재 화면에서
+       계산된 실제 px 값을 저장용 DOM에만 고정하고, 저장 후 renderPreview가
+       원래 DOM을 새로 그리므로 편집 상태에는 남지 않는다. */
+    root.querySelectorAll('.text-heading,[data-heading]').forEach(el=>{
+      const cs=getComputedStyle(el);
+      el.style.display='inline-block';
+      el.style.verticalAlign='baseline';
+      el.style.fontSize=cs.fontSize;
+      el.style.lineHeight=cs.lineHeight;
+      el.style.fontWeight=cs.fontWeight;
+      el.style.margin='0';
+      el.style.padding='0';
+    });
+  }
   function lockVisualWraps(root){
     const targets=[...root.querySelectorAll('.glyph-scale')];
     for(const el of targets){
       if(!el.textContent||!el.textContent.trim()) continue;
       const align=getComputedStyle(el).textAlign;
       if(align==='justify') continue; // forced <br> changes justification semantics
+      /* 서로 다른 글자 크기가 섞인 문단은 문자 중심점의 높이 차이가 실제
+         줄바꿈처럼 보일 수 있다. 이 블록은 이미 글꼴과 폭을 확정한 뒤 캡처하므로
+         강제 <br> 삽입 없이 자연 배치를 그대로 복제하는 편이 정확하다. */
+      if(el.querySelector('.text-heading,[data-heading]')) continue;
       const breaks=findSoftBreaks(el);
       if(!breaks.length) continue;
       const parent=el.parentElement;
@@ -3906,7 +3928,8 @@ else setTimeout(__idleLoadRenderer,1200);
       node.style.boxShadow='none';node.style.transform='none';
       await __twoPaintFrames();
 
-      /* Freeze the exact soft-wrap positions visible right now before html-to-image clones it. */
+      /* Freeze mixed-size title metrics first, then lock ordinary soft wraps. */
+      freezeHeadingMetrics(node);
       lockVisualWraps(node);
       await __twoPaintFrames();
 
