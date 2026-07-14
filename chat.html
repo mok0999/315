@@ -269,6 +269,8 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .n-msg .av{flex:0 0 auto;width:40px;height:40px;object-fit:cover;background:#C7C7CC;
   display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;overflow:hidden}
 .n-msg.circle .av{border-radius:50%}.n-msg.rounded .av{border-radius:12px}
+/* Consecutive messages keep the avatar column without drawing the avatar again. */
+.n-msg .av-continuation-spacer{flex:0 0 40px;width:40px;height:0;pointer-events:none}
 .n-body{flex:1;min-width:0}
 .n-name{font-size:12px;font-weight:700;margin-bottom:5px;line-height:1.25}
 .n-bubble{display:inline-block;vertical-align:top;max-width:100%;word-break:break-word}
@@ -934,6 +936,11 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 #chat:not(.bubble-tail-off) .n-bubble:after,
 #chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:after,
 #chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:before{content:none}
+
+/* Only the first bubble in a consecutive run owns a tail. */
+#chat:not(.bubble-tail-off) .n-msg.continuation .n-bubble:before,
+#chat:not(.bubble-tail-off) .m-msg.continuation:not(.mine) .m-bubble:before,
+#chat:not(.bubble-tail-off) .m-msg.continuation.mine .m-bubble:after{content:none!important}
 .bubble-tail-controls{margin-top:13px;padding-top:13px;border-top:1px solid var(--line-2)}
 .bubble-tail-position-row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:0;padding-top:1px}
 .bubble-tail-position-row .field{margin:0}
@@ -1037,8 +1044,59 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 .bubblepad-sec{grid-column:1/-1;border-top:1px solid var(--line-2);padding-top:12px}
 .bubblepad-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .bubblepad-head strong{font-size:12px}
+.bubble-align-field{margin-top:12px!important;padding-top:11px;border-top:1px solid var(--line-2)}
+#bubbleAlignSeg button{min-width:0}
+.bubble-align-help{margin-top:6px;line-height:1.45}
+
+/* 일반·로그 모드의 프로필 + 말풍선 묶음을 왼쪽/가운데/오른쪽으로 정렬 */
+.n-msg.bubble-align-center{justify-content:center}
+.n-msg.bubble-align-right{justify-content:flex-end}
+.n-msg.bubble-align-center .n-body,
+.n-msg.bubble-align-right .n-body{
+  flex:0 1 auto;
+  width:fit-content;
+  max-width:calc(100% - 52px);
+}
+.n-msg.no-av.bubble-align-center .n-body,
+.n-msg.no-av.bubble-align-right .n-body{max-width:100%}
 </style>
 
+
+<style id="text-heading-and-long-canvas-fixes">
+/* 글 모드: 정렬 버튼 옆에 부분 제목 크기 버튼 두 개 */
+.text-format-row{display:flex;align-items:center;gap:6px;width:100%;min-width:0}
+#textHeadingSeg{display:flex!important;flex:0 0 auto!important;gap:3px!important;margin-left:auto}
+#textHeadingSeg button{flex:0 0 auto!important;width:34px!important;height:34px!important;padding:0!important;
+  display:flex!important;align-items:center;justify-content:center;font-size:12px!important;font-weight:800!important;line-height:1!important}
+#textHeadingSeg button:first-child{font-size:15px!important}
+.text-heading{display:inline;letter-spacing:-.02em}
+.text-heading-1{font-size:1.55em;line-height:1.22;font-weight:700}
+.text-heading-2{font-size:1.28em;line-height:1.28;font-weight:500}
+.rich-composer .text-heading-1{font-weight:700}
+.rich-composer .text-heading-2{font-weight:500}
+@media(max-width:1160px) and (min-width:861px){
+  #textHeadingSeg button{width:30px!important}
+  .text-format-row{gap:4px}
+}
+</style>
+
+<style id="preview-zoom-and-ratio-reflow-fix">
+/* 미리보기 확대/축소 — 실제 캔버스와 저장 배율은 건드리지 않음 */
+.preview-heading{flex-wrap:wrap}
+.preview-zoom-tools{display:flex;align-items:center;gap:5px;min-width:0}
+.preview-zoom-controls{display:inline-flex;align-items:center;gap:3px;padding:2px;border:1px solid var(--line);border-radius:9px;background:#fff;flex:0 0 auto}
+.preview-zoom-controls button{height:27px;min-width:28px;padding:0 7px;border:0;border-radius:7px;background:transparent;color:var(--ink);font:700 13px/1 inherit;cursor:pointer}
+.preview-zoom-controls button:hover{background:var(--panel-2)}
+.preview-zoom-controls .zoom-label{min-width:50px;font-size:10.5px;color:var(--muted)}
+.preview-zoom-help{font-size:10px!important;color:var(--muted);white-space:normal!important;line-height:1.35}
+#stageEl.preview-scroll-x{overflow-x:auto!important}
+#stageEl:not(.preview-scroll-x){overflow-x:hidden!important}
+#stageEl.preview-scroll-y{overflow-y:auto!important}
+#stageEl:not(.preview-scroll-y){overflow-y:hidden!important}
+@media(max-width:760px){
+  .preview-heading{width:100%}.preview-zoom-tools{flex-wrap:wrap}.preview-zoom-help{width:100%}
+}
+</style>
 </head>
 <body>
 <div class="top">
@@ -1072,11 +1130,17 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 </div>
 <div class="field" id="alignField" style="display:none">
 <label class="lb">글 정렬</label>
+<div class="text-format-row">
 <div class="seg" id="alignSeg">
 <button title="양쪽 정렬" onclick="setAlign('justify')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="1" y1="6" x2="15" y2="6"/><line x1="1" y1="10" x2="15" y2="10"/></svg></button>
 <button class="on" title="왼쪽 정렬" onclick="setAlign('left')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="1" y1="6" x2="10" y2="6"/><line x1="1" y1="10" x2="13" y2="10"/></svg></button>
 <button title="가운데 정렬" onclick="setAlign('center')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="4" y1="6" x2="12" y2="6"/><line x1="2.5" y1="10" x2="13.5" y2="10"/></svg></button>
 <button title="오른쪽 정렬" onclick="setAlign('right')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="6" y1="6" x2="15" y2="6"/><line x1="3" y1="10" x2="15" y2="10"/></svg></button>
+</div>
+<div class="seg" id="textHeadingSeg" aria-label="부분 글자 크기">
+<button type="button" title="선택한 글자를 큰 제목으로" onclick="wrapTextHeading(1)">#</button>
+<button type="button" title="선택한 글자를 작은 제목으로" onclick="wrapTextHeading(2)">##</button>
+</div>
 </div>
 </div></div>
 <div class="field" id="composerTextField">
@@ -1264,14 +1328,14 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <option value="16:9">16 : 9 가로</option>
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
-</div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="field" style="margin-bottom:0"><div class="toggle"><div class="t-lb">프로필 사진 표시<span>일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요</span></div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양 · 간격</strong></div><div class="flat-tool-body"><div class="colorgrid">
+</div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="field" style="margin-bottom:0"><div class="toggle"><div class="t-lb">프로필 사진 표시<span>일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요</span></div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div><div class="field" style="margin:8px 0 0"><div class="toggle"><div class="t-lb">내 프로필·이름 표시<span>‘내 계정’으로 지정한 캐릭터의 프로필과 이름을 모든 모드에서 켜고 꺼요</span></div><label class="sw"><input id="showMyIdentity" onchange="state.showMyIdentity=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양 · 간격</strong></div><div class="flat-tool-body"><div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">이름 크기</label><div class="rangewrap"><input id="lyNameSize" max="24" min="9" oninput="setLayout('nameSize',this.value)" type="range" value="12"/><span class="val" id="lyNameSizeV">12px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">메시지 간격</label><div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div></div>
-<div class="field" style="margin:0"><label class="lb">채팅 ↔ 글 간격</label><div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="6"/><span class="val" id="lyTextGapV">6px</span></div></div>
-<div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div></div>
+<div class="field" style="margin:0"><label class="lb">채팅 ↔ 글 간격</label><div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="16"/><span class="val" id="lyTextGapV">16px</span></div></div>
+<div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div><div class="field bubble-align-field"><label class="lb">말풍선 정렬</label><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div><div class="field-help bubble-align-help">가운데 정렬은 프로필의 중심부터 말풍선 끝까지를 기준으로 맞추고, 프로필이 전체 여백 밖으로는 넘어가지 않아요. 메신저 모드는 발신자 기준 정렬을 유지해요.</div></div></div>
 </div><div class="bubble-tail-controls"><div class="field" style="margin-bottom:0"><div class="toggle"><div class="t-lb">말풍선 꼬리<span>SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요</span></div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div></div></div></div></div><div class="messenger-settings" id="messengerSettings"><div class="messenger-settings-head"><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></div><div class="messenger-settings-body"><div class="field">
 <label class="lb">내 계정 (오른쪽 정렬)</label>
 <select id="meSelect" onchange="state.meId=this.value; renderPreview()"></select>
@@ -1336,7 +1400,14 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <div class="preview-toolbar">
 <div class="preview-heading">
 <strong>미리보기</strong>
-<span>결과 크기 그대로 표시돼요</span>
+<div class="preview-zoom-tools">
+<div class="preview-zoom-controls" aria-label="미리보기 확대 축소">
+<button type="button" onclick="changePreviewZoom(-1)" title="미리보기 축소">−</button>
+<button type="button" class="zoom-label" id="previewZoomLabel" onclick="resetPreviewZoom()" title="화면 맞춤으로 돌아가기">맞춤</button>
+<button type="button" onclick="changePreviewZoom(1)" title="미리보기 확대">＋</button>
+</div>
+<span class="preview-zoom-help">버튼 또는 Ctrl/⌘+스크롤로 캔버스만 확대·축소해요. 저장 크기와 저장 배율에는 영향이 없어요.</span>
+</div>
 </div>
 <div class="preview-actions">
 <button class="btn" onclick="saveImage()">↓ 이미지 저장</button>
@@ -1402,6 +1473,7 @@ const state = {
   mode:'normal',
   shape:'circle',
   showProfile:true,
+  showMyIdentity:false,
   meId:'',
   parenOn:false,
   composerType:'chat',   // 'chat' | 'text'
@@ -1410,6 +1482,7 @@ const state = {
   messages:[],  // {id,type,senderId,content,...}  type: 'chat' | 'text'
   export:{ ratio:'auto', hMargin:24, vMargin:24, linkMargin:false, filename:'chat-발췌', scale:2.5 },
   transparentBg:false,
+  previewZoom:1,
   backgroundImage:{src:'',size:100,x:50,y:50,blur:0,overlayOpacity:0},
   credit:{ on:false, maker:'', character:'', align:'right', size:12, gap:16 },
   colors:{
@@ -1427,9 +1500,9 @@ const state = {
   layout:{
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
-    gap:12, textGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:8, nameSize:12, widthScale:100, letterSpacing:0,
+    gap:12, textGap:16, continuationGap:8, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:8, nameSize:12, widthScale:100, letterSpacing:0,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
-    textPadL:0, textPadR:0, linkTextPad:true,   // 글(중간 삽입) 좌우 여백
+    textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
     dividerMargin:8,   // 가름선 위·아래 여백
     dividerWidth:100,  // 선 가름선 길이(%)
     wb:'word',  // 'word' = keep-all, 'char' = break-all
@@ -1592,6 +1665,11 @@ function normalizedExportScale(v){
 }
 function setExportScale(v){ state.export.scale=normalizedExportScale(v); }
 function getExportScale(){ return normalizedExportScale(state.export.scale); }
+/* Keep the save multiplier exactly as selected by the user.
+   Preview fitting is handled separately and never changes export resolution. */
+function safeCaptureScale(width,height,requested){
+  return normalizedExportScale(requested);
+}
 function safeFilename(v){
   const cleaned=String(v||'').trim()
     .replace(/[<>:"/\\|?*]/g,'_')
@@ -1623,50 +1701,163 @@ function toggleExportMarginLink(){
 function applyCanvas(){
   const canvas=document.getElementById('canvas');
   const chat=document.getElementById('chat');
-  if(!canvas||!chat) return;
+  const stage=document.getElementById('stageEl');
+  if(!canvas||!chat||!stage) return;
   const bg=state.transparentBg?'transparent':state.colors.bg;
   canvas.style.background=bg;
   chat.style.background=bg;
-  document.getElementById('stageEl').classList.toggle('transparent-bg',!!state.transparentBg);
-  canvas.style.margin='0 auto';
+  stage.classList.toggle('transparent-bg',!!state.transparentBg);
   const {ratio,hMargin,vMargin}=state.export;
+
+  /* Always start from the width chosen in the layout panel. A previous fixed-ratio
+     preview may have widened #chat temporarily to reflow a long excerpt. */
+  const baseChatW=Math.max(1,Number(state.layout.width)||chat.offsetWidth||440);
+  chat.style.width=Math.round(baseChatW)+'px';
+  chat.style.maxWidth='none';
+
+  /* Remove preview-only geometry before measuring the real export canvas. */
+  canvas.style.transform='none';
+  canvas.style.transformOrigin='top left';
+  canvas.style.margin='0';
+  canvas.style.display='block';
+  canvas.style.alignItems='';
+  canvas.style.justifyContent='';
+  canvas.style.width='auto';
+  canvas.style.height='auto';
+  canvas.style.minWidth='0';
+  canvas.style.minHeight='0';
+  canvas.style.padding='0';
+
+  const measureAtWidth=(requestedWidth)=>{
+    chat.style.width=Math.max(1,Math.round(requestedWidth))+'px';
+    /* Reading these properties flushes layout and gives the actual wrapped size. */
+    return {
+      width:Math.ceil(Math.max(chat.scrollWidth,chat.offsetWidth)),
+      height:Math.ceil(Math.max(chat.scrollHeight,chat.offsetHeight))
+    };
+  };
+
   if(ratio==='auto'){
-    canvas.style.display='block';
+    measureAtWidth(baseChatW);
     canvas.style.width='fit-content';
     canvas.style.height='auto';
     canvas.style.padding=vMargin+'px '+hMargin+'px';
   }else{
+    const parts=String(ratio).split(':').map(Number);
+    const rw=parts[0]>0?parts[0]:1, rh=parts[1]>0?parts[1]:1;
+    const fitsRatio=(m)=>{
+      const frameUnitFromWidth=Math.ceil((m.width+2*hMargin)/rw);
+      return m.height+2*vMargin <= frameUnitFromWidth*rh+1;
+    };
+
+    let chosenW=baseChatW;
+    let chosen=measureAtWidth(chosenW);
+
+    /* A long one-column excerpt used to keep #chat at 440px while the ratio frame
+       expanded to ten-thousand pixels, producing enormous empty side margins.
+       For fixed ratios only, widen the text flow just enough for the whole excerpt
+       to fit. The selected layout width remains the minimum, not a permanently
+       changed setting. This keeps the saved image ratio exact and uses the canvas
+       area instead of filling it with blank space. */
+    if(!fitsRatio(chosen)){
+      const MAX_ADAPTIVE_CHAT_WIDTH=8192;
+      const estimated=Math.sqrt(Math.max(1,chosen.height*chosen.width*rw/rh));
+      let low=chosenW;
+      let high=Math.min(MAX_ADAPTIVE_CHAT_WIDTH,Math.max(chosenW+1,Math.ceil(estimated)));
+      let highMeasure=measureAtWidth(high);
+      while(!fitsRatio(highMeasure)&&high<MAX_ADAPTIVE_CHAT_WIDTH){
+        low=high;
+        high=Math.min(MAX_ADAPTIVE_CHAT_WIDTH,Math.ceil(high*1.55));
+        highMeasure=measureAtWidth(high);
+      }
+      if(fitsRatio(highMeasure)){
+        /* A few binary-search passes are enough and avoid repeatedly laying out
+           every single character in extremely long excerpts. */
+        for(let i=0;i<8;i++){
+          const mid=Math.floor((low+high)/2);
+          if(mid<=low) break;
+          const mm=measureAtWidth(mid);
+          if(fitsRatio(mm)){high=mid;highMeasure=mm;}
+          else low=mid;
+        }
+        chosenW=high;
+        chosen=measureAtWidth(chosenW);
+      }else{
+        chosenW=high;
+        chosen=highMeasure;
+      }
+    }
+
+    const frameUnit=Math.ceil(Math.max(
+      (chosen.width+2*hMargin)/rw,
+      (chosen.height+2*vMargin)/rh
+    ));
+    const frameW=Math.max(rw,frameUnit*rw);
+    const frameH=Math.max(rh,frameUnit*rh);
     canvas.style.display='flex';
     canvas.style.alignItems='center';
     canvas.style.justifyContent='center';
     canvas.style.padding='0';
-    const cw0=chat.offsetWidth, ch0=chat.offsetHeight;
-    const [rw,rh]=ratio.split(':').map(Number);
-    let cw=cw0+2*hMargin, ch=ch0+2*vMargin;
-    const targetH=cw*rh/rw;
-    if(targetH>=ch) ch=targetH; else cw=ch*rw/rh;
-    canvas.style.width=Math.round(cw)+'px';
-    canvas.style.height=Math.round(ch)+'px';
+    canvas.style.width=Math.ceil(frameW)+'px';
+    canvas.style.height=Math.ceil(frameH)+'px';
   }
   fitPreview();
 }
-/* scale the (possibly huge, due to outer margins) canvas down so it always
-   fits inside the fixed-size preview viewport, instead of pushing the page layout */
+
+/* Preview zoom is a multiplier on top of automatic whole-canvas fitting.
+   The real #canvas stays at export size, so saving and the selected save scale
+   are completely independent from these controls. */
+const PREVIEW_ZOOM_STEPS=[0.25,0.33,0.5,0.67,0.8,1,1.25,1.5,2,3,4,6,8,12,16,24,32,48,64];
+function normalizedPreviewZoom(v){
+  const n=Number(v);
+  return Number.isFinite(n)?Math.max(PREVIEW_ZOOM_STEPS[0],Math.min(PREVIEW_ZOOM_STEPS[PREVIEW_ZOOM_STEPS.length-1],n)):1;
+}
+function updatePreviewZoomLabel(){
+  const el=document.getElementById('previewZoomLabel');
+  if(!el) return;
+  const z=normalizedPreviewZoom(state.previewZoom);
+  el.textContent=Math.abs(z-1)<0.001?'맞춤':Math.round(z*100)+'%';
+}
+function changePreviewZoom(direction){
+  const cur=normalizedPreviewZoom(state.previewZoom);
+  let idx=PREVIEW_ZOOM_STEPS.findIndex(v=>Math.abs(v-cur)<0.001);
+  if(idx<0){
+    idx=PREVIEW_ZOOM_STEPS.findIndex(v=>v>cur);
+    if(idx<0) idx=PREVIEW_ZOOM_STEPS.length-1;
+    else if(direction<0) idx=Math.max(0,idx-1);
+  }else idx=Math.max(0,Math.min(PREVIEW_ZOOM_STEPS.length-1,idx+(direction>0?1:-1)));
+  state.previewZoom=PREVIEW_ZOOM_STEPS[idx];
+  fitPreview();
+}
+function resetPreviewZoom(){ state.previewZoom=1; fitPreview(); }
 function fitPreview(){
   const stage=document.getElementById('stageEl');
   const wrap=document.getElementById('canvasFit');
   const canvas=document.getElementById('canvas');
   if(!stage||!wrap||!canvas) return;
   canvas.style.transform='none';
+  canvas.style.transformOrigin='top left';
+  canvas.style.margin='0';
+  stage.style.justifyContent='flex-start';
+  wrap.style.marginLeft='auto';
+  wrap.style.marginRight='auto';
   const cw=canvas.offsetWidth, ch=canvas.offsetHeight;
-  if(!cw||!ch){ wrap.style.width=''; wrap.style.height=''; return; }
-  // shrink to fit the box WIDTH only (prevents horizontal overflow / layout push);
-  // height is free to scroll vertically inside the stage.
-  const availW=Math.max(40,stage.clientWidth-4);
-  const scale=Math.min(1,availW/cw);
-  canvas.style.transform=scale<1?`scale(${scale})`:'none';
-  wrap.style.width=Math.round(cw*scale)+'px';
-  wrap.style.height=Math.round(ch*scale)+'px';
+  if(!cw||!ch){ wrap.style.width=''; wrap.style.height=''; updatePreviewZoomLabel(); return; }
+
+  const availW=Math.max(40,stage.clientWidth-8);
+  const desktop=window.matchMedia&&window.matchMedia('(min-width:861px)').matches;
+  const ratioLocked=state.export&&state.export.ratio!=='auto';
+  const availH=(desktop&&ratioLocked)?Math.max(40,stage.clientHeight-8):Infinity;
+  const fitScale=Math.min(1,availW/cw,availH/ch);
+  const zoom=normalizedPreviewZoom(state.previewZoom);
+  /* Native-size zooming is allowed for inspection, but a modest cap prevents a
+     mistaken click from asking the browser to paint an absurdly large layer. */
+  const scale=Math.max(0.002,Math.min(4,fitScale*zoom));
+
+  canvas.style.transform=Math.abs(scale-1)>0.0001?`scale(${scale})`:'none';
+  wrap.style.width=Math.max(1,Math.round(cw*scale))+'px';
+  wrap.style.height=Math.max(1,Math.round(ch*scale))+'px';
+  updatePreviewZoomLabel();
   if(typeof syncPreviewScrollbar==='function') syncPreviewScrollbar();
 }
 let fitResizeQueued=false;
@@ -1726,6 +1917,25 @@ function toggleTextPadLink(){
   const btn=document.getElementById('textPadLinkBtn');
   if(btn){ btn.classList.toggle('on',state.layout.linkTextPad); btn.setAttribute('aria-pressed',state.layout.linkTextPad?'true':'false'); }
   if(state.layout.linkTextPad){ state.layout.textPadR=state.layout.textPadL; syncTextPadInputs(); renderPreview(); }
+}
+function normalizeBubbleAlign(value){
+  return ['left','center','right'].includes(value)?value:'left';
+}
+function syncBubbleAlignControls(){
+  const seg=document.getElementById('bubbleAlignSeg');
+  if(!seg) return;
+  const align=normalizeBubbleAlign(state.layout.bubbleAlign);
+  state.layout.bubbleAlign=align;
+  const order=['left','center','right'];
+  [...seg.children].forEach((button,index)=>button.classList.toggle('on',order[index]===align));
+}
+function setBubbleAlign(align){
+  state.layout.bubbleAlign=normalizeBubbleAlign(align);
+  syncBubbleAlignControls();
+  renderPreview();
+}
+function bubbleAlignClass(){
+  return 'bubble-align-'+normalizeBubbleAlign(state.layout.bubbleAlign);
 }
 function wbStyle(){
   return state.layout.wb==='char'
@@ -2035,8 +2245,10 @@ let themes=[];
 let themeStorageOK=true;
 
 function defaultLayout(){
-  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:6,bpy:9,bpx:13,
-    radius:14,fs:16,lh:1.55,para:8,nameSize:12,widthScale:100,letterSpacing:0,tailOn:true,tailSize:10,tailY:0,tailX:0,wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
+  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:16,continuationGap:8,bpy:9,bpx:13,
+    radius:14,fs:16,lh:1.55,para:8,nameSize:12,widthScale:100,letterSpacing:0,tailOn:true,tailSize:10,tailY:0,tailX:0,
+    linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerWidth:100,
+    wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
 function defaultExport(){ return {ratio:'auto',hMargin:24,vMargin:24,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
 function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16}; }
@@ -2176,6 +2388,7 @@ function syncControlsFromState(){
   updateMarginModeUI(L.marginMode); syncMarginInputs();
   // 글 좌우 여백 + 연결 버튼
   if(typeof syncTextPadInputs==='function') syncTextPadInputs();
+  if(typeof syncBubbleAlignControls==='function') syncBubbleAlignControls();
   const tpBtn=document.getElementById('textPadLinkBtn');
   if(tpBtn){ tpBtn.classList.toggle('on',L.linkTextPad!==false); tpBtn.setAttribute('aria-pressed',L.linkTextPad!==false?'true':'false'); }
   // 가름선 여백
@@ -2411,6 +2624,8 @@ function htmlToMarkup(node){
     if(tag==='br'){ out+='\n'; return; }
     if(ch.classList&&ch.classList.contains('mimg')) return; // skip images
     const inner=htmlToMarkup(ch);
+    if((ch.dataset&&ch.dataset.heading==='1')||(ch.classList&&ch.classList.contains('text-heading-1'))){ out+='[#]'+inner+'[/#]'; return; }
+    if((ch.dataset&&ch.dataset.heading==='2')||(ch.classList&&ch.classList.contains('text-heading-2'))){ out+='[##]'+inner+'[/##]'; return; }
     if(tag==='b'||tag==='strong'||/font-weight:\s*(bold|[6-9]00)/.test(style)){ out+='**'+inner+'**'; return; }
     if(tag==='i'||tag==='em'||/font-style:\s*italic/.test(style)){ out+='*'+inner+'*'; return; }
     if(tag==='s'||tag==='strike'||tag==='del'||/text-decoration[^;]*line-through/.test(style)){ out+='~~'+inner+'~~'; return; }
@@ -2496,6 +2711,9 @@ function fmtText(raw,edit){
   t=t.replace(/==([^=]+)==/g,`<mark style="background:${state.colors.highlight};color:inherit;padding:0 2px;border-radius:0">$1</mark>`);
   // partial text color: [#RRGGBB]text[/]
   t=t.replace(/\[#([0-9A-Fa-f]{6})\]([\s\S]*?)\[\/\]/g,'<span style="color:#$1">$2</span>');
+  // partial title sizing, used only by the inserted-text composer buttons.
+  t=t.replace(/\[##\]([\s\S]*?)\[\/##\]/g,'<span class="text-heading text-heading-2" data-heading="2">$1</span>');
+  t=t.replace(/\[#\]([\s\S]*?)\[\/#\]/g,'<span class="text-heading text-heading-1" data-heading="1">$1</span>');
   if(edit){
     // editing view = source-accurate: every newline is a <br>, no dynamic paren color
     t=t.replace(/\n/g,'<br>');
@@ -2545,14 +2763,25 @@ function renderPreview(){
   chat.style.padding=`${M.t}px ${M.r}px ${M.b}px ${M.l}px`;
   const msgs=state.messages;
   let html=msgs.map((m,i)=>{
+    const prev=msgs[i-1];
     const next=msgs[i+1];
+    // A run continues only when the immediately preceding item is another chat
+    // message from the same sender. Text, dividers, images, or another sender break it.
+    const isChat=x=>x&&(!x.type||x.type==='chat');
+    const continued=isChat(m)&&isChat(prev)&&m.senderId===prev.senderId;
+    const nextContinued=isChat(m)&&isChat(next)&&m.senderId===next.senderId;
+    // Spacing inside a consecutive same-sender run stays fixed. The message-gap control
+    // moves the whole run relative to surrounding items instead of stretching its bubbles.
+    const continuationGap=Number.isFinite(Number(state.layout.continuationGap))
+      ? Number(state.layout.continuationGap) : 8;
     // Spacing to the next item is governed by whichever element "owns" that seam, so the
     // bubble panel's spacing controls only affect bubble(+글) spacing — never 가름선/사진.
     // priority: 가름선 > 사진 > 글 > 말풍선
     let gap=0;
     if(next){
       const a=m.type, b=next.type;
-      if(a==='divider'||b==='divider') gap=Number(state.layout.dividerMargin)||0;
+      if(nextContinued) gap=continuationGap;
+      else if(a==='divider'||b==='divider') gap=Number(state.layout.dividerMargin)||0;
       else if(a==='image'||b==='image') gap=(a==='image'?(m.imgMargin!=null?m.imgMargin:6):(next.imgMargin!=null?next.imgMargin:6));
       else if(a==='text'||b==='text') gap=state.layout.textGap;
       else gap=state.layout.gap;
@@ -2561,9 +2790,9 @@ function renderPreview(){
     if(m.type==='image') return imageRow(m,gap);
     if(m.type==='text') return textRow(m,gap);
     const mem=state.members.find(x=>x.id===m.senderId)||{};
-    if(state.mode==='messenger') return msgrRow(m,mem,gap);
-    if(state.mode==='log') return logRow(m,mem,gap);
-    return normalRow(m,mem,gap);
+    if(state.mode==='messenger') return msgrRow(m,mem,gap,continued);
+    if(state.mode==='log') return logRow(m,mem,gap,continued);
+    return normalRow(m,mem,gap,continued);
   }).join('');
   html+=creditHTML();
   chat.innerHTML=html;
@@ -2617,38 +2846,54 @@ function imageRow(m,gap){
     ${msgImgHTML(m)}
   </div>`;
 }
-function normalRow(m,mem,gap){
-  const av=state.showProfile?avatarHTML(mem,state.shape):'';
-  return `<div class="pmsg n-msg ${av?'':'no-av'} ${state.shape}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
+function normalRow(m,mem,gap,continued=false){
+  const mine=(m.senderId===state.meId);
+  const showIdentity=!mine||!!state.showMyIdentity;
+  const hasAvatarColumn=!!state.showProfile&&showIdentity;
+  const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
+  const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
+  const name=showIdentity&&!continued?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  return `<div class="pmsg n-msg ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
-    ${av}
+    ${avatar||avatarSpacer}
     <div class="n-body">
-      <div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>
+      ${name}
       <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle(state.colors.nBubble,state.colors.nText,'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
     </div>
   </div>`;
 }
-function logRow(m,mem,gap){
+function logRow(m,mem,gap,continued=false){
   const L=state.layout;
+  const mine=(m.senderId===state.meId);
+  const showIdentity=!mine||!!state.showMyIdentity;
+  const hasAvatarColumn=!!state.showProfile&&showIdentity;
   const plain=`color:${state.colors.nText};font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
-  const av=state.showProfile?avatarHTML(mem,state.shape):'';
-  return `<div class="pmsg n-msg ${av?'':'no-av'} ${state.shape}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
+  const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
+  const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
+  const name=showIdentity&&!continued?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  return `<div class="pmsg n-msg ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
-    ${av}
+    ${avatar||avatarSpacer}
     <div class="n-body">
-      <div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>
+      ${name}
       <div class="n-plain editable" data-id="${m.id}" style="${plain}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
     </div>
   </div>`;
 }
-function msgrRow(m,mem,gap){
+function msgrRow(m,mem,gap,continued=false){
   const mine=(m.senderId===state.meId);
+  const showIdentity=!mine||!!state.showMyIdentity;
   const bub=mine?state.colors.myBubble:state.colors.otBubble;
   const txt=mine?state.colors.myText:state.colors.otText;
-  const hasAv=state.showProfile&&!mine;
-  const avatar=hasAv?avatarHTML(mem,state.shape):'';
-  const name=mine?'':`<div class="m-name" style="font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>`;
-  return `<div class="pmsg m-msg ${mine?'mine':''} ${hasAv?'':'no-av'} ${state.shape}" style="margin-bottom:${gap}px">
+  const hasAvatarColumn=!!state.showProfile&&showIdentity;
+  const showAvatar=hasAvatarColumn&&!continued;
+  const avatar=showAvatar?avatarHTML(mem,state.shape):'';
+  const name=showIdentity&&!continued?`<div class="m-name" style="font-size:${state.layout.nameSize}px;color:${mem.color||'#555'}">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  // Keep the appropriate avatar column during a consecutive run even though the avatar itself is hidden.
+  const noAvatarColumn=hasAvatarColumn?'':'no-av';
+  const ownIdentityClass=mine&&showIdentity?'own-identity':'';
+  const ownAvatarClass=mine&&hasAvatarColumn?'own-avatar-column':'';
+  return `<div class="pmsg m-msg ${mine?'mine':''} ${ownIdentityClass} ${ownAvatarClass} ${noAvatarColumn} ${continued?'continuation':''} ${state.shape}" style="margin-bottom:${gap}px">
     ${ctrlHTML(m.id)}
     ${avatar}
     ${name}
@@ -2914,13 +3159,18 @@ addOrUpdateMember=function(){
 let __previewOverflowFrame=0;
 function syncPreviewScrollbar(){
   const stage=document.getElementById('stageEl');
-  if(!stage) return;
+  const fit=document.getElementById('canvasFit');
+  if(!stage||!fit) return;
   cancelAnimationFrame(__previewOverflowFrame);
   __previewOverflowFrame=requestAnimationFrame(()=>{
-    // Ignore sub-pixel rounding so an empty preview never gets a phantom scrollbar.
-    const needsScroll=stage.scrollHeight>stage.clientHeight+2;
-    stage.style.overflowY=needsScroll?'auto':'hidden';
-    if(!needsScroll) stage.scrollTop=0;
+    /* The wrapper stores the transformed preview dimensions, which is more
+       reliable than stage.scrollWidth while the stage is a flex container. */
+    const needsX=fit.offsetWidth>stage.clientWidth+2;
+    const needsY=fit.offsetHeight>stage.clientHeight+2;
+    stage.classList.toggle('preview-scroll-x',needsX);
+    stage.classList.toggle('preview-scroll-y',needsY);
+    if(!needsX) stage.scrollLeft=0;
+    if(!needsY) stage.scrollTop=0;
   });
 }
 function initPreviewScrollbarGuard(){
@@ -3006,9 +3256,12 @@ function editorSelection(){
   }
   return sel;
 }
-function wrapRichSelection(tag,styleText){
+function wrapRichSelection(tag,styleText,className,dataAttrs){
   const ed=document.getElementById('msgContent'),sel=editorSelection();if(!ed||!sel||!sel.rangeCount)return;
-  const range=sel.getRangeAt(0),el=document.createElement(tag);if(styleText)el.setAttribute('style',styleText);
+  const range=sel.getRangeAt(0),el=document.createElement(tag);
+  if(styleText)el.setAttribute('style',styleText);
+  if(className)el.className=className;
+  if(dataAttrs)Object.keys(dataAttrs).forEach(k=>el.dataset[k]=dataAttrs[k]);
   try{el.appendChild(range.extractContents());range.insertNode(el);const nr=document.createRange();nr.selectNodeContents(el);sel.removeAllRanges();sel.addRange(nr);}catch(_){return;}
   ed.focus();
 }
@@ -3017,6 +3270,12 @@ wrapFmt=function(mark){
   const [tag,style]=spec[mark]||spec['**'];wrapRichSelection(tag,style);
 };
 wrapColor=function(){wrapRichSelection('span','color:'+state.colors.partial);};
+function wrapTextHeading(level){
+  if(state.composerType!=='text') return;
+  const lv=Number(level)===1?1:2;
+  const cls=lv===1?'text-heading text-heading-1':'text-heading text-heading-2';
+  wrapRichSelection('span','',cls,{heading:String(lv)});
+}
 
 function setBubbleTail(on){state.layout.tailOn=!!on;renderPreview();}
 function setBubbleTailSize(v){state.layout.tailSize=Math.max(6,Math.min(18,parseInt(v)||10));const e=document.getElementById('bubbleTailSizeV');if(e)e.textContent=state.layout.tailSize+'px';renderPreview();}
@@ -3653,7 +3912,7 @@ else setTimeout(__idleLoadRenderer,1200);
 
       showSaving('이미지 만드는 중...');
       const width=Math.ceil(node.offsetWidth),height=Math.ceil(node.offsetHeight);
-      const base={pixelRatio:getExportScale(),width,height,cacheBust:false,preferredFontFormat:'woff2'};
+      const base={pixelRatio:safeCaptureScale(width,height,getExportScale()),width,height,cacheBust:false,preferredFontFormat:'woff2'};
       if(!state.transparentBg) base.backgroundColor=state.colors.bg;
 
       let fontCss='';
@@ -3765,25 +4024,30 @@ else setTimeout(__idleLoadRenderer,1200);
     }
     flush();node.parentNode.replaceChild(frag,node);
   }
+  const cjkQuickRe=/[\u3040-\u30FF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F]/u;
+  const kanaQuickRe=/[\u3040-\u30FF\u31F0-\u31FF\uFF66-\uFF9F々〆ヵヶゝゞヽヾー「」『』【】]/u;
+  const hanQuickRe=/[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/u;
   function applyCJKRuns(root){
-    if(!root)return;
+    if(!root||root.dataset.cjkProcessed==='1')return;
     unwrapOldCJK(root);
+    /* Most excerpts are Korean-only. One fast text test avoids repeatedly walking and
+       spreading every character of a very long document when no Chinese/Japanese run exists. */
+    if(!cjkQuickRe.test(root.textContent||'')){root.dataset.cjkProcessed='1';return;}
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{
       acceptNode(node){
-        const p=node.parentElement;
-        if(!p||!node.nodeValue||!node.nodeValue.trim())return NodeFilter.FILTER_REJECT;
+        const p=node.parentElement, value=node.nodeValue||'';
+        if(!p||!value.trim())return NodeFilter.FILTER_REJECT;
         if(p.closest('.ctrl,.cjk-auto,script,style,textarea,select,option'))return NodeFilter.FILTER_REJECT;
-        return [...node.nodeValue].some(isCJK)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+        return cjkQuickRe.test(value)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
       }
     });
     const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
     nodes.forEach(node=>{
       const context=node.parentElement.closest('.glyph-scale,.n-name,.m-name,.divider-pill,.credit,.t-inner')||node.parentElement;
       const contextText=(context&&context.textContent)||node.nodeValue||'';
-      const contextHasJapanese=[...contextText].some(ch=>isKana(ch)||isJapaneseMark(ch));
-      const contextHasHan=[...contextText].some(isHan);
-      wrapTextNode(node,contextHasJapanese,contextHasHan);
+      wrapTextNode(node,kanaQuickRe.test(contextText),hanQuickRe.test(contextText));
     });
+    root.dataset.cjkProcessed='1';
   }
   function cjkFamilies(node){
     const list=[];
@@ -3864,6 +4128,8 @@ else setTimeout(__idleLoadRenderer,1200);
   renderPreview=function(){
     const result=previousRender.apply(this,arguments),chat=document.getElementById('chat');
     if(chat){
+      /* Core rendering replaces chat.innerHTML, so mark this DOM generation as fresh once. */
+      chat.removeAttribute('data-cjk-processed');
       applyCJKRuns(chat);try{applyGlyphScale();applyCanvas()}catch(_){}
       const version=++cjkLoadVersion;
       ensureAllVisibleFonts(document.getElementById('canvas')).then(()=>{if(version!==cjkLoadVersion)return;try{applyGlyphScale();applyCanvas()}catch(_){}}).catch(()=>{});
@@ -3875,6 +4141,648 @@ else setTimeout(__idleLoadRenderer,1200);
     const chat=document.getElementById('chat');applyCJKRuns(chat);
     ensureAllVisibleFonts(document.getElementById('canvas')).then(()=>{applyGlyphScale();applyCanvas()}).catch(()=>{});
   }catch(_){}
+})();
+</script>
+
+
+<style id="fixed-ratio-crisp-zoom-hand-pan-v3">
+/* Fixed-ratio preview: keep the authored text width/wrapping intact. */
+#canvas{image-rendering:auto}
+#stageEl.preview-pan-ready{cursor:grab}
+#stageEl.preview-pan-ready.is-panning,
+#stageEl.preview-pan-ready.is-panning *{cursor:grabbing!important}
+#stageEl.preview-pan-ready.is-panning{user-select:none;-webkit-user-select:none}
+/* ‘내 프로필·이름 표시’: 메신저의 내 아바타는 오른쪽, 이름도 오른쪽 정렬 */
+.m-msg.mine.own-avatar-column{padding-left:0;padding-right:50px}
+.m-msg.mine.own-avatar-column .av{left:auto;right:0}
+.m-msg.mine.own-identity .m-name{text-align:right;margin-left:3px;margin-right:3px}
+</style>
+<script id="fixed-ratio-crisp-zoom-hand-pan-v3-script">
+/* ===== fixed-ratio long-text layout + crisp preview zoom + hand panning ===== */
+(function(){
+  let previewCaptureMode=false;
+
+  /* Keep the layout width selected by the user. The old adaptive-width routine
+     reflowed long text to several thousand pixels, which changed alignment and
+     could make centered/right-aligned blocks look clipped. A fixed-ratio canvas
+     now grows around the original chat layout instead. */
+  applyCanvas=function(){
+    const canvas=document.getElementById('canvas');
+    const chat=document.getElementById('chat');
+    const stage=document.getElementById('stageEl');
+    if(!canvas||!chat||!stage) return;
+
+    const bg=state.transparentBg?'transparent':state.colors.bg;
+    canvas.style.background=bg;
+    chat.style.background=bg;
+    stage.classList.toggle('transparent-bg',!!state.transparentBg);
+
+    const ratio=state.export&&state.export.ratio||'auto';
+    const hMargin=Math.max(0,Number(state.export&&state.export.hMargin)||0);
+    const vMargin=Math.max(0,Number(state.export&&state.export.vMargin)||0);
+    const baseChatW=Math.max(1,Number(state.layout&&state.layout.width)||chat.offsetWidth||440);
+
+    /* Remove every preview-only scale before measuring export geometry. */
+    canvas.style.transform='none';
+    canvas.style.transformOrigin='top left';
+    canvas.style.zoom='1';
+    canvas.style.margin='0';
+    canvas.style.boxSizing='border-box';
+    canvas.style.padding='0';
+    canvas.style.width='auto';
+    canvas.style.height='auto';
+    canvas.style.minWidth='0';
+    canvas.style.minHeight='0';
+    canvas.style.display='block';
+    canvas.style.alignItems='';
+    canvas.style.justifyContent='';
+
+    chat.style.width=Math.round(baseChatW)+'px';
+    chat.style.minWidth=Math.round(baseChatW)+'px';
+    chat.style.maxWidth=Math.round(baseChatW)+'px';
+    chat.style.flex='0 0 auto';
+
+    /* Force one clean layout pass at the authored width. */
+    const contentW=Math.ceil(Math.max(chat.offsetWidth,chat.scrollWidth));
+    const contentH=Math.ceil(Math.max(chat.offsetHeight,chat.scrollHeight));
+
+    if(ratio==='auto'){
+      canvas.style.display='block';
+      canvas.style.width=Math.ceil(contentW+2*hMargin)+'px';
+      canvas.style.height=Math.ceil(contentH+2*vMargin)+'px';
+      canvas.style.padding=vMargin+'px '+hMargin+'px';
+    }else{
+      const p=String(ratio).split(':').map(Number);
+      const rw=p[0]>0?p[0]:1;
+      const rh=p[1]>0?p[1]:1;
+      const unit=Math.ceil(Math.max(
+        (contentW+2*hMargin)/rw,
+        (contentH+2*vMargin)/rh
+      ));
+      const frameW=Math.max(rw,unit*rw);
+      const frameH=Math.max(rh,unit*rh);
+      canvas.style.display='flex';
+      canvas.style.alignItems='center';
+      canvas.style.justifyContent='center';
+      canvas.style.width=Math.ceil(frameW)+'px';
+      canvas.style.height=Math.ceil(frameH)+'px';
+      canvas.style.padding='0';
+    }
+
+    fitPreview();
+  };
+
+  /* CSS zoom triggers a real browser repaint instead of enlarging one cached
+     transform layer. Text, borders and vector UI therefore remain much sharper
+     while the actual export canvas and save scale stay unchanged. */
+  fitPreview=function(){
+    const stage=document.getElementById('stageEl');
+    const wrap=document.getElementById('canvasFit');
+    const canvas=document.getElementById('canvas');
+    if(!stage||!wrap||!canvas) return;
+
+    canvas.style.transform='none';
+    canvas.style.transformOrigin='top left';
+    canvas.style.zoom='1';
+    canvas.style.margin='0';
+    stage.style.justifyContent='flex-start';
+    wrap.style.marginLeft='auto';
+    wrap.style.marginRight='auto';
+
+    const cw=Math.ceil(canvas.offsetWidth);
+    const ch=Math.ceil(canvas.offsetHeight);
+    if(!cw||!ch){
+      wrap.style.width='';wrap.style.height='';
+      if(typeof updatePreviewZoomLabel==='function') updatePreviewZoomLabel();
+      return;
+    }
+
+    if(previewCaptureMode){
+      wrap.style.width=cw+'px';
+      wrap.style.height=ch+'px';
+      if(typeof syncPreviewScrollbar==='function') syncPreviewScrollbar();
+      return;
+    }
+
+    const availW=Math.max(40,stage.clientWidth-8);
+    const desktop=window.matchMedia&&window.matchMedia('(min-width:861px)').matches;
+    const ratioLocked=state.export&&state.export.ratio!=='auto';
+    const availH=(desktop&&ratioLocked)?Math.max(40,stage.clientHeight-8):Infinity;
+    const fitScale=Math.min(1,availW/cw,availH/ch);
+    const zoom=(typeof normalizedPreviewZoom==='function')?normalizedPreviewZoom(state.previewZoom):1;
+    const scale=Math.max(0.002,Math.min(8,fitScale*zoom));
+
+    /* Chromium/Whale render CSS zoom sharply. Transform remains only as a
+       standards fallback for browsers that do not support it. */
+    const canZoom=window.CSS&&CSS.supports&&CSS.supports('zoom','1');
+    if(canZoom){
+      canvas.style.zoom=String(scale);
+      canvas.style.transform='none';
+    }else{
+      canvas.style.zoom='1';
+      canvas.style.transform=Math.abs(scale-1)>0.0001?'scale('+scale+')':'none';
+    }
+    wrap.style.width=Math.max(1,Math.round(cw*scale))+'px';
+    wrap.style.height=Math.max(1,Math.round(ch*scale))+'px';
+    if(typeof updatePreviewZoomLabel==='function') updatePreviewZoomLabel();
+    if(typeof syncPreviewScrollbar==='function') syncPreviewScrollbar();
+    requestAnimationFrame(updatePanAvailability);
+  };
+
+  function updatePanAvailability(){
+    const stage=document.getElementById('stageEl');
+    const fit=document.getElementById('canvasFit');
+    if(!stage||!fit) return;
+    const canPan=fit.offsetWidth>stage.clientWidth+2||fit.offsetHeight>stage.clientHeight+2;
+    stage.classList.toggle('preview-pan-ready',canPan);
+    if(!canPan) stage.classList.remove('is-panning');
+  }
+
+  function initHandPan(){
+    const stage=document.getElementById('stageEl');
+    const fit=document.getElementById('canvasFit');
+    const chat=document.getElementById('chat');
+    if(!stage||stage.dataset.handPanReady==='1') return;
+    stage.dataset.handPanReady='1';
+
+    let drag=null;
+    let suppressClick=false;
+    const hasOverflow=()=>stage.scrollWidth>stage.clientWidth+2||stage.scrollHeight>stage.clientHeight+2;
+
+    stage.addEventListener('pointerdown',e=>{
+      if(e.button!==0||!hasOverflow()) return;
+      if(e.target.closest('button,a,input,textarea,select,.ctrl')) return;
+      drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:stage.scrollLeft,top:stage.scrollTop,moved:false};
+    });
+    stage.addEventListener('pointermove',e=>{
+      if(!drag||drag.id!==e.pointerId) return;
+      const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+      if(!drag.moved&&Math.hypot(dx,dy)<4) return;
+      if(!drag.moved){
+        drag.moved=true;
+        stage.classList.add('is-panning');
+        try{stage.setPointerCapture(e.pointerId)}catch(_){}
+        const sel=window.getSelection&&window.getSelection();
+        if(sel&&sel.removeAllRanges) sel.removeAllRanges();
+      }
+      e.preventDefault();
+      stage.scrollLeft=drag.left-dx;
+      stage.scrollTop=drag.top-dy;
+    },{passive:false});
+    const end=e=>{
+      if(!drag||drag.id!==e.pointerId) return;
+      if(drag.moved) suppressClick=true;
+      try{stage.releasePointerCapture(e.pointerId)}catch(_){}
+      drag=null;
+      stage.classList.remove('is-panning');
+    };
+    stage.addEventListener('pointerup',end);
+    stage.addEventListener('pointercancel',end);
+    stage.addEventListener('lostpointercapture',()=>{drag=null;stage.classList.remove('is-panning')});
+    stage.addEventListener('click',e=>{
+      if(!suppressClick) return;
+      suppressClick=false;
+      e.preventDefault();e.stopPropagation();
+    },true);
+
+    if('ResizeObserver' in window){
+      const ro=new ResizeObserver(()=>requestAnimationFrame(updatePanAvailability));
+      ro.observe(stage);if(fit)ro.observe(fit);if(chat)ro.observe(chat);
+    }
+    if(chat){
+      const mo=new MutationObserver(()=>requestAnimationFrame(updatePanAvailability));
+      mo.observe(chat,{childList:true,subtree:true,attributes:true,characterData:true});
+    }
+    window.addEventListener('resize',updatePanAvailability,{passive:true});
+    stage.addEventListener('scroll',updatePanAvailability,{passive:true});
+    updatePanAvailability();
+  }
+
+  /* Existing save routines call render/applyCanvas internally. Capture mode makes
+     those calls keep the canvas at 100% while preserving the chosen save scale. */
+  const previousSaveImage=window.saveImage||saveImage;
+  saveImage=async function(){
+    previewCaptureMode=true;
+    const canvas=document.getElementById('canvas');
+    if(canvas){canvas.style.zoom='1';canvas.style.transform='none';}
+    try{return await previousSaveImage.apply(this,arguments);}
+    finally{previewCaptureMode=false;try{fitPreview()}catch(_){}}
+  };
+
+  const previousExportHTML=window.exportHTML||exportHTML;
+  exportHTML=function(){
+    previewCaptureMode=true;
+    const canvas=document.getElementById('canvas');
+    if(canvas){canvas.style.zoom='1';canvas.style.transform='none';}
+    try{return previousExportHTML.apply(this,arguments);}
+    finally{previewCaptureMode=false;try{fitPreview()}catch(_){}}
+  };
+
+  initHandPan();
+  try{applyCanvas();requestAnimationFrame(updatePanAvailability)}catch(_){}
+})();
+</script>
+
+
+<script id="canvas-only-ctrl-wheel-zoom">
+/* Ctrl/⌘ + wheel zooms only the preview canvas and blocks native browser zoom. */
+(function(){
+  let accumulated=0;
+  let lastStepAt=0;
+  let resetTimer=0;
+
+  function applyWheelZoom(e){
+    if(!(e.ctrlKey||e.metaKey)) return;
+    if(typeof changePreviewZoom!=='function') return;
+    e.preventDefault();
+
+    accumulated+=Number(e.deltaY)||0;
+    clearTimeout(resetTimer);
+    resetTimer=setTimeout(()=>{accumulated=0;},140);
+
+    const now=performance.now();
+    if(Math.abs(accumulated)<6||now-lastStepAt<45) return;
+    const direction=accumulated<0?1:-1;
+    accumulated=0;
+    lastStepAt=now;
+
+    const stage=document.getElementById('stageEl');
+    if(!stage){changePreviewZoom(direction);return;}
+
+    const rect=stage.getBoundingClientRect();
+    const inside=e.clientX>=rect.left&&e.clientX<=rect.right&&e.clientY>=rect.top&&e.clientY<=rect.bottom;
+    const anchorVX=inside?e.clientX-rect.left:stage.clientWidth/2;
+    const anchorVY=inside?e.clientY-rect.top:stage.clientHeight/2;
+    const oldW=Math.max(1,stage.scrollWidth);
+    const oldH=Math.max(1,stage.scrollHeight);
+    const anchorCX=stage.scrollLeft+anchorVX;
+    const anchorCY=stage.scrollTop+anchorVY;
+
+    changePreviewZoom(direction);
+    requestAnimationFrame(()=>{
+      const ratioX=Math.max(1,stage.scrollWidth)/oldW;
+      const ratioY=Math.max(1,stage.scrollHeight)/oldH;
+      stage.scrollLeft=anchorCX*ratioX-anchorVX;
+      stage.scrollTop=anchorCY*ratioY-anchorVY;
+    });
+  }
+
+  document.addEventListener('wheel',applyWheelZoom,{passive:false,capture:true});
+})();
+</script>
+
+
+<style id="profile-aware-center-and-format-toggle-fix">
+/* 가운데 정렬: 실제 프로필 전체가 아니라 프로필 중심(원의 절반 지점)을
+   말풍선 블록의 왼쪽 기준으로 삼는다. JS가 전체 여백을 넘지 않는 범위에서
+   정확한 이동량을 --profile-aware-center-shift 로 넣는다. */
+.n-msg.bubble-align-center:not(.no-av) > .av,
+.n-msg.bubble-align-center:not(.no-av) > .av-continuation-spacer,
+.n-msg.bubble-align-center:not(.no-av) > .n-body{
+  transform:translateX(var(--profile-aware-center-shift,0px));
+}
+</style>
+<script id="profile-aware-center-and-format-toggle-fix-script">
+/* ===== profile-aware bubble centering + non-nesting rich-format toggles ===== */
+(function(){
+  'use strict';
+
+  /* ---------- profile-aware center alignment ---------- */
+  function applyProfileAwareBubbleCentering(){
+    const chat=document.getElementById('chat');
+    if(!chat) return;
+    chat.querySelectorAll('.n-msg.bubble-align-center').forEach(row=>{
+      row.style.setProperty('--profile-aware-center-shift','0px');
+      if(row.classList.contains('no-av')) return;
+      const avatar=row.querySelector(':scope > .av, :scope > .av-continuation-spacer');
+      const body=row.querySelector(':scope > .n-body');
+      if(!avatar||!body) return;
+
+      /* The effective block starts at the avatar's center, not its left edge.
+         Compared with centering the whole avatar+body group, that means moving
+         the real group left by one quarter of the avatar diameter. */
+      const avatarWidth=Math.max(0,avatar.offsetWidth||40);
+      const wantedShift=-(avatarWidth/4);
+
+      /* offsetLeft ignores transforms, so it gives the currently centered layout.
+         Clamp the shift so the avatar's actual left edge never crosses the row's
+         inner left boundary (which already includes the user's bubble padding and
+         the chat's overall margin). */
+      const rowStyle=getComputedStyle(row);
+      const innerLeft=parseFloat(rowStyle.paddingLeft)||0;
+      const freeLeft=Math.max(0,(avatar.offsetLeft||0)-innerLeft);
+      const safeShift=Math.max(wantedShift,-freeLeft);
+      row.style.setProperty('--profile-aware-center-shift',safeShift.toFixed(2)+'px');
+    });
+  }
+  window.applyProfileAwareBubbleCentering=applyProfileAwareBubbleCentering;
+
+  /* applyGlyphScale runs after every preview render and again after web fonts load,
+     so extending it keeps the center correction accurate after every reflow. */
+  if(typeof window.applyGlyphScale==='function'){
+    const previousApplyGlyphScale=window.applyGlyphScale;
+    window.applyGlyphScale=function(){
+      const result=previousApplyGlyphScale.apply(this,arguments);
+      applyProfileAwareBubbleCentering();
+      return result;
+    };
+  }
+  window.addEventListener('resize',applyProfileAwareBubbleCentering,{passive:true});
+
+  /* ---------- rich editor format helpers ---------- */
+  const FORMAT_QUERY=[
+    'strong','b','em','i','s','strike','del','u','mark','font[color]',
+    'span[data-heading]','span.text-heading-1','span.text-heading-2','span[style*="color"]'
+  ].join(',');
+
+  function editorRoot(fallback){
+    if(fallback) return fallback;
+    return document.getElementById('msgContent');
+  }
+  function selectionInside(root){
+    const sel=window.getSelection();
+    if(!root||!sel||!sel.rangeCount) return null;
+    const range=sel.getRangeAt(0);
+    const start=range.startContainer, end=range.endContainer;
+    if(!root.contains(start)||!root.contains(end)) return null;
+    return {sel,range};
+  }
+  function ensureEditorSelection(root){
+    let found=selectionInside(root);
+    if(found) return found;
+    root.focus();
+    const sel=window.getSelection(),range=document.createRange();
+    range.selectNodeContents(root);range.collapse(false);
+    sel.removeAllRanges();sel.addRange(range);
+    return {sel,range:sel.getRangeAt(0)};
+  }
+  function asElement(node){
+    return node&&node.nodeType===1?node:node&&node.parentElement;
+  }
+  function rgbLikeToHex(value){
+    value=String(value||'').trim();
+    if(/^#[0-9a-f]{6}$/i.test(value)) return value.toUpperCase();
+    if(/^#[0-9a-f]{3}$/i.test(value)){
+      return ('#'+value.slice(1).split('').map(c=>c+c).join('')).toUpperCase();
+    }
+    const m=value.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if(!m) return '';
+    return '#'+[m[1],m[2],m[3]].map(n=>Math.max(0,Math.min(255,Number(n))).toString(16).padStart(2,'0')).join('').toUpperCase();
+  }
+  function elementColor(el){
+    if(!el) return '';
+    if(el.tagName==='FONT') return rgbLikeToHex(el.getAttribute('color'));
+    return rgbLikeToHex(el.style&&el.style.color||'');
+  }
+  function formatTypeOf(el){
+    if(!el||el.nodeType!==1) return '';
+    const tag=el.tagName;
+    if(tag==='STRONG'||tag==='B') return 'bold';
+    if(tag==='EM'||tag==='I') return 'italic';
+    if(tag==='S'||tag==='STRIKE'||tag==='DEL') return 'strike';
+    if(tag==='U') return 'underline';
+    if(tag==='MARK') return 'highlight';
+    if(el.dataset&&el.dataset.heading) return 'heading';
+    if(el.classList&&(el.classList.contains('text-heading-1')||el.classList.contains('text-heading-2'))) return 'heading';
+    if(tag==='FONT'&&el.getAttribute('color')) return 'color';
+    if(tag==='SPAN'&&el.style&&el.style.color) return 'color';
+    return '';
+  }
+  function matchesFormat(el,type){
+    const actual=formatTypeOf(el);
+    if(type==='heading') return actual==='heading';
+    return actual===type;
+  }
+  function closestFormat(node,root,type){
+    let el=asElement(node);
+    while(el&&el!==root){
+      if(matchesFormat(el,type)) return el;
+      el=el.parentElement;
+    }
+    return null;
+  }
+  function commonFormat(range,root,type){
+    const a=closestFormat(range.startContainer,root,type);
+    const b=closestFormat(range.endContainer,root,type);
+    if(a&&a===b) return a;
+    if(a&&b&&a.contains(b)) return a;
+    if(a&&b&&b.contains(a)) return b;
+    return null;
+  }
+  function nodeDepth(el){let n=0;while(el&&el.parentElement){n++;el=el.parentElement;}return n;}
+  function intersectingFormats(range,root,type){
+    return [...root.querySelectorAll(FORMAT_QUERY)]
+      .filter(el=>matchesFormat(el,type))
+      .filter(el=>{try{return range.intersectsNode(el);}catch(_){return false;}})
+      .sort((a,b)=>nodeDepth(b)-nodeDepth(a));
+  }
+  function unwrapElement(el){
+    if(!el||!el.parentNode) return;
+    const frag=document.createDocumentFragment();
+    while(el.firstChild) frag.appendChild(el.firstChild);
+    el.replaceWith(frag);
+  }
+  function markSelection(root){
+    const found=selectionInside(root);if(!found)return null;
+    const {sel,range}=found,collapsed=range.collapsed;
+    const make=kind=>{const m=document.createElement('span');m.dataset.formatSelectionMarker=kind;m.setAttribute('aria-hidden','true');return m;};
+    if(collapsed){
+      const caret=make('caret');range.insertNode(caret);
+      return {sel,collapsed,caret};
+    }
+    const start=make('start'),end=make('end');
+    const endRange=range.cloneRange();endRange.collapse(false);endRange.insertNode(end);
+    const startRange=range.cloneRange();startRange.collapse(true);startRange.insertNode(start);
+    return {sel,collapsed,start,end};
+  }
+  function restoreMarkedSelection(marked){
+    if(!marked) return;
+    const {sel,collapsed}=marked,range=document.createRange();
+    try{
+      if(collapsed){
+        range.setStartBefore(marked.caret);range.collapse(true);
+        marked.caret.remove();
+      }else{
+        range.setStartAfter(marked.start);range.setEndBefore(marked.end);
+        marked.start.remove();marked.end.remove();
+      }
+      sel.removeAllRanges();sel.addRange(range);
+    }catch(_){
+      [marked.caret,marked.start,marked.end].filter(Boolean).forEach(x=>x.remove());
+    }
+  }
+  function transformKeepingSelection(root,fn){
+    const marked=markSelection(root);
+    try{fn();}finally{restoreMarkedSelection(marked);}
+  }
+  function selectContents(el){
+    const sel=window.getSelection(),range=document.createRange();
+    range.selectNodeContents(el);sel.removeAllRanges();sel.addRange(range);
+  }
+  function ensureNonCollapsedRange(root){
+    const found=ensureEditorSelection(root),sel=found.sel;
+    if(!sel.isCollapsed) return sel.getRangeAt(0);
+    const range=sel.getRangeAt(0),node=document.createTextNode('텍스트');
+    range.insertNode(node);range.selectNodeContents(node);sel.removeAllRanges();sel.addRange(range);
+    return sel.getRangeAt(0);
+  }
+  function makeFormatElement(type,options){
+    let el;
+    if(type==='bold') el=document.createElement('strong');
+    else if(type==='italic') el=document.createElement('em');
+    else if(type==='strike') el=document.createElement('s');
+    else if(type==='underline') el=document.createElement('u');
+    else if(type==='highlight'){
+      el=document.createElement('mark');
+      el.style.background=options.color;el.style.color='inherit';el.style.padding='0 2px';el.style.borderRadius='0';
+    }else if(type==='color'){
+      el=document.createElement('span');el.style.color=options.color;
+    }else if(type==='heading'){
+      el=document.createElement('span');
+      const level=Number(options.level)===1?1:2;
+      el.dataset.heading=String(level);
+      el.className='text-heading text-heading-'+level;
+    }
+    return el;
+  }
+  function wrapCurrentSelection(root,type,options){
+    const range=ensureNonCollapsedRange(root),el=makeFormatElement(type,options||{});
+    if(!el) return null;
+    try{el.appendChild(range.extractContents());range.insertNode(el);selectContents(el);root.focus();return el;}catch(_){return null;}
+  }
+  function cleanupEmptyFormats(root){
+    if(!root) return;
+    const empty=[...root.querySelectorAll(FORMAT_QUERY)]
+      .filter(el=>!String(el.textContent||'').replace(/\u200B/g,'').length)
+      .sort((a,b)=>nodeDepth(b)-nodeDepth(a));
+    if(!empty.length) return;
+    transformKeepingSelection(root,()=>empty.forEach(unwrapElement));
+  }
+  function breakOutOfEmptyFormatBeforeTyping(root){
+    const found=selectionInside(root);if(!found||!found.range.collapsed)return false;
+    let el=asElement(found.range.startContainer),outer=null;
+    while(el&&el!==root){
+      if(formatTypeOf(el)&&!String(el.textContent||'').replace(/\u200B/g,'').length) outer=el;
+      el=el.parentElement;
+    }
+    if(!outer||!outer.parentNode)return false;
+    const marker=document.createElement('span');marker.dataset.plainTypingMarker='1';marker.setAttribute('aria-hidden','true');
+    outer.parentNode.insertBefore(marker,outer);outer.remove();
+    const range=document.createRange();range.setStartAfter(marker);range.collapse(true);
+    found.sel.removeAllRanges();found.sel.addRange(range);
+    requestAnimationFrame(()=>marker.remove());
+    return true;
+  }
+
+  function toggleSimpleFormat(root,type,options){
+    const found=ensureEditorSelection(root),range=found.sel.getRangeAt(0);
+    const active=commonFormat(range,root,type);
+    if(active){transformKeepingSelection(root,()=>unwrapElement(active));root.focus();return;}
+    const hits=range.collapsed?[]:intersectingFormats(range,root,type);
+    if(hits.length){transformKeepingSelection(root,()=>hits.forEach(unwrapElement));root.focus();return;}
+    wrapCurrentSelection(root,type,options||{});
+  }
+  function applyColorFormat(root,color){
+    color=rgbLikeToHex(color)||String(color||'').toUpperCase();
+    const found=ensureEditorSelection(root),range=found.sel.getRangeAt(0);
+    const active=commonFormat(range,root,'color');
+    if(active){
+      if(elementColor(active)===color){
+        transformKeepingSelection(root,()=>unwrapElement(active));
+      }else{
+        if(active.tagName==='FONT'){
+          const span=document.createElement('span');span.style.color=color;
+          while(active.firstChild)span.appendChild(active.firstChild);active.replaceWith(span);
+          selectContents(span);
+        }else active.style.color=color;
+      }
+      root.focus();return;
+    }
+    const hits=range.collapsed?[]:intersectingFormats(range,root,'color');
+    if(hits.length){
+      const allSame=hits.every(el=>elementColor(el)===color);
+      transformKeepingSelection(root,()=>hits.forEach(unwrapElement));
+      if(allSame){root.focus();return;}
+    }
+    wrapCurrentSelection(root,'color',{color});
+  }
+  function applyHeadingFormat(root,level){
+    if(root.id==='msgContent'&&state.composerType!=='text') return;
+    level=Number(level)===1?1:2;
+    const found=ensureEditorSelection(root),range=found.sel.getRangeAt(0);
+    const active=commonFormat(range,root,'heading');
+    if(active){
+      const current=Number(active.dataset.heading||(active.classList.contains('text-heading-1')?1:2));
+      if(current===level) transformKeepingSelection(root,()=>unwrapElement(active));
+      else{
+        active.dataset.heading=String(level);
+        active.classList.remove('text-heading-1','text-heading-2');
+        active.classList.add('text-heading','text-heading-'+level);
+      }
+      root.focus();return;
+    }
+    const hits=range.collapsed?[]:intersectingFormats(range,root,'heading');
+    if(hits.length){
+      const allSame=hits.every(el=>Number(el.dataset.heading||(el.classList.contains('text-heading-1')?1:2))===level);
+      transformKeepingSelection(root,()=>hits.forEach(unwrapElement));
+      if(allSame){root.focus();return;}
+    }
+    wrapCurrentSelection(root,'heading',{level});
+  }
+
+  function typeFromMark(mark){
+    return {'**':'bold','*':'italic','~~':'strike','++':'underline','==':'highlight'}[mark]||'bold';
+  }
+  window.wrapFmt=function(mark){
+    const root=editorRoot();if(!root)return;
+    const type=typeFromMark(mark);
+    toggleSimpleFormat(root,type,type==='highlight'?{color:state.colors.highlight}:{});
+    cleanupEmptyFormats(root);
+  };
+  window.wrapColor=function(){
+    const root=editorRoot();if(!root)return;
+    applyColorFormat(root,state.colors.partial);
+    cleanupEmptyFormats(root);
+  };
+  window.wrapTextHeading=function(level){
+    const root=editorRoot();if(!root)return;
+    applyHeadingFormat(root,level);
+    cleanupEmptyFormats(root);
+  };
+
+  /* Floating inline-edit toolbar uses the same toggle/replacement rules, so a
+     color change updates the existing color span instead of nesting another code. */
+  window.fmtSel=function(e,cmd){
+    e.preventDefault();
+    const root=document.querySelector('.editable.editing');
+    if(!root) return;
+    if(cmd==='color') applyColorFormat(root,state.colors.partial);
+    else if(cmd==='hilite') toggleSimpleFormat(root,'highlight',{color:state.colors.highlight});
+    else if(cmd==='clear'){
+      const found=selectionInside(root);
+      if(found&&!found.range.collapsed){
+        const hits=[...root.querySelectorAll(FORMAT_QUERY)].filter(el=>{try{return found.range.intersectsNode(el);}catch(_){return false;}}).sort((a,b)=>nodeDepth(b)-nodeDepth(a));
+        transformKeepingSelection(root,()=>hits.forEach(unwrapElement));
+      }
+    }else{
+      const map={bold:'bold',italic:'italic',strikeThrough:'strike',underline:'underline'};
+      toggleSimpleFormat(root,map[cmd]||cmd,{});
+    }
+    cleanupEmptyFormats(root);
+    setTimeout(()=>{if(typeof updateSelToolbar==='function')updateSelToolbar();},0);
+  };
+
+  function attachComposerCleanup(){
+    const ed=document.getElementById('msgContent');
+    if(!ed||ed.dataset.formatToggleFix==='1') return;
+    ed.dataset.formatToggleFix='1';
+    ed.addEventListener('beforeinput',e=>{
+      if(/^insert/i.test(e.inputType||'')) breakOutOfEmptyFormatBeforeTyping(ed);
+    });
+    ed.addEventListener('input',()=>cleanupEmptyFormats(ed));
+  }
+  attachComposerCleanup();
+  applyProfileAwareBubbleCentering();
 })();
 </script>
 
