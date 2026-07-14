@@ -1082,6 +1082,23 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 }
 </style>
 
+<style id="composer-heading-divider">
+/* 글 모드: 종류 | 글 정렬 | 글씨 크기 를 서식줄(형광펜 줄)처럼 가름선으로 구분 */
+/* 종류 ↔ 글 정렬 사이 가름선 — 서식줄과 같은 좌우 7px 여백 */
+.composer-top-grid #alignField{position:relative;margin:0 0 8px -2px!important;padding-left:8px;min-width:0}
+.composer-top-grid #alignField::before{content:"";position:absolute;left:0;bottom:2px;width:1px;height:27px;background:var(--line)}
+/* 글 정렬 ↔ 글씨 크기 사이 가름선 — gap 4px + 좌우 3px 마진 = 서식줄과 동일 */
+.text-format-row{gap:4px;align-items:flex-end;flex-wrap:nowrap;height:100%}
+.tfr-col{display:flex;flex-direction:column;justify-content:space-between;align-self:stretch;min-width:0;flex:0 0 auto}
+.tfr-div{height:27px;align-self:flex-end;margin:0 3px 2px;flex:0 0 auto}
+#textHeadingSeg{margin-left:0}
+/* 버튼 크기: 아랫줄 서식 버튼·색상칸(31×31)과 동일하게 고정 — 더 이상 줄어들지 않음 */
+#alignField .seg{height:31px!important;min-height:0!important;max-height:31px!important}
+#alignField #alignSeg button,#alignField #textHeadingSeg button{
+  flex:0 0 31px!important;width:31px!important;min-width:31px!important;max-width:31px!important;
+  height:31px!important;min-height:31px!important;max-height:31px!important;border-radius:7px}
+</style>
+
 <style id="preview-zoom-and-ratio-reflow-fix">
 /* 미리보기 확대/축소 — 실제 캔버스와 저장 배율은 건드리지 않음 */
 .preview-heading{flex-wrap:wrap}
@@ -1131,17 +1148,23 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <select id="senderSel"><option value="">— 멤버를 먼저 추가하세요 —</option></select>
 </div>
 <div class="field" id="alignField" style="display:none">
-<label class="lb">글 정렬</label>
 <div class="text-format-row">
+<div class="tfr-col">
+<label class="lb">글 정렬</label>
 <div class="seg" id="alignSeg">
 <button title="양쪽 정렬" onclick="setAlign('justify')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="1" y1="6" x2="15" y2="6"/><line x1="1" y1="10" x2="15" y2="10"/></svg></button>
 <button class="on" title="왼쪽 정렬" onclick="setAlign('left')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="1" y1="6" x2="10" y2="6"/><line x1="1" y1="10" x2="13" y2="10"/></svg></button>
 <button title="가운데 정렬" onclick="setAlign('center')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="4" y1="6" x2="12" y2="6"/><line x1="2.5" y1="10" x2="13.5" y2="10"/></svg></button>
 <button title="오른쪽 정렬" onclick="setAlign('right')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="6" y1="6" x2="15" y2="6"/><line x1="3" y1="10" x2="15" y2="10"/></svg></button>
 </div>
+</div>
+<span class="fmt-div tfr-div"></span>
+<div class="tfr-col">
+<label class="lb">글씨 크기</label>
 <div class="seg" id="textHeadingSeg" aria-label="부분 글자 크기">
 <button type="button" title="선택한 글자를 큰 제목으로" onclick="wrapTextHeading(1)">#</button>
 <button type="button" title="선택한 글자를 작은 제목으로" onclick="wrapTextHeading(2)">##</button>
+</div>
 </div>
 </div>
 </div></div>
