@@ -375,8 +375,9 @@ body{overflow-x:hidden;background:#F3F3F4}
 .preview-heading{display:flex;align-items:baseline;gap:9px;min-width:0}
 .preview-heading strong{font-size:15px;letter-spacing:-.02em}
 .preview-heading span{font-size:11px;color:var(--muted);white-space:nowrap}
-.preview-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
-.preview-actions .btn{padding:8px 11px;min-width:auto;background:rgba(255,255,255,.82)}
+.preview-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.preview-actions .btn{padding:10px 16px;min-width:auto;font-size:13.5px;white-space:nowrap;
+  flex:0 0 auto;line-height:1;background:rgba(255,255,255,.82)}
 .preview-surface.stage{height:auto;min-height:calc(100vh - 128px);max-height:none;
   overflow:visible;padding:30px 20px 90px;border-radius:18px;background:transparent;
   display:flex;align-items:flex-start;justify-content:center}
@@ -507,7 +508,7 @@ body{background:#F2F2F3}
 #panel-layout .width-control-block{padding:3px 0 12px}
 .acc-hd{padding:11px 14px}
 .acc-bd{padding-bottom:13px}
-.preview-toolbar{position:sticky;top:64px;z-index:10;margin-bottom:10px;padding:8px 10px;border:1px solid rgba(226,226,229,.9);
+.preview-toolbar{position:sticky;top:64px;z-index:10;margin-bottom:10px;padding:10px 12px;border:1px solid rgba(226,226,229,.9);
   border-radius:12px;background:rgba(248,248,249,.90);backdrop-filter:blur(12px)}
 .preview-surface.stage{min-height:calc(100vh - 132px);padding:26px 16px 90px}
 .stepper input{width:64px}
@@ -711,7 +712,7 @@ body{min-width:0}
 .tool-tabs #toolBtn-font span{font-size:12px;font-weight:800;line-height:1.15}
 
 #panel-style .theme-preset-bottom{
-  margin:14px 0 0!important;
+  margin:0 0 14px!important;
   padding:11px!important;
   background:#F2F2F4!important;
   border:1px solid #E7E7E9!important;
@@ -719,6 +720,7 @@ body{min-width:0}
 }
 #panel-style .theme-preset-bottom .preset-head{margin-bottom:9px}
 #panel-style .tool-panel-body>.flat-tool-section:first-child{border-top:0}
+#panel-style .theme-preset-bottom + .flat-tool-section{border-top:0}
 #panel-font .tool-panel-body>.flat-tool-section{border-top:0}
 #panel-font .flat-tool-title{padding-top:6px}
 
@@ -1116,12 +1118,60 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
   .preview-heading{width:100%}.preview-zoom-tools{flex-wrap:wrap}.preview-zoom-help{width:100%}
 }
 </style>
+
+<style id="single-line-preview-action-fix">
+/* 미리보기 상단 작업 버튼: 버튼 높이를 늘리지 않고 네 개 모두 한 줄로 유지 */
+.preview-actions{
+  flex-wrap:nowrap!important;
+  align-items:stretch;
+}
+.preview-actions .btn{
+  min-width:0!important;
+  padding-left:7px!important;
+  padding-right:7px!important;
+  gap:4px!important;
+  white-space:nowrap!important;
+  word-break:keep-all!important;
+  line-height:1.2!important;
+}
+@media(max-width:1160px){
+  .preview-actions{gap:5px!important}
+  .preview-actions .btn{
+    font-size:11.5px!important;
+    padding-left:5px!important;
+    padding-right:5px!important;
+  }
+}
+@media(max-width:520px){
+  .preview-actions{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    width:100%;
+    gap:4px!important;
+  }
+  .preview-actions .btn{
+    width:100%;
+    font-size:10.5px!important;
+    padding:7px 2px!important;
+    gap:3px!important;
+    letter-spacing:-.04em;
+  }
+}
+@media(max-width:360px){
+  .preview-actions .btn{
+    font-size:9.5px!important;
+    padding-left:1px!important;
+    padding-right:1px!important;
+    gap:2px!important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="top">
 <div class="brand">
 <svg class="ico" viewbox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M6 4h20a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H14l-6 5v-5H6a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4z" fill="currentColor"></path></svg>
-    채팅 발췌기
+    moko
   </div>
 <div class="modeswitch">
 <button class="on" id="modeNormal" onclick="setMode('normal')">일반</button>
@@ -1137,8 +1187,8 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <div class="field composer-type-field">
 <label class="lb">종류</label>
 <div class="seg" id="msgTypeSeg">
-<button class="on" onclick="setMsgType('chat')">💬 말풍</button>
 <button onclick="setMsgType('text')">📝 글</button>
+<button class="on" onclick="setMsgType('chat')">💬 말풍</button>
 <button onclick="setMsgType('divider')">➖ 가름</button>
 <button onclick="setMsgType('image')">🖼 사진</button>
 </div>
@@ -1209,6 +1259,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 </div>
 </div>
 </div>
+<label class="split-add-toggle" id="convertToChatToggle" style="display:none" title="수정 완료 시 이 글 블럭을 말풍선으로 바꿔요 (발신자는 첫 멤버로 지정)"><input id="convertToChatInput" onchange="onConvertToChatToggle(this)" type="checkbox"/><span>💬 말풍선으로 변경</span></label>
 <div class="composer-bottom-row">
 <button class="btn primary full" id="addBtn" onclick="addMessage()">💬 메시지 추가</button>
 <button type="button" id="cancelEditBtn" onclick="cancelComposerEdit()">취소</button>
@@ -1260,7 +1311,19 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 </div>
 <div class="preset-chips" id="presetChips"></div>
 <div class="preset-hint" id="presetHint"></div>
-</div></div></div></div></section><section class="tool-panel" id="panel-style"><div class="tool-panel-head"><div><strong>스타일</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accAppearance"><div class="flat-tool-title"><strong>색상 · 프로필</strong></div><div class="flat-tool-body"><div class="field">
+</div></div></div></div></section><section class="tool-panel" id="panel-style"><div class="tool-panel-head"><div><strong>스타일</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="preset-bar theme-preset-bottom" style="margin-top:0;margin-bottom:16px">
+<div class="preset-head">
+<span>🎨 테마 프리셋</span>
+<div class="preset-tools">
+<button class="mini" onclick="saveThemePrompt()" title="지금 색·여백·글꼴·너비를 테마로 저장">＋ 현재 테마</button>
+<button class="mini" onclick="exportThemes()" title="테마를 파일로 백업">↓</button>
+<label class="mini" title="테마 파일 불러오기">↑
+                  <input accept="application/json,.json" hidden="" onchange="importThemes(event)" type="file"/></label>
+</div>
+</div>
+<div class="preset-chips" id="themeChips"></div>
+<div class="preset-hint" id="themeHint"></div>
+</div><div class="flat-tool-section" id="accAppearance"><div class="flat-tool-title"><strong>색상 · 프로필</strong></div><div class="flat-tool-body"><div class="field">
 <label class="lb">아바타 모양</label>
 <div class="seg" id="shapeSeg">
 <button class="on" onclick="setShape('circle')">● 원형</button>
@@ -1278,19 +1341,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <label class="lb">말풍선 글자색</label>
 <div class="colorrow" data-color="nText"></div>
 </div>
-</div></div></div><div class="flat-tool-section" id="backgroundImageSection"><div class="flat-tool-title"><strong>배경 이미지</strong></div><div class="flat-tool-body"><div class="field"><label class="lb">이미지 불러오기</label><div class="bg-image-load-row"><label class="btn sm bg-upload-btn">↑ 파일<input accept="image/*" hidden="" id="bgImgFile" onchange="onBackgroundImageFile(event)" type="file"/></label><input id="bgImgUrl" placeholder="이미지 URL" type="text"/><button class="btn sm" onclick="loadBackgroundImageUrl()" type="button">불러오기</button><button class="btn sm danger-ghost" onclick="clearBackgroundImage()" type="button">지우기</button></div><div class="bg-image-preview" id="bgImgPreviewWrap" style="display:none"><img alt="배경 이미지 미리보기" id="bgImgPreview"/><span>배경 이미지 적용 중</span></div></div><div class="colorgrid bg-image-controls"><div class="field"><label class="lb">이미지 크기</label><div class="rangewrap"><input id="bgImgSize" max="240" min="40" oninput="setBackgroundImageValue('size',this.value)" step="1" type="range" value="100"/><span class="val" id="bgImgSizeV">100%</span></div></div><div class="field"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bgImgX" max="100" min="0" oninput="setBackgroundImageValue('x',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgXV">50%</span></div></div><div class="field"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bgImgY" max="100" min="0" oninput="setBackgroundImageValue('y',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgYV">50%</span></div></div><div class="field"><label class="lb">블러 농도</label><div class="rangewrap"><input id="bgImgBlur" max="30" min="0" oninput="setBackgroundImageValue('blur',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgBlurV">0px</span></div></div><div class="field bg-overlay-field" style="grid-column:1/-1;margin-bottom:0"><label class="lb">오버레이</label><div class="overlay-row"><div class="colorrow overlay-colorrow" data-color="bgOverlay"></div><div class="rangewrap overlay-opacity"><input id="bgOverlayOpacity" max="100" min="0" oninput="setBackgroundImageValue('overlayOpacity',this.value)" step="1" type="range" value="0"/><span class="val" id="bgOverlayOpacityV">0%</span></div></div></div></div></div></div><div class="preset-bar theme-preset-bottom" style="margin-top:0;margin-bottom:16px">
-<div class="preset-head">
-<span>🎨 테마 프리셋</span>
-<div class="preset-tools">
-<button class="mini" onclick="saveThemePrompt()" title="지금 색·여백·글꼴·너비를 테마로 저장">＋ 현재 테마</button>
-<button class="mini" onclick="exportThemes()" title="테마를 파일로 백업">↓</button>
-<label class="mini" title="테마 파일 불러오기">↑
-                  <input accept="application/json,.json" hidden="" onchange="importThemes(event)" type="file"/></label>
-</div>
-</div>
-<div class="preset-chips" id="themeChips"></div>
-<div class="preset-hint" id="themeHint"></div>
-</div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>글꼴</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
+</div></div></div><div class="flat-tool-section" id="backgroundImageSection"><div class="flat-tool-title"><strong>배경 이미지</strong></div><div class="flat-tool-body"><div class="field"><label class="lb">이미지 불러오기</label><div class="bg-image-load-row"><label class="btn sm bg-upload-btn">↑ 파일<input accept="image/*" hidden="" id="bgImgFile" onchange="onBackgroundImageFile(event)" type="file"/></label><input id="bgImgUrl" placeholder="이미지 URL" type="text"/><button class="btn sm" onclick="loadBackgroundImageUrl()" type="button">불러오기</button><button class="btn sm danger-ghost" onclick="clearBackgroundImage()" type="button">지우기</button></div><div class="bg-image-preview" id="bgImgPreviewWrap" style="display:none"><img alt="배경 이미지 미리보기" id="bgImgPreview"/><span>배경 이미지 적용 중</span></div></div><div class="colorgrid bg-image-controls"><div class="field"><label class="lb">이미지 크기</label><div class="rangewrap"><input id="bgImgSize" max="240" min="40" oninput="setBackgroundImageValue('size',this.value)" step="1" type="range" value="100"/><span class="val" id="bgImgSizeV">100%</span></div></div><div class="field"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bgImgX" max="100" min="0" oninput="setBackgroundImageValue('x',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgXV">50%</span></div></div><div class="field"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bgImgY" max="100" min="0" oninput="setBackgroundImageValue('y',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgYV">50%</span></div></div><div class="field"><label class="lb">블러 농도</label><div class="rangewrap"><input id="bgImgBlur" max="30" min="0" oninput="setBackgroundImageValue('blur',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgBlurV">0px</span></div></div><div class="field bg-overlay-field" style="grid-column:1/-1;margin-bottom:0"><label class="lb">오버레이</label><div class="overlay-row"><div class="colorrow overlay-colorrow" data-color="bgOverlay"></div><div class="rangewrap overlay-opacity"><input id="bgOverlayOpacity" max="100" min="0" oninput="setBackgroundImageValue('overlayOpacity',this.value)" step="1" type="range" value="0"/><span class="val" id="bgOverlayOpacityV">0%</span></div></div></div></div></div></div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>글꼴</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
 <div class="flat-tool-title"><strong>글꼴 · 텍스트</strong></div>
 <div class="flat-tool-body">
 <div class="field">
@@ -1311,6 +1362,8 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <div class="rangewrap"><input id="lyLh" max="2.2" min="1.1" oninput="setLayout('lh',this.value)" step="0.05" type="range" value="1.55"/><span class="val" id="lyLhV">1.55</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">문단 간격</label>
 <div class="rangewrap"><input id="lyPara" max="40" min="0" oninput="setLayout('para',this.value)" type="range" value="8"/><span class="val" id="lyParaV">8px</span></div></div>
+<div class="field" style="margin-bottom:14px"><label class="lb">블럭 간격</label>
+<div class="rangewrap"><input id="lyBlockGap" max="60" min="0" oninput="setLayout('blockGap',this.value)" type="range" value="16"/><span class="val" id="lyBlockGapV">16px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">장평</label>
 <div class="rangewrap"><input id="lyWidthScale" max="130" min="70" oninput="setLayout('widthScale',this.value)" step="1" type="range" value="100"/><span class="val" id="lyWidthScaleV">100%</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">자간</label>
@@ -1353,15 +1406,15 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <option value="16:9">16 : 9 가로</option>
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
-</div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="field" style="margin-bottom:0"><div class="toggle"><div class="t-lb">프로필 사진 표시<span>일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요</span></div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div><div class="field" style="margin:8px 0 0"><div class="toggle"><div class="t-lb">내 프로필·이름 표시<span>‘내 계정’으로 지정한 캐릭터의 프로필과 이름을 모든 모드에서 켜고 꺼요</span></div><label class="sw"><input id="showMyIdentity" onchange="state.showMyIdentity=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양 · 간격</strong></div><div class="flat-tool-body"><div class="colorgrid">
+</div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="field" style="margin-bottom:0"><div class="toggle"><div class="t-lb">프로필 사진 표시<span>일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요</span></div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div><div class="field" style="margin:8px 0 0"><div class="toggle"><div class="t-lb">내 프로필·이름 표시<span>‘내 계정’으로 지정한 캐릭터의 프로필과 이름을 모든 모드에서 켜고 꺼요</span></div><label class="sw"><input id="showMyIdentity" onchange="state.showMyIdentity=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div><div class="field" style="margin:8px 0 0"><div class="toggle"><div class="t-lb">말풍선 꼬리<span>SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요</span></div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div></div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양 · 간격</strong></div><div class="flat-tool-body"><div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">이름 크기</label><div class="rangewrap"><input id="lyNameSize" max="24" min="9" oninput="setLayout('nameSize',this.value)" type="range" value="12"/><span class="val" id="lyNameSizeV">12px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">메시지 간격</label><div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div></div>
-<div class="field" style="margin:0"><label class="lb">채팅 ↔ 글 간격</label><div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="16"/><span class="val" id="lyTextGapV">16px</span></div></div>
+<div class="field" style="margin:0"><label class="lb">채팅 ↔ 글 간격</label><div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="25"/><span class="val" id="lyTextGapV">25px</span></div></div>
 <div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div><div class="field bubble-align-field"><label class="lb">말풍선 정렬</label><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div><div class="field-help bubble-align-help">가운데 정렬은 프로필의 중심부터 말풍선 끝까지를 기준으로 맞추고, 프로필이 전체 여백 밖으로는 넘어가지 않아요. 메신저 모드는 발신자 기준 정렬을 유지해요.</div></div></div>
-</div><div class="bubble-tail-controls"><div class="field" style="margin-bottom:0"><div class="toggle"><div class="t-lb">말풍선 꼬리<span>SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요</span></div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div></div></div></div></div><div class="messenger-settings" id="messengerSettings"><div class="messenger-settings-head"><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></div><div class="messenger-settings-body"><div class="field">
+</div></div></div><div class="messenger-settings" id="messengerSettings"><div class="messenger-settings-head"><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></div><div class="messenger-settings-body"><div class="field">
 <label class="lb">내 계정 (오른쪽 정렬)</label>
 <select id="meSelect" onchange="state.meId=this.value; renderPreview()"></select>
 </div><div class="colorgrid"><div class="field"><label class="lb">내 말풍선</label><div class="colorrow" data-color="myBubble"></div></div><div class="field"><label class="lb">내 글자색</label><div class="colorrow" data-color="myText"></div></div><div class="field"><label class="lb">상대 말풍선</label><div class="colorrow" data-color="otBubble"></div></div><div class="field"><label class="lb">상대 글자색</label><div class="colorrow" data-color="otText"></div></div></div></div></div></div></section><section class="tool-panel" id="panel-export"><div class="tool-panel-head"><div><strong>저장 · 투명화 · 서명</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accCanvas">
@@ -1419,6 +1472,11 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <div class="rangewrap"><input id="creditGap" max="80" min="0" oninput="setCredit('gap',this.value)" type="range" value="16"/><span class="val" id="creditGapV">16px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">색상</label>
 <div class="colorrow" data-color="credit"></div></div>
+<div class="field" style="margin:0"><label class="lb">구분 기호</label>
+<div class="seg" id="creditSepSeg">
+<button class="on" onclick="setCredit('sep','dot')" type="button">·</button>
+<button onclick="setCredit('sep','bar')" type="button">|</button>
+</div></div>
 </div>
 </div>
 </div></div></section></div></div></section></aside><main class="preview-pane">
@@ -1510,7 +1568,7 @@ const state = {
   transparentBg:false,
   previewZoom:1,
   backgroundImage:{src:'',size:100,x:50,y:50,blur:0,overlayOpacity:0},
-  credit:{ on:false, maker:'', character:'', align:'right', size:12, gap:16 },
+  credit:{ on:false, maker:'', character:'', align:'right', size:12, gap:16, sep:'dot' },
   colors:{
     bg:'#EDEDEE',
     nBubble:'#FFFFFF', nText:'#424448',
@@ -1526,7 +1584,7 @@ const state = {
   layout:{
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
-    gap:12, textGap:16, continuationGap:8, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:8, nameSize:12, widthScale:100, letterSpacing:0,
+    gap:12, textGap:25, blockGap:16, continuationGap:8, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:8, nameSize:12, widthScale:100, letterSpacing:0,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
     textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
     dividerMargin:8,   // 가름선 위·아래 여백
@@ -1642,7 +1700,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeToolPanels();
 /* ================= composer type (chat / text) ================= */
 function setMsgType(t){
   state.composerType=t;
-  const order=['chat','text','divider','image'];
+  const order=['text','chat','divider','image'];
   [...msgTypeSeg.children].forEach((b,i)=>b.classList.toggle('on',order[i]===t));
   senderField.style.display=(t==='chat')?'':'none';
   const composer=document.querySelector('.composer-card');
@@ -1657,7 +1715,7 @@ function setMsgType(t){
   if(!composerEditId){
     addBtn.textContent=(t==='text')?'📝 글 추가':(t==='divider')?'➖ 가름선 추가':(t==='image')?'🖼 사진 추가':'💬 메시지 추가';
   }
-  msgContent.placeholder=(t==='text')?'채팅 사이에 끼워넣을 글 (내레이션·발췌 등)'
+  msgContent.placeholder=(t==='text')?'채팅 사이에 끼워넣을 글 (내레이션·발췌 등)\n✂ 문단별로 자동으로 블럭이 나눠져요'
     :(t==='divider')?'예: 2024년 3월 15일  ·  오후 9:41\n(비워두면 ───── 선으로 들어가요)'
     :'내용을 입력하세요';
 }
@@ -1676,6 +1734,12 @@ function setCredit(field,val){
     state.credit.align=val;
     const order=['left','center','right'];
     [...creditAlignSeg.children].forEach((b,i)=>b.classList.toggle('on',order[i]===val));
+  }
+  else if(field==='sep'){
+    state.credit.sep=(val==='bar')?'bar':'dot';
+    const seg=document.getElementById('creditSepSeg');
+    if(seg){ const order=['dot','bar'];
+      [...seg.children].forEach((b,i)=>b.classList.toggle('on',order[i]===state.credit.sep)); }
   }
   else state.credit[field]=val;
   renderPreview();
@@ -2267,17 +2331,18 @@ function importPresets(e){
 
 /* ================= theme presets (colors + layout) ================= */
 const THEME_KEY='chatEditorThemes_v1';
+const THEME_SEED_VER_KEY='chatEditorThemesSeedVer_v1';
 let themes=[];
 let themeStorageOK=true;
 
 function defaultLayout(){
-  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:16,continuationGap:8,bpy:9,bpx:13,
+  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:8,bpy:9,bpx:13,
     radius:14,fs:16,lh:1.55,para:8,nameSize:12,widthScale:100,letterSpacing:0,tailOn:true,tailSize:10,tailY:0,tailX:0,
     linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerWidth:100,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
 function defaultExport(){ return {ratio:'auto',hMargin:24,vMargin:24,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
-function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16}; }
+function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16,sep:'dot'}; }
 function seedThemes(){
   return [
     {id:uid(),name:'무채색',shape:'circle',parenOn:false,transparentBg:false,
@@ -2294,13 +2359,46 @@ function seedThemes(){
      layout:defaultLayout(),export:defaultExport(),credit:defaultCredit()}
   ];
 }
+/* ---- v2 기본 테마: 기본값에서 색·모서리만 덮어써서 간결하게 정의 ---- */
+function builtinTheme(name,over){
+  over=over||{};
+  const t={id:uid(),name,shape:over.shape||'circle',parenOn:false,transparentBg:false,
+    colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#FFFFFF',
+      otBubble:'#FFFFFF',otText:'#424448',highlight:'#E4E4E6',partial:'#D14343',paren:'#8A8F98',credit:'#8A8F98'},
+    layout:defaultLayout(),export:defaultExport(),credit:defaultCredit()};
+  if(over.colors) Object.assign(t.colors,over.colors);
+  if(over.layout) Object.assign(t.layout,over.layout);
+  return t;
+}
+function builtinThemesV2(){
+  return [
+    builtinTheme('아이메시지',{layout:{radius:18},colors:{
+      bg:'#FFFFFF',nBubble:'#E9E9EB',nText:'#1C1C1E',myBubble:'#0B84FE',myText:'#FFFFFF',
+      otBubble:'#E9E9EB',otText:'#1C1C1E',highlight:'#CFE5FF',partial:'#D14343',paren:'#8E8E93',credit:'#8E8E93'}})
+  ];
+}
 function loadThemesStore(){
   try{
     const raw=localStorage.getItem(THEME_KEY);
-    if(raw===null){ themes=seedThemes(); persistThemes(); }
+    if(raw===null){ themes=seedThemes().concat(builtinThemesV2()); persistThemes(); }
     else themes=JSON.parse(raw)||[];
     themeStorageOK=true;
-  }catch(e){ themes=seedThemes(); themeStorageOK=false; }
+  }catch(e){ themes=seedThemes().concat(builtinThemesV2()); themeStorageOK=false; }
+  /* 이미 테마를 저장해 둔 사용자 마이그레이션 (딱 한 번만 실행).
+     v2(테마 9종 추가 버전)를 거쳤다면 축소된 8종은 정리하고 아이메시지만 남긴다. */
+  try{
+    const ver=Number(localStorage.getItem(THEME_SEED_VER_KEY))||1;
+    if(ver<3){
+      if(ver===2){
+        const removed=new Set(['벚꽃','민트 소다','라벤더','미드나잇','세피아','숲','누아르','레트로 터미널']);
+        themes=themes.filter(t=>!(t&&removed.has(t.name)));
+      }
+      const names=new Set(themes.map(t=>t&&t.name));
+      builtinThemesV2().forEach(t=>{ if(!names.has(t.name)) themes.push(t); });
+      persistThemes();
+      localStorage.setItem(THEME_SEED_VER_KEY,'3');
+    }
+  }catch(e){}
 }
 function persistThemes(){
   try{ localStorage.setItem(THEME_KEY,JSON.stringify(themes)); themeStorageOK=true; }
@@ -2399,9 +2497,11 @@ function syncControlsFromState(){
   shapeSeg.children[1].classList.toggle('on',state.shape==='rounded');
   // width + simple px sliders
   const L=state.layout;
-  [['width','lyWidth'],['gap','lyGap'],['textGap','lyTextGap'],['bpy','lyBpy'],['bpx','lyBpx'],['radius','lyRadius'],['fs','lyFs'],['para','lyPara'],['nameSize','lyNameSize']]
-    .forEach(([k,id])=>{ const el=document.getElementById(id); if(el){el.value=L[k];
-      document.getElementById(id+'V').textContent=Math.round(L[k])+'px';} });
+  [['width','lyWidth'],['gap','lyGap'],['textGap','lyTextGap'],['blockGap','lyBlockGap'],['bpy','lyBpy'],['bpx','lyBpx'],['radius','lyRadius'],['fs','lyFs'],['para','lyPara'],['nameSize','lyNameSize']]
+    .forEach(([k,id])=>{ const el=document.getElementById(id); if(el){
+      const v=(L[k]!=null?L[k]:(k==='blockGap'?(L.textGap!=null?L.textGap:16):0));
+      el.value=v;
+      document.getElementById(id+'V').textContent=Math.round(v)+'px';} });
   lyLh.value=L.lh; lyLhV.textContent=(+L.lh).toFixed(2);
   if(document.getElementById('lyWidthScale')){ lyWidthScale.value=L.widthScale??100; lyWidthScaleV.textContent=Math.round(L.widthScale??100)+'%'; }
   if(document.getElementById('lyLetterSpacing')){ lyLetterSpacing.value=L.letterSpacing??0; lyLetterSpacingV.textContent=(Math.round((L.letterSpacing??0)*10)/10)+'px'; }
@@ -2440,6 +2540,9 @@ function syncControlsFromState(){
   creditGap.value=(state.credit.gap!=null?state.credit.gap:16); creditGapV.textContent=Math.round(creditGap.value)+'px';
   const cOrder=['left','center','right'];
   [...creditAlignSeg.children].forEach((b,i)=>b.classList.toggle('on',cOrder[i]===state.credit.align));
+  const sepSeg=document.getElementById('creditSepSeg');
+  if(sepSeg){ const sOrder=['dot','bar'];
+    [...sepSeg.children].forEach((b,i)=>b.classList.toggle('on',sOrder[i]===(state.credit.sep==='bar'?'bar':'dot'))); }
 }
 
 function wrapFmt(mark){
@@ -2809,6 +2912,7 @@ function renderPreview(){
       if(nextContinued) gap=continuationGap;
       else if(a==='divider'||b==='divider') gap=Number(state.layout.dividerMargin)||0;
       else if(a==='image'||b==='image') gap=(a==='image'?(m.imgMargin!=null?m.imgMargin:6):(next.imgMargin!=null?next.imgMargin:6));
+      else if(a==='text'&&b==='text') gap=(state.layout.blockGap!=null?Number(state.layout.blockGap):state.layout.textGap);
       else if(a==='text'||b==='text') gap=state.layout.textGap;
       else gap=state.layout.gap;
     }
@@ -2833,7 +2937,7 @@ function creditHTML(){
   if(!parts.length) return '';
   return `<div class="credit" style="text-align:${c.align};color:${state.colors.credit};
     font-size:${c.size}px;margin-top:${(c.gap!=null?c.gap:16)}px;
-    letter-spacing:.02em;opacity:.95">${parts.join('<span style="opacity:.5"> · </span>')}</div>`;
+    letter-spacing:.02em;opacity:.95">${parts.join('<span style="opacity:.5"> '+(c.sep==='bar'?'|':'\u00B7')+' </span>')}</div>`;
 }
 function dividerRow(m,gap){
   const L=state.layout;
@@ -4481,11 +4585,13 @@ else setTimeout(__idleLoadRenderer,1200);
 
 <style id="profile-aware-center-and-format-toggle-fix">
 /* 가운데 정렬: 실제 프로필 전체가 아니라 프로필 중심(원의 절반 지점)을
-   말풍선 블록의 왼쪽 기준으로 삼는다. JS가 전체 여백을 넘지 않는 범위에서
-   정확한 이동량을 --profile-aware-center-shift 로 넣는다. */
-.n-msg.bubble-align-center:not(.no-av) > .av,
-.n-msg.bubble-align-center:not(.no-av) > .av-continuation-spacer,
-.n-msg.bubble-align-center:not(.no-av) > .n-body{
+   말풍선 블록의 왼쪽 기준으로 삼는다. 또한 연속(continuation) 말풍선 묶음은
+   묶음 안에서 가장 긴 말풍선을 기준으로 왼쪽 기준선을 공유해서, 행마다
+   따로 가운데 정렬되며 케이크처럼 쌓이지 않는다. JS가 전체 여백을 넘지
+   않는 범위에서 정확한 이동량을 --profile-aware-center-shift 로 넣는다. */
+.n-msg.bubble-align-center > .av,
+.n-msg.bubble-align-center > .av-continuation-spacer,
+.n-msg.bubble-align-center > .n-body{
   transform:translateX(var(--profile-aware-center-shift,0px));
 }
 </style>
@@ -4494,32 +4600,62 @@ else setTimeout(__idleLoadRenderer,1200);
 (function(){
   'use strict';
 
-  /* ---------- profile-aware center alignment ---------- */
+  /* ---------- profile-aware center alignment (group-based) ---------- */
+  /* 같은 발신자의 연속 말풍선(continuation) 묶음을 하나의 그룹으로 보고,
+     그룹에서 가장 긴 말풍선을 기준으로 "프로필 중심 = 블록 왼쪽" 규칙으로
+     가운데 정렬한 뒤, 나머지 말풍선들은 그 왼쪽 기준선에 맞춰 붙인다. */
   function applyProfileAwareBubbleCentering(){
     const chat=document.getElementById('chat');
     if(!chat) return;
-    chat.querySelectorAll('.n-msg.bubble-align-center').forEach(row=>{
-      row.style.setProperty('--profile-aware-center-shift','0px');
-      if(row.classList.contains('no-av')) return;
-      const avatar=row.querySelector(':scope > .av, :scope > .av-continuation-spacer');
-      const body=row.querySelector(':scope > .n-body');
-      if(!avatar||!body) return;
+    const rows=Array.from(chat.querySelectorAll('.n-msg.bubble-align-center'));
+    rows.forEach(row=>row.style.setProperty('--profile-aware-center-shift','0px'));
+    if(!rows.length) return;
 
-      /* The effective block starts at the avatar's center, not its left edge.
-         Compared with centering the whole avatar+body group, that means moving
-         the real group left by one quarter of the avatar diameter. */
-      const avatarWidth=Math.max(0,avatar.offsetWidth||40);
-      const wantedShift=-(avatarWidth/4);
+    /* 연속 묶음 만들기: continuation이면서 바로 앞 형제가 같은 그룹의
+       마지막 행일 때만 이어 붙인다. 그 외에는 새 그룹 시작. */
+    const groups=[];
+    let current=null, prevRow=null;
+    rows.forEach(row=>{
+      const chained=current&&row.classList.contains('continuation')&&row.previousElementSibling===prevRow;
+      if(chained){ current.push(row); }
+      else { current=[row]; groups.push(current); }
+      prevRow=row;
+    });
 
-      /* offsetLeft ignores transforms, so it gives the currently centered layout.
-         Clamp the shift so the avatar's actual left edge never crosses the row's
-         inner left boundary (which already includes the user's bubble padding and
-         the chat's overall margin). */
-      const rowStyle=getComputedStyle(row);
+    groups.forEach(group=>{
+      /* offsetLeft/offsetWidth는 transform을 무시하므로, shift를 0으로
+         되돌린 지금의 순수 가운데 정렬 레이아웃을 그대로 읽을 수 있다. */
+      const infos=group.map(row=>{
+        const noAv=row.classList.contains('no-av');
+        const avatar=noAv?null:row.querySelector(':scope > .av, :scope > .av-continuation-spacer');
+        const body=row.querySelector(':scope > .n-body');
+        if(!body) return null;
+        const avatarWidth=avatar?Math.max(0,avatar.offsetWidth||40):0;
+        const leftEdge=avatar?(avatar.offsetLeft||0):(body.offsetLeft||0);
+        const rightEdge=(body.offsetLeft||0)+(body.offsetWidth||0);
+        /* 시각적 블록의 왼쪽 기준은 프로필의 중심(반 지점) */
+        const effLeft=leftEdge+avatarWidth/2;
+        return {row,leftEdge,rightEdge,effLeft,effWidth:rightEdge-effLeft};
+      }).filter(Boolean);
+      if(!infos.length) return;
+
+      /* 그룹에서 가장 긴 말풍선이 기준 */
+      const widest=infos.reduce((a,b)=>(b.effWidth>a.effWidth?b:a));
+      const rowStyle=getComputedStyle(widest.row);
       const innerLeft=parseFloat(rowStyle.paddingLeft)||0;
-      const freeLeft=Math.max(0,(avatar.offsetLeft||0)-innerLeft);
-      const safeShift=Math.max(wantedShift,-freeLeft);
-      row.style.setProperty('--profile-aware-center-shift',safeShift.toFixed(2)+'px');
+      const innerRight=(widest.row.clientWidth||0)-(parseFloat(rowStyle.paddingRight)||0);
+
+      /* 기준 말풍선을 "프로필 중심~말풍선 끝" 폭으로 가운데 정렬한 목표 기준선.
+         단, 프로필의 실제 왼쪽 끝이 안쪽 여백을 넘지는 않게 클램프. */
+      let targetEffLeft=innerLeft+Math.max(0,innerRight-innerLeft-widest.effWidth)/2;
+      targetEffLeft=Math.max(targetEffLeft, innerLeft+(widest.effLeft-widest.leftEdge));
+
+      infos.forEach(info=>{
+        let shift=targetEffLeft-info.effLeft;
+        shift=Math.min(shift,(innerRight-info.rightEdge));  /* 오른쪽 여백 보호 */
+        shift=Math.max(shift,(innerLeft-info.leftEdge));    /* 왼쪽 여백 보호(우선) */
+        info.row.style.setProperty('--profile-aware-center-shift',shift.toFixed(2)+'px');
+      });
     });
   }
   window.applyProfileAwareBubbleCentering=applyProfileAwareBubbleCentering;
@@ -4849,11 +4985,23 @@ else setTimeout(__idleLoadRenderer,1200);
   function removeCaptureOnlyArtifacts(root){
     root.querySelectorAll('[data-export-soft-break]').forEach(br=>br.remove());
     root.querySelectorAll('.ctrl,#selToolbar').forEach(el=>el.remove());
-    root.querySelectorAll('.editable.editing').forEach(el=>el.classList.remove('editing'));
+    /* 저장 사본에는 편집·선택·드래그 상태를 전혀 넘기지 않는다. */
+    root.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
+    root.querySelectorAll('.editable,.editing,.ctrl-open,.dragging').forEach(el=>{
+      el.classList.remove('editable','editing','ctrl-open','dragging');
+    });
+    root.classList.add('export-clean-preview');
   }
   function makeExactPreviewClone(source){
-    const width=Math.ceil(source.offsetWidth);
-    const height=Math.ceil(source.offsetHeight);
+    /* CSS zoom is preview-only. Read the authored border-box size from computed
+       CSS instead of the visually zoomed rectangle, then clone at exactly that size. */
+    const cs=getComputedStyle(source);
+    const inlineWidth=parseFloat(source.style.width);
+    const inlineHeight=parseFloat(source.style.height);
+    const cssWidth=parseFloat(cs.width);
+    const cssHeight=parseFloat(cs.height);
+    const width=Math.max(1,Math.ceil(Number.isFinite(inlineWidth)?inlineWidth:(Number.isFinite(cssWidth)?cssWidth:source.offsetWidth)));
+    const height=Math.max(1,Math.ceil(Number.isFinite(inlineHeight)?inlineHeight:(Number.isFinite(cssHeight)?cssHeight:source.offsetHeight)));
     const host=document.createElement('div');
     host.setAttribute('aria-hidden','true');
     Object.assign(host.style,{
@@ -4899,7 +5047,21 @@ else setTimeout(__idleLoadRenderer,1200);
       const source=document.getElementById('canvas');
       if(!source) throw new Error('preview canvas unavailable');
 
-      /* 렌더러를 기다리는 동안 원본 레이아웃이 달라지지 않도록 먼저 복제한다. */
+      /* 프리텐다드·본고딕·나눔명조·고운돋움과 자동 CJK 보완 글꼴까지,
+         현재 화면에 실제로 쓰인 글꼴/굵기를 먼저 확정한다. 글꼴 로딩 뒤에는
+         내용 DOM을 다시 만들지 않고 장평과 바깥 캔버스 크기만 재측정한다. */
+      showSaving('사용 중인 글꼴 확인 중...');
+      if(typeof __ensureCurrentFontLoaded==='function'){
+        try{await __ensureCurrentFontLoaded(source);}catch(_){}
+      }
+      try{if(document.fonts&&document.fonts.ready) await document.fonts.ready;}catch(_){}
+      await nextTwoFrames();
+      try{if(typeof applyGlyphScale==='function') applyGlyphScale();}catch(_){}
+      try{if(typeof applyCanvas==='function') applyCanvas();}catch(_){}
+      await nextTwoFrames();
+
+      /* 확정된 현재 미리보기 DOM을 즉시 복제한다. 저장 전용 <br>, 폭 보정,
+         여백 보정은 일절 삽입하지 않는다. */
       snapshot=makeExactPreviewClone(source);
       showSaving(savingMsg||'미리보기 그대로 저장 중...');
       await __loadHtmlToImage();
@@ -4922,17 +5084,28 @@ else setTimeout(__idleLoadRenderer,1200);
       let fontCss='';
       try{
         if(typeof __getTargetFontEmbedCSS==='function'){
-          fontCss=await __withTimeout(__getTargetFontEmbedCSS(snapshot.clone),9000,'');
+          fontCss=await __withTimeout(__getTargetFontEmbedCSS(snapshot.clone),12000,'');
+          /* SVG 안에서도 swap/fallback로 다른 글꼴이 먼저 찍히지 않도록 한다. */
+          fontCss=String(fontCss||'').replace(/font-display\s*:\s*[^;]+;/gi,'font-display:block;');
         }
       }catch(_){fontCss='';}
 
       let dataUrl;
       try{
-        const opts=fontCss?{...base,fontEmbedCSS:fontCss}:{...base,skipFonts:true};
+        /* 1차: 확인한 모든 사용 글꼴을 직접 포함. */
+        const opts=fontCss?{...base,fontEmbedCSS:fontCss}:{...base};
         dataUrl=await __withQuietConsole(()=>window.htmlToImage.toPng(snapshot.clone,opts));
       }catch(firstError){
-        console.warn('exact preview capture retry',firstError);
-        dataUrl=await __withQuietConsole(()=>window.htmlToImage.toPng(snapshot.clone,{...base,skipFonts:true}));
+        console.warn('exact preview capture font retry',firstError);
+        try{
+          /* 2차: 라이브러리 자체 글꼴 포함 경로. DOM과 줄바꿈은 그대로 둔다. */
+          dataUrl=await __withQuietConsole(()=>window.htmlToImage.toPng(snapshot.clone,{...base}));
+        }catch(secondError){
+          console.warn('exact preview capture loaded-font retry',secondError);
+          /* 마지막 재시도도 이미 브라우저에 로드된 동일 글꼴을 사용하며,
+             줄바꿈이나 캔버스 크기는 절대 수정하지 않는다. */
+          dataUrl=await __withQuietConsole(()=>window.htmlToImage.toPng(snapshot.clone,{...base,skipFonts:true}));
+        }
       }
       return dataUrl;
     }finally{
@@ -5961,6 +6134,472 @@ stage.addEventListener('touchend',e=>{
   }else{
     lastTap={t:now,x:t.clientX,y:t.clientY};
   }
+});
+})();
+</script>
+
+<style id="mobile-composer-overlap-fix">
+/* ===== 모바일 글 도구 겹침 방지 =====
+   바깥 회색 박스를 없애 독의 좌우 폭을 전부 사용하고,
+   종류 | 글 정렬 | 글씨 크기를 서로 침범하지 않는 그리드로 배치한다. */
+@media(max-width:700px){
+  .mobile-ui.m-tools-open #mDock .composer-top-grid{
+    display:grid!important;
+    grid-template-columns:max-content minmax(0,1fr)!important;
+    column-gap:8px!important;
+    row-gap:7px!important;
+    align-items:end!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    padding:0 0 1px!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.field{
+    min-width:0!important;
+    max-width:100%!important;
+    margin:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-type-field{grid-column:1}
+  .mobile-ui.m-tools-open #mDock #senderField,
+  .mobile-ui.m-tools-open #mDock #alignField{
+    grid-column:2;
+    width:100%!important;
+    min-width:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt{
+    grid-column:1 / -1;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+
+  /* 종류 버튼은 보통 화면에서는 기존 크기를 유지하고, 좁은 화면에서만 살짝 줄어든다. */
+  .mobile-ui.m-tools-open #mDock #msgTypeSeg button{
+    width:clamp(33px,9vw,37px)!important;
+    min-width:33px!important;
+    max-width:37px!important;
+  }
+
+  /* 종류와 글 정렬 사이의 가름선은 유지하되, 정렬 영역 안쪽 폭을 넘지 않게 한다. */
+  .mobile-ui.m-tools-open #mDock #alignField{
+    padding-left:8px!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignField::before{
+    left:0!important;
+    bottom:2px!important;
+  }
+
+  /* 글 정렬 | 글씨 크기: flex의 내용 넘침 대신 실제 남은 폭을 나눠 쓴다. */
+  .mobile-ui.m-tools-open #mDock .text-format-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 1px minmax(68px,.52fr)!important;
+    gap:4px!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:54px!important;
+    align-items:end!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock .tfr-col{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    flex:none!important;
+  }
+  .mobile-ui.m-tools-open #mDock .tfr-div{
+    display:block!important;
+    width:1px!important;
+    height:27px!important;
+    margin:0 0 2px!important;
+    align-self:end!important;
+    background:var(--line)!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignSeg{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:3px!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignSeg button{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    flex:none!important;
+  }
+  .mobile-ui.m-tools-open #mDock #textHeadingSeg{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(31px,1fr))!important;
+    gap:3px!important;
+    width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock #textHeadingSeg button{
+    width:100%!important;
+    min-width:31px!important;
+    max-width:none!important;
+    flex:none!important;
+  }
+
+  /* 도구 박스 자체에는 가로 스크롤이 생기지 않는다. */
+  .mobile-ui #mDock,
+  .mobile-ui #mDock .composer-card,
+  .mobile-ui #mDock .composer-card>.bd{
+    overflow-x:hidden!important;
+  }
+}
+
+/* 아주 좁은 화면에서는 칸을 억지로 찌그러뜨리지 않고 정렬·크기 묶음만 다음 줄로 보낸다. */
+@media(max-width:350px){
+  .mobile-ui.m-tools-open #mDock .composer-top-grid{
+    grid-template-columns:1fr!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-type-field,
+  .mobile-ui.m-tools-open #mDock #senderField,
+  .mobile-ui.m-tools-open #mDock #alignField{
+    grid-column:1!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignField{
+    padding-left:0!important;
+    padding-top:7px!important;
+    border-top:1px solid var(--line)!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignField::before{display:none!important}
+}
+</style>
+
+
+<style id="paragraph-split-feature">
+/* ===== 글 블럭: 자동 문단 나누기 · 말풍선 변환 ===== */
+.split-add-toggle{display:flex;align-items:center;gap:6px;margin:2px 2px 8px;
+  font-size:11.5px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none}
+.split-add-toggle input{accent-color:var(--accent);width:14px;height:14px;margin:0;cursor:pointer}
+.split-add-toggle:hover{color:var(--ink)}
+</style>
+<script id="paragraph-split-feature-script">
+/* ===== 글 타입: 문단마다 블럭 자동 나누기(기본 동작) · 수정 시 말풍선으로 변경 ===== */
+(function(){
+  'use strict';
+
+  /* 빈 줄이 있으면 빈 줄 기준(문단 안의 줄바꿈은 유지),
+     빈 줄이 하나도 없으면 줄바꿈 기준으로 나눈다. */
+  function splitIntoParagraphs(src){
+    const text=String(src||'').replace(/\r\n?/g,'\n');
+    const hasBlank=/\n[ \t]*\n/.test(text);
+    return (hasBlank?text.split(/\n[ \t]*\n+/):text.split(/\n+/))
+      .map(s=>s.trim()).filter(Boolean);
+  }
+  function say(msg){ try{toast(msg);}catch(_){ } }
+  function el(id){ return document.getElementById(id); }
+  function editingTextBlock(){
+    if(typeof composerEditId==='undefined'||!composerEditId) return false;
+    const m=state.messages.find(x=>x.id===composerEditId);
+    return !!(m&&m.type==='text');
+  }
+
+  /* '말풍선으로 변경' 체크박스: 글 블럭 수정 중에만 표시 */
+  function updateToggleVisibility(){
+    const conv=el('convertToChatToggle');
+    if(!conv) return;
+    const show=editingTextBlock()&&state.composerType==='text';
+    conv.style.display=show?'':'none';
+    if(!show){ const inp=el('convertToChatInput'); if(inp) inp.checked=false; }
+  }
+  const __setMsgType0=window.setMsgType;
+  window.setMsgType=function(){
+    const r=__setMsgType0.apply(this,arguments);
+    updateToggleVisibility();
+    return r;
+  };
+  const __begin0=window.beginComposerEdit;
+  window.beginComposerEdit=function(){
+    const r=__begin0.apply(this,arguments);
+    updateToggleVisibility();
+    return r;
+  };
+  const __end0=window.endComposerEdit;
+  window.endComposerEdit=function(){
+    const r=__end0.apply(this,arguments);
+    updateToggleVisibility();
+    return r;
+  };
+
+  /* 글 추가: 문단이 2개 이상이면 기본으로 블럭을 나눠 담는다 */
+  const __addMessage0=window.addMessage;
+  window.addMessage=function(){
+    try{
+      const editing=(typeof composerEditId!=='undefined')&&composerEditId;
+      if(!editing && state.composerType==='text'){
+        const content=msgContent.value;
+        if(content.trim()){
+          const parts=splitIntoParagraphs(content);
+          if(parts.length>1){
+            parts.forEach(p=>state.messages.push({id:uid(),type:'text',content:p,align:state.draftAlign}));
+            msgContent.value='';
+            renderPreview();
+            say('\u2702 '+parts.length+'개의 글 블럭으로 나눠 담았어');
+            return;
+          }
+        }
+      }
+    }catch(e){}
+    return __addMessage0.apply(this,arguments);
+  };
+
+  /* ---- 말풍선으로 변경 ---- */
+  window.onConvertToChatToggle=function(input){
+    if(input.checked && !(state.members&&state.members.length)){
+      alert('멤버를 추가해주세요.');
+      input.checked=false;
+    }
+  };
+  const __commit0=window.commitComposerEdit;
+  window.commitComposerEdit=function(){
+    try{
+      const inp=el('convertToChatInput');
+      if(inp&&inp.checked&&editingTextBlock()){
+        const m=state.messages.find(x=>x.id===composerEditId);
+        const content=msgContent.value;
+        if(!content.trim()){alert('내용을 입력해줘.');return;}
+        const first=state.members&&state.members[0];
+        if(!first){alert('멤버를 추가해주세요.');inp.checked=false;return;}
+        m.type='chat';
+        m.senderId=first.id;   /* 맨 처음 등록한 멤버로 지정 */
+        delete m.align;
+        m.content=content;
+        endComposerEdit();
+        renderPreview();
+        say('\ud83d\udcac 말풍선으로 바꿨어 — 발신자: '+(first.name||'첫 멤버'));
+        return;
+      }
+    }catch(e){}
+    return __commit0.apply(this,arguments);
+  };
+
+  /* ---- 시작 시 글 패널이 먼저 뜨도록 ---- */
+  try{ setMsgType('text'); }catch(e){}
+})();
+</script>
+<style id="mobile-save-pinch-export-clean-fixes">
+/* ===== iPhone Safari: mobile save sheet + canvas-only pinch + clean export ===== */
+.export-clean-preview,
+.export-clean-preview *{
+  outline:none!important;
+  outline-offset:0!important;
+}
+.export-clean-preview .ctrl{display:none!important}
+
+#mSaveChoice,
+#mSavedImageViewer{
+  position:fixed;inset:0;z-index:420;display:none;
+  align-items:flex-end;justify-content:center;
+  background:rgba(28,29,33,.34);backdrop-filter:blur(3px);
+  -webkit-backdrop-filter:blur(3px);
+  padding:14px 12px calc(14px + env(safe-area-inset-bottom));
+}
+#mSaveChoice.show,
+#mSavedImageViewer.show{display:flex}
+.m-save-sheet{
+  width:min(100%,520px);max-height:min(88dvh,760px);overflow:auto;
+  background:var(--panel,#fff);border:1px solid var(--line,#EAEAEC);
+  border-radius:20px;box-shadow:0 -10px 38px rgba(0,0,0,.22);
+  padding:16px;
+}
+.m-save-sheet-head{padding:1px 2px 13px;text-align:center}
+.m-save-sheet-head strong{display:block;font-size:16px;letter-spacing:-.02em}
+.m-save-sheet-head span{display:block;margin-top:4px;font-size:11px;line-height:1.5;color:var(--muted,#8d8d93)}
+.m-save-three-rows{display:grid;grid-template-columns:1fr;gap:9px}
+.m-save-three-rows button{
+  width:100%;min-height:52px;border-radius:13px;border:1px solid var(--line,#EAEAEC);
+  background:var(--panel-2,#F4F4F5);color:var(--ink,#424448);
+  font:700 14px/1.2 inherit;padding:13px 16px;touch-action:manipulation;
+}
+.m-save-three-rows button.primary{background:var(--accent,#424448);border-color:var(--accent,#424448);color:#fff}
+.m-save-three-rows button:disabled{opacity:.48}
+.m-saved-preview{
+  display:flex;align-items:center;justify-content:center;
+  max-height:46dvh;overflow:auto;margin:0 0 13px;padding:10px;
+  border:1px solid var(--line,#EAEAEC);border-radius:13px;
+  background-image:linear-gradient(45deg,#e5e5e7 25%,transparent 25%),linear-gradient(-45deg,#e5e5e7 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e5e7 75%),linear-gradient(-45deg,transparent 75%,#e5e5e7 75%);
+  background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;
+  -webkit-overflow-scrolling:touch;
+}
+.m-saved-preview img{display:block;max-width:100%;height:auto;box-shadow:0 5px 18px rgba(0,0,0,.14);-webkit-touch-callout:default}
+
+@media(max-width:700px){
+  html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+  .mobile-ui .app-shell,
+  .mobile-ui .preview-pane{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important}
+  .mobile-ui .preview-surface.stage{
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    overflow:auto!important;-webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain!important;touch-action:pan-x pan-y!important;
+    contain:layout paint;
+  }
+  .mobile-ui #canvasFit{max-width:none!important;flex:0 0 auto!important}
+  .mobile-ui #canvas{touch-action:pan-x pan-y!important}
+}
+</style>
+<script id="mobile-save-pinch-export-clean-script">
+(function(){
+'use strict';
+const mobileMQ=window.matchMedia('(max-width:700px)');
+const viewportMeta=document.querySelector('meta[name="viewport"]');
+const originalViewport=viewportMeta?viewportMeta.content:'';
+const directSaveImage=window.saveImage;
+const directCopyImage=window.copyImage;
+const desktopDownload=window.__downloadDataUrl||__downloadDataUrl;
+let savedDataUrl='',savedFilename='image.png',savedBlob=null;
+
+function mobileMode(){return mobileMQ.matches||document.body.classList.contains('mobile-ui');}
+function lockMobileViewport(){
+  const vp=document.querySelector('meta[name="viewport"]');
+  if(!vp) return;
+  if(mobileMode()) vp.content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover';
+  else if(originalViewport) vp.content=originalViewport;
+}
+lockMobileViewport();
+if(mobileMQ.addEventListener) mobileMQ.addEventListener('change',lockMobileViewport);
+else if(mobileMQ.addListener) mobileMQ.addListener(lockMobileViewport);
+
+function ensureSaveChoice(){
+  let root=document.getElementById('mSaveChoice');
+  if(root) return root;
+  root=document.createElement('div');root.id='mSaveChoice';
+  root.innerHTML='<div class="m-save-sheet" role="dialog" aria-modal="true" aria-label="저장 방법">'
+    +'<div class="m-save-sheet-head"><strong>저장 방법을 골라줘</strong><span>아이폰에서도 누르기 편하게 한 줄에 하나씩 표시해요.</span></div>'
+    +'<div class="m-save-three-rows">'
+    +'<button type="button" class="primary" data-action="save">↓ 이미지 저장</button>'
+    +'<button type="button" data-action="copy">⧉ 이미지 복사</button>'
+    +'<button type="button" data-action="close">닫기</button>'
+    +'</div></div>';
+  document.body.appendChild(root);
+  root.addEventListener('click',e=>{
+    if(e.target===root||e.target.closest('[data-action="close"]')){closeSaveChoice();return;}
+    const a=e.target.closest('[data-action]');if(!a)return;
+    if(a.dataset.action==='save'){
+      closeSaveChoice();
+      try{directSaveImage();}catch(err){console.error(err);}
+    }else if(a.dataset.action==='copy'){
+      closeSaveChoice();
+      try{directCopyImage();}catch(err){console.error(err);}
+    }
+  });
+  return root;
+}
+function openSaveChoice(){
+  if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+  try{if(typeof mCloseSheet==='function')mCloseSheet();}catch(_){}
+  ensureSaveChoice().classList.add('show');
+  document.body.style.overflow='hidden';
+}
+function closeSaveChoice(){
+  const root=document.getElementById('mSaveChoice');if(root)root.classList.remove('show');
+  const viewer=document.getElementById('mSavedImageViewer');
+  if(!viewer||!viewer.classList.contains('show')) document.body.style.overflow='';
+}
+
+function ensureViewer(){
+  let root=document.getElementById('mSavedImageViewer');
+  if(root) return root;
+  root=document.createElement('div');root.id='mSavedImageViewer';
+  root.innerHTML='<div class="m-save-sheet" role="dialog" aria-modal="true" aria-label="저장 이미지 보기">'
+    +'<div class="m-save-sheet-head"><strong>이미지가 완성됐어</strong><span>이미지를 길게 눌러 직접 저장해도 되고, 아래 버튼을 사용할 수도 있어요.</span></div>'
+    +'<div class="m-saved-preview"><img alt="저장할 이미지 미리보기"></div>'
+    +'<div class="m-save-three-rows">'
+    +'<button type="button" class="primary" data-action="share">↓ 사진 앱에 저장</button>'
+    +'<button type="button" data-action="copy">⧉ 이미지 복사</button>'
+    +'<button type="button" data-action="close">닫기</button>'
+    +'</div></div>';
+  document.body.appendChild(root);
+  root.addEventListener('click',async e=>{
+    if(e.target===root||e.target.closest('[data-action="close"]')){closeViewer();return;}
+    const a=e.target.closest('[data-action]');if(!a)return;
+    if(a.dataset.action==='share') await shareSavedImage();
+    if(a.dataset.action==='copy') await copySavedImage();
+  });
+  return root;
+}
+async function showViewer(dataUrl,filename){
+  savedDataUrl=dataUrl;savedFilename=filename||'image.png';savedBlob=null;
+  try{savedBlob=await fetch(dataUrl).then(r=>r.blob());}catch(_){}
+  const root=ensureViewer();
+  const img=root.querySelector('img');if(img)img.src=dataUrl;
+  root.classList.add('show');
+  document.body.style.overflow='hidden';
+}
+function closeViewer(){
+  const root=document.getElementById('mSavedImageViewer');if(root)root.classList.remove('show');
+  document.body.style.overflow='';
+}
+async function shareSavedImage(){
+  if(!savedBlob&&savedDataUrl){try{savedBlob=await fetch(savedDataUrl).then(r=>r.blob());}catch(_){}}
+  if(savedBlob&&navigator.share&&typeof File!=='undefined'){
+    try{
+      const file=new File([savedBlob],savedFilename,{type:'image/png'});
+      if(!navigator.canShare||navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:savedFilename});
+        return;
+      }
+    }catch(err){
+      if(err&&err.name==='AbortError') return;
+      console.warn('native image share failed',err);
+    }
+  }
+  desktopDownload(savedDataUrl,savedFilename);
+}
+async function copySavedImage(){
+  if(!savedBlob&&savedDataUrl){try{savedBlob=await fetch(savedDataUrl).then(r=>r.blob());}catch(_){}}
+  if(!savedBlob||!navigator.clipboard||typeof ClipboardItem==='undefined'){
+    alert('이 브라우저에서는 이미지 복사가 어려워. 위 이미지를 길게 눌러 저장해줘.');return;
+  }
+  try{
+    await navigator.clipboard.write([new ClipboardItem({'image/png':savedBlob})]);
+    if(typeof toast==='function')toast('이미지를 클립보드에 복사했어요');
+    else alert('이미지를 복사했어!');
+  }catch(err){
+    console.error('saved image copy failed',err);
+    alert('브라우저가 이미지 복사를 막았어. 위 이미지를 길게 눌러 저장해줘.');
+  }
+}
+
+window.__downloadDataUrl=function(dataUrl,filename){
+  if(mobileMode()){
+    showViewer(dataUrl,filename);
+    return;
+  }
+  return desktopDownload(dataUrl,filename);
+};
+window.saveImage=function(){
+  if(mobileMode()) return openSaveChoice();
+  return directSaveImage.apply(this,arguments);
+};
+window.openMobileSaveActions=openSaveChoice;
+
+const stage=document.getElementById('stageEl');
+let canvasPinching=false;
+function insideStage(target){return !!(stage&&(target===stage||(target&&target.closest&&target.closest('#stageEl'))));}
+document.addEventListener('touchstart',e=>{
+  if(e.touches&&e.touches.length>=2&&insideStage(e.target)){
+    canvasPinching=true;e.preventDefault();
+  }
+},{passive:false,capture:true});
+document.addEventListener('touchmove',e=>{
+  if(canvasPinching&&e.touches&&e.touches.length>=2)e.preventDefault();
+},{passive:false,capture:true});
+function endCanvasPinch(e){if(!e.touches||e.touches.length<2)canvasPinching=false;}
+document.addEventListener('touchend',endCanvasPinch,{passive:true,capture:true});
+document.addEventListener('touchcancel',endCanvasPinch,{passive:true,capture:true});
+['gesturestart','gesturechange','gestureend'].forEach(type=>{
+  document.addEventListener(type,e=>{
+    if(insideStage(e.target)){e.preventDefault();e.stopPropagation();}
+  },{passive:false,capture:true});
 });
 })();
 </script>
