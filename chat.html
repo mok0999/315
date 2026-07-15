@@ -1412,7 +1412,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <div class="field" style="margin:0"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">이름 크기</label><div class="rangewrap"><input id="lyNameSize" max="24" min="9" oninput="setLayout('nameSize',this.value)" type="range" value="12"/><span class="val" id="lyNameSizeV">12px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">메시지 간격</label><div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div></div>
-<div class="field" style="margin:0"><label class="lb">채팅 ↔ 글 간격</label><div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="16"/><span class="val" id="lyTextGapV">16px</span></div></div>
+<div class="field" style="margin:0"><label class="lb">채팅 ↔ 글 간격</label><div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="25"/><span class="val" id="lyTextGapV">25px</span></div></div>
 <div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div><div class="field bubble-align-field"><label class="lb">말풍선 정렬</label><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div><div class="field-help bubble-align-help">가운데 정렬은 프로필의 중심부터 말풍선 끝까지를 기준으로 맞추고, 프로필이 전체 여백 밖으로는 넘어가지 않아요. 메신저 모드는 발신자 기준 정렬을 유지해요.</div></div></div>
 </div></div></div><div class="messenger-settings" id="messengerSettings"><div class="messenger-settings-head"><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></div><div class="messenger-settings-body"><div class="field">
 <label class="lb">내 계정 (오른쪽 정렬)</label>
@@ -1584,7 +1584,7 @@ const state = {
   layout:{
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
-    gap:12, textGap:16, blockGap:16, continuationGap:8, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:8, nameSize:12, widthScale:100, letterSpacing:0,
+    gap:12, textGap:25, blockGap:16, continuationGap:8, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:8, nameSize:12, widthScale:100, letterSpacing:0,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
     textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
     dividerMargin:8,   // 가름선 위·아래 여백
@@ -2085,7 +2085,7 @@ function loadLink(){
       openCrop(c.toDataURL('image/png'));
     }catch(err){ openCrop(url); } // tainted: crop UI still works via url
   };
-  img.onerror=()=>alert('이미지를 불러오지 못했어요. 링크를 확인해줘.');
+  img.onerror=()=>alert('이미지를 불러오지 못했어요. 링크를 확인해 주세요.');
   img.src=url;
 }
 function showAvPreview(dataUrl){
@@ -2168,7 +2168,7 @@ function applyCrop(){
 /* ================= members CRUD ================= */
 function addOrUpdateMember(){
   const name=mName.value.trim();
-  if(!name){alert('이름을 입력해줘.');return;}
+  if(!name){alert('이름을 입력해 주세요.');return;}
   if(editingMemberId){
     const m=state.members.find(x=>x.id===editingMemberId);
     m.name=name; m.color=state.colors.draftColor;
@@ -2278,7 +2278,7 @@ function renderPresets(){
     : '이 환경에선 자동 저장이 안 돼요 — ↓ 내보내기로 프리셋을 파일로 백업해줘.';
 }
 function addPreset(name,image,color){
-  if(!name){alert('먼저 이름을 입력해줘.');return;}
+  if(!name){alert('먼저 이름을 입력해 주세요.');return;}
   presets.push({id:uid(),name,image:image||null,color:color||'#424448'});
   persistPresets(); renderPresets();
 }
@@ -2305,7 +2305,7 @@ function deletePreset(id){
   persistPresets(); renderPresets();
 }
 function exportPresets(){
-  if(!presets.length){alert('내보낼 프리셋이 없어.');return;}
+  if(!presets.length){alert('내보낼 프리셋이 없어요.');return;}
   const blob=new Blob([JSON.stringify(presets,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.download='member-presets.json'; a.href=URL.createObjectURL(blob); a.click();
@@ -2322,8 +2322,8 @@ function importPresets(e){
         if(p&&p.name){ presets.push({id:uid(),name:String(p.name),image:p.image||null,color:p.color||'#424448'}); added++; }
       });
       persistPresets(); renderPresets();
-      alert(added+'개의 프리셋을 불러왔어.');
-    }catch(err){ alert('프리셋 파일을 읽지 못했어. 이 도구에서 내보낸 JSON인지 확인해줘.'); }
+      alert(added+'개의 프리셋을 불러왔어요.');
+    }catch(err){ alert('프리셋 파일을 읽지 못했어요. 이 도구에서 내보낸 JSON인지 확인해 주세요.'); }
     e.target.value='';
   };
   r.readAsText(f);
@@ -2336,7 +2336,7 @@ let themes=[];
 let themeStorageOK=true;
 
 function defaultLayout(){
-  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:16,blockGap:16,continuationGap:8,bpy:9,bpx:13,
+  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:8,bpy:9,bpx:13,
     radius:14,fs:16,lh:1.55,para:8,nameSize:12,widthScale:100,letterSpacing:0,tailOn:true,tailSize:10,tailY:0,tailX:0,
     linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerWidth:100,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
@@ -2413,7 +2413,7 @@ function currentTheme(name){
     credit:JSON.parse(JSON.stringify(state.credit))};
 }
 function saveThemePrompt(){
-  const name=(prompt('테마 이름을 정해줘',' 테마 '+(themes.length+1))||'').trim();
+  const name=(prompt('테마 이름을 정해 주세요',' 테마 '+(themes.length+1))||'').trim();
   if(!name) return;
   themes.push(currentTheme(name));
   persistThemes(); renderThemes();
@@ -2458,7 +2458,7 @@ function renderThemes(){
     : '이 환경에선 자동 저장이 안 돼요 — ↓ 내보내기로 백업해줘.';
 }
 function exportThemes(){
-  if(!themes.length){alert('내보낼 테마가 없어.');return;}
+  if(!themes.length){alert('내보낼 테마가 없어요.');return;}
   const blob=new Blob([JSON.stringify(themes,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.download='chat-themes.json'; a.href=URL.createObjectURL(blob); a.click();
@@ -2476,8 +2476,8 @@ function importThemes(e){
           parenOn:!!t.parenOn,colors:t.colors,layout:t.layout||defaultLayout()}); added++; }
       });
       persistThemes(); renderThemes();
-      alert(added+'개의 테마를 불러왔어.');
-    }catch(err){ alert('테마 파일을 읽지 못했어. 이 도구에서 내보낸 JSON인지 확인해줘.'); }
+      alert(added+'개의 테마를 불러왔어요.');
+    }catch(err){ alert('테마 파일을 읽지 못했어요. 이 도구에서 내보낸 JSON인지 확인해 주세요.'); }
     e.target.value='';
   };
   r.readAsText(f);
@@ -2640,9 +2640,9 @@ function addMessage(){
   if(t==='divider'){ addDivider(); return; }
   if(t==='image'){ addImage(); return; }
   const sid=senderSel.value;
-  if(!sid){alert('발신자를 먼저 선택해줘. (멤버 추가 필요)');return;}
+  if(!sid){alert('발신자를 먼저 선택해 주세요. (멤버 추가가 필요해요)');return;}
   const content=msgContent.value;
-  if(!content.trim()){alert('내용을 입력해줘.');return;}
+  if(!content.trim()){alert('내용을 입력해 주세요.');return;}
   state.messages.push({ id:uid(),type:'chat',senderId:sid,content });
   msgContent.value='';
   resetDraftImg();
@@ -2650,7 +2650,7 @@ function addMessage(){
 }
 function addTextBlock(){
   const content=msgContent.value;
-  if(!content.trim()){alert('끼워넣을 글을 입력해줘.');return;}
+  if(!content.trim()){alert('끼워넣을 글을 입력해 주세요.');return;}
   state.messages.push({id:uid(),type:'text',content,align:state.draftAlign});
   msgContent.value='';
   renderPreview();
@@ -2678,7 +2678,7 @@ function setDividerWidth(v){
   renderPreview();
 }
 function addImage(){
-  if(!draftMsgImg){alert('먼저 “＋ 이미지 선택”으로 사진을 골라줘.');return;}
+  if(!draftMsgImg){alert('먼저 “＋ 이미지 선택”으로 사진을 골라 주세요.');return;}
   state.messages.push({id:uid(),type:'image',image:draftMsgImg,imgSize:draftImgSize,imgMargin:draftImgMargin,round:draftImgRound});
   resetDraftImg();
   renderPreview();
@@ -2717,10 +2717,10 @@ function commitComposerEdit(){
   if(!m){ endComposerEdit(); return; }
   const content=msgContent.value;
   if(m.type==='divider'){ m.content=(content||'').trim(); }
-  else if(m.type==='image'){ if(!draftMsgImg){alert('이미지를 선택해줘.');return;} m.image=draftMsgImg; m.imgSize=draftImgSize; m.imgMargin=draftImgMargin; m.round=draftImgRound; }
-  else if(m.type==='text'){ if(!content.trim()){alert('내용을 입력해줘.');return;} m.content=content; m.align=state.draftAlign; }
+  else if(m.type==='image'){ if(!draftMsgImg){alert('이미지를 선택해 주세요.');return;} m.image=draftMsgImg; m.imgSize=draftImgSize; m.imgMargin=draftImgMargin; m.round=draftImgRound; }
+  else if(m.type==='text'){ if(!content.trim()){alert('내용을 입력해 주세요.');return;} m.content=content; m.align=state.draftAlign; }
   else { if(senderSel.value) m.senderId=senderSel.value;
-         if(!content.trim()){alert('내용을 입력해줘.');return;} m.content=content; }
+         if(!content.trim()){alert('내용을 입력해 주세요.');return;} m.content=content; }
   endComposerEdit();
   renderPreview();
 }
@@ -3107,7 +3107,7 @@ function __filterFontEmbed(css,family){
 }
 
 async function saveImage(){
-  if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+  if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
   if(editingId){ commitEdit(); renderPreview(); }
   applyCanvas();
   const node=document.getElementById('canvas');
@@ -3151,7 +3151,7 @@ async function saveImage(){
     const a=document.createElement('a');
     a.download=safeFilename(state.export.filename)+'.png'; a.href=dataUrl; a.click();
   }catch(e){
-    alert('이미지 저장 중 문제가 생겼어. 외부 링크로 넣은 이미지는 CORS 때문에 저장이 막힐 수 있어 — 프로필·첨부는 파일 업로드를 권장해.');
+    alert('이미지 저장 중 문제가 생겼어요. 외부 링크로 넣은 이미지는 CORS 때문에 저장이 막힐 수 있어요. 프로필과 첨부 이미지는 파일 업로드를 권장해요.');
   }
   hideSaving();
   document.querySelectorAll('.ctrl').forEach(c=>c.style.display='');
@@ -3160,7 +3160,7 @@ async function saveImage(){
   fitPreview();
 }
 function exportHTML(){
-  if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+  if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
   if(editingId){ commitEdit(); renderPreview(); }
   applyCanvas();
   const node=document.getElementById('canvas').cloneNode(true);
@@ -3433,7 +3433,7 @@ function loadBackgroundImageUrl(){
   const input=document.getElementById('bgImgUrl');const url=(input&&input.value||'').trim();if(!url)return;
   const img=new Image();img.crossOrigin='anonymous';
   img.onload=()=>{try{const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);useBackgroundImage(c.toDataURL('image/png'));}catch(_){useBackgroundImage(url);}};
-  img.onerror=()=>alert('배경 이미지를 불러오지 못했어. 링크를 확인해줘.');img.src=url;
+  img.onerror=()=>alert('배경 이미지를 불러오지 못했어요. 링크를 확인해 주세요.');img.src=url;
 }
 function clearBackgroundImage(){state.backgroundImage.src='';const f=document.getElementById('bgImgFile'),u=document.getElementById('bgImgUrl');if(f)f.value='';if(u)u.value='';updateBackgroundImageControls();renderPreview();}
 function applyBackgroundLayers(){
@@ -3508,7 +3508,7 @@ syncControlsFromState=function(){__syncControlsRich();const t=document.getElemen
 
 /* Export every style block, not only the first one, so tails/backgrounds/rich typography survive HTML export. */
 exportHTML=function(){
-  if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+  if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
   if(editingId){commitEdit();renderPreview();}applyCanvas();
   const node=document.getElementById('canvas').cloneNode(true);node.style.transform='none';node.style.boxShadow='none';
   node.querySelectorAll('.ctrl').forEach(c=>c.remove());node.querySelectorAll('.editable').forEach(el=>{el.removeAttribute('contenteditable');el.classList.remove('editable','editing');});
@@ -3539,7 +3539,7 @@ try{ warmFontEmbed(); }catch(_){}
 </script>
 <script id="startup-font-export-performance-fixes">
 /* ===== startup, font loading and pixel-stable export fixes ===== */
-const __HTML_TO_IMAGE_URL='https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.13/html-to-image.min.js';
+const __HTML_TO_IMAGE_URL='https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js';
 let __htmlToImagePromise=null;
 function __loadHtmlToImage(){
   if(window.htmlToImage) return Promise.resolve(window.htmlToImage);
@@ -3732,7 +3732,7 @@ function __downloadDataUrl(dataUrl,filename){
 let __imageSaveBusy=false;
 saveImage=async function(){
   if(__imageSaveBusy) return;
-  if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+  if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
   __imageSaveBusy=true;
   const node=document.getElementById('canvas');
   let prevTransform='',prevShadow='';
@@ -3769,7 +3769,7 @@ saveImage=async function(){
     __downloadDataUrl(dataUrl,safeFilename(state.export.filename)+'.png');
   }catch(err){
     console.error(err);
-    alert('이미지 저장 중 문제가 생겼어. 인터넷 연결을 확인하고, 외부 링크 이미지는 파일 업로드로 다시 넣어줘.');
+    alert('이미지 저장 중 문제가 생겼어요. 인터넷 연결을 확인하고, 외부 링크 이미지는 파일 업로드로 다시 넣어 주세요.');
   }finally{
     hideSaving();
     document.querySelectorAll('.ctrl').forEach(c=>c.style.display='');
@@ -3892,9 +3892,9 @@ else setTimeout(__idleLoadRenderer,1200);
 
   /* Multi-CDN renderer loader. It is warmed after startup, but Save can retry another CDN. */
   const RENDERER_URLS=[
-    'https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.13/html-to-image.min.js',
-    'https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js',
-    'https://unpkg.com/html-to-image@1.11.13/dist/html-to-image.js'
+    'https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js',
+    'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js',
+    'https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js'
   ];
   let rendererPromise=null;
   function loadScript(url,timeout=6000){
@@ -4036,7 +4036,7 @@ else setTimeout(__idleLoadRenderer,1200);
   let saveBusy=false;
   saveImage=async function(){
     if(saveBusy) return;
-    if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+    if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
     saveBusy=true;
     const node=document.getElementById('canvas');
     let prevTransform='',prevShadow='';
@@ -4082,9 +4082,9 @@ else setTimeout(__idleLoadRenderer,1200);
       console.error('image export failed',err);
       const detail=String(err&&err.message||'');
       if(/renderer|script|timeout/i.test(detail)){
-        alert('이미지 저장 기능을 불러오지 못했어. 인터넷 연결을 확인한 뒤 다시 눌러줘.');
+        alert('이미지 저장 기능을 불러오지 못했어요. 인터넷 연결을 확인한 뒤 다시 눌러 주세요.');
       }else{
-        alert('이미지 저장 중 문제가 생겼어. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어줘.');
+        alert('이미지 저장 중 문제가 생겼어요. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어 주세요.');
       }
     }finally{
       hideSaving();
@@ -4337,6 +4337,12 @@ else setTimeout(__idleLoadRenderer,1200);
     canvas.style.transform='none';
     canvas.style.transformOrigin='top left';
     canvas.style.zoom='1';
+    /* Mobile preview may temporarily take the canvas out of normal flow so its
+       unscaled export width cannot enlarge the page. Restore authored layout
+       before measuring the real export geometry. */
+    canvas.style.position='relative';
+    canvas.style.left='';
+    canvas.style.top='';
     canvas.style.margin='0';
     canvas.style.boxSizing='border-box';
     canvas.style.padding='0';
@@ -4392,9 +4398,19 @@ else setTimeout(__idleLoadRenderer,1200);
     const canvas=document.getElementById('canvas');
     if(!stage||!wrap||!canvas) return;
 
+    /* Always measure at the untouched export size. On mobile the previous
+       preview pass may have absolutely positioned the canvas inside a scaled
+       wrapper, so remove those preview-only constraints first. */
+    wrap.style.contain='';
+    wrap.style.overflow='';
+    wrap.style.minWidth='0';
+    wrap.style.minHeight='0';
     canvas.style.transform='none';
     canvas.style.transformOrigin='top left';
     canvas.style.zoom='1';
+    canvas.style.position='relative';
+    canvas.style.left='';
+    canvas.style.top='';
     canvas.style.margin='0';
     stage.style.justifyContent='flex-start';
     wrap.style.marginLeft='auto';
@@ -4415,26 +4431,54 @@ else setTimeout(__idleLoadRenderer,1200);
       return;
     }
 
-    const availW=Math.max(40,stage.clientWidth-8);
+    const mobileTransformOnly=(
+      document.body.classList.contains('mobile-ui')||
+      (window.matchMedia&&window.matchMedia('(max-width:860px)').matches)||
+      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent||'')
+    );
+    /* clientWidth includes stage padding. On mobile, fitting against that full
+       number lets the scaled wrapper protrude into the right padding and creates
+       a page-width-looking overflow. Fit only inside the true content box. */
+    const stageCS=window.getComputedStyle?getComputedStyle(stage):null;
+    const stagePadX=stageCS?((parseFloat(stageCS.paddingLeft)||0)+(parseFloat(stageCS.paddingRight)||0)):0;
+    const stagePadY=stageCS?((parseFloat(stageCS.paddingTop)||0)+(parseFloat(stageCS.paddingBottom)||0)):0;
+    const availW=Math.max(40,stage.clientWidth-(mobileTransformOnly?stagePadX:8));
     const desktop=window.matchMedia&&window.matchMedia('(min-width:861px)').matches;
     const ratioLocked=state.export&&state.export.ratio!=='auto';
-    const availH=(desktop&&ratioLocked)?Math.max(40,stage.clientHeight-8):Infinity;
+    const availH=(desktop&&ratioLocked)?Math.max(40,stage.clientHeight-stagePadY):Infinity;
     const fitScale=Math.min(1,availW/cw,availH/ch);
     const zoom=(typeof normalizedPreviewZoom==='function')?normalizedPreviewZoom(state.previewZoom):1;
     const scale=Math.max(0.002,Math.min(8,fitScale*zoom));
 
-    /* Chromium/Whale render CSS zoom sharply. Transform remains only as a
-       standards fallback for browsers that do not support it. */
-    const canZoom=window.CSS&&CSS.supports&&CSS.supports('zoom','1');
+    /* Mobile WebKit can treat CSS zoom as real layout width and reflow long
+       text when a fixed-ratio canvas reaches the viewport edge. Mobile therefore
+       always uses a visual transform. The wrapper alone owns the scaled layout
+       size, while the full-size export canvas is removed from normal flow so it
+       cannot widen the page or change wrapping. Desktop keeps CSS zoom for crisp
+       inspection where the browser handles it safely. */
+    const canZoom=!mobileTransformOnly&&window.CSS&&CSS.supports&&CSS.supports('zoom','1');
+    const scaledW=Math.max(1,Math.round(cw*scale));
+    const scaledH=Math.max(1,Math.round(ch*scale));
+
+    wrap.style.width=scaledW+'px';
+    wrap.style.height=scaledH+'px';
+
     if(canZoom){
+      canvas.style.position='relative';
       canvas.style.zoom=String(scale);
       canvas.style.transform='none';
     }else{
+      /* Size containment prevents the unscaled child box from participating in
+         flex/min-content calculations. Absolute positioning keeps the authored
+         canvas width intact; only transform changes what the user sees. */
+      wrap.style.contain='layout size style';
+      wrap.style.overflow='visible';
+      canvas.style.position='absolute';
+      canvas.style.left='0';
+      canvas.style.top='0';
       canvas.style.zoom='1';
       canvas.style.transform=Math.abs(scale-1)>0.0001?'scale('+scale+')':'none';
     }
-    wrap.style.width=Math.max(1,Math.round(cw*scale))+'px';
-    wrap.style.height=Math.max(1,Math.round(ch*scale))+'px';
     if(typeof updatePreviewZoomLabel==='function') updatePreviewZoomLabel();
     if(typeof syncPreviewScrollbar==='function') syncPreviewScrollbar();
     requestAnimationFrame(updatePanAvailability);
@@ -4970,174 +5014,519 @@ else setTimeout(__idleLoadRenderer,1200);
 </script>
 
 
-<script id="exact-live-preview-export-v4">
-
-/* ===== 미리보기 그대로 저장 v4 =====
-   저장 직전에 원본 #canvas를 다시 렌더링하거나, 줄바꿈용 <br>, 고정 폭,
-   제목 행간 보정을 삽입하지 않는다. 현재 화면의 DOM을 즉시 복제한 뒤
-   화면 밖 사본만 캡처하므로 긴 글에서도 저장 전용 여백이 생기지 않는다. */
+<script id="exact-live-preview-export-v5">
+/* ===== 미리보기 그대로 저장 v5 =====
+   현재 보이는 #canvas를 별도 DOM으로 복제하고, 그 사본의 실제 줄 위치와
+   캔버스 크기만 고정한다. 라이브 미리보기에는 어떠한 저장용 스타일이나
+   줄바꿈도 삽입하지 않는다. SVG를 정확한 크기의 PNG 캔버스에 직접 그려
+   자동 크기 재계산으로 생기는 여백·줄바꿈 차이를 막는다. */
 (function(){
-  let exactPreviewSaveBusy=false;
+  'use strict';
+  let captureBusy=false;
 
-  function nextTwoFrames(){
+  function twoFrames(){
     return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   }
-  function removeCaptureOnlyArtifacts(root){
-    root.querySelectorAll('[data-export-soft-break]').forEach(br=>br.remove());
-    root.querySelectorAll('.ctrl,#selToolbar').forEach(el=>el.remove());
-    root.querySelectorAll('.editable.editing').forEach(el=>el.classList.remove('editing'));
+
+  function waitForImages(root){
+    const jobs=[...root.querySelectorAll('img')].map(img=>{
+      if(img.complete&&img.naturalWidth>0){
+        return img.decode?img.decode().catch(()=>{}):Promise.resolve();
+      }
+      return new Promise(resolve=>{
+        const done=()=>resolve();
+        img.addEventListener('load',done,{once:true});
+        img.addEventListener('error',done,{once:true});
+        setTimeout(done,8000);
+      });
+    });
+    return Promise.all(jobs);
   }
-  function makeExactPreviewClone(source){
-    const width=Math.ceil(source.offsetWidth);
-    const height=Math.ceil(source.offsetHeight);
+
+  function nodePath(node,root){
+    const path=[];
+    let cur=node;
+    while(cur&&cur!==root){
+      const parent=cur.parentNode;
+      if(!parent) return null;
+      path.push(Array.prototype.indexOf.call(parent.childNodes,cur));
+      cur=parent;
+    }
+    return cur===root?path.reverse():null;
+  }
+
+  function nodeAtPath(root,path){
+    let cur=root;
+    for(const index of path||[]){
+      if(!cur||!cur.childNodes||!cur.childNodes[index]) return null;
+      cur=cur.childNodes[index];
+    }
+    return cur;
+  }
+
+  function flowRuns(root){
+    const runs=[];
+    function pushText(node){
+      const value=node.nodeValue||'';
+      let start=0;
+      const re=/\r\n|\r|\n/g;
+      let m;
+      while((m=re.exec(value))){
+        if(m.index>start) runs.push({type:'text',node,start,end:m.index});
+        runs.push({type:'hard'});
+        start=m.index+m[0].length;
+      }
+      if(start<value.length) runs.push({type:'text',node,start,end:value.length});
+    }
+    function walk(parent){
+      for(const child of parent.childNodes){
+        if(child.nodeType===Node.TEXT_NODE){pushText(child);continue;}
+        if(child.nodeType!==Node.ELEMENT_NODE) continue;
+        const el=child;
+        if(el.matches('.ctrl,script,style')) continue;
+        if(el.tagName==='BR'){runs.push({type:'hard'});continue;}
+        const display=getComputedStyle(el).display;
+        const isBlock=/^(block|flex|grid|table|list-item)$/.test(display);
+        if(isBlock) runs.push({type:'hard'});
+        walk(el);
+        if(isBlock) runs.push({type:'hard'});
+      }
+    }
+    walk(root);
+    return runs;
+  }
+
+  function measuredSoftBreaks(root){
+    const points=[];
+    const range=document.createRange();
+    let currentBand=null;
+
+    function sameLine(a,b){
+      if(!a||!b) return false;
+      const overlap=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+      const minHeight=Math.max(1,Math.min(a.bottom-a.top,b.bottom-b.top));
+      return overlap>Math.max(1,minHeight*.18);
+    }
+    function groupBands(rects){
+      const bands=[];
+      for(const rect of rects){
+        if(!(rect.width>0&&rect.height>0)) continue;
+        const last=bands[bands.length-1];
+        if(last&&sameLine(last,rect)){
+          last.top=Math.min(last.top,rect.top);
+          last.bottom=Math.max(last.bottom,rect.bottom);
+        }else bands.push({top:rect.top,bottom:rect.bottom});
+      }
+      return bands;
+    }
+    function boundariesFor(value,start,end){
+      const result=[start];
+      let offset=start;
+      for(const ch of Array.from(value.slice(start,end))){offset+=ch.length;result.push(offset);}
+      return result;
+    }
+    function bandIndexForRect(rect,bands){
+      for(let i=0;i<bands.length;i++) if(sameLine(rect,bands[i])) return i;
+      let nearest=0,best=Infinity;
+      for(let i=0;i<bands.length;i++){
+        const d=Math.abs(rect.top-bands[i].top);
+        if(d<best){best=d;nearest=i;}
+      }
+      return nearest;
+    }
+    function lastPrefixBand(node,start,end,bands){
+      if(end<=start) return -1;
+      try{
+        range.setStart(node,start);range.setEnd(node,end);
+        const rects=[...range.getClientRects()].filter(r=>r.width>0&&r.height>0);
+        if(!rects.length) return -1;
+        return bandIndexForRect(rects[rects.length-1],bands);
+      }catch(_){return -1;}
+    }
+
+    for(const run of flowRuns(root)){
+      if(run.type==='hard'){currentBand=null;continue;}
+      const node=run.node;
+      if(!node||run.end<=run.start) continue;
+      let rects=[];
+      try{
+        range.setStart(node,run.start);range.setEnd(node,run.end);
+        rects=[...range.getClientRects()].filter(r=>r.width>0&&r.height>0);
+      }catch(_){continue;}
+      const bands=groupBands(rects);
+      if(!bands.length) continue;
+      const path=nodePath(node,root);
+      if(!path) continue;
+
+      if(currentBand&&!sameLine(currentBand,bands[0])) points.push({path,offset:run.start});
+
+      if(bands.length>1){
+        const boundaries=boundariesFor(node.nodeValue||'',run.start,run.end);
+        for(let target=1;target<bands.length;target++){
+          let lo=1,hi=boundaries.length-1;
+          while(lo<hi){
+            const mid=(lo+hi)>>1;
+            const idx=lastPrefixBand(node,run.start,boundaries[mid],bands);
+            if(idx>=target) hi=mid; else lo=mid+1;
+          }
+          const breakOffset=boundaries[Math.max(0,lo-1)];
+          if(breakOffset>run.start&&breakOffset<run.end) points.push({path,offset:breakOffset});
+        }
+      }
+      currentBand=bands[bands.length-1];
+    }
+    return points;
+  }
+
+  function insertLockedBreaks(cloneRoot,points){
+    const resolved=[];
+    for(const point of points){
+      const node=nodeAtPath(cloneRoot,point.path);
+      if(node&&node.nodeType===Node.TEXT_NODE){
+        resolved.push({node,offset:point.offset});
+      }
+    }
+    const order=new Map();
+    let seq=0;
+    resolved.forEach(p=>{if(!order.has(p.node)) order.set(p.node,seq++);});
+    resolved.sort((a,b)=>{
+      const byNode=(order.get(b.node)||0)-(order.get(a.node)||0);
+      return byNode||b.offset-a.offset;
+    });
+    const seen=new Set();
+    for(const point of resolved){
+      const key=(order.get(point.node)||0)+':'+point.offset;
+      if(seen.has(key)) continue;
+      seen.add(key);
+      const node=point.node;
+      if(!node.parentNode||point.offset<0||point.offset>node.length) continue;
+      const br=document.createElement('br');
+      br.dataset.previewLockedBreak='1';
+      if(point.offset===0) node.parentNode.insertBefore(br,node);
+      else if(point.offset===node.length) node.parentNode.insertBefore(br,node.nextSibling);
+      else{
+        const tail=node.splitText(point.offset);
+        node.parentNode.insertBefore(br,tail);
+      }
+    }
+  }
+
+  function copyTypography(source,clone){
+    const sourceEls=[source,...source.querySelectorAll('*')];
+    const cloneEls=[clone,...clone.querySelectorAll('*')];
+    const count=Math.min(sourceEls.length,cloneEls.length);
+    for(let i=0;i<count;i++){
+      const a=sourceEls[i],b=cloneEls[i];
+      if(!a||!b||!a.textContent||!a.textContent.trim()) continue;
+      const cs=getComputedStyle(a);
+      b.style.fontFamily=cs.fontFamily;
+      b.style.fontSize=cs.fontSize;
+      b.style.fontWeight=cs.fontWeight;
+      b.style.fontStyle=cs.fontStyle;
+      b.style.fontStretch=cs.fontStretch;
+      b.style.fontVariant=cs.fontVariant;
+      b.style.lineHeight=cs.lineHeight;
+      b.style.letterSpacing=cs.letterSpacing;
+      b.style.wordSpacing=cs.wordSpacing;
+      b.style.textAlign=cs.textAlign;
+      b.style.textIndent=cs.textIndent;
+      b.style.textTransform=cs.textTransform;
+      b.style.textDecoration=cs.textDecoration;
+      b.style.textUnderlineOffset=cs.textUnderlineOffset;
+      b.style.wordBreak=cs.wordBreak;
+      b.style.overflowWrap=cs.overflowWrap;
+      b.style.hyphens=cs.hyphens;
+    }
+  }
+
+  function cleanCaptureCopy(root){
+    root.removeAttribute('aria-live');
+    root.querySelectorAll('.ctrl,#selToolbar,[data-export-soft-break]').forEach(el=>el.remove());
+    root.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
+    root.querySelectorAll('.editing,.ctrl-open,.dragging').forEach(el=>{
+      el.classList.remove('editing','ctrl-open','dragging');
+    });
+    root.querySelectorAll('.editable,.pmsg').forEach(el=>{
+      el.style.setProperty('outline','none','important');
+      el.style.setProperty('outline-offset','0','important');
+    });
+  }
+
+  function makeSnapshot(source){
+    const width=Math.max(1,Math.ceil(source.offsetWidth));
+    const height=Math.max(1,Math.ceil(source.offsetHeight));
+    const sourceFlows=[...source.querySelectorAll('.glyph-scale')];
+    const breakSets=sourceFlows.map(flow=>{
+      const align=getComputedStyle(flow).textAlign;
+      return align==='justify'?[]:measuredSoftBreaks(flow);
+    });
+
     const host=document.createElement('div');
     host.setAttribute('aria-hidden','true');
     Object.assign(host.style,{
       position:'fixed',left:'-100000px',top:'0',
       width:width+'px',height:height+'px',
-      overflow:'hidden',pointerEvents:'none',zIndex:'-2147483647'
+      margin:'0',padding:'0',overflow:'hidden',
+      pointerEvents:'none',zIndex:'-2147483647',
+      contain:'layout style paint'
     });
 
     const clone=source.cloneNode(true);
-    clone.removeAttribute('aria-live');
-    clone.style.zoom='1';
-    clone.style.transform='none';
-    clone.style.transformOrigin='top left';
-    clone.style.margin='0';
-    clone.style.boxShadow='none';
-    clone.style.width=width+'px';
-    clone.style.height=height+'px';
-    clone.style.minWidth=width+'px';
-    clone.style.maxWidth=width+'px';
-    clone.style.minHeight=height+'px';
-    clone.style.maxHeight=height+'px';
-    removeCaptureOnlyArtifacts(clone);
+    copyTypography(source,clone);
+    clone.style.setProperty('zoom','1','important');
+    clone.style.setProperty('transform','none','important');
+    clone.style.setProperty('transform-origin','top left','important');
+    clone.style.setProperty('transition','none','important');
+    clone.style.setProperty('animation','none','important');
+    clone.style.setProperty('margin','0','important');
+    clone.style.setProperty('box-shadow','none','important');
+    clone.style.setProperty('width',width+'px','important');
+    clone.style.setProperty('height',height+'px','important');
+    clone.style.setProperty('min-width',width+'px','important');
+    clone.style.setProperty('max-width',width+'px','important');
+    clone.style.setProperty('min-height',height+'px','important');
+    clone.style.setProperty('max-height',height+'px','important');
+    cleanCaptureCopy(clone);
     host.appendChild(clone);
     document.body.appendChild(host);
+
+    const cloneFlows=[...clone.querySelectorAll('.glyph-scale')];
+    for(let i=0;i<Math.min(cloneFlows.length,breakSets.length);i++){
+      if(!breakSets[i].length) continue;
+      insertLockedBreaks(cloneFlows[i],breakSets[i]);
+      cloneFlows[i].style.setProperty('white-space','nowrap','important');
+      cloneFlows[i].style.setProperty('word-break','normal','important');
+      cloneFlows[i].style.setProperty('overflow-wrap','normal','important');
+    }
     return {host,clone,width,height};
   }
 
-  /* 저장·복사가 공유하는 캡처 파이프라인. dataURL을 돌려주고, 실패 시 throw.
-     이미 다른 캡처가 진행 중이면 null을 돌려준다. */
-  async function exactPreviewCapture(savingMsg){
-    if(exactPreviewSaveBusy) return null;
-    exactPreviewSaveBusy=true;
+  function isTouchWebKit(){
+    return /iPad|iPhone|iPod/i.test(navigator.userAgent||'')||
+      (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  }
+
+  function captureScaleForDevice(width,height,requested){
+    let scale=Math.max(.08,Number(requested)||1);
+    const touch=isTouchWebKit()||((navigator.maxTouchPoints||0)>0&&innerWidth<=900);
+    const maxSide=touch?8192:32767;
+    const maxPixels=touch?12000000:64000000;
+    scale=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
+    return Math.max(.0001,scale*.985);
+  }
+
+  function canvasToPngBlob(canvas){
+    return new Promise((resolve,reject)=>{
+      try{
+        if(canvas.toBlob){
+          canvas.toBlob(blob=>blob&&blob.size?resolve(blob):reject(new Error('PNG blob creation failed')),'image/png');
+          return;
+        }
+        const url=canvas.toDataURL('image/png');
+        fetch(url).then(r=>r.blob()).then(resolve,reject);
+      }catch(err){reject(err);}
+    });
+  }
+
+  function prepareRasterTarget(node,width,height){
+    const touch=isTouchWebKit()||((navigator.maxTouchPoints||0)>0&&innerWidth<=900);
+    const maxSide=touch?8192:16384;
+    const maxPixels=touch?12000000:48000000;
+    const layoutScale=Math.min(1,
+      maxSide/Math.max(1,width),
+      maxSide/Math.max(1,height),
+      Math.sqrt(maxPixels/Math.max(1,width*height))
+    );
+    if(layoutScale>=.9999) return {target:node,width,height,layoutScale:1};
+
+    const shell=document.createElement('div');
+    const shellW=Math.max(1,Math.floor(width*layoutScale));
+    const shellH=Math.max(1,Math.floor(height*layoutScale));
+    Object.assign(shell.style,{
+      position:'relative',display:'block',overflow:'hidden',margin:'0',padding:'0',
+      width:shellW+'px',height:shellH+'px',minWidth:shellW+'px',minHeight:shellH+'px',
+      maxWidth:shellW+'px',maxHeight:shellH+'px',boxSizing:'border-box',
+      background:'transparent',isolation:'isolate'
+    });
+    const parent=node.parentNode;
+    if(parent) parent.insertBefore(shell,node);
+    shell.appendChild(node);
+    node.style.setProperty('position','absolute','important');
+    node.style.setProperty('left','0','important');
+    node.style.setProperty('top','0','important');
+    node.style.setProperty('transform','scale('+layoutScale+')','important');
+    node.style.setProperty('transform-origin','top left','important');
+    return {target:shell,width:shellW,height:shellH,layoutScale};
+  }
+
+  async function renderSnapshotBlob(node,width,height,requestedScale,fontCss){
+    const raster=prepareRasterTarget(node,width,height);
+    const firstScale=captureScaleForDevice(width,height,requestedScale);
+    const attempts=[];
+    for(const factor of [1,.82,.67,.54,.43,.34]){
+      const candidate=Math.max(.0001,firstScale*factor);
+      if(!attempts.some(v=>Math.abs(v-candidate)<.01)) attempts.push(candidate);
+    }
+    let lastError=null;
+    for(const scale of attempts){
+      const outWidth=Math.max(1,Math.floor(width*scale));
+      const outHeight=Math.max(1,Math.floor(height*scale));
+      const base={
+        width:raster.width,
+        height:raster.height,
+        canvasWidth:outWidth,
+        canvasHeight:outHeight,
+        pixelRatio:1,
+        skipAutoScale:true,
+        cacheBust:false,
+        preferredFontFormat:'woff2',
+        style:{
+          zoom:'1',transform:'none',transformOrigin:'top left',
+          margin:'0',boxShadow:'none',width:raster.width+'px',height:raster.height+'px'
+        }
+      };
+      if(!state.transparentBg) base.backgroundColor=state.colors.bg;
+      const variants=[];
+      if(fontCss) variants.push({...base,fontEmbedCSS:fontCss});
+      variants.push(base,{...base,skipFonts:true});
+      for(const options of variants){
+        let bitmap=null;
+        try{
+          bitmap=await __withQuietConsole(()=>window.htmlToImage.toCanvas(raster.target,options));
+          if(!bitmap||bitmap.width!==outWidth||bitmap.height!==outHeight) throw new Error('renderer returned an invalid canvas');
+          const blob=await canvasToPngBlob(bitmap);
+          bitmap.width=1;bitmap.height=1;
+          return {blob,scale,requestedScale:Number(requestedScale)||1};
+        }catch(err){
+          lastError=err;
+          if(bitmap){try{bitmap.width=1;bitmap.height=1;}catch(_){}}
+        }
+      }
+      await new Promise(resolve=>setTimeout(resolve,0));
+    }
+    throw lastError||new Error('The image is too large for this browser to save.');
+  }
+
+  function blobToDataUrl(blob){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result);
+      reader.onerror=reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function downloadPngBlob(blob,filename){
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.download=filename;a.href=url;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+  }
+
+  async function captureExactPreview(message){
+    if(captureBusy) return null;
+    captureBusy=true;
     let snapshot=null;
     try{
-      /* 편집 중인 내용만 확정한다. 그 뒤에는 renderPreview/applyCanvas를
-         다시 호출하지 않아 현재 보이는 줄바꿈과 높이를 그대로 유지한다. */
+      if(!state.messages.length) throw new Error('empty preview');
       if(editingId){
         commitEdit();
         renderPreview();
-        await nextTwoFrames();
+        await twoFrames();
       }
 
       const source=document.getElementById('canvas');
       if(!source) throw new Error('preview canvas unavailable');
+      showSaving(message||'미리보기 그대로 저장 중...');
 
-      /* 렌더러를 기다리는 동안 원본 레이아웃이 달라지지 않도록 먼저 복제한다. */
-      snapshot=makeExactPreviewClone(source);
-      showSaving(savingMsg||'미리보기 그대로 저장 중...');
+      /* 현재 선택된 글꼴과 이미지가 실제 미리보기에서 완전히 그려진 뒤 사본을 만든다.
+         저장 과정에서 renderPreview/applyCanvas를 다시 호출하지 않는다. */
+      try{if(document.fonts&&document.fonts.ready) await document.fonts.ready;}catch(_){ }
+      await waitForImages(source);
+      await twoFrames();
+
+      snapshot=makeSnapshot(source);
+      await twoFrames();
       await __loadHtmlToImage();
-      await nextTwoFrames();
 
       const scale=(typeof safeCaptureScale==='function')
         ? safeCaptureScale(snapshot.width,snapshot.height,getExportScale())
         : getExportScale();
-      const base={
-        pixelRatio:scale,
-        width:snapshot.width,
-        height:snapshot.height,
-        cacheBust:false,
-        preferredFontFormat:'woff2'
-      };
-      if(!state.transparentBg) base.backgroundColor=state.colors.bg;
 
-      /* 현재 미리보기와 동일한 글꼴만 사본에 포함한다. 글꼴 삽입 실패 시에도
-         사본 DOM의 줄바꿈을 수정하지 않은 채 가볍게 재시도한다. */
       let fontCss='';
       try{
         if(typeof __getTargetFontEmbedCSS==='function'){
-          fontCss=await __withTimeout(__getTargetFontEmbedCSS(snapshot.clone),9000,'');
+          fontCss=await __withTimeout(__getTargetFontEmbedCSS(snapshot.clone),15000,'');
+          fontCss=String(fontCss||'').replace(/font-display\s*:\s*[^;]+;/gi,'font-display:block;');
         }
       }catch(_){fontCss='';}
 
-      let dataUrl;
-      try{
-        const opts=fontCss?{...base,fontEmbedCSS:fontCss}:{...base,skipFonts:true};
-        dataUrl=await __withQuietConsole(()=>window.htmlToImage.toPng(snapshot.clone,opts));
-      }catch(firstError){
-        console.warn('exact preview capture retry',firstError);
-        dataUrl=await __withQuietConsole(()=>window.htmlToImage.toPng(snapshot.clone,{...base,skipFonts:true}));
-      }
-      return dataUrl;
+      return await renderSnapshotBlob(snapshot.clone,snapshot.width,snapshot.height,scale,fontCss);
     }finally{
       if(snapshot&&snapshot.host) snapshot.host.remove();
       hideSaving();
-      exactPreviewSaveBusy=false;
+      captureBusy=false;
     }
   }
 
+  window.__exactPreviewCaptureBlob=async function(message){
+    const result=await captureExactPreview(message);
+    return result&&result.blob||null;
+  };
+  window.__exactPreviewCapture=async function(message){
+    const blob=await window.__exactPreviewCaptureBlob(message);
+    return blob?blobToDataUrl(blob):null;
+  };
   window.saveImage=async function(){
-    if(exactPreviewSaveBusy) return;
-    if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+    if(captureBusy) return;
+    if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
     try{
-      const dataUrl=await exactPreviewCapture('미리보기 그대로 저장 중...');
-      if(!dataUrl) return;
-      __downloadDataUrl(dataUrl,safeFilename(state.export.filename)+'.png');
+      const result=await captureExactPreview('미리보기 그대로 저장 중...');
+      if(result&&result.blob){
+        downloadPngBlob(result.blob,safeFilename(state.export.filename)+'.png');
+        if(result.scale+0.02<result.requestedScale&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
+      }
     }catch(err){
       console.error('exact preview image export failed',err);
       const detail=String(err&&err.message||'');
       if(/renderer|script|timeout/i.test(detail)){
-        alert('이미지 저장 기능을 불러오지 못했어. 인터넷 연결을 확인한 뒤 다시 눌러줘.');
+        alert('이미지 저장 기능을 불러오지 못했어요. 인터넷 연결을 확인한 뒤 다시 눌러 주세요.');
+      }else if(/too large|canvas|blob|memory|size/i.test(detail)){
+        alert('글이 너무 길어 이 브라우저의 이미지 한도를 넘었어요. 저장 배율을 낮춘 뒤 다시 눌러 주세요.');
       }else{
-        alert('이미지 저장 중 문제가 생겼어. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어줘.');
+        alert('이미지 저장 중 문제가 생겼어요. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어 주세요.');
       }
     }
   };
 
-  /* ⧉ 이미지 복사: 저장과 완전히 같은 캡처 결과를 클립보드(PNG)로 보낸다. */
   window.copyImage=async function(){
-    if(exactPreviewSaveBusy) return;
-    if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+    if(captureBusy) return;
+    if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
     if(!navigator.clipboard||typeof window.ClipboardItem==='undefined'||typeof navigator.clipboard.write!=='function'){
-      alert('이 브라우저는 이미지 클립보드 복사를 지원하지 않아. 대신 "이미지 저장"을 사용해줘.');
+      alert('이 브라우저는 이미지 클립보드 복사를 지원하지 않아요. 대신 "이미지 저장"을 사용해 주세요.');
       return;
     }
-    /* 캡처를 먼저 시작해 두고, Promise 기반 ClipboardItem으로 곧바로 write를 건다.
-       (사파리는 사용자 클릭 제스처 안에서 write가 시작돼야 해서 이 순서가 중요함) */
-    const dataUrlPromise=exactPreviewCapture('이미지 복사 준비 중...');
-    const blobPromise=dataUrlPromise.then(du=>{
-      if(!du) throw new Error('capture busy');
-      return fetch(du).then(r=>r.blob());
+    const blobPromise=window.__exactPreviewCaptureBlob('이미지 복사 준비 중...').then(blob=>{
+      if(!blob) throw new Error('capture busy');
+      return blob;
     });
-    const notifyOk=()=>{ try{ if(typeof toast==='function'){ toast('이미지를 클립보드에 복사했어요'); return; } }catch(_){} alert('이미지를 클립보드에 복사했어!'); };
+    const done=()=>{try{if(typeof toast==='function'){toast('이미지를 클립보드에 복사했어요');return;}}catch(_){ }alert('이미지를 클립보드에 복사했어요!');};
     try{
       await navigator.clipboard.write([new ClipboardItem({'image/png':blobPromise})]);
-      notifyOk();
-    }catch(err){
-      if(/capture busy/.test(String(err&&err.message||''))) return;
-      /* 일부 브라우저는 Promise 기반 ClipboardItem을 지원하지 않음 → blob을 기다렸다가 재시도 */
+      done();
+    }catch(firstError){
       try{
         const blob=await blobPromise;
         await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
-        notifyOk();
-      }catch(err2){
-        console.error('image copy failed',err,err2);
-        const name=String((err2&&err2.name)||(err&&err.name)||'');
-        const detail=String((err2&&err2.message)||(err&&err.message)||'');
-        if(/renderer|script|timeout/i.test(detail)){
-          alert('이미지 복사 기능을 불러오지 못했어. 인터넷 연결을 확인한 뒤 다시 눌러줘.');
-        }else if(/NotAllowed|SecurityError/i.test(name)||/denied|permission|focus|gesture/i.test(detail)){
-          alert('브라우저가 클립보드 접근을 막았어. 화면을 한 번 클릭한 뒤 다시 시도하거나, "이미지 저장"을 사용해줘.');
-        }else{
-          alert('이미지 복사 중 문제가 생겼어. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어줘.');
-        }
+        done();
+      }catch(secondError){
+        console.error('image copy failed',firstError,secondError);
+        alert('이미지 복사 중 문제가 생겼어요. 대신 "이미지 저장"을 사용해 주세요.');
       }
     }
   };
 })();
-
 </script>
 <style id="convenience-upgrade-styles">
 /* ===== 편의성 업그레이드: 토스트 · 복원 바 · 드래그 정렬 · 자동저장 배지 ===== */
@@ -5447,13 +5836,13 @@ window.importProject=function(ev){
     try{
       const d=JSON.parse(rd.result);
       if(!d||(!Array.isArray(d.messages)&&!Array.isArray(d.members))){
-        alert('프로젝트 파일이 아닌 것 같아. (이 도구에서 저장한 .json인지 확인해줘)'); return;
+        alert('프로젝트 파일이 아닌 것 같아요. (이 도구에서 저장한 .json인지 확인해 주세요)'); return;
       }
-      if(state.messages.length&&!confirm('현재 작업을 불러온 프로젝트로 교체할까? 지금 내용은 사라져요. (Ctrl+Z로 되돌릴 수 있어요)')) return;
+      if(state.messages.length&&!confirm('현재 작업을 불러온 프로젝트로 교체할까요? 지금 내용은 사라져요. (Ctrl+Z로 되돌릴 수 있어요)')) return;
       pushUndo('프로젝트 불러오기');
       applyProject(d);
       toast('프로젝트를 불러왔어요');
-    }catch(_){ alert('파일을 읽지 못했어. JSON 형식을 확인해줘.'); }
+    }catch(_){ alert('파일을 읽지 못했어요. JSON 형식을 확인해 주세요.'); }
   };
   rd.readAsText(f);
 };
@@ -5827,7 +6216,7 @@ function showHintOnce(){
   try{ if(localStorage.getItem(HINT_KEY)) return; }catch(_){}
   if(document.getElementById('mHint')) return;
   const h=document.createElement('div'); h.id='mHint';
-  h.innerHTML='멤버 추가 · 테마 · 저장은<br>여기 <b>⚙ 도구</b>에 다 있어요!<span class="x">눌러서 닫기</span>';
+  h.innerHTML='멤버 추가 · 테마 · 저장은<br>여기 <b>⚙ 도구</b>에 다 있어요!<span class="x">눌러서 닫아 주세요</span>';
   h.onclick=dismissHint;
   document.body.appendChild(h);
   requestAnimationFrame(()=>{
@@ -6008,7 +6397,20 @@ applyMQ();
 
 <style id="pinch-zoom-styles">
 /* ===== 캔버스 전용 핀치 줌 ===== */
-.mobile-ui .preview-surface.stage{overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.mobile-ui .preview-pane{
+  width:100%;min-width:0;max-width:100%;overflow:hidden;contain:layout;
+}
+.mobile-ui .preview-surface.stage{
+  box-sizing:border-box;width:100%;max-width:100%;min-width:0;overflow:auto!important;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  touch-action:pan-x pan-y;contain:layout paint;isolation:isolate;
+}
+.mobile-ui #canvasFit{
+  position:relative;flex:0 0 auto;min-width:0;min-height:0;max-width:none;
+}
+/* Never let Mobile Safari's zoom implementation participate in preview layout.
+   JavaScript supplies transform:scale() and the exact scaled wrapper size. */
+.mobile-ui #canvas{zoom:1!important;max-width:none!important;transform-origin:top left!important}
 #mZoomBadge{position:fixed;top:0;left:50%;transform:translate(-50%,10px);z-index:95;
   background:rgba(26,27,31,.86);color:#fff;font-size:12px;font-weight:700;
   padding:6px 12px;border-radius:999px;pointer-events:none;opacity:0;transition:opacity .18s}
@@ -6080,9 +6482,24 @@ function endPinch(e){ if(pinch&&e.touches.length<2) pinch=null; }
 stage.addEventListener('touchend',endPinch);
 stage.addEventListener('touchcancel',endPinch);
 
-/* iOS 사파리 전용 제스처 이벤트도 미리보기 위에서는 차단 */
+/* iOS 사파리는 gesture 이벤트의 target이 stage 밖(document 등)으로 잡히는
+   경우가 있어 캡처 단계에서도 막는다. 미리보기에서 시작한 제스처만 차단하며
+   페이지의 다른 영역과 데스크톱 레이아웃에는 영향을 주지 않는다. */
+function gestureBelongsToStage(e){
+  if(pinch) return true;
+  const target=e.target;
+  if(target&&(target===stage||stage.contains(target))) return true;
+  const x=Number(e.clientX),y=Number(e.clientY);
+  if(Number.isFinite(x)&&Number.isFinite(y)){
+    const hit=document.elementFromPoint(x,y);
+    return !!(hit&&(hit===stage||stage.contains(hit)));
+  }
+  return false;
+}
 ['gesturestart','gesturechange','gestureend'].forEach(t=>{
-  stage.addEventListener(t,e=>e.preventDefault());
+  document.addEventListener(t,e=>{
+    if(gestureBelongsToStage(e)) e.preventDefault();
+  },{passive:false,capture:true});
 });
 
 /* 빈 곳 더블 탭 → 화면 맞춤 */
@@ -6306,7 +6723,7 @@ stage.addEventListener('touchend',e=>{
             parts.forEach(p=>state.messages.push({id:uid(),type:'text',content:p,align:state.draftAlign}));
             msgContent.value='';
             renderPreview();
-            say('\u2702 '+parts.length+'개의 글 블럭으로 나눠 담았어');
+            say('\u2702 '+parts.length+'개의 글 블럭으로 나눠 담았어요');
             return;
           }
         }
@@ -6318,7 +6735,7 @@ stage.addEventListener('touchend',e=>{
   /* ---- 말풍선으로 변경 ---- */
   window.onConvertToChatToggle=function(input){
     if(input.checked && !(state.members&&state.members.length)){
-      alert('멤버를 추가해주세요.');
+      alert('멤버를 추가해 주세요.');
       input.checked=false;
     }
   };
@@ -6329,16 +6746,16 @@ stage.addEventListener('touchend',e=>{
       if(inp&&inp.checked&&editingTextBlock()){
         const m=state.messages.find(x=>x.id===composerEditId);
         const content=msgContent.value;
-        if(!content.trim()){alert('내용을 입력해줘.');return;}
+        if(!content.trim()){alert('내용을 입력해 주세요.');return;}
         const first=state.members&&state.members[0];
-        if(!first){alert('멤버를 추가해주세요.');inp.checked=false;return;}
+        if(!first){alert('멤버를 추가해 주세요.');inp.checked=false;return;}
         m.type='chat';
         m.senderId=first.id;   /* 맨 처음 등록한 멤버로 지정 */
         delete m.align;
         m.content=content;
         endComposerEdit();
         renderPreview();
-        say('\ud83d\udcac 말풍선으로 바꿨어 — 발신자: '+(first.name||'첫 멤버'));
+        say('\ud83d\udcac 말풍선으로 바꿨어요 — 발신자: '+(first.name||'첫 멤버'));
         return;
       }
     }catch(e){}
@@ -6349,5 +6766,781 @@ stage.addEventListener('touchend',e=>{
   try{ setMsgType('text'); }catch(e){}
 })();
 </script>
+<style id="mobile-save-dialog-styles">
+/* 모바일 저장 UI는 고정 레이어 안에서만 동작한다. 기존 앱 레이아웃에는 영향 없음. */
+#mobileSaveChoice,#mobileSavedImageViewer{
+  position:fixed;inset:0;z-index:4200;display:none;
+  align-items:flex-end;justify-content:center;
+  padding:14px 12px calc(14px + env(safe-area-inset-bottom));
+  background:rgba(28,29,33,.36);
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+}
+#mobileSaveChoice.show,#mobileSavedImageViewer.show{display:flex}
+#mobileSaveChoice .mobile-save-panel,#mobileSavedImageViewer .mobile-save-panel{
+  width:min(100%,520px);max-height:min(88dvh,760px);overflow:auto;
+  padding:16px;background:var(--panel,#fff);color:var(--ink,#424448);
+  border:1px solid var(--line,#EAEAEC);border-radius:20px;
+  box-shadow:0 -12px 38px rgba(0,0,0,.24);
+  -webkit-overflow-scrolling:touch;
+}
+.mobile-save-title{text-align:center;padding:1px 4px 13px}
+.mobile-save-title strong{display:block;font-size:16px;letter-spacing:-.02em}
+.mobile-save-title span{display:block;margin-top:4px;color:var(--muted,#909096);font-size:11px;line-height:1.5}
+.mobile-save-buttons{display:grid;grid-template-columns:1fr;gap:9px}
+.mobile-save-buttons button{
+  width:100%;min-height:54px;padding:13px 16px;border-radius:13px;
+  border:1px solid var(--line,#EAEAEC);background:var(--panel-2,#F4F4F5);
+  color:var(--ink,#424448);font:700 14px/1.2 inherit;touch-action:manipulation;
+}
+.mobile-save-buttons button.primary{background:var(--accent,#424448);border-color:var(--accent,#424448);color:#fff}
+.mobile-save-preview{
+  display:flex;align-items:flex-start;justify-content:center;max-height:49dvh;overflow:auto;
+  margin:0 0 13px;padding:10px;border:1px solid var(--line,#EAEAEC);border-radius:13px;
+  background-image:linear-gradient(45deg,#e4e4e6 25%,transparent 25%),linear-gradient(-45deg,#e4e4e6 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e4e4e6 75%),linear-gradient(-45deg,transparent 75%,#e4e4e6 75%);
+  background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;
+  -webkit-overflow-scrolling:touch;
+}
+.mobile-save-preview img{display:block;max-width:100%;height:auto;box-shadow:0 5px 18px rgba(0,0,0,.14);-webkit-touch-callout:default}
+</style>
+<script id="exact-preview-export-scaled-raster-v7">
+/* ===== exact preview + mobile-safe scaled raster v7 =====
+   Keep the live preview's original CSS geometry and line breaks. On browsers
+   that cannot create a huge bitmap, only the OUTER SVG/canvas resolution is
+   reduced; the cloned DOM is not reflowed. The previous transformed-DOM method
+   remains as a final fallback for very restrictive mobile WebKit builds. */
+(function(){
+  'use strict';
+  let busy=false;
+
+  const nextPaint=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  const yieldThread=()=>new Promise(resolve=>setTimeout(resolve,0));
+
+  function isTouchWebKit(){
+    return /iPad|iPhone|iPod/i.test(navigator.userAgent||'')||
+      (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  }
+
+  function isMobileEngine(){
+    return isTouchWebKit()||((navigator.maxTouchPoints||0)>0&&innerWidth<=900);
+  }
+
+  function waitForImages(root){
+    return Promise.all([...root.querySelectorAll('img')].map(img=>{
+      if(img.complete&&img.naturalWidth>0) return img.decode?img.decode().catch(()=>{}):Promise.resolve();
+      return new Promise(resolve=>{
+        const done=()=>resolve();
+        img.addEventListener('load',done,{once:true});
+        img.addEventListener('error',done,{once:true});
+        setTimeout(done,8000);
+      });
+    }));
+  }
+
+  function nodePath(node,root){
+    const path=[];
+    let cur=node;
+    while(cur&&cur!==root){
+      const parent=cur.parentNode;
+      if(!parent) return null;
+      path.push(Array.prototype.indexOf.call(parent.childNodes,cur));
+      cur=parent;
+    }
+    return cur===root?path.reverse():null;
+  }
+
+  function nodeAtPath(root,path){
+    let cur=root;
+    for(const index of path||[]){
+      if(!cur||!cur.childNodes||!cur.childNodes[index]) return null;
+      cur=cur.childNodes[index];
+    }
+    return cur;
+  }
+
+  function flowRuns(root){
+    const runs=[];
+    function pushText(node){
+      const value=node.nodeValue||'';
+      let start=0;
+      const re=/\r\n|\r|\n/g;
+      let match;
+      while((match=re.exec(value))){
+        if(match.index>start) runs.push({type:'text',node,start,end:match.index});
+        runs.push({type:'hard'});
+        start=match.index+match[0].length;
+      }
+      if(start<value.length) runs.push({type:'text',node,start,end:value.length});
+    }
+    function walk(parent){
+      for(const child of parent.childNodes){
+        if(child.nodeType===Node.TEXT_NODE){pushText(child);continue;}
+        if(child.nodeType!==Node.ELEMENT_NODE) continue;
+        const el=child;
+        if(el.matches('.ctrl,script,style')) continue;
+        if(el.tagName==='BR'){runs.push({type:'hard'});continue;}
+        const display=getComputedStyle(el).display;
+        const block=/^(block|flex|grid|table|list-item)$/.test(display);
+        if(block) runs.push({type:'hard'});
+        walk(el);
+        if(block) runs.push({type:'hard'});
+      }
+    }
+    walk(root);
+    return runs;
+  }
+
+  function measuredSoftBreaks(root){
+    const points=[];
+    const range=document.createRange();
+    let currentBand=null;
+
+    function sameLine(a,b){
+      if(!a||!b) return false;
+      const overlap=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+      const minHeight=Math.max(1,Math.min(a.bottom-a.top,b.bottom-b.top));
+      return overlap>Math.max(1,minHeight*.18);
+    }
+    function groupBands(rects){
+      const bands=[];
+      for(const rect of rects){
+        if(!(rect.width>0&&rect.height>0)) continue;
+        const last=bands[bands.length-1];
+        if(last&&sameLine(last,rect)){
+          last.top=Math.min(last.top,rect.top);
+          last.bottom=Math.max(last.bottom,rect.bottom);
+        }else bands.push({top:rect.top,bottom:rect.bottom});
+      }
+      return bands;
+    }
+    function boundaries(value,start,end){
+      const result=[start];
+      let offset=start;
+      for(const ch of Array.from(value.slice(start,end))){offset+=ch.length;result.push(offset);}
+      return result;
+    }
+    function bandIndex(rect,bands){
+      for(let i=0;i<bands.length;i++) if(sameLine(rect,bands[i])) return i;
+      let nearest=0,best=Infinity;
+      for(let i=0;i<bands.length;i++){
+        const distance=Math.abs(rect.top-bands[i].top);
+        if(distance<best){best=distance;nearest=i;}
+      }
+      return nearest;
+    }
+    function lastPrefixBand(node,start,end,bands){
+      if(end<=start) return -1;
+      try{
+        range.setStart(node,start);
+        range.setEnd(node,end);
+        const rects=[...range.getClientRects()].filter(r=>r.width>0&&r.height>0);
+        if(!rects.length) return -1;
+        return bandIndex(rects[rects.length-1],bands);
+      }catch(_){return -1;}
+    }
+
+    for(const run of flowRuns(root)){
+      if(run.type==='hard'){currentBand=null;continue;}
+      if(!run.node||run.end<=run.start) continue;
+      let rects=[];
+      try{
+        range.setStart(run.node,run.start);
+        range.setEnd(run.node,run.end);
+        rects=[...range.getClientRects()].filter(r=>r.width>0&&r.height>0);
+      }catch(_){continue;}
+      const bands=groupBands(rects);
+      if(!bands.length) continue;
+      const path=nodePath(run.node,root);
+      if(!path) continue;
+      if(currentBand&&!sameLine(currentBand,bands[0])) points.push({path,offset:run.start});
+      if(bands.length>1){
+        const cuts=boundaries(run.node.nodeValue||'',run.start,run.end);
+        for(let target=1;target<bands.length;target++){
+          let lo=1,hi=cuts.length-1;
+          while(lo<hi){
+            const mid=(lo+hi)>>1;
+            if(lastPrefixBand(run.node,run.start,cuts[mid],bands)>=target) hi=mid;
+            else lo=mid+1;
+          }
+          const offset=cuts[Math.max(0,lo-1)];
+          if(offset>run.start&&offset<run.end) points.push({path,offset});
+        }
+      }
+      currentBand=bands[bands.length-1];
+    }
+    return points;
+  }
+
+  function insertLockedBreaks(cloneRoot,points){
+    const resolved=[];
+    for(const point of points){
+      const node=nodeAtPath(cloneRoot,point.path);
+      if(node&&node.nodeType===Node.TEXT_NODE) resolved.push({node,offset:point.offset});
+    }
+    const order=new Map();
+    let seq=0;
+    resolved.forEach(item=>{if(!order.has(item.node)) order.set(item.node,seq++);});
+    resolved.sort((a,b)=>{
+      const nodeOrder=(order.get(b.node)||0)-(order.get(a.node)||0);
+      return nodeOrder||b.offset-a.offset;
+    });
+    const seen=new Set();
+    for(const point of resolved){
+      const key=(order.get(point.node)||0)+':'+point.offset;
+      if(seen.has(key)) continue;
+      seen.add(key);
+      const node=point.node;
+      if(!node.parentNode||point.offset<0||point.offset>node.length) continue;
+      const br=document.createElement('br');
+      br.dataset.previewLockedBreak='1';
+      if(point.offset===0) node.parentNode.insertBefore(br,node);
+      else if(point.offset===node.length) node.parentNode.insertBefore(br,node.nextSibling);
+      else{
+        const tail=node.splitText(point.offset);
+        node.parentNode.insertBefore(br,tail);
+      }
+    }
+  }
+
+  function copyTypography(source,clone){
+    const sourceEls=[source,...source.querySelectorAll('*')];
+    const cloneEls=[clone,...clone.querySelectorAll('*')];
+    const count=Math.min(sourceEls.length,cloneEls.length);
+    for(let i=0;i<count;i++){
+      const from=sourceEls[i],to=cloneEls[i];
+      if(!from||!to||!from.textContent||!from.textContent.trim()) continue;
+      const cs=getComputedStyle(from);
+      to.style.fontFamily=cs.fontFamily;
+      to.style.fontSize=cs.fontSize;
+      to.style.fontWeight=cs.fontWeight;
+      to.style.fontStyle=cs.fontStyle;
+      to.style.fontStretch=cs.fontStretch;
+      to.style.fontVariant=cs.fontVariant;
+      to.style.lineHeight=cs.lineHeight;
+      to.style.letterSpacing=cs.letterSpacing;
+      to.style.wordSpacing=cs.wordSpacing;
+      to.style.textAlign=cs.textAlign;
+      to.style.textIndent=cs.textIndent;
+      to.style.textTransform=cs.textTransform;
+      to.style.textDecoration=cs.textDecoration;
+      to.style.textUnderlineOffset=cs.textUnderlineOffset;
+      to.style.wordBreak=cs.wordBreak;
+      to.style.overflowWrap=cs.overflowWrap;
+      to.style.hyphens=cs.hyphens;
+    }
+  }
+
+  function cleanClone(root){
+    root.removeAttribute('aria-live');
+    root.querySelectorAll('.ctrl,#selToolbar,[data-export-soft-break]').forEach(el=>el.remove());
+    root.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
+    root.querySelectorAll('.editing,.ctrl-open,.dragging,.drop-before,.drop-after').forEach(el=>{
+      el.classList.remove('editing','ctrl-open','dragging','drop-before','drop-after');
+    });
+    root.querySelectorAll('.editable,.pmsg').forEach(el=>{
+      el.style.setProperty('outline','none','important');
+      el.style.setProperty('outline-offset','0','important');
+    });
+  }
+
+  async function makeSnapshot(source){
+    const width=Math.max(1,Math.ceil(source.offsetWidth));
+    const height=Math.max(1,Math.ceil(source.offsetHeight));
+    const sourceFlows=[...source.querySelectorAll('.glyph-scale')];
+    const breakSets=[];
+    for(let i=0;i<sourceFlows.length;i++){
+      const flow=sourceFlows[i];
+      breakSets.push(getComputedStyle(flow).textAlign==='justify'?[]:measuredSoftBreaks(flow));
+      if(i&&i%20===0) await yieldThread();
+    }
+
+    const host=document.createElement('div');
+    host.setAttribute('aria-hidden','true');
+    Object.assign(host.style,{
+      position:'fixed',left:'-100000px',top:'0',width:width+'px',height:height+'px',
+      margin:'0',padding:'0',overflow:'hidden',pointerEvents:'none',zIndex:'-2147483647',
+      contain:'layout style paint'
+    });
+    const clone=source.cloneNode(true);
+    copyTypography(source,clone);
+    clone.style.setProperty('zoom','1','important');
+    clone.style.setProperty('position','relative','important');
+    clone.style.setProperty('left','0','important');
+    clone.style.setProperty('top','0','important');
+    clone.style.setProperty('transform','none','important');
+    clone.style.setProperty('transform-origin','top left','important');
+    clone.style.setProperty('transition','none','important');
+    clone.style.setProperty('animation','none','important');
+    clone.style.setProperty('margin','0','important');
+    clone.style.setProperty('box-shadow','none','important');
+    clone.style.setProperty('width',width+'px','important');
+    clone.style.setProperty('height',height+'px','important');
+    clone.style.setProperty('min-width',width+'px','important');
+    clone.style.setProperty('max-width',width+'px','important');
+    clone.style.setProperty('min-height',height+'px','important');
+    clone.style.setProperty('max-height',height+'px','important');
+    cleanClone(clone);
+    host.appendChild(clone);
+    document.body.appendChild(host);
+
+    const cloneFlows=[...clone.querySelectorAll('.glyph-scale')];
+    for(let i=0;i<Math.min(cloneFlows.length,breakSets.length);i++){
+      if(!breakSets[i].length) continue;
+      insertLockedBreaks(cloneFlows[i],breakSets[i]);
+      cloneFlows[i].style.setProperty('white-space','nowrap','important');
+      cloneFlows[i].style.setProperty('word-break','normal','important');
+      cloneFlows[i].style.setProperty('overflow-wrap','normal','important');
+    }
+    await waitForImages(clone);
+    await nextPaint();
+    return {host,clone,width,height};
+  }
+
+  function captureScaleForDevice(width,height,requested){
+    let scale=Math.max(.08,Number(requested)||1);
+    const mobile=isMobileEngine();
+    const maxSide=mobile?8192:32767;
+    const maxPixels=mobile?12000000:64000000;
+    scale=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
+    return Math.max(.0001,scale*.985);
+  }
+
+  function canvasBlob(canvas){
+    return new Promise((resolve,reject)=>{
+      try{
+        if(canvas.toBlob){
+          canvas.toBlob(blob=>blob&&blob.size?resolve(blob):reject(new Error('PNG blob creation failed')),'image/png');
+          return;
+        }
+        const url=canvas.toDataURL('image/png');
+        fetch(url).then(r=>r.blob()).then(resolve,reject);
+      }catch(err){reject(err);}
+    });
+  }
+
+  function loadSvgImage(svgText){
+    return new Promise((resolve,reject)=>{
+      const blob=new Blob([svgText],{type:'image/svg+xml;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const img=new Image();
+      img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};
+      img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('SVG image decode failed'));};
+      img.src=url;
+    });
+  }
+
+  async function scaledSvgText(node,width,height,outWidth,outHeight,baseOptions){
+    const dataUrl=await __withQuietConsole(()=>window.htmlToImage.toSvg(node,baseOptions));
+    const svgText=await fetch(dataUrl).then(response=>{
+      if(!response.ok) throw new Error('SVG snapshot creation failed');
+      return response.text();
+    });
+    const doc=new DOMParser().parseFromString(svgText,'image/svg+xml');
+    if(doc.querySelector('parsererror')) throw new Error('SVG snapshot parse failed');
+    const svg=doc.documentElement;
+    svg.setAttribute('width',String(outWidth));
+    svg.setAttribute('height',String(outHeight));
+    svg.setAttribute('viewBox','0 0 '+width+' '+height);
+    svg.setAttribute('preserveAspectRatio','none');
+    return new XMLSerializer().serializeToString(svg);
+  }
+
+  async function renderExactScaled(node,width,height,scale,fontCss){
+    const outWidth=Math.max(1,Math.floor(width*scale));
+    const outHeight=Math.max(1,Math.floor(height*scale));
+    const base={
+      width,height,pixelRatio:1,skipAutoScale:true,cacheBust:false,preferredFontFormat:'woff2',
+      style:{
+        zoom:'1',position:'relative',left:'0',top:'0',transform:'none',transformOrigin:'top left',
+        margin:'0',boxShadow:'none',width:width+'px',height:height+'px',
+        minWidth:width+'px',maxWidth:width+'px',minHeight:height+'px',maxHeight:height+'px'
+      }
+    };
+    if(!state.transparentBg) base.backgroundColor=state.colors.bg;
+    const variants=[];
+    if(fontCss) variants.push({...base,fontEmbedCSS:fontCss});
+    variants.push(base,{...base,skipFonts:true});
+    let lastError=null;
+    for(const options of variants){
+      let canvas=null;
+      try{
+        const svgText=await scaledSvgText(node,width,height,outWidth,outHeight,options);
+        const img=await loadSvgImage(svgText);
+        canvas=document.createElement('canvas');
+        canvas.width=outWidth;
+        canvas.height=outHeight;
+        const ctx=canvas.getContext('2d',{alpha:true});
+        if(!ctx) throw new Error('Canvas context unavailable');
+        if(!state.transparentBg){ctx.fillStyle=state.colors.bg;ctx.fillRect(0,0,outWidth,outHeight);}
+        ctx.drawImage(img,0,0,outWidth,outHeight);
+        const blob=await canvasBlob(canvas);
+        canvas.width=1;canvas.height=1;
+        return blob;
+      }catch(err){
+        lastError=err;
+        if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}}
+      }
+    }
+    throw lastError||new Error('Exact scaled SVG rendering failed');
+  }
+
+  function prepareLegacyRasterTarget(node,width,height){
+    const mobile=isMobileEngine();
+    const maxSide=mobile?8192:16384;
+    const maxPixels=mobile?12000000:48000000;
+    const layoutScale=Math.min(1,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
+    if(layoutScale>=.9999) return {target:node,width,height};
+    const shell=document.createElement('div');
+    const shellW=Math.max(1,Math.floor(width*layoutScale));
+    const shellH=Math.max(1,Math.floor(height*layoutScale));
+    Object.assign(shell.style,{
+      position:'relative',display:'block',overflow:'hidden',margin:'0',padding:'0',
+      width:shellW+'px',height:shellH+'px',minWidth:shellW+'px',minHeight:shellH+'px',
+      maxWidth:shellW+'px',maxHeight:shellH+'px',boxSizing:'border-box',background:'transparent',isolation:'isolate'
+    });
+    const parent=node.parentNode;
+    if(parent) parent.insertBefore(shell,node);
+    shell.appendChild(node);
+    node.style.setProperty('position','absolute','important');
+    node.style.setProperty('left','0','important');
+    node.style.setProperty('top','0','important');
+    node.style.setProperty('transform','scale('+layoutScale+')','important');
+    node.style.setProperty('transform-origin','top left','important');
+    return {target:shell,width:shellW,height:shellH};
+  }
+
+  async function renderLegacyFallback(node,width,height,scale,fontCss){
+    const raster=prepareLegacyRasterTarget(node,width,height);
+    const outWidth=Math.max(1,Math.floor(width*scale));
+    const outHeight=Math.max(1,Math.floor(height*scale));
+    const base={
+      width:raster.width,height:raster.height,canvasWidth:outWidth,canvasHeight:outHeight,
+      pixelRatio:1,skipAutoScale:true,cacheBust:false,preferredFontFormat:'woff2',
+      style:{zoom:'1',transform:'none',transformOrigin:'top left',margin:'0',boxShadow:'none',width:raster.width+'px',height:raster.height+'px'}
+    };
+    if(!state.transparentBg) base.backgroundColor=state.colors.bg;
+    const variants=[];
+    if(fontCss) variants.push({...base,fontEmbedCSS:fontCss});
+    variants.push(base,{...base,skipFonts:true});
+    let lastError=null;
+    for(const options of variants){
+      let canvas=null;
+      try{
+        canvas=await __withQuietConsole(()=>window.htmlToImage.toCanvas(raster.target,options));
+        if(!canvas||canvas.width!==outWidth||canvas.height!==outHeight) throw new Error('renderer returned an invalid canvas');
+        const blob=await canvasBlob(canvas);
+        canvas.width=1;canvas.height=1;
+        return blob;
+      }catch(err){
+        lastError=err;
+        if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}}
+      }
+    }
+    throw lastError||new Error('Legacy scaled rendering failed');
+  }
+
+  async function renderSnapshot(node,width,height,requestedScale,fontCss){
+    const firstScale=captureScaleForDevice(width,height,requestedScale);
+    const attempts=[];
+    for(const factor of [1,.82,.67,.54,.43,.34]){
+      const candidate=Math.max(.0001,firstScale*factor);
+      if(!attempts.some(value=>Math.abs(value-candidate)<.0001)) attempts.push(candidate);
+    }
+    let lastError=null;
+    for(const scale of attempts){
+      try{
+        const blob=await renderExactScaled(node,width,height,scale,fontCss);
+        return {blob,scale,requestedScale:Number(requestedScale)||1,method:'exact-svg'};
+      }catch(err){lastError=err;}
+      try{
+        const fallbackNode=node.cloneNode(true);
+        const fallbackHost=document.createElement('div');
+        fallbackHost.setAttribute('aria-hidden','true');
+        Object.assign(fallbackHost.style,{position:'fixed',left:'-100000px',top:'0',width:width+'px',height:height+'px',overflow:'hidden',pointerEvents:'none'});
+        fallbackHost.appendChild(fallbackNode);
+        document.body.appendChild(fallbackHost);
+        try{
+          const blob=await renderLegacyFallback(fallbackNode,width,height,scale,fontCss);
+          return {blob,scale,requestedScale:Number(requestedScale)||1,method:'legacy-fallback'};
+        }finally{fallbackHost.remove();}
+      }catch(err){lastError=err;}
+      await yieldThread();
+    }
+    throw lastError||new Error('The image is too large for this browser to save.');
+  }
+
+  function blobToDataUrl(blob){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result);
+      reader.onerror=reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function downloadBlob(blob,filename){
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.download=filename;
+    a.href=url;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+  }
+
+  async function capture(message){
+    if(busy) return null;
+    busy=true;
+    let snapshot=null;
+    try{
+      if(!state.messages.length) throw new Error('empty preview');
+      if(typeof editingId!=='undefined'&&editingId){
+        commitEdit();
+        renderPreview();
+        await nextPaint();
+      }
+      const source=document.getElementById('canvas');
+      if(!source) throw new Error('preview canvas unavailable');
+      showSaving(message||'미리보기 그대로 저장 중...');
+      try{if(document.fonts&&document.fonts.ready) await document.fonts.ready;}catch(_){ }
+      await waitForImages(source);
+      await nextPaint();
+
+      snapshot=await makeSnapshot(source);
+      await __loadHtmlToImage();
+      const requested=(typeof getExportScale==='function')?getExportScale():1;
+      let fontCss='';
+      try{
+        if(typeof __getTargetFontEmbedCSS==='function'){
+          fontCss=await __withTimeout(__getTargetFontEmbedCSS(snapshot.clone),15000,'');
+          fontCss=String(fontCss||'').replace(/font-display\s*:\s*[^;]+;/gi,'font-display:block;');
+        }
+      }catch(_){fontCss='';}
+      return await renderSnapshot(snapshot.clone,snapshot.width,snapshot.height,requested,fontCss);
+    }finally{
+      if(snapshot&&snapshot.host) snapshot.host.remove();
+      hideSaving();
+      busy=false;
+    }
+  }
+
+  window.__exactPreviewCaptureBlob=async function(message){
+    const result=await capture(message);
+    return result&&result.blob||null;
+  };
+  window.__exactPreviewCapture=async function(message){
+    const blob=await window.__exactPreviewCaptureBlob(message);
+    return blob?blobToDataUrl(blob):null;
+  };
+
+  window.saveImage=async function(){
+    if(busy) return;
+    if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
+    try{
+      const result=await capture('미리보기 그대로 저장 중...');
+      if(result&&result.blob){
+        downloadBlob(result.blob,safeFilename(state.export.filename)+'.png');
+        if(result.scale+0.02<result.requestedScale&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
+      }
+    }catch(err){
+      console.error('exact preview scaled raster export failed',err);
+      const detail=String(err&&err.message||'');
+      if(/renderer|script|timeout/i.test(detail)) alert('이미지 저장 기능을 불러오지 못했어요. 인터넷 연결을 확인한 뒤 다시 눌러 주세요.');
+      else if(/too large|canvas|blob|memory|size/i.test(detail)) alert('글이 너무 길어 이 브라우저의 이미지 한도를 넘었어요. 저장 배율을 낮춘 뒤 다시 눌러 주세요.');
+      else alert('이미지 저장 중 문제가 생겼어요. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어 주세요.');
+    }
+  };
+
+  window.copyImage=async function(){
+    if(busy) return;
+    if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
+    if(!navigator.clipboard||typeof window.ClipboardItem==='undefined'||typeof navigator.clipboard.write!=='function'){
+      alert('이 브라우저는 이미지 클립보드 복사를 지원하지 않아요. 대신 “이미지 저장”을 사용해 주세요.');
+      return;
+    }
+    try{
+      const blobPromise=window.__exactPreviewCaptureBlob('이미지 복사 준비 중...').then(blob=>{
+        if(!blob) throw new Error('capture busy');
+        return blob;
+      });
+      try{await navigator.clipboard.write([new ClipboardItem({'image/png':blobPromise})]);}
+      catch(_){const blob=await blobPromise;await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);}
+      if(typeof toast==='function') toast('이미지를 클립보드에 복사했어요');
+      else alert('이미지를 클립보드에 복사했어요!');
+    }catch(err){
+      console.error('exact preview scaled raster copy failed',err);
+      alert('이미지 복사 중 문제가 생겼어요. 대신 “이미지 저장”을 사용해 주세요.');
+    }
+  };
+})();
+</script>
+
+
+<script id="mobile-save-dialog-script">
+(function(){
+'use strict';
+let savedDataUrl='',savedBlob=null,savedObjectUrl='',savedFilename='image.png';
+let previousBodyOverflow='';
+const desktopSaveImage=window.saveImage;
+
+function isMobileSaveUI(){
+  return document.body.classList.contains('mobile-ui')||
+    (window.matchMedia&&window.matchMedia('(max-width:700px)').matches);
+}
+function lockPage(){
+  previousBodyOverflow=document.body.style.overflow;
+  document.body.style.overflow='hidden';
+}
+function unlockPage(){
+  const choice=document.getElementById('mobileSaveChoice');
+  const viewer=document.getElementById('mobileSavedImageViewer');
+  if(!(choice&&choice.classList.contains('show'))&&!(viewer&&viewer.classList.contains('show'))){
+    document.body.style.overflow=previousBodyOverflow;
+  }
+}
+function closeChoice(){
+  const root=document.getElementById('mobileSaveChoice');
+  if(root) root.classList.remove('show');
+  unlockPage();
+}
+function closeViewer(){
+  const root=document.getElementById('mobileSavedImageViewer');
+  if(root) root.classList.remove('show');
+  if(savedObjectUrl){URL.revokeObjectURL(savedObjectUrl);savedObjectUrl='';}
+  unlockPage();
+}
+function ensureChoice(){
+  let root=document.getElementById('mobileSaveChoice');
+  if(root) return root;
+  root=document.createElement('div');
+  root.id='mobileSaveChoice';
+  root.innerHTML='<div class="mobile-save-panel" role="dialog" aria-modal="true" aria-label="이미지 저장 방법">'
+    +'<div class="mobile-save-title"><strong>저장 방법</strong></div>'
+    +'<div class="mobile-save-buttons">'
+    +'<button type="button" class="primary" data-action="save">↓ 이미지 저장</button>'
+    +'<button type="button" data-action="copy">⧉ 이미지 복사</button>'
+    +'<button type="button" data-action="close">닫기</button>'
+    +'</div></div>';
+  document.body.appendChild(root);
+  root.addEventListener('click',e=>{
+    if(e.target===root){closeChoice();return;}
+    const btn=e.target.closest('[data-action]');
+    if(!btn) return;
+    const action=btn.dataset.action;
+    if(action==='close'){closeChoice();return;}
+    if(action==='copy'){
+      const p=window.copyImage&&window.copyImage();
+      closeChoice();
+      if(p&&typeof p.catch==='function') p.catch(()=>{});
+      return;
+    }
+    if(action==='save'){
+      closeChoice();
+      createMobileImageViewer();
+    }
+  });
+  return root;
+}
+function ensureViewer(){
+  let root=document.getElementById('mobileSavedImageViewer');
+  if(root) return root;
+  root=document.createElement('div');
+  root.id='mobileSavedImageViewer';
+  root.innerHTML='<div class="mobile-save-panel" role="dialog" aria-modal="true" aria-label="저장 이미지 보기">'
+    +'<div class="mobile-save-title"><strong>이미지가 완성됐어요!</strong></div>'
+    +'<div class="mobile-save-preview"><img alt="저장할 이미지 미리보기"></div>'
+    +'<div class="mobile-save-buttons">'
+    +'<button type="button" class="primary" data-action="share">↗ 공유·사진 앱에 저장</button>'
+    +'<button type="button" data-action="close">닫기</button>'
+    +'</div></div>';
+  document.body.appendChild(root);
+  root.addEventListener('click',e=>{
+    if(e.target===root){closeViewer();return;}
+    const btn=e.target.closest('[data-action]');
+    if(!btn) return;
+    if(btn.dataset.action==='close') closeViewer();
+    else if(btn.dataset.action==='share') shareSavedImage();
+    else if(btn.dataset.action==='copy') copySavedImage();
+  });
+  return root;
+}
+function openChoice(){
+  if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
+  try{if(typeof window.mCloseSheet==='function') window.mCloseSheet();}catch(_){}
+  ensureChoice().classList.add('show');
+  lockPage();
+}
+async function createMobileImageViewer(){
+  if(typeof window.__exactPreviewCaptureBlob!=='function'&&typeof window.__exactPreviewCapture!=='function'){
+    return desktopSaveImage.apply(window,arguments);
+  }
+  try{
+    savedDataUrl='';
+    savedBlob=typeof window.__exactPreviewCaptureBlob==='function'
+      ?await window.__exactPreviewCaptureBlob('미리보기 그대로 저장 중...')
+      :null;
+    if(!savedBlob){
+      const dataUrl=await window.__exactPreviewCapture('미리보기 그대로 저장 중...');
+      if(!dataUrl) return;
+      savedDataUrl=dataUrl;
+      savedBlob=await fetch(dataUrl).then(r=>r.blob());
+    }
+    if(!savedBlob) return;
+    savedFilename=(typeof safeFilename==='function'?safeFilename(state.export.filename):'image')+'.png';
+    if(savedObjectUrl) URL.revokeObjectURL(savedObjectUrl);
+    savedObjectUrl=URL.createObjectURL(savedBlob);
+    const root=ensureViewer();
+    root.querySelector('img').src=savedObjectUrl;
+    root.classList.add('show');
+    lockPage();
+  }catch(err){
+    console.error('mobile image viewer failed',err);
+    alert('이미지 저장 중 문제가 생겼어요. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어 주세요.');
+  }
+}
+async function shareSavedImage(){
+  if(!savedBlob&&savedDataUrl){
+    try{savedBlob=await fetch(savedDataUrl).then(r=>r.blob());}catch(_){}
+  }
+  if(savedBlob&&navigator.share&&typeof File!=='undefined'){
+    try{
+      const file=new File([savedBlob],savedFilename,{type:'image/png'});
+      if(!navigator.canShare||navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:savedFilename});
+        return;
+      }
+    }catch(err){
+      if(err&&err.name==='AbortError') return;
+      console.warn('image share failed',err);
+    }
+  }
+  /* 공유 API가 없는 환경에서는 현재 창의 이미지 자체를 길게 눌러 저장할 수 있다. */
+  alert('공유 기능을 사용할 수 없어요. 위 이미지를 길게 눌러 저장해 주세요.');
+}
+async function copySavedImage(){
+  if(!savedBlob&&savedDataUrl){
+    try{savedBlob=await fetch(savedDataUrl).then(r=>r.blob());}catch(_){}
+  }
+  if(!savedBlob||!navigator.clipboard||typeof ClipboardItem==='undefined'){
+    alert('이 브라우저에서는 이미지 복사가 어려워요. 위 이미지를 길게 눌러 저장해 주세요.');
+    return;
+  }
+  try{
+    await navigator.clipboard.write([new ClipboardItem({'image/png':savedBlob})]);
+    if(typeof toast==='function') toast('이미지를 클립보드에 복사했어요');
+    else alert('이미지를 복사했어요!');
+  }catch(err){
+    console.error('mobile saved image copy failed',err);
+    alert('브라우저가 이미지 복사를 막았어요. 위 이미지를 길게 눌러 저장해 주세요.');
+  }
+}
+window.openMobileSaveActions=openChoice;
+window.saveImage=function(){
+  if(isMobileSaveUI()) return openChoice();
+  return desktopSaveImage.apply(this,arguments);
+};
+})();
+</script>
+
 </body>
 </html>
