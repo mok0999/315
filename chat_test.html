@@ -6811,6 +6811,9 @@ stage.addEventListener('touchend',e=>{
 (function(){
   'use strict';
   let busy=false;
+  /* file:// 등에서 SVG 캡처 경로가 차단된 것이 확인되면 true.
+     이후 저장은 실패가 확정된 경로를 건너뛰고 곧장 레거시 렌더러로 간다. */
+  let __exactPathBroken=false;
 
   const nextPaint=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   const yieldThread=()=>new Promise(resolve=>setTimeout(resolve,0));
@@ -7163,8 +7166,11 @@ stage.addEventListener('touchend',e=>{
     for(const options of variants){
       let canvas=null;
       try{
+        const __tA=performance.now();
         const svgText=await scaledSvgText(node,width,height,outWidth,outHeight,options);
+        const __tB=performance.now();
         const img=await loadSvgImage(svgText);
+        const __tC=performance.now();
         canvas=document.createElement('canvas');
         canvas.width=outWidth;
         canvas.height=outHeight;
@@ -7172,7 +7178,10 @@ stage.addEventListener('touchend',e=>{
         if(!ctx) throw new Error('Canvas context unavailable');
         if(!state.transparentBg){ctx.fillStyle=state.colors.bg;ctx.fillRect(0,0,outWidth,outHeight);}
         ctx.drawImage(img,0,0,outWidth,outHeight);
+        const __tD=performance.now();
         const blob=await canvasBlob(canvas);
+        const __tE=performance.now();
+        if(window.__saveTimings) Object.assign(window.__saveTimings,{svg:__tB-__tA,decode:__tC-__tB,draw:__tD-__tC,png:__tE-__tD});
         canvas.width=1;canvas.height=1;
         return blob;
       }catch(err){
@@ -7225,9 +7234,13 @@ stage.addEventListener('touchend',e=>{
     for(const options of variants){
       let canvas=null;
       try{
+        const __tL0=performance.now();
         canvas=await __withQuietConsole(()=>window.htmlToImage.toCanvas(raster.target,options));
         if(!canvas||canvas.width!==outWidth||canvas.height!==outHeight) throw new Error('renderer returned an invalid canvas');
+        const __tL1=performance.now();
         const blob=await canvasBlob(canvas);
+        const __tL2=performance.now();
+        if(window.__saveTimings) Object.assign(window.__saveTimings,{legacyRender:__tL1-__tL0,legacyPng:__tL2-__tL1});
         canvas.width=1;canvas.height=1;
         return blob;
       }catch(err){
@@ -7247,10 +7260,23 @@ stage.addEventListener('touchend',e=>{
     }
     let lastError=null;
     for(const scale of attempts){
-      try{
-        const blob=await renderExactScaled(node,width,height,scale,fontCss);
-        return {blob,scale,requestedScale:Number(requestedScale)||1,method:'exact-svg'};
-      }catch(err){lastError=err;}
+      if(!__exactPathBroken){
+        const __tExact=performance.now();
+        try{
+          const blob=await renderExactScaled(node,width,height,scale,fontCss);
+          return {blob,scale,requestedScale:Number(requestedScale)||1,method:'exact-svg'};
+        }catch(err){
+          lastError=err;
+          if(window.__saveTimings) window.__saveTimings.exactFail=(window.__saveTimings.exactFail||0)+(performance.now()-__tExact);
+          /* file:// 로 연 페이지에서 SVG 디코드가 막힌 경우는 같은 세션에서 계속
+             똑같이 실패하므로, 기억해 두고 이후에는 레거시로 직행한다.
+             (호스팅 환경에서는 일시적 실패일 수 있으니 기존처럼 매번 재시도) */
+          if(location.protocol==='file:'&&/SVG.*(decode|parse|creation)/i.test(String(err&&err.message||''))){
+            __exactPathBroken=true;
+            console.info('[저장] file:// 환경에서 빠른 SVG 경로가 차단되어, 이후 저장은 레거시 렌더러로 바로 진행합니다.');
+          }
+        }
+      }
       try{
         const fallbackNode=node.cloneNode(true);
         const fallbackHost=document.createElement('div');
@@ -7302,21 +7328,48 @@ stage.addEventListener('touchend',e=>{
       const source=document.getElementById('canvas');
       if(!source) throw new Error('preview canvas unavailable');
       showSaving(message||'미리보기 그대로 저장 중...');
+      /* 저장 대기 단축: 렌더러 로딩과 글꼴 임베드 CSS 준비(네트워크)를
+         스냅샷 작업과 병렬로 먼저 시작한다. 글리프 샘플은 클론과 텍스트가
+         동일한 원본 캔버스에서 뽑으므로 임베드 결과는 이전과 같고, 유휴 시간
+         워밍업과 캐시 서명이 일치해 재저장은 네트워크 없이 곧바로 진행된다.
+         (배율·캡처·출력 로직은 그대로) */
+      const rendererReady=__loadHtmlToImage();
+      const fontCssReady=(typeof __getTargetFontEmbedCSS==='function')
+        ?__withTimeout(__getTargetFontEmbedCSS(source),15000,'').catch(()=> '')
+        :Promise.resolve('');
+      const __t0=performance.now();
+      window.__saveTimings={};
       try{if(document.fonts&&document.fonts.ready) await document.fonts.ready;}catch(_){ }
       await waitForImages(source);
       await nextPaint();
+      const __tPrep=performance.now();
+      window.__saveTimings.prepare=__tPrep-__t0;
 
       snapshot=await makeSnapshot(source);
-      await __loadHtmlToImage();
+      window.__saveTimings&&(window.__saveTimings.snapshot=performance.now()-__tPrep);
+      await rendererReady;
       const requested=(typeof getExportScale==='function')?getExportScale():1;
       let fontCss='';
+      const __tFont=performance.now();
       try{
-        if(typeof __getTargetFontEmbedCSS==='function'){
-          fontCss=await __withTimeout(__getTargetFontEmbedCSS(snapshot.clone),15000,'');
-          fontCss=String(fontCss||'').replace(/font-display\s*:\s*[^;]+;/gi,'font-display:block;');
-        }
+        fontCss=String((await fontCssReady)||'').replace(/font-display\s*:\s*[^;]+;/gi,'font-display:block;');
       }catch(_){fontCss='';}
-      return await renderSnapshot(snapshot.clone,snapshot.width,snapshot.height,requested,fontCss);
+      window.__saveTimings&&(window.__saveTimings.fontWait=performance.now()-__tFont);
+      const result=await renderSnapshot(snapshot.clone,snapshot.width,snapshot.height,requested,fontCss);
+      /* ── 저장 시간 분석: 어느 단계가 오래 걸리는지 콘솔에서 확인 ── */
+      try{
+        const T=window.__saveTimings||{};
+        T.total=performance.now()-__t0;
+        const s=v=>((v||0)/1000).toFixed(1)+'s';
+        const parts=['총 '+s(T.total),'준비 '+s(T.prepare),'줄바꿈측정·스냅샷 '+s(T.snapshot),'글꼴CSS대기 '+s(T.fontWait)];
+        if(T.exactFail) parts.push('SVG경로 실패시도 '+s(T.exactFail));
+        if(T.svg!=null) parts.push('SVG생성 '+s(T.svg),'SVG디코드 '+s(T.decode),'캔버스그리기 '+s(T.draw),'PNG인코딩 '+s(T.png));
+        if(T.legacyRender!=null) parts.push('레거시렌더 '+s(T.legacyRender),'레거시PNG '+s(T.legacyPng));
+        parts.push('방식 '+(result&&result.method||'?'));
+        parts.push('배율 '+(result&&result.scale!=null?result.scale.toFixed(2):'?'));
+        console.info('[저장 시간 분석] '+parts.join(' | '));
+      }catch(_){}
+      return result;
     }finally{
       if(snapshot&&snapshot.host) snapshot.host.remove();
       hideSaving();
@@ -7372,6 +7425,34 @@ stage.addEventListener('touchend',e=>{
       alert('이미지 복사 중 문제가 생겼어요. 대신 “이미지 저장”을 사용해 주세요.');
     }
   };
+
+  /* file:// 로 연 경우, 첫 저장 전에 SVG 캡처 경로가 작동하는지 아주 작은
+     노드로 미리 검사한다. 차단된 환경이면 첫 저장부터 실패 시도 없이
+     레거시 렌더러로 직행해 저장 시간이 한 번의 렌더링 비용만 든다.
+     (호스팅 환경에서는 검사하지 않고 기존 동작 그대로) */
+  if(location.protocol==='file:'){
+    const probeExactPath=async()=>{
+      if(__exactPathBroken) return;
+      let probe=null;
+      try{
+        await __loadHtmlToImage();
+        probe=document.createElement('div');
+        probe.textContent='probe';
+        probe.setAttribute('aria-hidden','true');
+        probe.style.cssText='position:fixed;left:-99999px;top:0;width:60px;height:24px;font:12px sans-serif;background:#fff;color:#000;pointer-events:none';
+        document.body.appendChild(probe);
+        const svgText=await scaledSvgText(probe,60,24,60,24,{width:60,height:24,pixelRatio:1,skipFonts:true,cacheBust:false});
+        await loadSvgImage(svgText);
+      }catch(err){
+        __exactPathBroken=true;
+        console.info('[저장] file:// 환경에서 빠른 SVG 경로가 차단되어, 저장은 레거시 렌더러로 바로 진행합니다.');
+      }finally{
+        if(probe) probe.remove();
+      }
+    };
+    if(window.requestIdleCallback) requestIdleCallback(()=>{probeExactPath();},{timeout:4000});
+    else setTimeout(probeExactPath,1500);
+  }
 })();
 </script>
 
@@ -7539,6 +7620,73 @@ window.saveImage=function(){
   if(isMobileSaveUI()) return openChoice();
   return desktopSaveImage.apply(this,arguments);
 };
+})();
+</script>
+
+<script id="save-speed-idle-warmup">
+/* ===== 저장 대기 시간 단축: 유휴 시간 글꼴 임베드 워밍업 =====
+   저장 파이프라인(캡처 방식·저장 배율·출력)은 전혀 건드리지 않는다.
+   저장을 누르기 전에 글꼴 서브셋 CSS와 woff2 바이너리를 미리 받아
+   기존 캐시(__targetFontCssCache / __fontBinaryCache)를 채워 둘 뿐이다.
+   - 첫 저장: 글꼴 네트워크 대기 없이 바로 캡처 단계로 진행
+   - 편집 후 저장: 입력이 멈추면 유휴 시간에 새 글자 조합의 서브셋을
+     미리 계산 (woff2 바이너리는 URL 단위 캐시를 재사용하므로 가벼움)
+   - 서브셋 CSS는 data URL을 포함해 커질 수 있으므로 최근 몇 개만 유지 */
+(function(){
+  'use strict';
+  if(typeof __getTargetFontEmbedCSS!=='function') return;
+
+  /* 캐시가 무한히 커지지 않도록 오래된 서명부터 정리 (최근 4개 유지) */
+  const MAX_FONT_CSS_CACHE=4;
+  const innerGetFontCss=__getTargetFontEmbedCSS;
+  __getTargetFontEmbedCSS=function(node){
+    const result=innerGetFontCss(node);
+    try{
+      if(typeof __targetFontCssCache!=='undefined'&&__targetFontCssCache&&__targetFontCssCache.size>MAX_FONT_CSS_CACHE){
+        const oldestKey=__targetFontCssCache.keys().next().value;
+        if(oldestKey!==undefined) __targetFontCssCache.delete(oldestKey);
+      }
+    }catch(_){}
+    return result;
+  };
+
+  let warmTimer=null;
+  function warmNow(){
+    try{
+      const node=document.getElementById('canvas');
+      if(!node) return;
+      if(!(window.state&&state.messages&&state.messages.length)) return;
+      Promise.resolve(__getTargetFontEmbedCSS(node)).catch(()=>{});
+    }catch(_){}
+  }
+  function scheduleWarm(delay){
+    clearTimeout(warmTimer);
+    warmTimer=setTimeout(()=>{
+      if(window.requestIdleCallback) requestIdleCallback(warmNow,{timeout:2500});
+      else warmNow();
+    },delay==null?1500:delay);
+  }
+
+  /* 편집이 멈춘 뒤에만 워밍업하도록 미리보기 렌더 뒤에 디바운스 훅 */
+  if(typeof window.renderPreview==='function'){
+    const innerRenderPreview=window.renderPreview;
+    window.renderPreview=function(){
+      const out=innerRenderPreview.apply(this,arguments);
+      scheduleWarm(1500);
+      return out;
+    };
+  }
+  /* 글꼴을 바꾸면 곧바로 새 글꼴의 서브셋을 준비 */
+  if(typeof setFont==='function'){
+    const innerSetFont=setFont;
+    setFont=function(){
+      const out=innerSetFont.apply(this,arguments);
+      scheduleWarm(700);
+      return out;
+    };
+  }
+  /* 시작 직후에도 한 번 (렌더러 스크립트 워밍업은 기존 코드가 담당) */
+  scheduleWarm(2500);
 })();
 </script>
 
