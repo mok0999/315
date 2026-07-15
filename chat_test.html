@@ -265,10 +265,12 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .t-block .t-inner{white-space:pre-wrap}
 
 /* normal & log mode — flex flow so avatar sits inside the outer margin */
-.n-msg{display:flex;gap:10px;align-items:flex-start;position:relative}
+.n-msg{display:flex;gap:12px;align-items:flex-start;position:relative}
 .n-msg .av{flex:0 0 auto;width:40px;height:40px;object-fit:cover;background:#C7C7CC;
   display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;overflow:hidden}
 .n-msg.circle .av{border-radius:50%}.n-msg.rounded .av{border-radius:12px}
+/* Consecutive messages keep the avatar column without drawing the avatar again. */
+.n-msg .av-continuation-spacer{flex:0 0 40px;width:40px;height:0;pointer-events:none}
 .n-body{flex:1;min-width:0}
 .n-name{font-size:12px;font-weight:700;margin-bottom:5px;line-height:1.25}
 .n-bubble{display:inline-block;vertical-align:top;max-width:100%;word-break:break-word}
@@ -277,7 +279,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .n-plain .mimg{display:block;border-radius:8px}
 
 /* messenger mode — no flex; align via text-align + absolute avatar */
-.m-msg{position:relative;padding-left:46px}
+.m-msg{position:relative;padding-left:50px}
 .m-msg.mine{padding-left:0;text-align:right}
 .m-msg.no-av{padding-left:0}
 .m-msg .av{position:absolute;left:0;top:0;width:36px;height:36px;object-fit:cover;background:#C7C7CC;
@@ -841,6 +843,13 @@ body{min-width:0}
 .filename-ext{flex:0 0 auto;font:600 10.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);white-space:nowrap}
 .field-help{font-size:10px;color:var(--muted);margin:5px 0 0 2px}
 .save-name-field{margin-bottom:13px!important}
+.save-option-grid{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:10px;align-items:start}
+.save-option-grid .field{min-width:0;margin-bottom:0!important}
+.save-scale-row{display:flex;align-items:center;gap:6px}
+.save-scale-row select{min-width:0;height:38px;padding-top:0;padding-bottom:0;background-color:var(--panel-2)}
+.save-scale-unit{flex:0 0 auto;font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+.save-scale-help{font-size:9.5px;color:var(--muted);line-height:1.45;margin:5px 1px 0}
+@media(max-width:520px){.save-option-grid{grid-template-columns:1fr}.save-option-grid .save-scale-field{max-width:150px}}
 
 @media(max-width:1160px) and (min-width:861px){
   .tool-tabs button{font-size:9.5px!important;padding-left:1px!important;padding-right:1px!important}
@@ -848,6 +857,10 @@ body{min-width:0}
 @media(max-width:520px){
   .tool-tabs{grid-template-columns:repeat(6,minmax(54px,1fr))!important;overflow-x:auto}
 }
+</style>
+<style id="square-highlight-fix">
+/* 형광펜 시작과 끝을 둥글리지 않고 완전히 각지게 표시 */
+mark,.rich-composer mark,.editable mark{border-radius:0!important}
 </style>
 <style id="rich-background-tail-fixes">
 /* ===== 2026 rich composer, background image, soft bubble tails ===== */
@@ -859,7 +872,7 @@ body{min-width:0}
 }
 .rich-composer:focus{border-color:var(--accent);background:var(--panel);box-shadow:0 0 0 3px var(--accent-soft)}
 .rich-composer:empty:before{content:attr(data-placeholder);color:#A5A5AA;pointer-events:none;white-space:pre-line}
-.rich-composer mark{padding:0 2px;border-radius:3px;color:inherit}
+.rich-composer mark{padding:0 2px;border-radius:0!important;color:inherit}
 @media(min-width:861px) and (max-height:800px){.rich-composer{height:110px;min-height:110px;max-height:110px}}
 @media(min-width:861px) and (max-height:700px){.rich-composer{height:90px;min-height:90px;max-height:90px}}
 
@@ -869,36 +882,69 @@ body{min-width:0}
 .canvas-bg-image{z-index:0;background-repeat:no-repeat;will-change:filter,transform,background-position,background-size}
 .canvas-bg-overlay{z-index:1}
 
-/* Independent messenger tail.
-   The triangle is a separate sibling outside the bubble, so every bubble corner keeps
-   the selected border-radius — including the corner next to the tail. */
-.bubble-wrap{position:relative;display:inline-block;vertical-align:top;max-width:100%}
-.m-msg>.bubble-wrap{max-width:78%}
-.bubble-wrap>.n-bubble,.bubble-wrap>.m-bubble{position:relative;display:block;max-width:100%;z-index:1}
-.bubble-tail{
+/* Long, slim messenger tail — a single CSS triangle tucked BEHIND the bubble.
+   The narrow point pokes out past the bubble edge; the wide base is hidden under
+   the bubble body (z-index:-1), so the rounded corner is never covered and the
+   tail stays seamlessly attached even when 모서리 둥글기 is at maximum.
+   Base length scales with --bubble-radius so the overlap always outreaches the
+   corner curve. */
+.n-bubble,.m-bubble{position:relative;overflow:visible}
+
+/* Messenger mode: move the received name, bubble, and attached tail 2px toward the profile. */
+.m-msg:not(.mine) .m-name,
+.m-msg:not(.mine) .m-bubble{position:relative;left:-2px}
+
+/* received / normal bubble → left-pointing tail */
+#chat:not(.bubble-tail-off) .n-bubble:before,
+#chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:before{
+  content:'';
   position:absolute;
-  top:clamp(6px,calc(var(--bubble-radius,14px) - 2px),14px);
-  width:calc(var(--bubble-tail-size,10px) - 1px);
-  height:calc(var(--bubble-tail-size,10px) - 2px);
-  background:var(--bubble-bg);
+  z-index:-1;
+  /* Radius growth raises the whole tail only very gently. */
+  top:calc(7.6px - var(--bubble-tail-radius-delta,0px) * 0.02 + var(--bubble-tail-y,0px));
+  /* A larger visible protrusion is safe because both chat layouts now reserve a wider avatar gap. */
+  left:calc(var(--bubble-tail-size,10px) * -0.9 + var(--bubble-tail-inward-delta,0px) * 0.55 + var(--bubble-tail-x,0px) + 1px);
+  width:0;
+  height:0;
+  /* Slightly fuller base silhouette, while the avatar-facing tip remains nearly
+     level with the upper bubble-side vertex. Radius-based rise is softened. */
+  border-top:calc(var(--bubble-tail-size,10px) * 0.08 + 0.6px - var(--bubble-tail-radius-delta,0px) * 0.01) solid transparent;
+  border-bottom:calc(var(--bubble-tail-size,10px) * 1.48 + 3.6px + var(--bubble-tail-radius-delta,0px) * 0.31) solid transparent;
+  border-right:calc(var(--bubble-tail-size,10px) * 1.28 + var(--bubble-tail-radius-base,15px) - var(--bubble-tail-inward-delta,0px) * 0.45) solid var(--bubble-bg);
   pointer-events:none;
-  z-index:0;
 }
-/* The triangle ends exactly at the bubble box but never overlaps it. */
-.bubble-tail.left{
-  left:0;
-  transform:translateX(-100%);
-  clip-path:polygon(0 50%,100% 0,100% 100%);
-  -webkit-clip-path:polygon(0 50%,100% 0,100% 100%);
+
+/* sent bubble → right-pointing tail (mirror) */
+#chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:after{
+  content:'';
+  position:absolute;
+  z-index:-1;
+  /* Radius growth raises the mirrored tail only very gently. */
+  top:calc(7.6px - var(--bubble-tail-radius-delta,0px) * 0.02 + var(--bubble-tail-y,0px));
+  /* Mirror the larger visible protrusion for sent bubbles. */
+  right:calc(var(--bubble-tail-size,10px) * -0.9 + var(--bubble-tail-inward-delta,0px) * 0.55 + var(--bubble-tail-x,0px) + 1px);
+  width:0;
+  height:0;
+  /* Mirrored fuller silhouette with the same softened radius-based rise. */
+  border-top:calc(var(--bubble-tail-size,10px) * 0.08 + 0.6px - var(--bubble-tail-radius-delta,0px) * 0.01) solid transparent;
+  border-bottom:calc(var(--bubble-tail-size,10px) * 1.48 + 3.6px + var(--bubble-tail-radius-delta,0px) * 0.31) solid transparent;
+  border-left:calc(var(--bubble-tail-size,10px) * 1.28 + var(--bubble-tail-radius-base,15px) - var(--bubble-tail-inward-delta,0px) * 0.45) solid var(--bubble-bg);
+  pointer-events:none;
 }
-.bubble-tail.right{
-  right:0;
-  transform:translateX(100%);
-  clip-path:polygon(100% 50%,0 0,0 100%);
-  -webkit-clip-path:polygon(100% 50%,0 0,0 100%);
-}
-#chat.bubble-tail-off .bubble-tail{display:none}
+
+/* No rounded connector or extra pseudo-element. */
+#chat:not(.bubble-tail-off) .n-bubble:after,
+#chat:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:after,
+#chat:not(.bubble-tail-off) .m-msg.mine .m-bubble:before{content:none}
+
+/* Only the first bubble in a consecutive run owns a tail. */
+#chat:not(.bubble-tail-off) .n-msg.continuation .n-bubble:before,
+#chat:not(.bubble-tail-off) .m-msg.continuation:not(.mine) .m-bubble:before,
+#chat:not(.bubble-tail-off) .m-msg.continuation.mine .m-bubble:after{content:none!important}
 .bubble-tail-controls{margin-top:13px;padding-top:13px;border-top:1px solid var(--line-2)}
+.bubble-tail-position-row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:0;padding-top:1px}
+.bubble-tail-position-row .field{margin:0}
+@media(max-width:520px){.bubble-tail-position-row{grid-template-columns:1fr}}
 
 .bg-image-load-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center}
 .bg-image-load-row input[type=text]{min-width:0}
@@ -910,11 +956,8 @@ body{min-width:0}
 .bg-overlay-color-field{grid-column:1/-1}
 
 .messenger-settings{margin:13px -14px -14px;border-top:1px solid var(--line-2);background:#F8F8F9}
-.messenger-settings>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;list-style:none;cursor:pointer;padding:12px 14px;font-weight:700;font-size:12.5px}
-.messenger-settings>summary::-webkit-details-marker{display:none}
-.messenger-settings>summary small{font-size:10px;color:var(--muted);font-weight:500}
-.messenger-settings>summary:after{content:'⌄';color:var(--muted);transition:.16s}
-.messenger-settings[open]>summary:after{transform:rotate(180deg)}
+.messenger-settings-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;font-weight:700;font-size:12.5px}
+.messenger-settings-head small{font-size:10px;color:var(--muted);font-weight:500}
 .messenger-settings-body{padding:2px 14px 14px;border-top:1px solid var(--line-2)}
 .messenger-settings-body>.field:first-child{margin-top:12px}
 
@@ -1001,8 +1044,78 @@ body{min-width:0}
 .bubblepad-sec{grid-column:1/-1;border-top:1px solid var(--line-2);padding-top:12px}
 .bubblepad-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .bubblepad-head strong{font-size:12px}
+.bubble-align-field{margin-top:12px!important;padding-top:11px;border-top:1px solid var(--line-2)}
+#bubbleAlignSeg button{min-width:0}
+.bubble-align-help{margin-top:6px;line-height:1.45}
+
+/* 일반·로그 모드의 프로필 + 말풍선 묶음을 왼쪽/가운데/오른쪽으로 정렬 */
+.n-msg.bubble-align-center{justify-content:center}
+.n-msg.bubble-align-right{justify-content:flex-end}
+.n-msg.bubble-align-center .n-body,
+.n-msg.bubble-align-right .n-body{
+  flex:0 1 auto;
+  width:fit-content;
+  max-width:calc(100% - 52px);
+}
+.n-msg.no-av.bubble-align-center .n-body,
+.n-msg.no-av.bubble-align-right .n-body{max-width:100%}
 </style>
 
+
+<style id="text-heading-and-long-canvas-fixes">
+/* 글 모드: 정렬 버튼 옆에 부분 제목 크기 버튼 두 개 */
+.text-format-row{display:flex;align-items:center;gap:6px;width:100%;min-width:0}
+#textHeadingSeg{display:flex!important;flex:0 0 auto!important;gap:3px!important;margin-left:auto}
+#textHeadingSeg button{flex:0 0 auto!important;width:34px!important;height:34px!important;padding:0!important;
+  display:flex!important;align-items:center;justify-content:center;font-size:12px!important;font-weight:800!important;line-height:1!important}
+#textHeadingSeg button:first-child{font-size:15px!important}
+/* 제목 크기 span을 독립된 인라인 상자로 두어 큰 글자의 행 높이가
+   바로 앞 일반 문장의 line box까지 끌어올리지 않도록 한다. */
+.text-heading{display:inline-block;vertical-align:baseline;margin:0;padding:0;letter-spacing:-.02em}
+.text-heading-1{font-size:1.55em;line-height:1.22;font-weight:700}
+.text-heading-2{font-size:1.28em;line-height:1.28;font-weight:500}
+.rich-composer .text-heading-1{font-weight:700}
+.rich-composer .text-heading-2{font-weight:500}
+@media(max-width:1160px) and (min-width:861px){
+  #textHeadingSeg button{width:30px!important}
+  .text-format-row{gap:4px}
+}
+</style>
+
+<style id="composer-heading-divider">
+/* 글 모드: 종류 | 글 정렬 | 글씨 크기 를 서식줄(형광펜 줄)처럼 가름선으로 구분 */
+/* 종류 ↔ 글 정렬 사이 가름선 — 서식줄과 같은 좌우 7px 여백 */
+.composer-top-grid #alignField{position:relative;margin:0 0 8px -2px!important;padding-left:8px;min-width:0}
+.composer-top-grid #alignField::before{content:"";position:absolute;left:0;bottom:2px;width:1px;height:27px;background:var(--line)}
+/* 글 정렬 ↔ 글씨 크기 사이 가름선 — gap 4px + 좌우 3px 마진 = 서식줄과 동일 */
+.text-format-row{gap:4px;align-items:flex-end;flex-wrap:nowrap;height:100%}
+.tfr-col{display:flex;flex-direction:column;justify-content:space-between;align-self:stretch;min-width:0;flex:0 0 auto}
+.tfr-div{height:27px;align-self:flex-end;margin:0 3px 2px;flex:0 0 auto}
+#textHeadingSeg{margin-left:0}
+/* 버튼 크기: 아랫줄 서식 버튼·색상칸(31×31)과 동일하게 고정 — 더 이상 줄어들지 않음 */
+#alignField .seg{height:31px!important;min-height:0!important;max-height:31px!important}
+#alignField #alignSeg button,#alignField #textHeadingSeg button{
+  flex:0 0 31px!important;width:31px!important;min-width:31px!important;max-width:31px!important;
+  height:31px!important;min-height:31px!important;max-height:31px!important;border-radius:7px}
+</style>
+
+<style id="preview-zoom-and-ratio-reflow-fix">
+/* 미리보기 확대/축소 — 실제 캔버스와 저장 배율은 건드리지 않음 */
+.preview-heading{flex-wrap:wrap}
+.preview-zoom-tools{display:flex;align-items:center;gap:5px;min-width:0}
+.preview-zoom-controls{display:inline-flex;align-items:center;gap:3px;padding:2px;border:1px solid var(--line);border-radius:9px;background:#fff;flex:0 0 auto}
+.preview-zoom-controls button{height:27px;min-width:28px;padding:0 7px;border:0;border-radius:7px;background:transparent;color:var(--ink);font:700 13px/1 inherit;cursor:pointer}
+.preview-zoom-controls button:hover{background:var(--panel-2)}
+.preview-zoom-controls .zoom-label{min-width:50px;font-size:10.5px;color:var(--muted)}
+.preview-zoom-help{font-size:10px!important;color:var(--muted);white-space:normal!important;line-height:1.35}
+#stageEl.preview-scroll-x{overflow-x:auto!important}
+#stageEl:not(.preview-scroll-x){overflow-x:hidden!important}
+#stageEl.preview-scroll-y{overflow-y:auto!important}
+#stageEl:not(.preview-scroll-y){overflow-y:hidden!important}
+@media(max-width:760px){
+  .preview-heading{width:100%}.preview-zoom-tools{flex-wrap:wrap}.preview-zoom-help{width:100%}
+}
+</style>
 </head>
 <body>
 <div class="top">
@@ -1035,12 +1148,24 @@ body{min-width:0}
 <select id="senderSel"><option value="">— 멤버를 먼저 추가하세요 —</option></select>
 </div>
 <div class="field" id="alignField" style="display:none">
+<div class="text-format-row">
+<div class="tfr-col">
 <label class="lb">글 정렬</label>
 <div class="seg" id="alignSeg">
 <button title="양쪽 정렬" onclick="setAlign('justify')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="1" y1="6" x2="15" y2="6"/><line x1="1" y1="10" x2="15" y2="10"/></svg></button>
 <button class="on" title="왼쪽 정렬" onclick="setAlign('left')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="1" y1="6" x2="10" y2="6"/><line x1="1" y1="10" x2="13" y2="10"/></svg></button>
 <button title="가운데 정렬" onclick="setAlign('center')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="4" y1="6" x2="12" y2="6"/><line x1="2.5" y1="10" x2="13.5" y2="10"/></svg></button>
 <button title="오른쪽 정렬" onclick="setAlign('right')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="6" y1="6" x2="15" y2="6"/><line x1="3" y1="10" x2="15" y2="10"/></svg></button>
+</div>
+</div>
+<span class="fmt-div tfr-div"></span>
+<div class="tfr-col">
+<label class="lb">글씨 크기</label>
+<div class="seg" id="textHeadingSeg" aria-label="부분 글자 크기">
+<button type="button" title="선택한 글자를 큰 제목으로" onclick="wrapTextHeading(1)">#</button>
+<button type="button" title="선택한 글자를 작은 제목으로" onclick="wrapTextHeading(2)">##</button>
+</div>
+</div>
 </div>
 </div></div>
 <div class="field" id="composerTextField">
@@ -1228,24 +1353,31 @@ body{min-width:0}
 <option value="16:9">16 : 9 가로</option>
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
-</div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="field" style="margin-bottom:0"><div class="toggle"><div class="t-lb">프로필 사진 표시<span>일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요</span></div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양 · 간격</strong></div><div class="flat-tool-body"><div class="colorgrid">
+</div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="field" style="margin-bottom:0"><div class="toggle"><div class="t-lb">프로필 사진 표시<span>일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요</span></div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div><div class="field" style="margin:8px 0 0"><div class="toggle"><div class="t-lb">내 프로필·이름 표시<span>‘내 계정’으로 지정한 캐릭터의 프로필과 이름을 모든 모드에서 켜고 꺼요</span></div><label class="sw"><input id="showMyIdentity" onchange="state.showMyIdentity=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양 · 간격</strong></div><div class="flat-tool-body"><div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">이름 크기</label><div class="rangewrap"><input id="lyNameSize" max="24" min="9" oninput="setLayout('nameSize',this.value)" type="range" value="12"/><span class="val" id="lyNameSizeV">12px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">메시지 간격</label><div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div></div>
-<div class="field" style="margin:0"><label class="lb">채팅 ↔ 글 간격</label><div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="6"/><span class="val" id="lyTextGapV">6px</span></div></div>
-<div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div></div>
-</div><div class="colorgrid bubble-tail-controls"><div class="field"><div class="toggle"><div class="t-lb">말풍선 꼬리<span>말풍선 모서리를 건드리지 않는 별도의 세모 꼬리예요</span></div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div></div><div class="field"><label class="lb">꼬리 크기</label><div class="rangewrap"><input id="bubbleTailSize" max="18" min="6" oninput="setBubbleTailSize(this.value)" step="1" type="range" value="10"/><span class="val" id="bubbleTailSizeV">10px</span></div></div></div></div></div><details class="messenger-settings" id="messengerSettings"><summary><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></summary><div class="messenger-settings-body"><div class="field">
+<div class="field" style="margin:0"><label class="lb">채팅 ↔ 글 간격</label><div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="16"/><span class="val" id="lyTextGapV">16px</span></div></div>
+<div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div><div class="field bubble-align-field"><label class="lb">말풍선 정렬</label><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div><div class="field-help bubble-align-help">가운데 정렬은 프로필의 중심부터 말풍선 끝까지를 기준으로 맞추고, 프로필이 전체 여백 밖으로는 넘어가지 않아요. 메신저 모드는 발신자 기준 정렬을 유지해요.</div></div></div>
+</div><div class="bubble-tail-controls"><div class="field" style="margin-bottom:0"><div class="toggle"><div class="t-lb">말풍선 꼬리<span>SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요</span></div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div></div></div></div></div><div class="messenger-settings" id="messengerSettings"><div class="messenger-settings-head"><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></div><div class="messenger-settings-body"><div class="field">
 <label class="lb">내 계정 (오른쪽 정렬)</label>
 <select id="meSelect" onchange="state.meId=this.value; renderPreview()"></select>
-</div><div class="colorgrid"><div class="field"><label class="lb">내 말풍선</label><div class="colorrow" data-color="myBubble"></div></div><div class="field"><label class="lb">내 글자색</label><div class="colorrow" data-color="myText"></div></div><div class="field"><label class="lb">상대 말풍선</label><div class="colorrow" data-color="otBubble"></div></div><div class="field"><label class="lb">상대 글자색</label><div class="colorrow" data-color="otText"></div></div></div></div></details></div></section><section class="tool-panel" id="panel-export"><div class="tool-panel-head"><div><strong>저장 · 투명화 · 서명</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accCanvas">
+</div><div class="colorgrid"><div class="field"><label class="lb">내 말풍선</label><div class="colorrow" data-color="myBubble"></div></div><div class="field"><label class="lb">내 글자색</label><div class="colorrow" data-color="myText"></div></div><div class="field"><label class="lb">상대 말풍선</label><div class="colorrow" data-color="otBubble"></div></div><div class="field"><label class="lb">상대 글자색</label><div class="colorrow" data-color="otText"></div></div></div></div></div></div></section><section class="tool-panel" id="panel-export"><div class="tool-panel-head"><div><strong>저장 · 투명화 · 서명</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accCanvas">
 <div class="flat-tool-title"><strong>🖼 저장 옵션</strong></div>
 <div class="flat-tool-body">
-<div class="field save-name-field">
+<div class="save-option-grid save-name-field">
+<div class="field">
 <label class="lb">파일 이름</label>
 <div class="filename-row"><input id="fileName" maxlength="100" oninput="setFilename(this.value)" placeholder="chat-발췌" type="text" value="chat-발췌"/><span class="filename-ext">.png / .html</span></div>
 <div class="field-help">확장자는 자동으로 붙어요.</div>
+</div>
+<div class="field save-scale-field">
+<label class="lb">저장 배율</label>
+<div class="save-scale-row"><select id="exportScale" onchange="setExportScale(this.value)"><option value="1">1</option><option value="1.5">1.5</option><option value="2">2</option><option selected value="2.5">2.5</option><option value="3">3</option><option value="4">4</option></select><span class="save-scale-unit">×</span></div>
+<div class="save-scale-help">배율이 높을수록 저장 시간이 더 걸릴 수 있어요.</div>
+</div>
 </div>
 <div class="field" style="margin-top:2px;margin-bottom:0">
 <div class="toggle">
@@ -1293,10 +1425,18 @@ body{min-width:0}
 <div class="preview-toolbar">
 <div class="preview-heading">
 <strong>미리보기</strong>
-<span>결과 크기 그대로 표시돼요</span>
+<div class="preview-zoom-tools">
+<div class="preview-zoom-controls" aria-label="미리보기 확대 축소">
+<button type="button" onclick="changePreviewZoom(-1)" title="미리보기 축소">−</button>
+<button type="button" class="zoom-label" id="previewZoomLabel" onclick="resetPreviewZoom()" title="화면 맞춤으로 돌아가기">맞춤</button>
+<button type="button" onclick="changePreviewZoom(1)" title="미리보기 확대">＋</button>
+</div>
+<span class="preview-zoom-help">버튼 또는 Ctrl/⌘+스크롤로 캔버스만 확대·축소해요. 저장 크기와 저장 배율에는 영향이 없어요.</span>
+</div>
 </div>
 <div class="preview-actions">
 <button class="btn" onclick="saveImage()">↓ 이미지 저장</button>
+<button class="btn" onclick="copyImage()">⧉ 이미지 복사</button>
 <button class="btn" onclick="exportHTML()">↓ HTML 내보내기</button>
 <button class="btn danger-ghost" onclick="openClear()">전부 지우기</button>
 </div>
@@ -1359,14 +1499,16 @@ const state = {
   mode:'normal',
   shape:'circle',
   showProfile:true,
+  showMyIdentity:false,
   meId:'',
   parenOn:false,
   composerType:'chat',   // 'chat' | 'text'
   draftAlign:'left',
   members:[],   // {id,name,image,color}
   messages:[],  // {id,type,senderId,content,...}  type: 'chat' | 'text'
-  export:{ ratio:'auto', hMargin:24, vMargin:24, linkMargin:false, filename:'chat-발췌' },
+  export:{ ratio:'auto', hMargin:24, vMargin:24, linkMargin:false, filename:'chat-발췌', scale:2.5 },
   transparentBg:false,
+  previewZoom:1,
   backgroundImage:{src:'',size:100,x:50,y:50,blur:0,overlayOpacity:0},
   credit:{ on:false, maker:'', character:'', align:'right', size:12, gap:16 },
   colors:{
@@ -1384,9 +1526,9 @@ const state = {
   layout:{
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
-    gap:12, textGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:8, nameSize:12, widthScale:100, letterSpacing:0,
-    tailOn:true, tailSize:10, linkV:false, linkH:false,
-    textPadL:0, textPadR:0, linkTextPad:true,   // 글(중간 삽입) 좌우 여백
+    gap:12, textGap:16, continuationGap:8, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:8, nameSize:12, widthScale:100, letterSpacing:0,
+    tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
+    textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
     dividerMargin:8,   // 가름선 위·아래 여백
     dividerWidth:100,  // 선 가름선 길이(%)
     wb:'word',  // 'word' = keep-all, 'char' = break-all
@@ -1543,6 +1685,17 @@ function setCredit(field,val){
 function setRatio(v){ state.export.ratio=v; renderPreview(); }
 function setTransparent(on){ state.transparentBg=!!on; renderPreview(); }
 function setFilename(v){ state.export.filename=v; }
+function normalizedExportScale(v){
+  const n=Number(v);
+  return [1,1.5,2,2.5,3,4].includes(n)?n:2.5;
+}
+function setExportScale(v){ state.export.scale=normalizedExportScale(v); }
+function getExportScale(){ return normalizedExportScale(state.export.scale); }
+/* Keep the save multiplier exactly as selected by the user.
+   Preview fitting is handled separately and never changes export resolution. */
+function safeCaptureScale(width,height,requested){
+  return normalizedExportScale(requested);
+}
 function safeFilename(v){
   const cleaned=String(v||'').trim()
     .replace(/[<>:"/\\|?*]/g,'_')
@@ -1574,50 +1727,163 @@ function toggleExportMarginLink(){
 function applyCanvas(){
   const canvas=document.getElementById('canvas');
   const chat=document.getElementById('chat');
-  if(!canvas||!chat) return;
+  const stage=document.getElementById('stageEl');
+  if(!canvas||!chat||!stage) return;
   const bg=state.transparentBg?'transparent':state.colors.bg;
   canvas.style.background=bg;
   chat.style.background=bg;
-  document.getElementById('stageEl').classList.toggle('transparent-bg',!!state.transparentBg);
-  canvas.style.margin='0 auto';
+  stage.classList.toggle('transparent-bg',!!state.transparentBg);
   const {ratio,hMargin,vMargin}=state.export;
+
+  /* Always start from the width chosen in the layout panel. A previous fixed-ratio
+     preview may have widened #chat temporarily to reflow a long excerpt. */
+  const baseChatW=Math.max(1,Number(state.layout.width)||chat.offsetWidth||440);
+  chat.style.width=Math.round(baseChatW)+'px';
+  chat.style.maxWidth='none';
+
+  /* Remove preview-only geometry before measuring the real export canvas. */
+  canvas.style.transform='none';
+  canvas.style.transformOrigin='top left';
+  canvas.style.margin='0';
+  canvas.style.display='block';
+  canvas.style.alignItems='';
+  canvas.style.justifyContent='';
+  canvas.style.width='auto';
+  canvas.style.height='auto';
+  canvas.style.minWidth='0';
+  canvas.style.minHeight='0';
+  canvas.style.padding='0';
+
+  const measureAtWidth=(requestedWidth)=>{
+    chat.style.width=Math.max(1,Math.round(requestedWidth))+'px';
+    /* Reading these properties flushes layout and gives the actual wrapped size. */
+    return {
+      width:Math.ceil(Math.max(chat.scrollWidth,chat.offsetWidth)),
+      height:Math.ceil(Math.max(chat.scrollHeight,chat.offsetHeight))
+    };
+  };
+
   if(ratio==='auto'){
-    canvas.style.display='block';
+    measureAtWidth(baseChatW);
     canvas.style.width='fit-content';
     canvas.style.height='auto';
     canvas.style.padding=vMargin+'px '+hMargin+'px';
   }else{
+    const parts=String(ratio).split(':').map(Number);
+    const rw=parts[0]>0?parts[0]:1, rh=parts[1]>0?parts[1]:1;
+    const fitsRatio=(m)=>{
+      const frameUnitFromWidth=Math.ceil((m.width+2*hMargin)/rw);
+      return m.height+2*vMargin <= frameUnitFromWidth*rh+1;
+    };
+
+    let chosenW=baseChatW;
+    let chosen=measureAtWidth(chosenW);
+
+    /* A long one-column excerpt used to keep #chat at 440px while the ratio frame
+       expanded to ten-thousand pixels, producing enormous empty side margins.
+       For fixed ratios only, widen the text flow just enough for the whole excerpt
+       to fit. The selected layout width remains the minimum, not a permanently
+       changed setting. This keeps the saved image ratio exact and uses the canvas
+       area instead of filling it with blank space. */
+    if(!fitsRatio(chosen)){
+      const MAX_ADAPTIVE_CHAT_WIDTH=8192;
+      const estimated=Math.sqrt(Math.max(1,chosen.height*chosen.width*rw/rh));
+      let low=chosenW;
+      let high=Math.min(MAX_ADAPTIVE_CHAT_WIDTH,Math.max(chosenW+1,Math.ceil(estimated)));
+      let highMeasure=measureAtWidth(high);
+      while(!fitsRatio(highMeasure)&&high<MAX_ADAPTIVE_CHAT_WIDTH){
+        low=high;
+        high=Math.min(MAX_ADAPTIVE_CHAT_WIDTH,Math.ceil(high*1.55));
+        highMeasure=measureAtWidth(high);
+      }
+      if(fitsRatio(highMeasure)){
+        /* A few binary-search passes are enough and avoid repeatedly laying out
+           every single character in extremely long excerpts. */
+        for(let i=0;i<8;i++){
+          const mid=Math.floor((low+high)/2);
+          if(mid<=low) break;
+          const mm=measureAtWidth(mid);
+          if(fitsRatio(mm)){high=mid;highMeasure=mm;}
+          else low=mid;
+        }
+        chosenW=high;
+        chosen=measureAtWidth(chosenW);
+      }else{
+        chosenW=high;
+        chosen=highMeasure;
+      }
+    }
+
+    const frameUnit=Math.ceil(Math.max(
+      (chosen.width+2*hMargin)/rw,
+      (chosen.height+2*vMargin)/rh
+    ));
+    const frameW=Math.max(rw,frameUnit*rw);
+    const frameH=Math.max(rh,frameUnit*rh);
     canvas.style.display='flex';
     canvas.style.alignItems='center';
     canvas.style.justifyContent='center';
     canvas.style.padding='0';
-    const cw0=chat.offsetWidth, ch0=chat.offsetHeight;
-    const [rw,rh]=ratio.split(':').map(Number);
-    let cw=cw0+2*hMargin, ch=ch0+2*vMargin;
-    const targetH=cw*rh/rw;
-    if(targetH>=ch) ch=targetH; else cw=ch*rw/rh;
-    canvas.style.width=Math.round(cw)+'px';
-    canvas.style.height=Math.round(ch)+'px';
+    canvas.style.width=Math.ceil(frameW)+'px';
+    canvas.style.height=Math.ceil(frameH)+'px';
   }
   fitPreview();
 }
-/* scale the (possibly huge, due to outer margins) canvas down so it always
-   fits inside the fixed-size preview viewport, instead of pushing the page layout */
+
+/* Preview zoom is a multiplier on top of automatic whole-canvas fitting.
+   The real #canvas stays at export size, so saving and the selected save scale
+   are completely independent from these controls. */
+const PREVIEW_ZOOM_STEPS=[0.25,0.33,0.5,0.67,0.8,1,1.25,1.5,2,3,4,6,8,12,16,24,32,48,64];
+function normalizedPreviewZoom(v){
+  const n=Number(v);
+  return Number.isFinite(n)?Math.max(PREVIEW_ZOOM_STEPS[0],Math.min(PREVIEW_ZOOM_STEPS[PREVIEW_ZOOM_STEPS.length-1],n)):1;
+}
+function updatePreviewZoomLabel(){
+  const el=document.getElementById('previewZoomLabel');
+  if(!el) return;
+  const z=normalizedPreviewZoom(state.previewZoom);
+  el.textContent=Math.abs(z-1)<0.001?'맞춤':Math.round(z*100)+'%';
+}
+function changePreviewZoom(direction){
+  const cur=normalizedPreviewZoom(state.previewZoom);
+  let idx=PREVIEW_ZOOM_STEPS.findIndex(v=>Math.abs(v-cur)<0.001);
+  if(idx<0){
+    idx=PREVIEW_ZOOM_STEPS.findIndex(v=>v>cur);
+    if(idx<0) idx=PREVIEW_ZOOM_STEPS.length-1;
+    else if(direction<0) idx=Math.max(0,idx-1);
+  }else idx=Math.max(0,Math.min(PREVIEW_ZOOM_STEPS.length-1,idx+(direction>0?1:-1)));
+  state.previewZoom=PREVIEW_ZOOM_STEPS[idx];
+  fitPreview();
+}
+function resetPreviewZoom(){ state.previewZoom=1; fitPreview(); }
 function fitPreview(){
   const stage=document.getElementById('stageEl');
   const wrap=document.getElementById('canvasFit');
   const canvas=document.getElementById('canvas');
   if(!stage||!wrap||!canvas) return;
   canvas.style.transform='none';
+  canvas.style.transformOrigin='top left';
+  canvas.style.margin='0';
+  stage.style.justifyContent='flex-start';
+  wrap.style.marginLeft='auto';
+  wrap.style.marginRight='auto';
   const cw=canvas.offsetWidth, ch=canvas.offsetHeight;
-  if(!cw||!ch){ wrap.style.width=''; wrap.style.height=''; return; }
-  // shrink to fit the box WIDTH only (prevents horizontal overflow / layout push);
-  // height is free to scroll vertically inside the stage.
-  const availW=Math.max(40,stage.clientWidth-4);
-  const scale=Math.min(1,availW/cw);
-  canvas.style.transform=scale<1?`scale(${scale})`:'none';
-  wrap.style.width=Math.round(cw*scale)+'px';
-  wrap.style.height=Math.round(ch*scale)+'px';
+  if(!cw||!ch){ wrap.style.width=''; wrap.style.height=''; updatePreviewZoomLabel(); return; }
+
+  const availW=Math.max(40,stage.clientWidth-8);
+  const desktop=window.matchMedia&&window.matchMedia('(min-width:861px)').matches;
+  const ratioLocked=state.export&&state.export.ratio!=='auto';
+  const availH=(desktop&&ratioLocked)?Math.max(40,stage.clientHeight-8):Infinity;
+  const fitScale=Math.min(1,availW/cw,availH/ch);
+  const zoom=normalizedPreviewZoom(state.previewZoom);
+  /* Native-size zooming is allowed for inspection, but a modest cap prevents a
+     mistaken click from asking the browser to paint an absurdly large layer. */
+  const scale=Math.max(0.002,Math.min(4,fitScale*zoom));
+
+  canvas.style.transform=Math.abs(scale-1)>0.0001?`scale(${scale})`:'none';
+  wrap.style.width=Math.max(1,Math.round(cw*scale))+'px';
+  wrap.style.height=Math.max(1,Math.round(ch*scale))+'px';
+  updatePreviewZoomLabel();
   if(typeof syncPreviewScrollbar==='function') syncPreviewScrollbar();
 }
 let fitResizeQueued=false;
@@ -1678,6 +1944,25 @@ function toggleTextPadLink(){
   if(btn){ btn.classList.toggle('on',state.layout.linkTextPad); btn.setAttribute('aria-pressed',state.layout.linkTextPad?'true':'false'); }
   if(state.layout.linkTextPad){ state.layout.textPadR=state.layout.textPadL; syncTextPadInputs(); renderPreview(); }
 }
+function normalizeBubbleAlign(value){
+  return ['left','center','right'].includes(value)?value:'left';
+}
+function syncBubbleAlignControls(){
+  const seg=document.getElementById('bubbleAlignSeg');
+  if(!seg) return;
+  const align=normalizeBubbleAlign(state.layout.bubbleAlign);
+  state.layout.bubbleAlign=align;
+  const order=['left','center','right'];
+  [...seg.children].forEach((button,index)=>button.classList.toggle('on',order[index]===align));
+}
+function setBubbleAlign(align){
+  state.layout.bubbleAlign=normalizeBubbleAlign(align);
+  syncBubbleAlignControls();
+  renderPreview();
+}
+function bubbleAlignClass(){
+  return 'bubble-align-'+normalizeBubbleAlign(state.layout.bubbleAlign);
+}
 function wbStyle(){
   return state.layout.wb==='char'
     ? 'word-break:break-all;overflow-wrap:normal'
@@ -1686,12 +1971,15 @@ function wbStyle(){
 function bubbleStyle(bg,color,tailCorner){
   const L=state.layout;
   const r=Number(L.radius)||0;
-  return `background:${bg};color:${color};padding:${L.bpy}px ${L.bpx}px;`
+  /* Keep the tail at the exact 15px geometry for radii 0–15.
+     Only the amount above 15 changes the tail: its bubble-side base widens,
+     while the outward point rises gradually toward the avatar. */
+  const tailRadiusBase=Math.max(15,r);
+  const tailRadiusDelta=Math.max(0,r-15);
+  /* Radius 22+ also retracts the outward tip slightly toward the bubble. */
+  const tailInwardDelta=Math.max(0,r-22);
+  return `background:${bg};--bubble-bg:${bg};--bubble-radius:${r}px;--bubble-tail-radius-base:${tailRadiusBase}px;--bubble-tail-radius-delta:${tailRadiusDelta}px;--bubble-tail-inward-delta:${tailInwardDelta}px;color:${color};padding:${L.bpy}px ${L.bpx}px;`
     +`border-radius:${r}px;font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
-}
-function bubbleWrapStyle(bg){
-  const r=Number(state.layout.radius)||0;
-  return `--bubble-bg:${bg};--bubble-radius:${r}px;`;
 }
 function typographyStyle(align='left'){
   const L=state.layout;
@@ -1983,10 +2271,12 @@ let themes=[];
 let themeStorageOK=true;
 
 function defaultLayout(){
-  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:6,bpy:9,bpx:13,
-    radius:14,fs:16,lh:1.55,para:8,nameSize:12,widthScale:100,letterSpacing:0,wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
+  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:16,continuationGap:8,bpy:9,bpx:13,
+    radius:14,fs:16,lh:1.55,para:8,nameSize:12,widthScale:100,letterSpacing:0,tailOn:true,tailSize:10,tailY:0,tailX:0,
+    linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerWidth:100,
+    wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
-function defaultExport(){ return {ratio:'auto',hMargin:24,vMargin:24,linkMargin:false,filename:'chat-발췌'}; }
+function defaultExport(){ return {ratio:'auto',hMargin:24,vMargin:24,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
 function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16}; }
 function seedThemes(){
   return [
@@ -2124,6 +2414,7 @@ function syncControlsFromState(){
   updateMarginModeUI(L.marginMode); syncMarginInputs();
   // 글 좌우 여백 + 연결 버튼
   if(typeof syncTextPadInputs==='function') syncTextPadInputs();
+  if(typeof syncBubbleAlignControls==='function') syncBubbleAlignControls();
   const tpBtn=document.getElementById('textPadLinkBtn');
   if(tpBtn){ tpBtn.classList.toggle('on',L.linkTextPad!==false); tpBtn.setAttribute('aria-pressed',L.linkTextPad!==false?'true':'false'); }
   // 가름선 여백
@@ -2138,6 +2429,9 @@ function syncControlsFromState(){
   if(exBtn){ exBtn.classList.toggle('on',!!state.export.linkMargin); exBtn.setAttribute('aria-pressed',state.export.linkMargin?'true':'false'); }
   transparentOn.checked=!!state.transparentBg;
   if(document.getElementById('fileName')) fileName.value=state.export.filename||'chat-발췌';
+  state.export.scale=getExportScale();
+  const exportScaleEl=document.getElementById('exportScale');
+  if(exportScaleEl) exportScaleEl.value=String(state.export.scale);
   // signature / credit
   creditOn.checked=!!state.credit.on;
   creditChar.value=state.credit.character||'';
@@ -2356,6 +2650,8 @@ function htmlToMarkup(node){
     if(tag==='br'){ out+='\n'; return; }
     if(ch.classList&&ch.classList.contains('mimg')) return; // skip images
     const inner=htmlToMarkup(ch);
+    if((ch.dataset&&ch.dataset.heading==='1')||(ch.classList&&ch.classList.contains('text-heading-1'))){ out+='[#]'+inner+'[/#]'; return; }
+    if((ch.dataset&&ch.dataset.heading==='2')||(ch.classList&&ch.classList.contains('text-heading-2'))){ out+='[##]'+inner+'[/##]'; return; }
     if(tag==='b'||tag==='strong'||/font-weight:\s*(bold|[6-9]00)/.test(style)){ out+='**'+inner+'**'; return; }
     if(tag==='i'||tag==='em'||/font-style:\s*italic/.test(style)){ out+='*'+inner+'*'; return; }
     if(tag==='s'||tag==='strike'||tag==='del'||/text-decoration[^;]*line-through/.test(style)){ out+='~~'+inner+'~~'; return; }
@@ -2438,9 +2734,12 @@ function fmtText(raw,edit){
   t=t.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<i>$1</i>');
   t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
   t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
-  t=t.replace(/==([^=]+)==/g,`<mark style="background:${state.colors.highlight};color:inherit;padding:0 2px;border-radius:3px">$1</mark>`);
+  t=t.replace(/==([^=]+)==/g,`<mark style="background:${state.colors.highlight};color:inherit;padding:0 2px;border-radius:0">$1</mark>`);
   // partial text color: [#RRGGBB]text[/]
   t=t.replace(/\[#([0-9A-Fa-f]{6})\]([\s\S]*?)\[\/\]/g,'<span style="color:#$1">$2</span>');
+  // partial title sizing, used only by the inserted-text composer buttons.
+  t=t.replace(/\[##\]([\s\S]*?)\[\/##\]/g,'<span class="text-heading text-heading-2" data-heading="2">$1</span>');
+  t=t.replace(/\[#\]([\s\S]*?)\[\/#\]/g,'<span class="text-heading text-heading-1" data-heading="1">$1</span>');
   if(edit){
     // editing view = source-accurate: every newline is a <br>, no dynamic paren color
     t=t.replace(/\n/g,'<br>');
@@ -2490,14 +2789,25 @@ function renderPreview(){
   chat.style.padding=`${M.t}px ${M.r}px ${M.b}px ${M.l}px`;
   const msgs=state.messages;
   let html=msgs.map((m,i)=>{
+    const prev=msgs[i-1];
     const next=msgs[i+1];
+    // A run continues only when the immediately preceding item is another chat
+    // message from the same sender. Text, dividers, images, or another sender break it.
+    const isChat=x=>x&&(!x.type||x.type==='chat');
+    const continued=isChat(m)&&isChat(prev)&&m.senderId===prev.senderId;
+    const nextContinued=isChat(m)&&isChat(next)&&m.senderId===next.senderId;
+    // Spacing inside a consecutive same-sender run stays fixed. The message-gap control
+    // moves the whole run relative to surrounding items instead of stretching its bubbles.
+    const continuationGap=Number.isFinite(Number(state.layout.continuationGap))
+      ? Number(state.layout.continuationGap) : 8;
     // Spacing to the next item is governed by whichever element "owns" that seam, so the
     // bubble panel's spacing controls only affect bubble(+글) spacing — never 가름선/사진.
     // priority: 가름선 > 사진 > 글 > 말풍선
     let gap=0;
     if(next){
       const a=m.type, b=next.type;
-      if(a==='divider'||b==='divider') gap=Number(state.layout.dividerMargin)||0;
+      if(nextContinued) gap=continuationGap;
+      else if(a==='divider'||b==='divider') gap=Number(state.layout.dividerMargin)||0;
       else if(a==='image'||b==='image') gap=(a==='image'?(m.imgMargin!=null?m.imgMargin:6):(next.imgMargin!=null?next.imgMargin:6));
       else if(a==='text'||b==='text') gap=state.layout.textGap;
       else gap=state.layout.gap;
@@ -2506,9 +2816,9 @@ function renderPreview(){
     if(m.type==='image') return imageRow(m,gap);
     if(m.type==='text') return textRow(m,gap);
     const mem=state.members.find(x=>x.id===m.senderId)||{};
-    if(state.mode==='messenger') return msgrRow(m,mem,gap);
-    if(state.mode==='log') return logRow(m,mem,gap);
-    return normalRow(m,mem,gap);
+    if(state.mode==='messenger') return msgrRow(m,mem,gap,continued);
+    if(state.mode==='log') return logRow(m,mem,gap,continued);
+    return normalRow(m,mem,gap,continued);
   }).join('');
   html+=creditHTML();
   chat.innerHTML=html;
@@ -2562,48 +2872,58 @@ function imageRow(m,gap){
     ${msgImgHTML(m)}
   </div>`;
 }
-function normalRow(m,mem,gap){
-  const av=state.showProfile?avatarHTML(mem,state.shape):'';
-  return `<div class="pmsg n-msg ${av?'':'no-av'} ${state.shape}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
+function normalRow(m,mem,gap,continued=false){
+  const mine=(m.senderId===state.meId);
+  const showIdentity=!mine||!!state.showMyIdentity;
+  const hasAvatarColumn=!!state.showProfile&&showIdentity;
+  const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
+  const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
+  const name=showIdentity&&!continued?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  return `<div class="pmsg n-msg ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
-    ${av}
+    ${avatar||avatarSpacer}
     <div class="n-body">
-      <div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>
-      <div class="bubble-wrap" style="${bubbleWrapStyle(state.colors.nBubble)}">
-        <span class="bubble-tail left" aria-hidden="true"></span>
-        <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle(state.colors.nBubble,state.colors.nText,'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
-      </div>
+      ${name}
+      <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle(state.colors.nBubble,state.colors.nText,'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
     </div>
   </div>`;
 }
-function logRow(m,mem,gap){
+function logRow(m,mem,gap,continued=false){
   const L=state.layout;
+  const mine=(m.senderId===state.meId);
+  const showIdentity=!mine||!!state.showMyIdentity;
+  const hasAvatarColumn=!!state.showProfile&&showIdentity;
   const plain=`color:${state.colors.nText};font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
-  const av=state.showProfile?avatarHTML(mem,state.shape):'';
-  return `<div class="pmsg n-msg ${av?'':'no-av'} ${state.shape}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
+  const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
+  const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
+  const name=showIdentity&&!continued?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  return `<div class="pmsg n-msg ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
-    ${av}
+    ${avatar||avatarSpacer}
     <div class="n-body">
-      <div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>
+      ${name}
       <div class="n-plain editable" data-id="${m.id}" style="${plain}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
     </div>
   </div>`;
 }
-function msgrRow(m,mem,gap){
+function msgrRow(m,mem,gap,continued=false){
   const mine=(m.senderId===state.meId);
+  const showIdentity=!mine||!!state.showMyIdentity;
   const bub=mine?state.colors.myBubble:state.colors.otBubble;
   const txt=mine?state.colors.myText:state.colors.otText;
-  const hasAv=state.showProfile&&!mine;
-  const avatar=hasAv?avatarHTML(mem,state.shape):'';
-  const name=mine?'':`<div class="m-name" style="font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>`;
-  return `<div class="pmsg m-msg ${mine?'mine':''} ${hasAv?'':'no-av'} ${state.shape}" style="margin-bottom:${gap}px">
+  const hasAvatarColumn=!!state.showProfile&&showIdentity;
+  const showAvatar=hasAvatarColumn&&!continued;
+  const avatar=showAvatar?avatarHTML(mem,state.shape):'';
+  const name=showIdentity&&!continued?`<div class="m-name" style="font-size:${state.layout.nameSize}px;color:${mem.color||'#555'}">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  // Keep the appropriate avatar column during a consecutive run even though the avatar itself is hidden.
+  const noAvatarColumn=hasAvatarColumn?'':'no-av';
+  const ownIdentityClass=mine&&showIdentity?'own-identity':'';
+  const ownAvatarClass=mine&&hasAvatarColumn?'own-avatar-column':'';
+  return `<div class="pmsg m-msg ${mine?'mine':''} ${ownIdentityClass} ${ownAvatarClass} ${noAvatarColumn} ${continued?'continuation':''} ${state.shape}" style="margin-bottom:${gap}px">
     ${ctrlHTML(m.id)}
     ${avatar}
     ${name}
-    <div class="bubble-wrap" style="${bubbleWrapStyle(bub)}">
-      <span class="bubble-tail ${mine?'right':'left'}" aria-hidden="true"></span>
-      <div class="m-bubble editable" data-id="${m.id}" style="${bubbleStyle(bub,txt,mine?'tr':'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'',mine?'right':'left')}</div>
-    </div>
+    <div class="m-bubble editable" data-id="${m.id}" style="${bubbleStyle(bub,txt,mine?'tr':'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'',mine?'right':'left')}</div>
   </div>`;
 }
 
@@ -2701,7 +3021,7 @@ async function saveImage(){
   }catch(_){}
   // make sure webfonts are loaded before snapshotting so the PNG wraps EXACTLY like the preview
   try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(_){}
-  const opts={pixelRatio:2.5};   // no cacheBust: images are already inline data URLs, re-fetching only slows saves
+  const opts={pixelRatio:getExportScale()};   // no cacheBust: images are already inline data URLs, re-fetching only slows saves
   if(!state.transparentBg) opts.backgroundColor=state.colors.bg;
   // Embed ONLY the font family actually in use (embedding every loaded font — esp. the huge
   // Noto Sans KR — is what made saves crawl). We DO embed it (not skip) so the saved text uses
@@ -2865,13 +3185,18 @@ addOrUpdateMember=function(){
 let __previewOverflowFrame=0;
 function syncPreviewScrollbar(){
   const stage=document.getElementById('stageEl');
-  if(!stage) return;
+  const fit=document.getElementById('canvasFit');
+  if(!stage||!fit) return;
   cancelAnimationFrame(__previewOverflowFrame);
   __previewOverflowFrame=requestAnimationFrame(()=>{
-    // Ignore sub-pixel rounding so an empty preview never gets a phantom scrollbar.
-    const needsScroll=stage.scrollHeight>stage.clientHeight+2;
-    stage.style.overflowY=needsScroll?'auto':'hidden';
-    if(!needsScroll) stage.scrollTop=0;
+    /* The wrapper stores the transformed preview dimensions, which is more
+       reliable than stage.scrollWidth while the stage is a flex container. */
+    const needsX=fit.offsetWidth>stage.clientWidth+2;
+    const needsY=fit.offsetHeight>stage.clientHeight+2;
+    stage.classList.toggle('preview-scroll-x',needsX);
+    stage.classList.toggle('preview-scroll-y',needsY);
+    if(!needsX) stage.scrollLeft=0;
+    if(!needsY) stage.scrollTop=0;
   });
 }
 function initPreviewScrollbarGuard(){
@@ -2912,7 +3237,9 @@ if(!state.members.length) openMemberEditor(false);
 state.backgroundImage=state.backgroundImage||{src:'',size:100,x:50,y:50,blur:0,overlayOpacity:0};
 state.colors.bgOverlay=state.colors.bgOverlay||'#000000';
 state.layout.tailOn=state.layout.tailOn!==false;
-state.layout.tailSize=Number(state.layout.tailSize||10);
+state.layout.tailSize=Math.max(6,Math.min(18,Number(state.layout.tailSize||10)));
+state.layout.tailY=Math.max(-24,Math.min(24,Number(state.layout.tailY||0)));
+state.layout.tailX=Math.max(-20,Math.min(20,Number(state.layout.tailX||0)));
 state.layout.linkV=!!state.layout.linkV;
 state.layout.linkH=!!state.layout.linkH;
 
@@ -2955,20 +3282,35 @@ function editorSelection(){
   }
   return sel;
 }
-function wrapRichSelection(tag,styleText){
+function wrapRichSelection(tag,styleText,className,dataAttrs){
   const ed=document.getElementById('msgContent'),sel=editorSelection();if(!ed||!sel||!sel.rangeCount)return;
-  const range=sel.getRangeAt(0),el=document.createElement(tag);if(styleText)el.setAttribute('style',styleText);
+  const range=sel.getRangeAt(0),el=document.createElement(tag);
+  if(styleText)el.setAttribute('style',styleText);
+  if(className)el.className=className;
+  if(dataAttrs)Object.keys(dataAttrs).forEach(k=>el.dataset[k]=dataAttrs[k]);
   try{el.appendChild(range.extractContents());range.insertNode(el);const nr=document.createRange();nr.selectNodeContents(el);sel.removeAllRanges();sel.addRange(nr);}catch(_){return;}
   ed.focus();
 }
 wrapFmt=function(mark){
-  const spec={'**':['strong',''],'*':['em',''],'~~':['s',''],'++':['u',''],'==':['mark','background:'+state.colors.highlight+';color:inherit;padding:0 2px;border-radius:3px']};
+  const spec={'**':['strong',''],'*':['em',''],'~~':['s',''],'++':['u',''],'==':['mark','background:'+state.colors.highlight+';color:inherit;padding:0 2px;border-radius:0']};
   const [tag,style]=spec[mark]||spec['**'];wrapRichSelection(tag,style);
 };
 wrapColor=function(){wrapRichSelection('span','color:'+state.colors.partial);};
+function wrapTextHeading(level){
+  if(state.composerType!=='text') return;
+  const lv=Number(level)===1?1:2;
+  const cls=lv===1?'text-heading text-heading-1':'text-heading text-heading-2';
+  wrapRichSelection('span','',cls,{heading:String(lv)});
+}
 
 function setBubbleTail(on){state.layout.tailOn=!!on;renderPreview();}
 function setBubbleTailSize(v){state.layout.tailSize=Math.max(6,Math.min(18,parseInt(v)||10));const e=document.getElementById('bubbleTailSizeV');if(e)e.textContent=state.layout.tailSize+'px';renderPreview();}
+function setBubbleTailPosition(axis,v){
+  const key=axis==='y'?'tailY':'tailX', min=axis==='y'?-24:-20, max=axis==='y'?24:20;
+  let n=parseInt(v);if(!Number.isFinite(n))n=0;n=Math.max(min,Math.min(max,n));state.layout[key]=n;
+  const e=document.getElementById(axis==='y'?'bubbleTailYV':'bubbleTailXV');if(e)e.textContent=n+'px';
+  renderPreview();
+}
 
 function updateBackgroundImageControls(){
   const B=state.backgroundImage;
@@ -3002,6 +3344,8 @@ function applyBackgroundLayers(){
   overlay.style.background=state.colors.bgOverlay;overlay.style.opacity=String(B.overlayOpacity/100);
   chat.classList.toggle('bubble-tail-off',!state.layout.tailOn);
   chat.style.setProperty('--bubble-tail-size',state.layout.tailSize+'px');
+  chat.style.setProperty('--bubble-tail-y',state.layout.tailY+'px');
+  chat.style.setProperty('--bubble-tail-x',state.layout.tailX+'px');
 }
 const __applyCanvasRich=applyCanvas;
 applyCanvas=function(){__applyCanvasRich();applyBackgroundLayers();};
@@ -3056,7 +3400,7 @@ currentTheme=function(name){const t=__currentThemeRich(name);t.backgroundImage=J
 const __applyThemeRich=applyThemeById;
 applyThemeById=function(id){const t=themes.find(x=>x.id===id);__applyThemeRich(id);if(t&&t.backgroundImage)state.backgroundImage=Object.assign({src:'',size:100,x:50,y:50,blur:0,overlayOpacity:0},JSON.parse(JSON.stringify(t.backgroundImage)));updateBackgroundImageControls();updateMarginLinkButtons();renderPreview();};
 const __syncControlsRich=syncControlsFromState;
-syncControlsFromState=function(){__syncControlsRich();const t=document.getElementById('bubbleTailOn'),s=document.getElementById('bubbleTailSize');if(t)t.checked=state.layout.tailOn;if(s)s.value=state.layout.tailSize;const sv=document.getElementById('bubbleTailSizeV');if(sv)sv.textContent=state.layout.tailSize+'px';updateBackgroundImageControls();updateMarginLinkButtons();};
+syncControlsFromState=function(){__syncControlsRich();const t=document.getElementById('bubbleTailOn'),s=document.getElementById('bubbleTailSize'),y=document.getElementById('bubbleTailY'),x=document.getElementById('bubbleTailX');if(t)t.checked=state.layout.tailOn;if(s)s.value=state.layout.tailSize;if(y)y.value=state.layout.tailY;if(x)x.value=state.layout.tailX;const sv=document.getElementById('bubbleTailSizeV'),yv=document.getElementById('bubbleTailYV'),xv=document.getElementById('bubbleTailXV');if(sv)sv.textContent=state.layout.tailSize+'px';if(yv)yv.textContent=state.layout.tailY+'px';if(xv)xv.textContent=state.layout.tailX+'px';updateBackgroundImageControls();updateMarginLinkButtons();};
 
 /* Export every style block, not only the first one, so tails/backgrounds/rich typography survive HTML export. */
 exportHTML=function(){
@@ -3074,9 +3418,9 @@ exportHTML=function(){
 initRichComposer();
 refreshColorRows();
 initPreciseControls();
-['bgImgSize','bgImgX','bgImgY','bgImgBlur','bgOverlayOpacity','bubbleTailSize'].forEach(id=>{
-  const map={bgImgSize:'bgImgSizeV',bgImgX:'bgImgXV',bgImgY:'bgImgYV',bgImgBlur:'bgImgBlurV',bgOverlayOpacity:'bgOverlayOpacityV',bubbleTailSize:'bubbleTailSizeV'};
-  const opts={bgImgSize:{min:40,max:240,step:1,nudge:5},bgImgX:{min:0,max:100,step:1,nudge:2},bgImgY:{min:0,max:100,step:1,nudge:2},bgImgBlur:{min:0,max:30,step:1,nudge:1},bgOverlayOpacity:{min:0,max:100,step:1,nudge:5},bubbleTailSize:{min:6,max:18,step:1,nudge:1}};
+['bgImgSize','bgImgX','bgImgY','bgImgBlur','bgOverlayOpacity','bubbleTailSize','bubbleTailY','bubbleTailX'].forEach(id=>{
+  const map={bgImgSize:'bgImgSizeV',bgImgX:'bgImgXV',bgImgY:'bgImgYV',bgImgBlur:'bgImgBlurV',bgOverlayOpacity:'bgOverlayOpacityV',bubbleTailSize:'bubbleTailSizeV',bubbleTailY:'bubbleTailYV',bubbleTailX:'bubbleTailXV'};
+  const opts={bgImgSize:{min:40,max:240,step:1,nudge:5},bgImgX:{min:0,max:100,step:1,nudge:2},bgImgY:{min:0,max:100,step:1,nudge:2},bgImgBlur:{min:0,max:30,step:1,nudge:1},bgOverlayOpacity:{min:0,max:100,step:1,nudge:5},bubbleTailSize:{min:6,max:18,step:1,nudge:1},bubbleTailY:{min:-24,max:24,step:1,nudge:1},bubbleTailX:{min:-20,max:20,step:1,nudge:1}};
   enhanceRange(id,map[id],opts[id]);
 });
 syncControlsFromState();
@@ -3310,7 +3654,7 @@ saveImage=async function(){
 
     showSaving('이미지 만드는 중...');
     const width=node.offsetWidth,height=node.offsetHeight;
-    const opts={pixelRatio:2.5,width,height,cacheBust:false};
+    const opts={pixelRatio:getExportScale(),width,height,cacheBust:false};
     if(!state.transparentBg) opts.backgroundColor=state.colors.bg;
 
     const fontCss=await __getTargetFontEmbedCSS(node);
@@ -3542,12 +3886,32 @@ else setTimeout(__idleLoadRenderer,1200);
       else{const tail=p.node.splitText(p.offset);p.node.parentNode.insertBefore(br,tail);}
     }
   }
+  function freezeHeadingMetrics(root){
+    /* html-to-image의 foreignObject 복제에서 em 기반 제목 크기와 line-height가
+       다시 계산되며 앞 문단 간격이 달라지는 일을 막는다. 현재 화면에서
+       계산된 실제 px 값을 저장용 DOM에만 고정하고, 저장 후 renderPreview가
+       원래 DOM을 새로 그리므로 편집 상태에는 남지 않는다. */
+    root.querySelectorAll('.text-heading,[data-heading]').forEach(el=>{
+      const cs=getComputedStyle(el);
+      el.style.display='inline-block';
+      el.style.verticalAlign='baseline';
+      el.style.fontSize=cs.fontSize;
+      el.style.lineHeight=cs.lineHeight;
+      el.style.fontWeight=cs.fontWeight;
+      el.style.margin='0';
+      el.style.padding='0';
+    });
+  }
   function lockVisualWraps(root){
     const targets=[...root.querySelectorAll('.glyph-scale')];
     for(const el of targets){
       if(!el.textContent||!el.textContent.trim()) continue;
       const align=getComputedStyle(el).textAlign;
       if(align==='justify') continue; // forced <br> changes justification semantics
+      /* 서로 다른 글자 크기가 섞인 문단은 문자 중심점의 높이 차이가 실제
+         줄바꿈처럼 보일 수 있다. 이 블록은 이미 글꼴과 폭을 확정한 뒤 캡처하므로
+         강제 <br> 삽입 없이 자연 배치를 그대로 복제하는 편이 정확하다. */
+      if(el.querySelector('.text-heading,[data-heading]')) continue;
       const breaks=findSoftBreaks(el);
       if(!breaks.length) continue;
       const parent=el.parentElement;
@@ -3588,13 +3952,14 @@ else setTimeout(__idleLoadRenderer,1200);
       node.style.boxShadow='none';node.style.transform='none';
       await __twoPaintFrames();
 
-      /* Freeze the exact soft-wrap positions visible right now before html-to-image clones it. */
+      /* Freeze mixed-size title metrics first, then lock ordinary soft wraps. */
+      freezeHeadingMetrics(node);
       lockVisualWraps(node);
       await __twoPaintFrames();
 
       showSaving('이미지 만드는 중...');
       const width=Math.ceil(node.offsetWidth),height=Math.ceil(node.offsetHeight);
-      const base={pixelRatio:2.5,width,height,cacheBust:false,preferredFontFormat:'woff2'};
+      const base={pixelRatio:safeCaptureScale(width,height,getExportScale()),width,height,cacheBust:false,preferredFontFormat:'woff2'};
       if(!state.transparentBg) base.backgroundColor=state.colors.bg;
 
       let fontCss='';
@@ -3706,25 +4071,30 @@ else setTimeout(__idleLoadRenderer,1200);
     }
     flush();node.parentNode.replaceChild(frag,node);
   }
+  const cjkQuickRe=/[\u3040-\u30FF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F]/u;
+  const kanaQuickRe=/[\u3040-\u30FF\u31F0-\u31FF\uFF66-\uFF9F々〆ヵヶゝゞヽヾー「」『』【】]/u;
+  const hanQuickRe=/[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/u;
   function applyCJKRuns(root){
-    if(!root)return;
+    if(!root||root.dataset.cjkProcessed==='1')return;
     unwrapOldCJK(root);
+    /* Most excerpts are Korean-only. One fast text test avoids repeatedly walking and
+       spreading every character of a very long document when no Chinese/Japanese run exists. */
+    if(!cjkQuickRe.test(root.textContent||'')){root.dataset.cjkProcessed='1';return;}
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{
       acceptNode(node){
-        const p=node.parentElement;
-        if(!p||!node.nodeValue||!node.nodeValue.trim())return NodeFilter.FILTER_REJECT;
+        const p=node.parentElement, value=node.nodeValue||'';
+        if(!p||!value.trim())return NodeFilter.FILTER_REJECT;
         if(p.closest('.ctrl,.cjk-auto,script,style,textarea,select,option'))return NodeFilter.FILTER_REJECT;
-        return [...node.nodeValue].some(isCJK)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+        return cjkQuickRe.test(value)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
       }
     });
     const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
     nodes.forEach(node=>{
       const context=node.parentElement.closest('.glyph-scale,.n-name,.m-name,.divider-pill,.credit,.t-inner')||node.parentElement;
       const contextText=(context&&context.textContent)||node.nodeValue||'';
-      const contextHasJapanese=[...contextText].some(ch=>isKana(ch)||isJapaneseMark(ch));
-      const contextHasHan=[...contextText].some(isHan);
-      wrapTextNode(node,contextHasJapanese,contextHasHan);
+      wrapTextNode(node,kanaQuickRe.test(contextText),hanQuickRe.test(contextText));
     });
+    root.dataset.cjkProcessed='1';
   }
   function cjkFamilies(node){
     const list=[];
@@ -3805,6 +4175,8 @@ else setTimeout(__idleLoadRenderer,1200);
   renderPreview=function(){
     const result=previousRender.apply(this,arguments),chat=document.getElementById('chat');
     if(chat){
+      /* Core rendering replaces chat.innerHTML, so mark this DOM generation as fresh once. */
+      chat.removeAttribute('data-cjk-processed');
       applyCJKRuns(chat);try{applyGlyphScale();applyCanvas()}catch(_){}
       const version=++cjkLoadVersion;
       ensureAllVisibleFonts(document.getElementById('canvas')).then(()=>{if(version!==cjkLoadVersion)return;try{applyGlyphScale();applyCanvas()}catch(_){}}).catch(()=>{});
@@ -3816,6 +4188,1780 @@ else setTimeout(__idleLoadRenderer,1200);
     const chat=document.getElementById('chat');applyCJKRuns(chat);
     ensureAllVisibleFonts(document.getElementById('canvas')).then(()=>{applyGlyphScale();applyCanvas()}).catch(()=>{});
   }catch(_){}
+})();
+</script>
+
+
+<style id="fixed-ratio-crisp-zoom-hand-pan-v3">
+/* Fixed-ratio preview: keep the authored text width/wrapping intact. */
+#canvas{image-rendering:auto}
+#stageEl.preview-pan-ready{cursor:grab}
+#stageEl.preview-pan-ready.is-panning,
+#stageEl.preview-pan-ready.is-panning *{cursor:grabbing!important}
+#stageEl.preview-pan-ready.is-panning{user-select:none;-webkit-user-select:none}
+/* ‘내 프로필·이름 표시’: 메신저의 내 아바타는 오른쪽, 이름도 오른쪽 정렬 */
+.m-msg.mine.own-avatar-column{padding-left:0;padding-right:50px}
+.m-msg.mine.own-avatar-column .av{left:auto;right:0}
+.m-msg.mine.own-identity .m-name{text-align:right;margin-left:3px;margin-right:3px}
+</style>
+<script id="fixed-ratio-crisp-zoom-hand-pan-v3-script">
+/* ===== fixed-ratio long-text layout + crisp preview zoom + hand panning ===== */
+(function(){
+  let previewCaptureMode=false;
+
+  /* Keep the layout width selected by the user. The old adaptive-width routine
+     reflowed long text to several thousand pixels, which changed alignment and
+     could make centered/right-aligned blocks look clipped. A fixed-ratio canvas
+     now grows around the original chat layout instead. */
+  applyCanvas=function(){
+    const canvas=document.getElementById('canvas');
+    const chat=document.getElementById('chat');
+    const stage=document.getElementById('stageEl');
+    if(!canvas||!chat||!stage) return;
+
+    const bg=state.transparentBg?'transparent':state.colors.bg;
+    canvas.style.background=bg;
+    chat.style.background=bg;
+    stage.classList.toggle('transparent-bg',!!state.transparentBg);
+
+    const ratio=state.export&&state.export.ratio||'auto';
+    const hMargin=Math.max(0,Number(state.export&&state.export.hMargin)||0);
+    const vMargin=Math.max(0,Number(state.export&&state.export.vMargin)||0);
+    const baseChatW=Math.max(1,Number(state.layout&&state.layout.width)||chat.offsetWidth||440);
+
+    /* Remove every preview-only scale before measuring export geometry. */
+    canvas.style.transform='none';
+    canvas.style.transformOrigin='top left';
+    canvas.style.zoom='1';
+    canvas.style.margin='0';
+    canvas.style.boxSizing='border-box';
+    canvas.style.padding='0';
+    canvas.style.width='auto';
+    canvas.style.height='auto';
+    canvas.style.minWidth='0';
+    canvas.style.minHeight='0';
+    canvas.style.display='block';
+    canvas.style.alignItems='';
+    canvas.style.justifyContent='';
+
+    chat.style.width=Math.round(baseChatW)+'px';
+    chat.style.minWidth=Math.round(baseChatW)+'px';
+    chat.style.maxWidth=Math.round(baseChatW)+'px';
+    chat.style.flex='0 0 auto';
+
+    /* Force one clean layout pass at the authored width. */
+    const contentW=Math.ceil(Math.max(chat.offsetWidth,chat.scrollWidth));
+    const contentH=Math.ceil(Math.max(chat.offsetHeight,chat.scrollHeight));
+
+    if(ratio==='auto'){
+      canvas.style.display='block';
+      canvas.style.width=Math.ceil(contentW+2*hMargin)+'px';
+      canvas.style.height=Math.ceil(contentH+2*vMargin)+'px';
+      canvas.style.padding=vMargin+'px '+hMargin+'px';
+    }else{
+      const p=String(ratio).split(':').map(Number);
+      const rw=p[0]>0?p[0]:1;
+      const rh=p[1]>0?p[1]:1;
+      const unit=Math.ceil(Math.max(
+        (contentW+2*hMargin)/rw,
+        (contentH+2*vMargin)/rh
+      ));
+      const frameW=Math.max(rw,unit*rw);
+      const frameH=Math.max(rh,unit*rh);
+      canvas.style.display='flex';
+      canvas.style.alignItems='center';
+      canvas.style.justifyContent='center';
+      canvas.style.width=Math.ceil(frameW)+'px';
+      canvas.style.height=Math.ceil(frameH)+'px';
+      canvas.style.padding='0';
+    }
+
+    fitPreview();
+  };
+
+  /* CSS zoom triggers a real browser repaint instead of enlarging one cached
+     transform layer. Text, borders and vector UI therefore remain much sharper
+     while the actual export canvas and save scale stay unchanged. */
+  fitPreview=function(){
+    const stage=document.getElementById('stageEl');
+    const wrap=document.getElementById('canvasFit');
+    const canvas=document.getElementById('canvas');
+    if(!stage||!wrap||!canvas) return;
+
+    canvas.style.transform='none';
+    canvas.style.transformOrigin='top left';
+    canvas.style.zoom='1';
+    canvas.style.margin='0';
+    stage.style.justifyContent='flex-start';
+    wrap.style.marginLeft='auto';
+    wrap.style.marginRight='auto';
+
+    const cw=Math.ceil(canvas.offsetWidth);
+    const ch=Math.ceil(canvas.offsetHeight);
+    if(!cw||!ch){
+      wrap.style.width='';wrap.style.height='';
+      if(typeof updatePreviewZoomLabel==='function') updatePreviewZoomLabel();
+      return;
+    }
+
+    if(previewCaptureMode){
+      wrap.style.width=cw+'px';
+      wrap.style.height=ch+'px';
+      if(typeof syncPreviewScrollbar==='function') syncPreviewScrollbar();
+      return;
+    }
+
+    const availW=Math.max(40,stage.clientWidth-8);
+    const desktop=window.matchMedia&&window.matchMedia('(min-width:861px)').matches;
+    const ratioLocked=state.export&&state.export.ratio!=='auto';
+    const availH=(desktop&&ratioLocked)?Math.max(40,stage.clientHeight-8):Infinity;
+    const fitScale=Math.min(1,availW/cw,availH/ch);
+    const zoom=(typeof normalizedPreviewZoom==='function')?normalizedPreviewZoom(state.previewZoom):1;
+    const scale=Math.max(0.002,Math.min(8,fitScale*zoom));
+
+    /* Chromium/Whale render CSS zoom sharply. Transform remains only as a
+       standards fallback for browsers that do not support it. */
+    const canZoom=window.CSS&&CSS.supports&&CSS.supports('zoom','1');
+    if(canZoom){
+      canvas.style.zoom=String(scale);
+      canvas.style.transform='none';
+    }else{
+      canvas.style.zoom='1';
+      canvas.style.transform=Math.abs(scale-1)>0.0001?'scale('+scale+')':'none';
+    }
+    wrap.style.width=Math.max(1,Math.round(cw*scale))+'px';
+    wrap.style.height=Math.max(1,Math.round(ch*scale))+'px';
+    if(typeof updatePreviewZoomLabel==='function') updatePreviewZoomLabel();
+    if(typeof syncPreviewScrollbar==='function') syncPreviewScrollbar();
+    requestAnimationFrame(updatePanAvailability);
+  };
+
+  function updatePanAvailability(){
+    const stage=document.getElementById('stageEl');
+    const fit=document.getElementById('canvasFit');
+    if(!stage||!fit) return;
+    const canPan=fit.offsetWidth>stage.clientWidth+2||fit.offsetHeight>stage.clientHeight+2;
+    stage.classList.toggle('preview-pan-ready',canPan);
+    if(!canPan) stage.classList.remove('is-panning');
+  }
+
+  function initHandPan(){
+    const stage=document.getElementById('stageEl');
+    const fit=document.getElementById('canvasFit');
+    const chat=document.getElementById('chat');
+    if(!stage||stage.dataset.handPanReady==='1') return;
+    stage.dataset.handPanReady='1';
+
+    let drag=null;
+    let suppressClick=false;
+    const hasOverflow=()=>stage.scrollWidth>stage.clientWidth+2||stage.scrollHeight>stage.clientHeight+2;
+
+    stage.addEventListener('pointerdown',e=>{
+      if(e.button!==0||!hasOverflow()) return;
+      if(e.target.closest('button,a,input,textarea,select,.ctrl')) return;
+      drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:stage.scrollLeft,top:stage.scrollTop,moved:false};
+    });
+    stage.addEventListener('pointermove',e=>{
+      if(!drag||drag.id!==e.pointerId) return;
+      const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+      if(!drag.moved&&Math.hypot(dx,dy)<4) return;
+      if(!drag.moved){
+        drag.moved=true;
+        stage.classList.add('is-panning');
+        try{stage.setPointerCapture(e.pointerId)}catch(_){}
+        const sel=window.getSelection&&window.getSelection();
+        if(sel&&sel.removeAllRanges) sel.removeAllRanges();
+      }
+      e.preventDefault();
+      stage.scrollLeft=drag.left-dx;
+      stage.scrollTop=drag.top-dy;
+    },{passive:false});
+    const end=e=>{
+      if(!drag||drag.id!==e.pointerId) return;
+      if(drag.moved) suppressClick=true;
+      try{stage.releasePointerCapture(e.pointerId)}catch(_){}
+      drag=null;
+      stage.classList.remove('is-panning');
+    };
+    stage.addEventListener('pointerup',end);
+    stage.addEventListener('pointercancel',end);
+    stage.addEventListener('lostpointercapture',()=>{drag=null;stage.classList.remove('is-panning')});
+    stage.addEventListener('click',e=>{
+      if(!suppressClick) return;
+      suppressClick=false;
+      e.preventDefault();e.stopPropagation();
+    },true);
+
+    if('ResizeObserver' in window){
+      const ro=new ResizeObserver(()=>requestAnimationFrame(updatePanAvailability));
+      ro.observe(stage);if(fit)ro.observe(fit);if(chat)ro.observe(chat);
+    }
+    if(chat){
+      const mo=new MutationObserver(()=>requestAnimationFrame(updatePanAvailability));
+      mo.observe(chat,{childList:true,subtree:true,attributes:true,characterData:true});
+    }
+    window.addEventListener('resize',updatePanAvailability,{passive:true});
+    stage.addEventListener('scroll',updatePanAvailability,{passive:true});
+    updatePanAvailability();
+  }
+
+  /* Existing save routines call render/applyCanvas internally. Capture mode makes
+     those calls keep the canvas at 100% while preserving the chosen save scale. */
+  const previousSaveImage=window.saveImage||saveImage;
+  saveImage=async function(){
+    previewCaptureMode=true;
+    const canvas=document.getElementById('canvas');
+    if(canvas){canvas.style.zoom='1';canvas.style.transform='none';}
+    try{return await previousSaveImage.apply(this,arguments);}
+    finally{previewCaptureMode=false;try{fitPreview()}catch(_){}}
+  };
+
+  const previousExportHTML=window.exportHTML||exportHTML;
+  exportHTML=function(){
+    previewCaptureMode=true;
+    const canvas=document.getElementById('canvas');
+    if(canvas){canvas.style.zoom='1';canvas.style.transform='none';}
+    try{return previousExportHTML.apply(this,arguments);}
+    finally{previewCaptureMode=false;try{fitPreview()}catch(_){}}
+  };
+
+  initHandPan();
+  try{applyCanvas();requestAnimationFrame(updatePanAvailability)}catch(_){}
+})();
+</script>
+
+
+<script id="canvas-only-ctrl-wheel-zoom">
+/* Ctrl/⌘ + wheel zooms only the preview canvas and blocks native browser zoom. */
+(function(){
+  let accumulated=0;
+  let lastStepAt=0;
+  let resetTimer=0;
+
+  function applyWheelZoom(e){
+    if(!(e.ctrlKey||e.metaKey)) return;
+    if(typeof changePreviewZoom!=='function') return;
+    e.preventDefault();
+
+    accumulated+=Number(e.deltaY)||0;
+    clearTimeout(resetTimer);
+    resetTimer=setTimeout(()=>{accumulated=0;},140);
+
+    const now=performance.now();
+    if(Math.abs(accumulated)<6||now-lastStepAt<45) return;
+    const direction=accumulated<0?1:-1;
+    accumulated=0;
+    lastStepAt=now;
+
+    const stage=document.getElementById('stageEl');
+    if(!stage){changePreviewZoom(direction);return;}
+
+    const rect=stage.getBoundingClientRect();
+    const inside=e.clientX>=rect.left&&e.clientX<=rect.right&&e.clientY>=rect.top&&e.clientY<=rect.bottom;
+    const anchorVX=inside?e.clientX-rect.left:stage.clientWidth/2;
+    const anchorVY=inside?e.clientY-rect.top:stage.clientHeight/2;
+    const oldW=Math.max(1,stage.scrollWidth);
+    const oldH=Math.max(1,stage.scrollHeight);
+    const anchorCX=stage.scrollLeft+anchorVX;
+    const anchorCY=stage.scrollTop+anchorVY;
+
+    changePreviewZoom(direction);
+    requestAnimationFrame(()=>{
+      const ratioX=Math.max(1,stage.scrollWidth)/oldW;
+      const ratioY=Math.max(1,stage.scrollHeight)/oldH;
+      stage.scrollLeft=anchorCX*ratioX-anchorVX;
+      stage.scrollTop=anchorCY*ratioY-anchorVY;
+    });
+  }
+
+  document.addEventListener('wheel',applyWheelZoom,{passive:false,capture:true});
+})();
+</script>
+
+
+<style id="profile-aware-center-and-format-toggle-fix">
+/* 가운데 정렬: 실제 프로필 전체가 아니라 프로필 중심(원의 절반 지점)을
+   말풍선 블록의 왼쪽 기준으로 삼는다. JS가 전체 여백을 넘지 않는 범위에서
+   정확한 이동량을 --profile-aware-center-shift 로 넣는다. */
+.n-msg.bubble-align-center:not(.no-av) > .av,
+.n-msg.bubble-align-center:not(.no-av) > .av-continuation-spacer,
+.n-msg.bubble-align-center:not(.no-av) > .n-body{
+  transform:translateX(var(--profile-aware-center-shift,0px));
+}
+</style>
+<script id="profile-aware-center-and-format-toggle-fix-script">
+/* ===== profile-aware bubble centering + non-nesting rich-format toggles ===== */
+(function(){
+  'use strict';
+
+  /* ---------- profile-aware center alignment ---------- */
+  function applyProfileAwareBubbleCentering(){
+    const chat=document.getElementById('chat');
+    if(!chat) return;
+    chat.querySelectorAll('.n-msg.bubble-align-center').forEach(row=>{
+      row.style.setProperty('--profile-aware-center-shift','0px');
+      if(row.classList.contains('no-av')) return;
+      const avatar=row.querySelector(':scope > .av, :scope > .av-continuation-spacer');
+      const body=row.querySelector(':scope > .n-body');
+      if(!avatar||!body) return;
+
+      /* The effective block starts at the avatar's center, not its left edge.
+         Compared with centering the whole avatar+body group, that means moving
+         the real group left by one quarter of the avatar diameter. */
+      const avatarWidth=Math.max(0,avatar.offsetWidth||40);
+      const wantedShift=-(avatarWidth/4);
+
+      /* offsetLeft ignores transforms, so it gives the currently centered layout.
+         Clamp the shift so the avatar's actual left edge never crosses the row's
+         inner left boundary (which already includes the user's bubble padding and
+         the chat's overall margin). */
+      const rowStyle=getComputedStyle(row);
+      const innerLeft=parseFloat(rowStyle.paddingLeft)||0;
+      const freeLeft=Math.max(0,(avatar.offsetLeft||0)-innerLeft);
+      const safeShift=Math.max(wantedShift,-freeLeft);
+      row.style.setProperty('--profile-aware-center-shift',safeShift.toFixed(2)+'px');
+    });
+  }
+  window.applyProfileAwareBubbleCentering=applyProfileAwareBubbleCentering;
+
+  /* applyGlyphScale runs after every preview render and again after web fonts load,
+     so extending it keeps the center correction accurate after every reflow. */
+  if(typeof window.applyGlyphScale==='function'){
+    const previousApplyGlyphScale=window.applyGlyphScale;
+    window.applyGlyphScale=function(){
+      const result=previousApplyGlyphScale.apply(this,arguments);
+      applyProfileAwareBubbleCentering();
+      return result;
+    };
+  }
+  window.addEventListener('resize',applyProfileAwareBubbleCentering,{passive:true});
+
+  /* ---------- rich editor format helpers ---------- */
+  const FORMAT_QUERY=[
+    'strong','b','em','i','s','strike','del','u','mark','font[color]',
+    'span[data-heading]','span.text-heading-1','span.text-heading-2','span[style*="color"]'
+  ].join(',');
+
+  function editorRoot(fallback){
+    if(fallback) return fallback;
+    return document.getElementById('msgContent');
+  }
+  function selectionInside(root){
+    const sel=window.getSelection();
+    if(!root||!sel||!sel.rangeCount) return null;
+    const range=sel.getRangeAt(0);
+    const start=range.startContainer, end=range.endContainer;
+    if(!root.contains(start)||!root.contains(end)) return null;
+    return {sel,range};
+  }
+  function ensureEditorSelection(root){
+    let found=selectionInside(root);
+    if(found) return found;
+    root.focus();
+    const sel=window.getSelection(),range=document.createRange();
+    range.selectNodeContents(root);range.collapse(false);
+    sel.removeAllRanges();sel.addRange(range);
+    return {sel,range:sel.getRangeAt(0)};
+  }
+  function asElement(node){
+    return node&&node.nodeType===1?node:node&&node.parentElement;
+  }
+  function rgbLikeToHex(value){
+    value=String(value||'').trim();
+    if(/^#[0-9a-f]{6}$/i.test(value)) return value.toUpperCase();
+    if(/^#[0-9a-f]{3}$/i.test(value)){
+      return ('#'+value.slice(1).split('').map(c=>c+c).join('')).toUpperCase();
+    }
+    const m=value.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if(!m) return '';
+    return '#'+[m[1],m[2],m[3]].map(n=>Math.max(0,Math.min(255,Number(n))).toString(16).padStart(2,'0')).join('').toUpperCase();
+  }
+  function elementColor(el){
+    if(!el) return '';
+    if(el.tagName==='FONT') return rgbLikeToHex(el.getAttribute('color'));
+    return rgbLikeToHex(el.style&&el.style.color||'');
+  }
+  function formatTypeOf(el){
+    if(!el||el.nodeType!==1) return '';
+    const tag=el.tagName;
+    if(tag==='STRONG'||tag==='B') return 'bold';
+    if(tag==='EM'||tag==='I') return 'italic';
+    if(tag==='S'||tag==='STRIKE'||tag==='DEL') return 'strike';
+    if(tag==='U') return 'underline';
+    if(tag==='MARK') return 'highlight';
+    if(el.dataset&&el.dataset.heading) return 'heading';
+    if(el.classList&&(el.classList.contains('text-heading-1')||el.classList.contains('text-heading-2'))) return 'heading';
+    if(tag==='FONT'&&el.getAttribute('color')) return 'color';
+    if(tag==='SPAN'&&el.style&&el.style.color) return 'color';
+    return '';
+  }
+  function matchesFormat(el,type){
+    const actual=formatTypeOf(el);
+    if(type==='heading') return actual==='heading';
+    return actual===type;
+  }
+  function closestFormat(node,root,type){
+    let el=asElement(node);
+    while(el&&el!==root){
+      if(matchesFormat(el,type)) return el;
+      el=el.parentElement;
+    }
+    return null;
+  }
+  function commonFormat(range,root,type){
+    const a=closestFormat(range.startContainer,root,type);
+    const b=closestFormat(range.endContainer,root,type);
+    if(a&&a===b) return a;
+    if(a&&b&&a.contains(b)) return a;
+    if(a&&b&&b.contains(a)) return b;
+    return null;
+  }
+  function nodeDepth(el){let n=0;while(el&&el.parentElement){n++;el=el.parentElement;}return n;}
+  function intersectingFormats(range,root,type){
+    return [...root.querySelectorAll(FORMAT_QUERY)]
+      .filter(el=>matchesFormat(el,type))
+      .filter(el=>{try{return range.intersectsNode(el);}catch(_){return false;}})
+      .sort((a,b)=>nodeDepth(b)-nodeDepth(a));
+  }
+  function unwrapElement(el){
+    if(!el||!el.parentNode) return;
+    const frag=document.createDocumentFragment();
+    while(el.firstChild) frag.appendChild(el.firstChild);
+    el.replaceWith(frag);
+  }
+  function markSelection(root){
+    const found=selectionInside(root);if(!found)return null;
+    const {sel,range}=found,collapsed=range.collapsed;
+    const make=kind=>{const m=document.createElement('span');m.dataset.formatSelectionMarker=kind;m.setAttribute('aria-hidden','true');return m;};
+    if(collapsed){
+      const caret=make('caret');range.insertNode(caret);
+      return {sel,collapsed,caret};
+    }
+    const start=make('start'),end=make('end');
+    const endRange=range.cloneRange();endRange.collapse(false);endRange.insertNode(end);
+    const startRange=range.cloneRange();startRange.collapse(true);startRange.insertNode(start);
+    return {sel,collapsed,start,end};
+  }
+  function restoreMarkedSelection(marked){
+    if(!marked) return;
+    const {sel,collapsed}=marked,range=document.createRange();
+    try{
+      if(collapsed){
+        range.setStartBefore(marked.caret);range.collapse(true);
+        marked.caret.remove();
+      }else{
+        range.setStartAfter(marked.start);range.setEndBefore(marked.end);
+        marked.start.remove();marked.end.remove();
+      }
+      sel.removeAllRanges();sel.addRange(range);
+    }catch(_){
+      [marked.caret,marked.start,marked.end].filter(Boolean).forEach(x=>x.remove());
+    }
+  }
+  function transformKeepingSelection(root,fn){
+    const marked=markSelection(root);
+    try{fn();}finally{restoreMarkedSelection(marked);}
+  }
+  function selectContents(el){
+    const sel=window.getSelection(),range=document.createRange();
+    range.selectNodeContents(el);sel.removeAllRanges();sel.addRange(range);
+  }
+  function ensureNonCollapsedRange(root){
+    const found=ensureEditorSelection(root),sel=found.sel;
+    if(!sel.isCollapsed) return sel.getRangeAt(0);
+    const range=sel.getRangeAt(0),node=document.createTextNode('텍스트');
+    range.insertNode(node);range.selectNodeContents(node);sel.removeAllRanges();sel.addRange(range);
+    return sel.getRangeAt(0);
+  }
+  function makeFormatElement(type,options){
+    let el;
+    if(type==='bold') el=document.createElement('strong');
+    else if(type==='italic') el=document.createElement('em');
+    else if(type==='strike') el=document.createElement('s');
+    else if(type==='underline') el=document.createElement('u');
+    else if(type==='highlight'){
+      el=document.createElement('mark');
+      el.style.background=options.color;el.style.color='inherit';el.style.padding='0 2px';el.style.borderRadius='0';
+    }else if(type==='color'){
+      el=document.createElement('span');el.style.color=options.color;
+    }else if(type==='heading'){
+      el=document.createElement('span');
+      const level=Number(options.level)===1?1:2;
+      el.dataset.heading=String(level);
+      el.className='text-heading text-heading-'+level;
+    }
+    return el;
+  }
+  function wrapCurrentSelection(root,type,options){
+    const range=ensureNonCollapsedRange(root),el=makeFormatElement(type,options||{});
+    if(!el) return null;
+    try{el.appendChild(range.extractContents());range.insertNode(el);selectContents(el);root.focus();return el;}catch(_){return null;}
+  }
+  function cleanupEmptyFormats(root){
+    if(!root) return;
+    const empty=[...root.querySelectorAll(FORMAT_QUERY)]
+      .filter(el=>!String(el.textContent||'').replace(/\u200B/g,'').length)
+      .sort((a,b)=>nodeDepth(b)-nodeDepth(a));
+    if(!empty.length) return;
+    transformKeepingSelection(root,()=>empty.forEach(unwrapElement));
+  }
+  function breakOutOfEmptyFormatBeforeTyping(root){
+    const found=selectionInside(root);if(!found||!found.range.collapsed)return false;
+    let el=asElement(found.range.startContainer),outer=null;
+    while(el&&el!==root){
+      if(formatTypeOf(el)&&!String(el.textContent||'').replace(/\u200B/g,'').length) outer=el;
+      el=el.parentElement;
+    }
+    if(!outer||!outer.parentNode)return false;
+    const marker=document.createElement('span');marker.dataset.plainTypingMarker='1';marker.setAttribute('aria-hidden','true');
+    outer.parentNode.insertBefore(marker,outer);outer.remove();
+    const range=document.createRange();range.setStartAfter(marker);range.collapse(true);
+    found.sel.removeAllRanges();found.sel.addRange(range);
+    requestAnimationFrame(()=>marker.remove());
+    return true;
+  }
+
+  function toggleSimpleFormat(root,type,options){
+    const found=ensureEditorSelection(root),range=found.sel.getRangeAt(0);
+    const active=commonFormat(range,root,type);
+    if(active){transformKeepingSelection(root,()=>unwrapElement(active));root.focus();return;}
+    const hits=range.collapsed?[]:intersectingFormats(range,root,type);
+    if(hits.length){transformKeepingSelection(root,()=>hits.forEach(unwrapElement));root.focus();return;}
+    wrapCurrentSelection(root,type,options||{});
+  }
+  function applyColorFormat(root,color){
+    color=rgbLikeToHex(color)||String(color||'').toUpperCase();
+    const found=ensureEditorSelection(root),range=found.sel.getRangeAt(0);
+    const active=commonFormat(range,root,'color');
+    if(active){
+      if(elementColor(active)===color){
+        transformKeepingSelection(root,()=>unwrapElement(active));
+      }else{
+        if(active.tagName==='FONT'){
+          const span=document.createElement('span');span.style.color=color;
+          while(active.firstChild)span.appendChild(active.firstChild);active.replaceWith(span);
+          selectContents(span);
+        }else active.style.color=color;
+      }
+      root.focus();return;
+    }
+    const hits=range.collapsed?[]:intersectingFormats(range,root,'color');
+    if(hits.length){
+      const allSame=hits.every(el=>elementColor(el)===color);
+      transformKeepingSelection(root,()=>hits.forEach(unwrapElement));
+      if(allSame){root.focus();return;}
+    }
+    wrapCurrentSelection(root,'color',{color});
+  }
+  function applyHeadingFormat(root,level){
+    if(root.id==='msgContent'&&state.composerType!=='text') return;
+    level=Number(level)===1?1:2;
+    const found=ensureEditorSelection(root),range=found.sel.getRangeAt(0);
+    const active=commonFormat(range,root,'heading');
+    if(active){
+      const current=Number(active.dataset.heading||(active.classList.contains('text-heading-1')?1:2));
+      if(current===level) transformKeepingSelection(root,()=>unwrapElement(active));
+      else{
+        active.dataset.heading=String(level);
+        active.classList.remove('text-heading-1','text-heading-2');
+        active.classList.add('text-heading','text-heading-'+level);
+      }
+      root.focus();return;
+    }
+    const hits=range.collapsed?[]:intersectingFormats(range,root,'heading');
+    if(hits.length){
+      const allSame=hits.every(el=>Number(el.dataset.heading||(el.classList.contains('text-heading-1')?1:2))===level);
+      transformKeepingSelection(root,()=>hits.forEach(unwrapElement));
+      if(allSame){root.focus();return;}
+    }
+    wrapCurrentSelection(root,'heading',{level});
+  }
+
+  function typeFromMark(mark){
+    return {'**':'bold','*':'italic','~~':'strike','++':'underline','==':'highlight'}[mark]||'bold';
+  }
+  window.wrapFmt=function(mark){
+    const root=editorRoot();if(!root)return;
+    const type=typeFromMark(mark);
+    toggleSimpleFormat(root,type,type==='highlight'?{color:state.colors.highlight}:{});
+    cleanupEmptyFormats(root);
+  };
+  window.wrapColor=function(){
+    const root=editorRoot();if(!root)return;
+    applyColorFormat(root,state.colors.partial);
+    cleanupEmptyFormats(root);
+  };
+  window.wrapTextHeading=function(level){
+    const root=editorRoot();if(!root)return;
+    applyHeadingFormat(root,level);
+    cleanupEmptyFormats(root);
+  };
+
+  /* Floating inline-edit toolbar uses the same toggle/replacement rules, so a
+     color change updates the existing color span instead of nesting another code. */
+  window.fmtSel=function(e,cmd){
+    e.preventDefault();
+    const root=document.querySelector('.editable.editing');
+    if(!root) return;
+    if(cmd==='color') applyColorFormat(root,state.colors.partial);
+    else if(cmd==='hilite') toggleSimpleFormat(root,'highlight',{color:state.colors.highlight});
+    else if(cmd==='clear'){
+      const found=selectionInside(root);
+      if(found&&!found.range.collapsed){
+        const hits=[...root.querySelectorAll(FORMAT_QUERY)].filter(el=>{try{return found.range.intersectsNode(el);}catch(_){return false;}}).sort((a,b)=>nodeDepth(b)-nodeDepth(a));
+        transformKeepingSelection(root,()=>hits.forEach(unwrapElement));
+      }
+    }else{
+      const map={bold:'bold',italic:'italic',strikeThrough:'strike',underline:'underline'};
+      toggleSimpleFormat(root,map[cmd]||cmd,{});
+    }
+    cleanupEmptyFormats(root);
+    setTimeout(()=>{if(typeof updateSelToolbar==='function')updateSelToolbar();},0);
+  };
+
+  function attachComposerCleanup(){
+    const ed=document.getElementById('msgContent');
+    if(!ed||ed.dataset.formatToggleFix==='1') return;
+    ed.dataset.formatToggleFix='1';
+    ed.addEventListener('beforeinput',e=>{
+      if(/^insert/i.test(e.inputType||'')) breakOutOfEmptyFormatBeforeTyping(ed);
+    });
+    ed.addEventListener('input',()=>cleanupEmptyFormats(ed));
+  }
+  attachComposerCleanup();
+  applyProfileAwareBubbleCentering();
+})();
+</script>
+
+
+<script id="exact-live-preview-export-v4">
+
+/* ===== 미리보기 그대로 저장 v4 =====
+   저장 직전에 원본 #canvas를 다시 렌더링하거나, 줄바꿈용 <br>, 고정 폭,
+   제목 행간 보정을 삽입하지 않는다. 현재 화면의 DOM을 즉시 복제한 뒤
+   화면 밖 사본만 캡처하므로 긴 글에서도 저장 전용 여백이 생기지 않는다. */
+(function(){
+  let exactPreviewSaveBusy=false;
+
+  function nextTwoFrames(){
+    return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  }
+  function removeCaptureOnlyArtifacts(root){
+    root.querySelectorAll('[data-export-soft-break]').forEach(br=>br.remove());
+    root.querySelectorAll('.ctrl,#selToolbar').forEach(el=>el.remove());
+    root.querySelectorAll('.editable.editing').forEach(el=>el.classList.remove('editing'));
+  }
+  function makeExactPreviewClone(source){
+    const width=Math.ceil(source.offsetWidth);
+    const height=Math.ceil(source.offsetHeight);
+    const host=document.createElement('div');
+    host.setAttribute('aria-hidden','true');
+    Object.assign(host.style,{
+      position:'fixed',left:'-100000px',top:'0',
+      width:width+'px',height:height+'px',
+      overflow:'hidden',pointerEvents:'none',zIndex:'-2147483647'
+    });
+
+    const clone=source.cloneNode(true);
+    clone.removeAttribute('aria-live');
+    clone.style.zoom='1';
+    clone.style.transform='none';
+    clone.style.transformOrigin='top left';
+    clone.style.margin='0';
+    clone.style.boxShadow='none';
+    clone.style.width=width+'px';
+    clone.style.height=height+'px';
+    clone.style.minWidth=width+'px';
+    clone.style.maxWidth=width+'px';
+    clone.style.minHeight=height+'px';
+    clone.style.maxHeight=height+'px';
+    removeCaptureOnlyArtifacts(clone);
+    host.appendChild(clone);
+    document.body.appendChild(host);
+    return {host,clone,width,height};
+  }
+
+  /* 저장·복사가 공유하는 캡처 파이프라인. dataURL을 돌려주고, 실패 시 throw.
+     이미 다른 캡처가 진행 중이면 null을 돌려준다. */
+  async function exactPreviewCapture(savingMsg){
+    if(exactPreviewSaveBusy) return null;
+    exactPreviewSaveBusy=true;
+    let snapshot=null;
+    try{
+      /* 편집 중인 내용만 확정한다. 그 뒤에는 renderPreview/applyCanvas를
+         다시 호출하지 않아 현재 보이는 줄바꿈과 높이를 그대로 유지한다. */
+      if(editingId){
+        commitEdit();
+        renderPreview();
+        await nextTwoFrames();
+      }
+
+      const source=document.getElementById('canvas');
+      if(!source) throw new Error('preview canvas unavailable');
+
+      /* 렌더러를 기다리는 동안 원본 레이아웃이 달라지지 않도록 먼저 복제한다. */
+      snapshot=makeExactPreviewClone(source);
+      showSaving(savingMsg||'미리보기 그대로 저장 중...');
+      await __loadHtmlToImage();
+      await nextTwoFrames();
+
+      const scale=(typeof safeCaptureScale==='function')
+        ? safeCaptureScale(snapshot.width,snapshot.height,getExportScale())
+        : getExportScale();
+      const base={
+        pixelRatio:scale,
+        width:snapshot.width,
+        height:snapshot.height,
+        cacheBust:false,
+        preferredFontFormat:'woff2'
+      };
+      if(!state.transparentBg) base.backgroundColor=state.colors.bg;
+
+      /* 현재 미리보기와 동일한 글꼴만 사본에 포함한다. 글꼴 삽입 실패 시에도
+         사본 DOM의 줄바꿈을 수정하지 않은 채 가볍게 재시도한다. */
+      let fontCss='';
+      try{
+        if(typeof __getTargetFontEmbedCSS==='function'){
+          fontCss=await __withTimeout(__getTargetFontEmbedCSS(snapshot.clone),9000,'');
+        }
+      }catch(_){fontCss='';}
+
+      let dataUrl;
+      try{
+        const opts=fontCss?{...base,fontEmbedCSS:fontCss}:{...base,skipFonts:true};
+        dataUrl=await __withQuietConsole(()=>window.htmlToImage.toPng(snapshot.clone,opts));
+      }catch(firstError){
+        console.warn('exact preview capture retry',firstError);
+        dataUrl=await __withQuietConsole(()=>window.htmlToImage.toPng(snapshot.clone,{...base,skipFonts:true}));
+      }
+      return dataUrl;
+    }finally{
+      if(snapshot&&snapshot.host) snapshot.host.remove();
+      hideSaving();
+      exactPreviewSaveBusy=false;
+    }
+  }
+
+  window.saveImage=async function(){
+    if(exactPreviewSaveBusy) return;
+    if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+    try{
+      const dataUrl=await exactPreviewCapture('미리보기 그대로 저장 중...');
+      if(!dataUrl) return;
+      __downloadDataUrl(dataUrl,safeFilename(state.export.filename)+'.png');
+    }catch(err){
+      console.error('exact preview image export failed',err);
+      const detail=String(err&&err.message||'');
+      if(/renderer|script|timeout/i.test(detail)){
+        alert('이미지 저장 기능을 불러오지 못했어. 인터넷 연결을 확인한 뒤 다시 눌러줘.');
+      }else{
+        alert('이미지 저장 중 문제가 생겼어. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어줘.');
+      }
+    }
+  };
+
+  /* ⧉ 이미지 복사: 저장과 완전히 같은 캡처 결과를 클립보드(PNG)로 보낸다. */
+  window.copyImage=async function(){
+    if(exactPreviewSaveBusy) return;
+    if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+    if(!navigator.clipboard||typeof window.ClipboardItem==='undefined'||typeof navigator.clipboard.write!=='function'){
+      alert('이 브라우저는 이미지 클립보드 복사를 지원하지 않아. 대신 "이미지 저장"을 사용해줘.');
+      return;
+    }
+    /* 캡처를 먼저 시작해 두고, Promise 기반 ClipboardItem으로 곧바로 write를 건다.
+       (사파리는 사용자 클릭 제스처 안에서 write가 시작돼야 해서 이 순서가 중요함) */
+    const dataUrlPromise=exactPreviewCapture('이미지 복사 준비 중...');
+    const blobPromise=dataUrlPromise.then(du=>{
+      if(!du) throw new Error('capture busy');
+      return fetch(du).then(r=>r.blob());
+    });
+    const notifyOk=()=>{ try{ if(typeof toast==='function'){ toast('이미지를 클립보드에 복사했어요'); return; } }catch(_){} alert('이미지를 클립보드에 복사했어!'); };
+    try{
+      await navigator.clipboard.write([new ClipboardItem({'image/png':blobPromise})]);
+      notifyOk();
+    }catch(err){
+      if(/capture busy/.test(String(err&&err.message||''))) return;
+      /* 일부 브라우저는 Promise 기반 ClipboardItem을 지원하지 않음 → blob을 기다렸다가 재시도 */
+      try{
+        const blob=await blobPromise;
+        await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+        notifyOk();
+      }catch(err2){
+        console.error('image copy failed',err,err2);
+        const name=String((err2&&err2.name)||(err&&err.name)||'');
+        const detail=String((err2&&err2.message)||(err&&err.message)||'');
+        if(/renderer|script|timeout/i.test(detail)){
+          alert('이미지 복사 기능을 불러오지 못했어. 인터넷 연결을 확인한 뒤 다시 눌러줘.');
+        }else if(/NotAllowed|SecurityError/i.test(name)||/denied|permission|focus|gesture/i.test(detail)){
+          alert('브라우저가 클립보드 접근을 막았어. 화면을 한 번 클릭한 뒤 다시 시도하거나, "이미지 저장"을 사용해줘.');
+        }else{
+          alert('이미지 복사 중 문제가 생겼어. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어줘.');
+        }
+      }
+    }
+  };
+})();
+
+</script>
+<style id="convenience-upgrade-styles">
+/* ===== 편의성 업그레이드: 토스트 · 복원 바 · 드래그 정렬 · 자동저장 배지 ===== */
+#upToast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,10px);opacity:0;pointer-events:none;
+  display:flex;align-items:center;gap:10px;background:#1A1B1F;color:#fff;font-size:13px;
+  padding:10px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.22);z-index:2100;
+  transition:opacity .22s,transform .22s;max-width:calc(100vw - 32px)}
+#upToast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#upToast button{border:0;background:rgba(255,255,255,.16);color:#fff;font-weight:700;font-size:12px;
+  padding:5px 11px;border-radius:8px;cursor:pointer;white-space:nowrap}
+#upToast button:hover{background:rgba(255,255,255,.3)}
+#restoreBar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;
+  background:var(--panel,#fff);border:1px solid var(--line,#E2E2E6);color:var(--ink,#222);font-size:13px;
+  padding:12px 16px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.16);z-index:2050;
+  max-width:calc(100vw - 24px);flex-wrap:wrap;line-height:1.5}
+#restoreBar button{border:1px solid var(--line,#E2E2E6);background:transparent;font-size:12px;font-weight:600;
+  padding:6px 13px;border-radius:9px;cursor:pointer;color:inherit;white-space:nowrap}
+#restoreBar button:hover{border-color:var(--accent,#424448)}
+#restoreBar button.rb-primary{background:var(--ink,#1A1B1F);border-color:var(--ink,#1A1B1F);color:#fff}
+#autosaveBadge{margin-left:8px;font-size:11px;font-weight:600;color:var(--muted,#8A8F98);opacity:0;transition:opacity .35s;user-select:none}
+#autosaveBadge.show{opacity:1}
+.pmsg .ctrl button.drag-handle{cursor:grab;touch-action:none;font-size:11px;letter-spacing:-1px}
+.pmsg .ctrl button.drag-handle:active{cursor:grabbing}
+.pmsg.dragging{opacity:.45}
+.pmsg.drop-before::before,.pmsg.drop-after::after{content:'';position:absolute;left:0;right:0;height:2px;
+  background:var(--ink,#1A1B1F);border-radius:2px;z-index:6;pointer-events:none}
+.pmsg.drop-before::before{top:-3px}
+.pmsg.drop-after::after{bottom:-3px}
+.project-io-row{display:flex;gap:8px;flex-wrap:wrap}
+.project-io-row .btn{flex:1;min-width:120px;text-align:center;justify-content:center}
+</style>
+<script id="convenience-upgrade">
+/* =====================================================================
+   편의성 업그레이드 모듈 (전부 추가형 — 기존 코드는 건드리지 않음)
+   1) 자동 저장 & 새로고침 복원 (IndexedDB, 이미지 포함)
+   2) 프로젝트 백업 — .json 파일로 저장/불러오기
+   3) 삭제 실행 취소 (토스트의 [실행 취소] 버튼 · Ctrl/⌘+Z)
+   4) 미리보기에서 드래그로 메시지 순서 이동 (⠿ 핸들)
+   5) 메시지 복제 버튼 (⧉)
+   6) 단축키: Ctrl/⌘+S = 이미지 저장, Ctrl/⌘+Z = 삭제 취소
+   ===================================================================== */
+(function(){
+'use strict';
+
+/* ---------- 공용 토스트 ---------- */
+let __toastTimer=null;
+function toast(msg,opt){
+  opt=opt||{};
+  let el=document.getElementById('upToast');
+  if(!el){el=document.createElement('div');el.id='upToast';document.body.appendChild(el);}
+  el.innerHTML='';
+  const span=document.createElement('span'); span.textContent=msg; el.appendChild(span);
+  if(opt.action){
+    const b=document.createElement('button'); b.type='button'; b.textContent=opt.action;
+    b.onclick=()=>{hideToast(); if(opt.onAction) opt.onAction();};
+    el.appendChild(b);
+  }
+  el.classList.add('show');
+  clearTimeout(__toastTimer);
+  __toastTimer=setTimeout(hideToast,opt.duration||5000);
+}
+function hideToast(){const el=document.getElementById('upToast'); if(el) el.classList.remove('show');}
+
+/* ---------- 프로젝트 스냅샷 (직렬화) ---------- */
+const SNAP_KEYS=['mode','shape','showProfile','showMyIdentity','meId','parenOn','members','messages',
+  'export','transparentBg','backgroundImage','credit','colors','layout'];
+function projectSnapshot(){
+  const o={};
+  SNAP_KEYS.forEach(k=>{ o[k]=state[k]; });
+  return JSON.parse(JSON.stringify(o));
+}
+function applyProject(d){
+  if(!d||typeof d!=='object') return;
+  if(Array.isArray(d.members)) state.members=d.members;
+  if(Array.isArray(d.messages)) state.messages=d.messages;
+  ['mode','shape','meId'].forEach(k=>{ if(typeof d[k]==='string') state[k]=d[k]; });
+  ['showProfile','showMyIdentity','parenOn','transparentBg'].forEach(k=>{ if(typeof d[k]==='boolean') state[k]=d[k]; });
+  ['export','backgroundImage','credit','colors','layout'].forEach(k=>{
+    if(d[k]&&typeof d[k]==='object') Object.assign(state[k],JSON.parse(JSON.stringify(d[k])));
+  });
+  try{ setMode(state.mode); }catch(_){}
+  try{ syncControlsFromState(); }catch(_){}
+  const sp=document.getElementById('showProfile'); if(sp) sp.checked=!!state.showProfile;
+  const smi=document.getElementById('showMyIdentity'); if(smi) smi.checked=!!state.showMyIdentity;
+  try{ renderMembers(); renderSenders(); renderMeSelect(); }catch(_){}
+  if(typeof applyBackgroundLayers==='function'){ try{ applyBackgroundLayers(); }catch(_){} }
+  renderPreview();
+}
+
+/* ---------- 저장소 (IndexedDB, 실패 시 localStorage 폴백) ---------- */
+const IDB_NAME='chatExtractorStore', LS_KEY='chatExtractorSession_v1';
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    if(!window.indexedDB) return rej(new Error('no idb'));
+    const r=indexedDB.open(IDB_NAME,1);
+    r.onupgradeneeded=()=>{ try{ r.result.createObjectStore('kv'); }catch(_){} };
+    r.onsuccess=()=>res(r.result);
+    r.onerror=()=>rej(r.error);
+    r.onblocked=()=>rej(new Error('blocked'));
+  });
+}
+async function storeSet(v){
+  try{
+    const db=await idbOpen();
+    await new Promise((res,rej)=>{
+      const tx=db.transaction('kv','readwrite');
+      tx.objectStore('kv').put(v,'session');
+      tx.oncomplete=res; tx.onerror=()=>rej(tx.error);
+    });
+    db.close(); return true;
+  }catch(_){
+    try{ localStorage.setItem(LS_KEY,JSON.stringify(v)); return true; }catch(__){ return false; }
+  }
+}
+async function storeGet(){
+  try{
+    const db=await idbOpen();
+    const v=await new Promise((res,rej)=>{
+      const tx=db.transaction('kv','readonly');
+      const rq=tx.objectStore('kv').get('session');
+      rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error);
+    });
+    db.close();
+    if(v!=null) return v;
+  }catch(_){}
+  try{ const raw=localStorage.getItem(LS_KEY); return raw?JSON.parse(raw):null; }catch(_){ return null; }
+}
+
+/* ---------- 자동 저장 ---------- */
+let __asTimer=null, __lastSavedJson='';
+function scheduleAutosave(){ clearTimeout(__asTimer); __asTimer=setTimeout(doAutosave,900); }
+async function doAutosave(){
+  try{
+    const snap=projectSnapshot();
+    const j=JSON.stringify(snap);
+    if(j===__lastSavedJson) return;
+    snap.__savedAt=Date.now();
+    const ok=await storeSet(snap);
+    if(ok){ __lastSavedJson=j; flashSaveBadge(); }
+  }catch(_){}
+}
+function flashSaveBadge(){
+  let b=document.getElementById('autosaveBadge');
+  if(!b){
+    b=document.createElement('span'); b.id='autosaveBadge'; b.textContent='✓ 자동 저장됨';
+    const h=document.querySelector('.preview-heading strong');
+    if(h&&h.parentNode) h.parentNode.insertBefore(b,h.nextSibling);
+    else{ const t=document.querySelector('.preview-toolbar'); if(t) t.appendChild(b); }
+  }
+  b.classList.add('show');
+  clearTimeout(b.__t); b.__t=setTimeout(()=>b.classList.remove('show'),1600);
+}
+function relTime(t){
+  const m=Math.floor((Date.now()-t)/60000);
+  if(m<1) return '방금 전'; if(m<60) return m+'분 전';
+  const h=Math.floor(m/60); if(h<24) return h+'시간 전';
+  return Math.floor(h/24)+'일 전';
+}
+function showRestoreBar(saved){
+  const msgs=(saved.messages||[]).length, mems=(saved.members||[]).length;
+  const bar=document.createElement('div'); bar.id='restoreBar';
+  const span=document.createElement('span');
+  span.textContent='💾 이전 작업이 남아 있어요 — 메시지 '+msgs+'개 · 멤버 '+mems+'명'
+    +(saved.__savedAt?' · '+relTime(saved.__savedAt):'');
+  const b1=document.createElement('button'); b1.type='button'; b1.className='rb-primary'; b1.textContent='복원하기';
+  b1.onclick=()=>{ applyProject(saved); bar.remove(); toast('이전 작업을 복원했어요'); };
+  const b2=document.createElement('button'); b2.type='button'; b2.textContent='새로 시작';
+  b2.onclick=()=>bar.remove();
+  bar.append(span,b1,b2);
+  document.body.appendChild(bar);
+}
+
+/* ---------- 실행 취소 (삭제 계열) ---------- */
+const __undoStack=[];
+function pushUndo(label){
+  try{
+    __undoStack.push({label,data:JSON.parse(JSON.stringify({
+      members:state.members, messages:state.messages, meId:state.meId
+    }))});
+    if(__undoStack.length>20) __undoStack.shift();
+  }catch(_){}
+}
+function undoLast(){
+  const u=__undoStack.pop(); if(!u) return;
+  state.members=u.data.members; state.messages=u.data.messages; state.meId=u.data.meId;
+  try{ renderMembers(); renderSenders(); renderMeSelect(); }catch(_){}
+  renderPreview();
+  toast('“'+u.label+'” 실행을 취소했어요');
+}
+
+/* 기존 삭제 함수들을 감싸서 실행 취소 지원 */
+const __delMsg0=window.delMsg;
+window.delMsg=function(id){
+  pushUndo('메시지 삭제');
+  __delMsg0(id);
+  toast('메시지를 삭제했어요',{action:'실행 취소',onAction:undoLast});
+};
+const __deleteMember0=window.deleteMember;
+window.deleteMember=function(id){
+  const m=(state.members||[]).find(x=>x.id===id);
+  pushUndo('멤버 삭제');
+  __deleteMember0(id);
+  toast((m?('“'+m.name+'” '):'')+'멤버와 해당 메시지를 삭제했어요',{action:'실행 취소',onAction:undoLast});
+};
+const __doClear0=window.doClear;
+window.doClear=function(){
+  pushUndo('전부 지우기');
+  __doClear0();
+  toast('전부 지웠어요',{action:'실행 취소',onAction:undoLast,duration:8000});
+};
+
+/* ---------- 메시지 복제 ---------- */
+window.dupMsg=function(id){
+  const i=state.messages.findIndex(m=>m.id===id); if(i<0) return;
+  const c=JSON.parse(JSON.stringify(state.messages[i])); c.id=uid();
+  state.messages.splice(i+1,0,c);
+  renderPreview();
+  toast('메시지를 복제했어요');
+};
+
+/* ---------- 메시지 컨트롤 버튼 확장 (⠿ 드래그 · ⧉ 복제 추가) ---------- */
+window.ctrlHTML=function(id){
+  return '<div class="ctrl">'
+    +'<button type="button" class="drag-handle" data-mid="'+id+'" title="드래그로 순서 이동" onclick="return false">⠿</button>'
+    +'<button type="button" title="위로" onclick="moveMsg(\''+id+'\',-1)">▲</button>'
+    +'<button type="button" title="아래로" onclick="moveMsg(\''+id+'\',1)">▼</button>'
+    +'<button type="button" title="복제" onclick="dupMsg(\''+id+'\')">⧉</button>'
+    +'<button type="button" title="수정" onclick="editMsgPrompt(\''+id+'\')">✎</button>'
+    +'<button type="button" class="del" title="삭제" onclick="delMsg(\''+id+'\')">×</button>'
+    +'</div>';
+};
+
+/* ---------- 드래그로 순서 이동 ---------- */
+(function initDragSort(){
+  const chat=document.getElementById('chat'); if(!chat) return;
+  let drag=null;
+  function clearMarks(){
+    chat.querySelectorAll('.drop-before,.drop-after').forEach(r=>r.classList.remove('drop-before','drop-after'));
+  }
+  chat.addEventListener('pointerdown',e=>{
+    const h=e.target.closest('.drag-handle'); if(!h) return;
+    const row=h.closest('.pmsg'); if(!row) return;
+    e.preventDefault();
+    drag={id:h.dataset.mid,row,moved:false,target:null,pos:null};
+    row.classList.add('dragging');
+    try{ h.setPointerCapture(e.pointerId); }catch(_){}
+    document.body.style.userSelect='none';
+  });
+  chat.addEventListener('pointermove',e=>{
+    if(!drag) return;
+    drag.moved=true;
+    clearMarks(); drag.target=null;
+    const rows=[...chat.querySelectorAll('.pmsg')].filter(r=>r!==drag.row);
+    let best=null,bestDist=Infinity;
+    rows.forEach(r=>{
+      const rc=r.getBoundingClientRect();
+      const mid=rc.top+rc.height/2;
+      const d=Math.abs(e.clientY-mid);
+      if(d<bestDist){ bestDist=d; best={r,before:e.clientY<mid}; }
+    });
+    if(best){
+      best.r.classList.add(best.before?'drop-before':'drop-after');
+      drag.target=best.r; drag.pos=best.before?'before':'after';
+    }
+  });
+  function finish(){
+    if(!drag) return;
+    const {id,row,target,pos,moved}=drag;
+    clearMarks();
+    row.classList.remove('dragging');
+    document.body.style.userSelect='';
+    drag=null;
+    if(!moved||!target) return;
+    const th=target.querySelector('.drag-handle');
+    const tid=th?th.dataset.mid:null; if(!tid) return;
+    const from=state.messages.findIndex(m=>m.id===id);
+    let to=state.messages.findIndex(m=>m.id===tid);
+    if(from<0||to<0) return;
+    if(pos==='after') to++;
+    if(to>from) to--;
+    if(to===from) return;
+    pushUndo('순서 이동');
+    const it=state.messages.splice(from,1)[0];
+    state.messages.splice(to,0,it);
+    renderPreview();
+  }
+  chat.addEventListener('pointerup',finish);
+  chat.addEventListener('pointercancel',finish);
+})();
+
+/* ---------- 프로젝트 백업 (.json 저장/불러오기) ---------- */
+window.exportProject=function(){
+  const snap=projectSnapshot();
+  snap.__type='chat-extractor-project'; snap.__v=1; snap.__savedAt=Date.now();
+  const blob=new Blob([JSON.stringify(snap)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.download=safeFilename(state.export.filename||'chat')+'-project.json';
+  a.href=URL.createObjectURL(blob); a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast('프로젝트를 파일로 저장했어요');
+};
+window.importProject=function(ev){
+  const f=ev.target.files&&ev.target.files[0]; ev.target.value='';
+  if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const d=JSON.parse(rd.result);
+      if(!d||(!Array.isArray(d.messages)&&!Array.isArray(d.members))){
+        alert('프로젝트 파일이 아닌 것 같아. (이 도구에서 저장한 .json인지 확인해줘)'); return;
+      }
+      if(state.messages.length&&!confirm('현재 작업을 불러온 프로젝트로 교체할까? 지금 내용은 사라져요. (Ctrl+Z로 되돌릴 수 있어요)')) return;
+      pushUndo('프로젝트 불러오기');
+      applyProject(d);
+      toast('프로젝트를 불러왔어요');
+    }catch(_){ alert('파일을 읽지 못했어. JSON 형식을 확인해줘.'); }
+  };
+  rd.readAsText(f);
+};
+(function insertBackupUI(){
+  const body=document.querySelector('#panel-export .tool-panel-body'); if(!body) return;
+  const sec=document.createElement('div'); sec.className='flat-tool-section'; sec.id='accProjectBackup';
+  sec.innerHTML='<div class="flat-tool-title"><strong>📦 프로젝트 백업</strong></div>'
+    +'<div class="flat-tool-body">'
+    +'<div class="project-io-row">'
+    +'<button class="btn sm" type="button" onclick="exportProject()">↓ 프로젝트 저장 (.json)</button>'
+    +'<label class="btn sm" style="cursor:pointer;text-align:center">↑ 프로젝트 불러오기'
+    +'<input type="file" accept="application/json,.json" hidden onchange="importProject(event)"></label>'
+    +'</div>'
+    +'<div class="field-help" style="margin-top:8px">멤버·메시지·이미지·설정 전체가 파일 하나에 담겨요. 다른 기기나 브라우저에서 이어서 작업할 수 있어요. 이 브라우저 안에서는 작업 내용이 자동 저장돼 새로고침해도 복원할 수 있어요.</div>'
+    +'</div>';
+  body.insertBefore(sec,body.firstChild);
+})();
+
+/* ---------- 단축키 ---------- */
+document.addEventListener('keydown',e=>{
+  const mod=e.ctrlKey||e.metaKey;
+  if(!mod) return;
+  const k=(e.key||'').toLowerCase();
+  const ae=document.activeElement;
+  const typing=ae&&(/^(input|textarea|select)$/i.test(ae.tagName)||ae.isContentEditable);
+  if(k==='s'&&!e.shiftKey&&!e.altKey){
+    e.preventDefault();
+    try{ saveImage(); }catch(_){}
+  }else if(k==='z'&&!typing&&!e.shiftKey){
+    if(__undoStack.length){ e.preventDefault(); undoLast(); }
+  }
+});
+
+/* ---------- 자동 저장 훅 + 복원 배너 ---------- */
+const __renderPreview0=window.renderPreview;
+window.renderPreview=function(){
+  __renderPreview0.apply(this,arguments);
+  scheduleAutosave();
+};
+document.addEventListener('input',scheduleAutosave,true);
+document.addEventListener('change',scheduleAutosave,true);
+
+(async function initRestore(){
+  try{
+    const saved=await storeGet();
+    if(!saved) return;
+    const has=(saved.messages&&saved.messages.length)||(saved.members&&saved.members.length);
+    if(has&&!state.messages.length&&!state.members.length) showRestoreBar(saved);
+  }catch(_){}
+})();
+
+})();
+</script>
+
+<style id="mobile-ui-styles">
+/* ===== 모바일 전용 UI (≤700px에서만 body.mobile-ui 활성) — 데스크톱 무영향 ===== */
+#mDock,#mSheet,#mHdrBtns,#mToolsBtn,#mQuickActions{display:none}
+
+/* --- 헤더 --- */
+.mobile-ui .top{padding:8px 10px;gap:8px;z-index:60}
+.mobile-ui .brand{font-size:0;gap:0}
+.mobile-ui .modeswitch{margin-left:auto}
+.mobile-ui .modeswitch button{padding:6px 11px;font-size:12px}
+.mobile-ui #mHdrBtns{display:flex;gap:6px;margin-left:6px}
+.mobile-ui #mHdrBtns button{height:34px;padding:0 11px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel);display:flex;align-items:center;justify-content:center;gap:4px;
+  font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap;touch-action:manipulation}
+.mobile-ui #mHdrBtns button:active{transform:scale(.94)}
+
+/* --- 본문: 미리보기 전면 --- */
+.mobile-ui .app-shell{display:flex!important;flex-direction:column;height:auto!important;min-height:0;
+  overflow:visible;padding:8px 8px calc(158px + env(safe-area-inset-bottom))!important;gap:0}
+.mobile-ui .editor-pane{display:none!important}
+.mobile-ui .preview-pane{width:100%;order:0}
+.mobile-ui .preview-toolbar{display:none!important}
+.mobile-ui .preview-surface.stage{min-height:54vh}
+
+/* --- 하단 독 (메신저 입력 바) --- */
+.mobile-ui #mDock{display:block;position:fixed;left:0;right:0;bottom:0;z-index:80;
+  background:var(--panel);border-top:1px solid var(--line);
+  padding:6px 8px calc(8px + env(safe-area-inset-bottom));
+  box-shadow:0 -6px 24px rgba(20,20,24,.07)}
+#mChips{display:flex;gap:9px;overflow-x:auto;padding:3px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#mChips::-webkit-scrollbar{display:none}
+.mobile-ui.m-tools-open #mChips{display:none}
+.mchip{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;
+  padding:0;cursor:pointer;min-width:46px;touch-action:manipulation}
+.mchip .mav{width:38px;height:38px;object-fit:cover;border:2px solid transparent;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;
+  box-sizing:border-box;background:#C7C7CC}
+.mchip.circle .mav{border-radius:50%}
+.mchip.rounded .mav{border-radius:12px}
+.mchip.on .mav{border-color:var(--ink)}
+.mchip .nm{font-size:10px;color:var(--muted);max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mchip.on .nm{color:var(--ink);font-weight:700}
+.mchip.add .mav{border:1.5px dashed var(--line-2,#C9C9CE);background:var(--panel);color:var(--muted);font-size:18px;font-weight:400}
+.mchip.add .nm{max-width:none}
+
+.mobile-ui #mDock .composer-card{border:0;box-shadow:none;background:transparent;margin:0;border-radius:0}
+.mobile-ui #mDock .composer-card>.hd{display:none}
+.mobile-ui #mDock .composer-card>.bd{padding:0;display:flex;flex-direction:column;gap:7px}
+.mobile-ui #mDock .composer-top-grid{display:none}
+.mobile-ui.m-tools-open #mDock .composer-top-grid{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;
+  border:1px solid var(--line);border-radius:12px;padding:9px;background:var(--panel-2,#F6F6F7);
+  max-width:100%;overflow:hidden}
+.mobile-ui.m-tools-open #mDock .composer-top-grid .field{margin:0;min-width:0}
+/* 1행: 종류(아이콘) + 발신자(말풍) 또는 정렬·글씨크기(글) — 타입별 상호배타라 항상 한 줄 */
+.mobile-ui #mDock .composer-type-field>.lb,
+.mobile-ui #mDock #senderField>.lb,
+.mobile-ui #mDock #alignField .lb{display:none}
+.mobile-ui.m-tools-open #mDock .composer-type-field{flex:none}
+.mobile-ui.m-tools-open #mDock #msgTypeSeg{display:flex;gap:4px}
+.mobile-ui.m-tools-open #mDock #msgTypeSeg button{width:37px;height:40px;padding:0;font-size:16px;
+  flex:none;min-width:0;white-space:nowrap}
+.mobile-ui.m-tools-open #mDock #senderField{flex:1;min-width:0}
+.mobile-ui.m-tools-open #mDock #senderField select{height:40px;font-size:13px;width:100%}
+.mobile-ui.m-tools-open #mDock #alignField{flex:1;min-width:0;margin:0}
+.mobile-ui.m-tools-open #mDock #alignField .seg{height:40px!important;max-height:40px!important;min-height:40px!important}
+.mobile-ui.m-tools-open #mDock .text-format-row{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+.mobile-ui.m-tools-open #mDock .tfr-div{display:none}
+.mobile-ui.m-tools-open #mDock .tfr-col{min-width:0;flex:1}
+.mobile-ui.m-tools-open #mDock .tfr-col:last-child{flex:none}
+.mobile-ui.m-tools-open #mDock #alignSeg{gap:3px}
+.mobile-ui.m-tools-open #mDock #alignSeg button{flex:1;min-width:24px;padding:0;height:40px}
+.mobile-ui.m-tools-open #mDock #textHeadingSeg{gap:3px}
+.mobile-ui.m-tools-open #mDock #textHeadingSeg button{width:34px;height:40px;padding:0;flex:none}
+/* 2행: 서식 B I S U + 색·강조 ✎( )A — 전부 한 줄, 균등 배치 */
+.m-fmt-break{display:none!important}
+.mobile-ui.m-tools-open #mDock .composer-top-grid .fmt{flex:1 1 100%;display:flex;flex-wrap:nowrap;gap:4px;
+  align-items:center;margin:0;min-width:0;max-width:100%}
+.mobile-ui.m-tools-open #mDock .composer-top-grid .fmt .fmt-div{display:none}
+.mobile-ui.m-tools-open #mDock .composer-top-grid .fmt>button{flex:1;height:38px;min-width:26px;
+  padding:0;font-size:13.5px}
+.mobile-ui.m-tools-open #mDock .composer-top-grid .fmt .fmt-swatch{flex:none;width:22px;height:22px;
+  border-radius:7px;align-self:center}
+#mInputRow{display:flex;gap:6px;align-items:flex-end}
+#mInputRow #composerTextField{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;margin:0}
+.mobile-ui #mDock #msgContent{min-height:42px;max-height:110px;height:auto;border-radius:21px;
+  padding:10px 15px;font-size:16px;background:var(--panel-2,#F6F6F7)}
+.mobile-ui #mToolsBtn{display:flex;flex:none;align-items:center;justify-content:center;width:42px;height:42px;
+  border-radius:50%;border:1px solid var(--line);background:var(--panel);font-weight:700;font-size:14px;
+  color:var(--ink);touch-action:manipulation}
+.mobile-ui.m-tools-open #mToolsBtn{background:var(--ink);color:#fff;border-color:var(--ink)}
+.mobile-ui:not(.m-tools-open) #mDock .fmt{display:none}
+
+/* --- 첫 방문 안내 말풍선 ("도구는 여기!") --- */
+#mHint{display:none}
+.mobile-ui #mHint{display:block;position:fixed;z-index:85;background:var(--ink,#1A1B1F);color:#fff;
+  font-size:12px;line-height:1.55;padding:10px 13px;border-radius:12px;
+  box-shadow:0 8px 22px rgba(0,0,0,.24);max-width:236px;cursor:pointer;
+  animation:mHintIn .3s ease}
+#mHint::before{content:'';position:absolute;top:-5px;right:24px;width:10px;height:10px;
+  background:var(--ink,#1A1B1F);transform:rotate(45deg)}
+#mHint b{font-weight:800}
+#mHint .x{display:block;margin-top:5px;font-size:10.5px;opacity:.65}
+@keyframes mHintIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.mobile-ui #mDock #addBtn{flex:none;width:auto;min-width:0;height:42px;border-radius:21px;padding:0 16px;font-size:0;gap:0}
+.mobile-ui #mDock #addBtn::after{content:'추가';font-size:13.5px;font-weight:700;letter-spacing:0}
+.mobile-ui #mDock .composer-card.composer-editing #addBtn::after{content:'완료'}
+.mobile-ui #mDock .composer-bottom-row{display:flex;gap:6px}
+.mobile-ui #mDock .composer-bottom-row:empty{display:none}
+.mobile-ui #mDock #cancelEditBtn{height:36px;border-radius:10px;flex:1}
+.mobile-ui #mDock .msg-img-editor,.mobile-ui #mDock #dividerOpts{border:1px solid var(--line);
+  border-radius:12px;padding:10px;background:var(--panel-2,#F6F6F7)}
+
+/* --- 바텀 시트 (도구) --- */
+/* --- 바텀 시트: 가림막 없음, 절반 높이 기본 — 위 미리보기를 보면서 조정 --- */
+.mobile-ui #mSheet.open{display:block;position:fixed;left:0;right:0;bottom:0;z-index:90}
+#mSheetBackdrop{display:none!important}
+#mSheetPanel{position:relative;height:46vh;background:var(--panel,#FCFCFD);
+  border-radius:18px 18px 0 0;display:flex;flex-direction:column;
+  box-shadow:0 -10px 34px rgba(0,0,0,.20);border-top:1px solid var(--line);
+  transition:height .18s ease,transform .18s ease;padding-bottom:env(safe-area-inset-bottom)}
+#mSheet.tall #mSheetPanel{height:82vh}
+#mSheet.minimized #mSheetPanel{height:48px;overflow:hidden}
+#mSheet.minimized #mSheetBody{visibility:hidden}
+#mSheetBar{flex:none;display:flex;align-items:center;gap:4px;padding:4px 6px 2px}
+#mSheetHandle{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 0 4px;touch-action:none;cursor:grab}
+#mSheetHandle span{width:38px;height:4px;border-radius:2px;background:#D4D4D8}
+#mSheetHandle .mlb{display:none;font-size:11.5px;font-weight:700;color:var(--muted)}
+#mSheet.minimized #mSheetHandle .mlb{display:block}
+#mSheetBarBtns{flex:none;display:flex;gap:4px}
+#mSheetBarBtns button{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);
+  background:var(--panel);font-size:13px;color:var(--ink);display:flex;align-items:center;
+  justify-content:center;touch-action:manipulation}
+#mSheet.tall #mSheetSize{background:var(--ink);color:#fff;border-color:var(--ink)}
+#mSheet.minimized #mSheetMin{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* 시트 상태별로 본문 하단 여백 확보 → 스크롤로 캔버스 아래까지 확인 가능 */
+.mobile-ui.m-sheet-open .app-shell{padding-bottom:calc(46vh + 44px)!important}
+.mobile-ui.m-sheet-open.m-sheet-min .app-shell{padding-bottom:96px!important}
+#mSheetBody{flex:1;min-height:0;display:flex;flex-direction:column}
+.mobile-ui #mSheetBody .settings-card{height:100%!important;max-height:none!important;border:0;box-shadow:none;
+  background:transparent;display:flex;flex-direction:column;min-height:0;border-radius:0}
+.mobile-ui #mSheetBody .settings-card-hd{display:none}
+.mobile-ui #mSheetBody .settings-card-body{flex:1;min-height:0;display:flex;flex-direction:column}
+.mobile-ui #mSheetBody .tool-tabs{flex:none;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;display:flex;gap:2px}
+.mobile-ui #mSheetBody .tool-tabs::-webkit-scrollbar{display:none}
+.mobile-ui #mSheetBody .tool-tabs button{flex:1 0 auto;min-width:58px;padding:8px 8px;font-size:11.5px;touch-action:manipulation}
+.mobile-ui #mSheetBody .tool-panels{flex:1;min-height:0;display:flex;flex-direction:column}
+.mobile-ui #mSheetBody .tool-panel{flex:1;min-height:0;height:auto}
+.mobile-ui #mSheetBody .tool-panel-body{flex:1;min-height:0;max-height:none;overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* 시트가 화면을 막지 않으므로 본문 스크롤 유지 */
+
+/* 큰 터치 타깃: 스테퍼 · 스위치 */
+.mobile-ui .tool-panel .stepper button{width:32px;height:32px;font-size:15px}
+.mobile-ui .tool-panel .stepper input{width:48px;height:32px;font-size:13px}
+.mobile-ui .tool-panel .rangewrap.has-stepper{grid-template-columns:minmax(56px,1fr) auto}
+
+/* --- 저장 패널 퀵 액션 --- */
+.mobile-ui #mQuickActions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.mobile-ui #mQuickActions .btn{flex:1;min-width:96px;justify-content:center;text-align:center}
+
+/* --- 말풍선 탭 → 액션 표시 --- */
+.mobile-ui .pmsg:hover .ctrl{display:none}
+.mobile-ui .pmsg.ctrl-open{outline:2px dashed rgba(66,68,72,.22);outline-offset:4px;border-radius:8px}
+.mobile-ui .pmsg.ctrl-open .ctrl{display:flex!important;top:auto;bottom:calc(100% + 4px);right:0;
+  background:var(--panel);border-radius:11px;padding:4px;box-shadow:0 5px 16px rgba(0,0,0,.16);gap:5px;z-index:7}
+.mobile-ui .pmsg .ctrl button{width:33px;height:33px;font-size:14px;border-radius:8px;touch-action:manipulation}
+
+/* --- 테마 갤러리 (모바일 시각화) --- */
+.mobile-ui #themeChips{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.mtheme{cursor:pointer;touch-action:manipulation}
+.mtheme-prev{height:46px;border-radius:11px;border:1px solid var(--line);padding:8px;
+  display:flex;flex-direction:column;gap:6px;justify-content:center}
+.mtheme-prev i{display:block;width:66%;height:9px;border-radius:5px}
+.mtheme-prev i.me{margin-left:auto;width:48%}
+.mtheme-nm{display:flex;align-items:center;justify-content:center;gap:4px;font-size:10.5px;
+  color:var(--ink);margin-top:5px;font-weight:600}
+.mtheme-nm button{border:0;background:none;color:var(--muted);font-size:13px;padding:0 2px;cursor:pointer}
+
+/* 하단 UI와 겹치지 않게 토스트·복원 바 올리기 */
+.mobile-ui #upToast{bottom:calc(168px + env(safe-area-inset-bottom))}
+.mobile-ui #restoreBar{bottom:calc(168px + env(safe-area-inset-bottom));width:calc(100vw - 20px);justify-content:center}
+</style>
+<script id="mobile-ui">
+/* =====================================================================
+   모바일 전용 레이어 (≤700px) — 전부 추가형, 데스크톱 로직 무변경
+   · 미리보기 전면 + 메신저형 하단 입력 바 (발신자 아바타 칩 · Aa 도구 토글)
+   · 도구 6탭 전체를 바텀 시트로 이동 (DOM 이동 → 기존 기능 그대로)
+   · 말풍선 탭 → 액션 버튼 표시 (호버 대체) · ⠿ 드래그는 그대로 동작
+   · 헤더에 도구/저장 버튼 · 저장 탭 퀵 액션 · 테마 미니 썸네일
+   · 키보드가 올라오면 입력 바가 따라 올라감 (visualViewport)
+   ===================================================================== */
+(function(){
+'use strict';
+const mq=window.matchMedia('(max-width:700px)');
+let built=false, mobileOn=false;
+const ph={};   // 원위치 복원용 placeholder
+
+function isMobile(){ return mobileOn; }
+
+/* ---------- 모바일 크롬 1회 생성 ---------- */
+function buildChrome(){
+  if(built) return; built=true;
+
+  try{
+    const vp=document.querySelector('meta[name="viewport"]');
+    if(vp&&vp.content.indexOf('viewport-fit')<0) vp.content+=',viewport-fit=cover';
+  }catch(_){}
+
+  /* 헤더 버튼 */
+  const hb=document.createElement('div'); hb.id='mHdrBtns';
+  const gear=document.createElement('button'); gear.type='button'; gear.id='mGearBtn'; gear.title='멤버·꾸미기·저장 도구'; gear.textContent='⚙ 도구';
+  gear.onclick=()=>{ dismissHint(); toggleSheet(); };
+  const dl=document.createElement('button'); dl.type='button'; dl.title='이미지 저장'; dl.textContent='↓ 저장';
+  dl.onclick=()=>{ closeSheet(); try{ saveImage(); }catch(_){} };
+  hb.append(gear,dl);
+  const top=document.querySelector('.top'); if(top) top.appendChild(hb);
+
+  /* 서식 툴바 줄바꿈 지점: B I S U | ✎( )A+색상칩 (데스크톱에선 숨김) */
+  const fmtBar=document.querySelector('.composer-card .fmt');
+  if(fmtBar&&!fmtBar.querySelector('.m-fmt-break')){
+    const br=document.createElement('span'); br.className='m-fmt-break';
+    const u=fmtBar.querySelector('button.u');
+    if(u&&u.nextSibling) fmtBar.insertBefore(br,u.nextSibling);
+    else fmtBar.appendChild(br);
+  }
+
+  /* 하단 독 */
+  const dock=document.createElement('div'); dock.id='mDock';
+  const chips=document.createElement('div'); chips.id='mChips';
+  dock.appendChild(chips);
+  document.body.appendChild(dock);
+
+  /* 바텀 시트 (가림막 없음 · 반높이/전체/최소화 3단) */
+  const sheet=document.createElement('div'); sheet.id='mSheet';
+  sheet.innerHTML='<div id="mSheetPanel">'
+    +'<div id="mSheetBar">'
+    +'<div id="mSheetHandle"><span></span><em class="mlb">▲ 도구 열기</em></div>'
+    +'<div id="mSheetBarBtns">'
+    +'<button type="button" id="mSheetSize" title="크게/작게 전환">⌃</button>'
+    +'<button type="button" id="mSheetMin" title="미리보기만 보기">👁</button>'
+    +'<button type="button" id="mSheetClose" title="닫기">✕</button>'
+    +'</div></div>'
+    +'<div id="mSheetBody"></div></div>';
+  document.body.appendChild(sheet);
+  sheet.querySelector('#mSheetClose').onclick=closeSheet;
+  sheet.querySelector('#mSheetSize').onclick=()=>setSheetState(sheet.classList.contains('tall')?'half':'tall');
+  sheet.querySelector('#mSheetMin').onclick=()=>setSheetState(sheet.classList.contains('minimized')?'half':'min');
+
+  /* 핸들 드래그: 위로 = 크게, 아래로 = 작게/닫기 · 최소화 상태 탭 = 복귀 */
+  (function(){
+    const h=sheet.querySelector('#mSheetHandle'), p=sheet.querySelector('#mSheetPanel');
+    let sy=null,moved=false;
+    h.addEventListener('pointerdown',e=>{ sy=e.clientY; moved=false;
+      try{h.setPointerCapture(e.pointerId);}catch(_){} p.style.transition='none'; });
+    h.addEventListener('pointermove',e=>{ if(sy==null) return;
+      const dy=e.clientY-sy; if(Math.abs(dy)>4) moved=true;
+      p.style.transform='translateY('+Math.max(-30,dy)+'px)'; });
+    const end=e=>{
+      if(sy==null) return;
+      const dy=e.clientY-sy; sy=null;
+      p.style.transition=''; p.style.transform='';
+      const min=sheet.classList.contains('minimized'), tall=sheet.classList.contains('tall');
+      if(!moved){ if(min) setSheetState('half'); return; }
+      if(min){ if(dy<-30) setSheetState('half'); else if(dy>50) closeSheet(); return; }
+      if(dy>70){ if(tall) setSheetState('half'); else setSheetState('min'); }
+      else if(dy<-70){ if(!tall) setSheetState('tall'); }
+    };
+    h.addEventListener('pointerup',end); h.addEventListener('pointercancel',end);
+  })();
+
+  /* 저장 패널 퀵 액션 */
+  const exBody=document.querySelector('#panel-export .tool-panel-body');
+  if(exBody&&!document.getElementById('mQuickActions')){
+    const qa=document.createElement('div'); qa.id='mQuickActions';
+    const mk=(txt,fn,cls)=>{ const b=document.createElement('button'); b.type='button'; b.className='btn sm'+(cls?' '+cls:''); b.textContent=txt;
+      b.onclick=()=>{ closeSheet(); setTimeout(fn,60); }; return b; };
+    /* 이미지 복사는 클릭 제스처 안에서 바로 실행해야 클립보드 권한이 살아있음 (setTimeout 금지) */
+    const mkNow=(txt,fn)=>{ const b=document.createElement('button'); b.type='button'; b.className='btn sm'; b.textContent=txt;
+      b.onclick=()=>{ try{fn();}catch(_){} closeSheet(); }; return b; };
+    qa.append(
+      mk('↓ 이미지 저장',()=>{try{saveImage();}catch(_){}}),
+      mkNow('⧉ 이미지 복사',()=>copyImage()),
+      mk('↓ HTML',()=>{try{exportHTML();}catch(_){}}),
+      mk('전부 지우기',()=>{try{openClear();}catch(_){}},'danger-ghost')
+    );
+    exBody.insertBefore(qa,exBody.firstChild);
+  }
+
+  /* 말풍선 탭 → 컨트롤 토글 */
+  const chat=document.getElementById('chat');
+  if(chat) chat.addEventListener('click',e=>{
+    if(!isMobile()) return;
+    if(e.target.closest('.ctrl')) return;
+    const row=e.target.closest('.pmsg');
+    document.querySelectorAll('#chat .pmsg.ctrl-open').forEach(r=>{ if(r!==row) r.classList.remove('ctrl-open'); });
+    if(row) row.classList.toggle('ctrl-open');
+  });
+
+  /* 키보드가 올라오면 독을 함께 올림 */
+  if(window.visualViewport){
+    const vv=window.visualViewport;
+    const onVV=()=>{
+      const d=document.getElementById('mDock'); if(!d) return;
+      if(!isMobile()){ d.style.bottom=''; return; }
+      const off=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
+      d.style.bottom=off+'px';
+    };
+    vv.addEventListener('resize',onVV); vv.addEventListener('scroll',onVV);
+  }
+
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheet(); });
+}
+
+/* ---------- 첫 방문 안내 말풍선 ---------- */
+const HINT_KEY='chatMobileHintSeen_v1';
+let __hintTimer=null;
+function showHintOnce(){
+  try{ if(localStorage.getItem(HINT_KEY)) return; }catch(_){}
+  if(document.getElementById('mHint')) return;
+  const h=document.createElement('div'); h.id='mHint';
+  h.innerHTML='멤버 추가 · 테마 · 저장은<br>여기 <b>⚙ 도구</b>에 다 있어요!<span class="x">눌러서 닫기</span>';
+  h.onclick=dismissHint;
+  document.body.appendChild(h);
+  requestAnimationFrame(()=>{
+    const g=document.getElementById('mGearBtn');
+    if(g){
+      const r=g.getBoundingClientRect();
+      h.style.top=(r.bottom+9)+'px';
+      const arrowFromRight=24+5;
+      h.style.right=Math.max(8,window.innerWidth-(r.left+r.width/2)-arrowFromRight)+'px';
+    }else{ h.style.top='56px'; h.style.right='8px'; }
+  });
+  clearTimeout(__hintTimer);
+  __hintTimer=setTimeout(dismissHint,12000);
+}
+function dismissHint(){
+  const h=document.getElementById('mHint');
+  if(h) h.remove();
+  clearTimeout(__hintTimer);
+  try{ localStorage.setItem(HINT_KEY,'1'); }catch(_){}
+}
+
+/* ---------- 시트 열기/닫기/상태 ---------- */
+function setSheetState(st){
+  const s=document.getElementById('mSheet'); if(!s) return;
+  s.classList.remove('tall','minimized');
+  document.body.classList.remove('m-sheet-min');
+  if(st==='tall') s.classList.add('tall');
+  else if(st==='min'){ s.classList.add('minimized'); document.body.classList.add('m-sheet-min'); }
+}
+function openSheet(){
+  if(!isMobile()) return;
+  const s=document.getElementById('mSheet'); if(!s) return;
+  s.classList.add('open'); document.body.classList.add('m-sheet-open');
+  setSheetState('half');
+  if(!document.querySelector('.tool-panel.show')){ try{ switchToolPanel('style',true); }catch(_){} }
+}
+function closeSheet(){
+  const s=document.getElementById('mSheet'); if(!s) return;
+  s.classList.remove('open','tall','minimized');
+  document.body.classList.remove('m-sheet-open','m-sheet-min');
+}
+function toggleSheet(){
+  const s=document.getElementById('mSheet');
+  if(s&&s.classList.contains('open')) closeSheet(); else openSheet();
+}
+window.mOpenSheet=openSheet; window.mCloseSheet=closeSheet;
+
+/* ---------- 발신자 아바타 칩 ---------- */
+function renderMobileChips(){
+  const box=document.getElementById('mChips'); if(!box) return;
+  const shape=(state.shape==='rounded')?'rounded':'circle';
+  const cur=(typeof senderSel!=='undefined'&&senderSel)?senderSel.value:'';
+  let html=state.members.map(m=>{
+    const av=m.image
+      ? '<img class="mav" src="'+m.image+'" alt="">'
+      : '<span class="mav" style="background:'+(m.color||'#C7C7CC')+'">'+esc((m.name||'?').trim().charAt(0).toUpperCase())+'</span>';
+    return '<button type="button" class="mchip '+shape+(m.id===cur?' on':'')+'" data-id="'+m.id+'">'
+      +av+'<span class="nm">'+esc(m.name)+'</span></button>';
+  }).join('');
+  html+='<button type="button" class="mchip add '+shape+'"><span class="mav">＋</span><span class="nm">멤버·설정</span></button>';
+  box.innerHTML=html;
+  box.querySelectorAll('.mchip[data-id]').forEach(b=>{
+    b.onclick=()=>{ try{ senderSel.value=b.dataset.id; }catch(_){} renderMobileChips(); };
+  });
+  const add=box.querySelector('.mchip.add');
+  if(add) add.onclick=()=>{ openSheet(); try{ switchToolPanel('members',true); openMemberEditor(); }catch(_){} };
+}
+
+/* renderSenders 뒤에 칩도 갱신 */
+const __renderSenders0=window.renderSenders;
+window.renderSenders=function(){ __renderSenders0.apply(this,arguments); if(isMobile()) renderMobileChips(); };
+const __beginComposerEdit0=window.beginComposerEdit;
+window.beginComposerEdit=function(id){
+  __beginComposerEdit0(id);
+  if(isMobile()){ document.body.classList.add('m-tools-open'); renderMobileChips(); }
+};
+
+/* ---------- 테마 미니 썸네일 (모바일에서만 교체) ---------- */
+const __renderThemes0=window.renderThemes;
+window.renderThemes=function(){
+  __renderThemes0.apply(this,arguments);
+  if(!isMobile()) return;
+  const box=document.getElementById('themeChips');
+  if(!box||typeof themes==='undefined'||!themes.length) return;
+  box.innerHTML=themes.map(t=>{
+    const c=t.colors||{};
+    return '<div class="mtheme" onclick="applyThemeById(\''+t.id+'\')">'
+      +'<div class="mtheme-prev" style="background:'+(c.bg||'#EDEDEE')+'">'
+      +'<i style="background:'+(c.otBubble||c.nBubble||'#FFFFFF')+'"></i>'
+      +'<i class="me" style="background:'+(c.myBubble||'#424448')+'"></i>'
+      +'</div><div class="mtheme-nm">'+esc(t.name)
+      +'<button type="button" title="테마 삭제" onclick="event.stopPropagation();deleteTheme(\''+t.id+'\')">×</button></div></div>';
+  }).join('');
+};
+
+/* ---------- 모바일 진입 / 이탈 (DOM 이동) ---------- */
+function movePlace(key,node,dest){
+  ph[key]=document.createComment(key);
+  node.parentNode.replaceChild(ph[key],node);
+  dest.appendChild(node);
+}
+function moveBack(key,node){
+  const p=ph[key]; if(!p||!p.parentNode) return;
+  p.parentNode.replaceChild(node,p); ph[key]=null;
+}
+function enterMobile(){
+  if(mobileOn) return;
+  buildChrome();
+  const sc=document.querySelector('.settings-card'), cc=document.querySelector('.composer-card');
+  const dock=document.getElementById('mDock'), sheetBody=document.getElementById('mSheetBody');
+  if(!sc||!cc||!dock||!sheetBody) return;
+  movePlace('sc',sc,sheetBody);
+  movePlace('cc',cc,dock);
+  /* 입력 행 조립: [Aa][입력창][추가] */
+  const bd=cc.querySelector('.bd'), tf=document.getElementById('composerTextField'),
+        addBtn=document.getElementById('addBtn'), bottom=cc.querySelector('.composer-bottom-row');
+  if(bd&&tf&&addBtn&&bottom){
+    const row=document.createElement('div'); row.id='mInputRow';
+    bd.insertBefore(row,bottom);
+    ph.tf=document.createComment('tf'); tf.parentNode.replaceChild(ph.tf,tf);
+    ph.add=document.createComment('add'); addBtn.parentNode.replaceChild(ph.add,addBtn);
+    let tools=document.getElementById('mToolsBtn');
+    if(!tools){
+      tools=document.createElement('button'); tools.type='button'; tools.id='mToolsBtn';
+      tools.title='종류·서식 도구'; tools.textContent='Aa';
+      tools.onclick=()=>document.body.classList.toggle('m-tools-open');
+    }
+    row.append(tools,tf,addBtn);
+    /* 서식 툴바를 도구 박스(종류·발신자·정렬 아래)로 이동 */
+    const fmt=tf.querySelector('.fmt'), grid=cc.querySelector('.composer-top-grid');
+    if(fmt&&grid&&!ph.fmt){
+      ph.fmt=document.createComment('fmt');
+      fmt.parentNode.replaceChild(ph.fmt,fmt);
+      grid.appendChild(fmt);
+    }
+    /* 종류 버튼 → 아이콘만 (원문은 data-full에 보존, 데스크톱 복귀 시 원복) */
+    cc.querySelectorAll('#msgTypeSeg button').forEach(b=>{
+      if(!b.dataset.full){ b.dataset.full=b.textContent; b.title=b.textContent.trim(); }
+      b.textContent=(b.dataset.full.trim().split(/\s+/)[0])||b.dataset.full;
+    });
+  }
+  mobileOn=true;
+  document.body.classList.add('mobile-ui');
+  document.body.classList.remove('m-tools-open');
+  renderMobileChips();
+  showHintOnce();
+  try{ renderThemes(); }catch(_){}
+  setTimeout(()=>{ try{ fitPreview(); }catch(_){} },80);
+}
+function exitMobile(){
+  if(!mobileOn) return;
+  closeSheet();
+  document.body.classList.remove('mobile-ui','m-tools-open');
+  const tf=document.getElementById('composerTextField'), addBtn=document.getElementById('addBtn');
+  const row=document.getElementById('mInputRow');
+  const fmt=document.querySelector('#mDock .composer-top-grid .fmt');
+  if(fmt&&ph.fmt) moveBack('fmt',fmt);
+  document.querySelectorAll('#msgTypeSeg button').forEach(b=>{ if(b.dataset.full) b.textContent=b.dataset.full; });
+  const hint=document.getElementById('mHint'); if(hint) hint.remove();
+  if(tf&&ph.tf) moveBack('tf',tf);
+  if(addBtn&&ph.add) moveBack('add',addBtn);
+  if(row&&row.parentNode) row.parentNode.removeChild(row);
+  const sc=document.querySelector('#mSheetBody .settings-card'), cc=document.querySelector('#mDock .composer-card');
+  if(sc&&ph.sc) moveBack('sc',sc);
+  if(cc&&ph.cc) moveBack('cc',cc);
+  mobileOn=false;
+  try{ renderThemes(); }catch(_){}
+  setTimeout(()=>{ try{ fitPreview(); }catch(_){} },80);
+}
+function applyMQ(){ if(mq.matches) enterMobile(); else exitMobile(); }
+if(mq.addEventListener) mq.addEventListener('change',applyMQ);
+else if(mq.addListener) mq.addListener(applyMQ);
+window.addEventListener('orientationchange',()=>setTimeout(applyMQ,120));
+applyMQ();
+
+})();
+</script>
+
+<style id="pinch-zoom-styles">
+/* ===== 캔버스 전용 핀치 줌 ===== */
+.mobile-ui .preview-surface.stage{overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#mZoomBadge{position:fixed;top:0;left:50%;transform:translate(-50%,10px);z-index:95;
+  background:rgba(26,27,31,.86);color:#fff;font-size:12px;font-weight:700;
+  padding:6px 12px;border-radius:999px;pointer-events:none;opacity:0;transition:opacity .18s}
+#mZoomBadge.show{opacity:1}
+</style>
+<script id="pinch-zoom">
+/* =====================================================================
+   캔버스 전용 핀치 줌 — 터치 환경 공통 (모바일 UI 여부와 무관)
+   · 미리보기(#stageEl) 위에서 두 손가락: 캔버스만 확대/축소, 페이지는 그대로
+   · 손가락 중심점 고정(앵커) — 벌린 지점이 그 자리에서 커짐
+   · 한 손가락 스크롤/팬, 말풍선 탭은 기존 그대로
+   · 빈 곳 더블 탭 = 화면 맞춤으로 리셋
+   ===================================================================== */
+(function(){
+'use strict';
+const stage=document.getElementById('stageEl');
+if(!stage) return;
+
+const MINZ=0.25, MAXZ=8;
+let pinch=null, badgeTimer=null, lastTap=null;
+
+function dist(t){ return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
+function mid(t){ return {x:(t[0].clientX+t[1].clientX)/2, y:(t[0].clientY+t[1].clientY)/2}; }
+
+function showZoomBadge(text){
+  let b=document.getElementById('mZoomBadge');
+  if(!b){ b=document.createElement('div'); b.id='mZoomBadge'; document.body.appendChild(b); }
+  const top=document.querySelector('.top');
+  b.style.top=top?(top.getBoundingClientRect().bottom+8)+'px':'60px';
+  b.textContent=text;
+  b.classList.add('show');
+  clearTimeout(badgeTimer);
+  badgeTimer=setTimeout(()=>b.classList.remove('show'),900);
+}
+function currentZoom(){
+  return (typeof normalizedPreviewZoom==='function')?normalizedPreviewZoom(state.previewZoom):1;
+}
+
+stage.addEventListener('touchstart',e=>{
+  if(e.touches.length!==2) return;
+  e.preventDefault();               /* 페이지 확대 차단 — 캔버스만 줌 */
+  const r=stage.getBoundingClientRect(), m=mid(e.touches);
+  pinch={
+    d0:Math.max(1,dist(e.touches)),
+    z0:currentZoom(),
+    /* 시작 시 중심점이 가리키던 콘텐츠 좌표(스크롤 포함)와 화면 좌표 */
+    cx:m.x-r.left+stage.scrollLeft,
+    cy:m.y-r.top+stage.scrollTop,
+    vx:m.x-r.left,
+    vy:m.y-r.top
+  };
+},{passive:false});
+
+stage.addEventListener('touchmove',e=>{
+  if(!pinch||e.touches.length!==2) return;
+  e.preventDefault();
+  const want=pinch.z0*dist(e.touches)/pinch.d0;
+  state.previewZoom=Math.max(MINZ,Math.min(MAXZ,want));
+  fitPreview();
+  /* 앵커: 시작 중심점 아래 있던 지점을 그대로 유지 */
+  const k=currentZoom()/pinch.z0;
+  stage.scrollLeft=pinch.cx*k-pinch.vx;
+  stage.scrollTop=pinch.cy*k-pinch.vy;
+  const z=currentZoom();
+  showZoomBadge(Math.abs(z-1)<0.005?'맞춤':Math.round(z*100)+'%');
+},{passive:false});
+
+function endPinch(e){ if(pinch&&e.touches.length<2) pinch=null; }
+stage.addEventListener('touchend',endPinch);
+stage.addEventListener('touchcancel',endPinch);
+
+/* iOS 사파리 전용 제스처 이벤트도 미리보기 위에서는 차단 */
+['gesturestart','gesturechange','gestureend'].forEach(t=>{
+  stage.addEventListener(t,e=>e.preventDefault());
+});
+
+/* 빈 곳 더블 탭 → 화면 맞춤 */
+stage.addEventListener('touchend',e=>{
+  if(e.touches.length>0||e.changedTouches.length!==1) return;
+  const t=e.changedTouches[0];
+  if(e.target.closest('.pmsg,button,a,input,select,textarea,.ctrl')) { lastTap=null; return; }
+  const now=Date.now();
+  if(lastTap&&now-lastTap.t<320&&Math.hypot(t.clientX-lastTap.x,t.clientY-lastTap.y)<32){
+    lastTap=null;
+    if(typeof resetPreviewZoom==='function'){ resetPreviewZoom(); showZoomBadge('맞춤'); }
+  }else{
+    lastTap={t:now,x:t.clientX,y:t.clientY};
+  }
+});
 })();
 </script>
 
