@@ -4985,12 +4985,18 @@ else setTimeout(__idleLoadRenderer,1200);
   function removeCaptureOnlyArtifacts(root){
     root.querySelectorAll('[data-export-soft-break]').forEach(br=>br.remove());
     root.querySelectorAll('.ctrl,#selToolbar').forEach(el=>el.remove());
-    /* 저장 사본에는 편집·선택·드래그 상태를 전혀 넘기지 않는다. */
+    /* 저장 사본은 편집 화면과 완전히 분리한다. 모바일 탭 선택선, 편집선,
+       드래그 상태와 contenteditable 속성은 사본에만 제거한다. */
     root.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
     root.querySelectorAll('.editable,.editing,.ctrl-open,.dragging').forEach(el=>{
       el.classList.remove('editable','editing','ctrl-open','dragging');
+      el.style.setProperty('outline','none','important');
+      el.style.setProperty('outline-offset','0','important');
     });
-    root.classList.add('export-clean-preview');
+    root.querySelectorAll('.pmsg').forEach(el=>{
+      el.style.setProperty('outline','none','important');
+      el.style.setProperty('outline-offset','0','important');
+    });
   }
   function makeExactPreviewClone(source){
     /* CSS zoom is preview-only. Read the authored border-box size from computed
@@ -5114,6 +5120,9 @@ else setTimeout(__idleLoadRenderer,1200);
       exactPreviewSaveBusy=false;
     }
   }
+
+  /* 모바일 저장창도 데스크톱과 정확히 같은 캡처 결과를 사용한다. */
+  window.__exactPreviewCapture=exactPreviewCapture;
 
   window.saveImage=async function(){
     if(exactPreviewSaveBusy) return;
@@ -6045,7 +6054,13 @@ applyMQ();
 
 <style id="pinch-zoom-styles">
 /* ===== 캔버스 전용 핀치 줌 ===== */
-.mobile-ui .preview-surface.stage{overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.mobile-ui .preview-pane{min-width:0;max-width:100%;overflow:hidden}
+.mobile-ui .preview-surface.stage{
+  width:100%;max-width:100%;min-width:0;overflow:auto;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  touch-action:pan-x pan-y;
+}
+.mobile-ui #canvasFit{flex:0 0 auto;max-width:none}
 #mZoomBadge{position:fixed;top:0;left:50%;transform:translate(-50%,10px);z-index:95;
   background:rgba(26,27,31,.86);color:#fff;font-size:12px;font-weight:700;
   padding:6px 12px;border-radius:999px;pointer-events:none;opacity:0;transition:opacity .18s}
@@ -6117,9 +6132,24 @@ function endPinch(e){ if(pinch&&e.touches.length<2) pinch=null; }
 stage.addEventListener('touchend',endPinch);
 stage.addEventListener('touchcancel',endPinch);
 
-/* iOS 사파리 전용 제스처 이벤트도 미리보기 위에서는 차단 */
+/* iOS 사파리는 gesture 이벤트의 target이 stage 밖(document 등)으로 잡히는
+   경우가 있어 캡처 단계에서도 막는다. 미리보기에서 시작한 제스처만 차단하며
+   페이지의 다른 영역과 데스크톱 레이아웃에는 영향을 주지 않는다. */
+function gestureBelongsToStage(e){
+  if(pinch) return true;
+  const target=e.target;
+  if(target&&(target===stage||stage.contains(target))) return true;
+  const x=Number(e.clientX),y=Number(e.clientY);
+  if(Number.isFinite(x)&&Number.isFinite(y)){
+    const hit=document.elementFromPoint(x,y);
+    return !!(hit&&(hit===stage||stage.contains(hit)));
+  }
+  return false;
+}
 ['gesturestart','gesturechange','gestureend'].forEach(t=>{
-  stage.addEventListener(t,e=>e.preventDefault());
+  document.addEventListener(t,e=>{
+    if(gestureBelongsToStage(e)) e.preventDefault();
+  },{passive:false,capture:true});
 });
 
 /* 빈 곳 더블 탭 → 화면 맞춤 */
@@ -6386,160 +6416,159 @@ stage.addEventListener('touchend',e=>{
   try{ setMsgType('text'); }catch(e){}
 })();
 </script>
-<style id="mobile-save-pinch-export-clean-fixes">
-/* ===== iPhone Safari: mobile save sheet + canvas-only pinch + clean export ===== */
-.export-clean-preview,
-.export-clean-preview *{
-  outline:none!important;
-  outline-offset:0!important;
-}
-.export-clean-preview .ctrl{display:none!important}
-
-#mSaveChoice,
-#mSavedImageViewer{
-  position:fixed;inset:0;z-index:420;display:none;
+<style id="mobile-save-dialog-styles">
+/* 모바일 저장 UI는 고정 레이어 안에서만 동작한다. 기존 앱 레이아웃에는 영향 없음. */
+#mobileSaveChoice,#mobileSavedImageViewer{
+  position:fixed;inset:0;z-index:4200;display:none;
   align-items:flex-end;justify-content:center;
-  background:rgba(28,29,33,.34);backdrop-filter:blur(3px);
-  -webkit-backdrop-filter:blur(3px);
   padding:14px 12px calc(14px + env(safe-area-inset-bottom));
+  background:rgba(28,29,33,.36);
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
 }
-#mSaveChoice.show,
-#mSavedImageViewer.show{display:flex}
-.m-save-sheet{
+#mobileSaveChoice.show,#mobileSavedImageViewer.show{display:flex}
+#mobileSaveChoice .mobile-save-panel,#mobileSavedImageViewer .mobile-save-panel{
   width:min(100%,520px);max-height:min(88dvh,760px);overflow:auto;
-  background:var(--panel,#fff);border:1px solid var(--line,#EAEAEC);
-  border-radius:20px;box-shadow:0 -10px 38px rgba(0,0,0,.22);
-  padding:16px;
+  padding:16px;background:var(--panel,#fff);color:var(--ink,#424448);
+  border:1px solid var(--line,#EAEAEC);border-radius:20px;
+  box-shadow:0 -12px 38px rgba(0,0,0,.24);
+  -webkit-overflow-scrolling:touch;
 }
-.m-save-sheet-head{padding:1px 2px 13px;text-align:center}
-.m-save-sheet-head strong{display:block;font-size:16px;letter-spacing:-.02em}
-.m-save-sheet-head span{display:block;margin-top:4px;font-size:11px;line-height:1.5;color:var(--muted,#8d8d93)}
-.m-save-three-rows{display:grid;grid-template-columns:1fr;gap:9px}
-.m-save-three-rows button{
-  width:100%;min-height:52px;border-radius:13px;border:1px solid var(--line,#EAEAEC);
-  background:var(--panel-2,#F4F4F5);color:var(--ink,#424448);
-  font:700 14px/1.2 inherit;padding:13px 16px;touch-action:manipulation;
+.mobile-save-title{text-align:center;padding:1px 4px 13px}
+.mobile-save-title strong{display:block;font-size:16px;letter-spacing:-.02em}
+.mobile-save-title span{display:block;margin-top:4px;color:var(--muted,#909096);font-size:11px;line-height:1.5}
+.mobile-save-buttons{display:grid;grid-template-columns:1fr;gap:9px}
+.mobile-save-buttons button{
+  width:100%;min-height:54px;padding:13px 16px;border-radius:13px;
+  border:1px solid var(--line,#EAEAEC);background:var(--panel-2,#F4F4F5);
+  color:var(--ink,#424448);font:700 14px/1.2 inherit;touch-action:manipulation;
 }
-.m-save-three-rows button.primary{background:var(--accent,#424448);border-color:var(--accent,#424448);color:#fff}
-.m-save-three-rows button:disabled{opacity:.48}
-.m-saved-preview{
-  display:flex;align-items:center;justify-content:center;
-  max-height:46dvh;overflow:auto;margin:0 0 13px;padding:10px;
-  border:1px solid var(--line,#EAEAEC);border-radius:13px;
-  background-image:linear-gradient(45deg,#e5e5e7 25%,transparent 25%),linear-gradient(-45deg,#e5e5e7 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e5e7 75%),linear-gradient(-45deg,transparent 75%,#e5e5e7 75%);
+.mobile-save-buttons button.primary{background:var(--accent,#424448);border-color:var(--accent,#424448);color:#fff}
+.mobile-save-preview{
+  display:flex;align-items:flex-start;justify-content:center;max-height:49dvh;overflow:auto;
+  margin:0 0 13px;padding:10px;border:1px solid var(--line,#EAEAEC);border-radius:13px;
+  background-image:linear-gradient(45deg,#e4e4e6 25%,transparent 25%),linear-gradient(-45deg,#e4e4e6 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e4e4e6 75%),linear-gradient(-45deg,transparent 75%,#e4e4e6 75%);
   background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;
   -webkit-overflow-scrolling:touch;
 }
-.m-saved-preview img{display:block;max-width:100%;height:auto;box-shadow:0 5px 18px rgba(0,0,0,.14);-webkit-touch-callout:default}
-
-@media(max-width:700px){
-  html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
-  .mobile-ui .app-shell,
-  .mobile-ui .preview-pane{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important}
-  .mobile-ui .preview-surface.stage{
-    width:100%!important;max-width:100%!important;min-width:0!important;
-    overflow:auto!important;-webkit-overflow-scrolling:touch;
-    overscroll-behavior:contain!important;touch-action:pan-x pan-y!important;
-    contain:layout paint;
-  }
-  .mobile-ui #canvasFit{max-width:none!important;flex:0 0 auto!important}
-  .mobile-ui #canvas{touch-action:pan-x pan-y!important}
-}
+.mobile-save-preview img{display:block;max-width:100%;height:auto;box-shadow:0 5px 18px rgba(0,0,0,.14);-webkit-touch-callout:default}
 </style>
-<script id="mobile-save-pinch-export-clean-script">
+<script id="mobile-save-dialog-script">
 (function(){
 'use strict';
-const mobileMQ=window.matchMedia('(max-width:700px)');
-const viewportMeta=document.querySelector('meta[name="viewport"]');
-const originalViewport=viewportMeta?viewportMeta.content:'';
-const directSaveImage=window.saveImage;
-const directCopyImage=window.copyImage;
-const desktopDownload=window.__downloadDataUrl||__downloadDataUrl;
-let savedDataUrl='',savedFilename='image.png',savedBlob=null;
+let savedDataUrl='',savedBlob=null,savedFilename='image.png';
+let previousBodyOverflow='';
+const desktopSaveImage=window.saveImage;
 
-function mobileMode(){return mobileMQ.matches||document.body.classList.contains('mobile-ui');}
-function lockMobileViewport(){
-  const vp=document.querySelector('meta[name="viewport"]');
-  if(!vp) return;
-  if(mobileMode()) vp.content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover';
-  else if(originalViewport) vp.content=originalViewport;
+function isMobileSaveUI(){
+  return document.body.classList.contains('mobile-ui')||
+    (window.matchMedia&&window.matchMedia('(max-width:700px)').matches);
 }
-lockMobileViewport();
-if(mobileMQ.addEventListener) mobileMQ.addEventListener('change',lockMobileViewport);
-else if(mobileMQ.addListener) mobileMQ.addListener(lockMobileViewport);
-
-function ensureSaveChoice(){
-  let root=document.getElementById('mSaveChoice');
+function lockPage(){
+  previousBodyOverflow=document.body.style.overflow;
+  document.body.style.overflow='hidden';
+}
+function unlockPage(){
+  const choice=document.getElementById('mobileSaveChoice');
+  const viewer=document.getElementById('mobileSavedImageViewer');
+  if(!(choice&&choice.classList.contains('show'))&&!(viewer&&viewer.classList.contains('show'))){
+    document.body.style.overflow=previousBodyOverflow;
+  }
+}
+function closeChoice(){
+  const root=document.getElementById('mobileSaveChoice');
+  if(root) root.classList.remove('show');
+  unlockPage();
+}
+function closeViewer(){
+  const root=document.getElementById('mobileSavedImageViewer');
+  if(root) root.classList.remove('show');
+  unlockPage();
+}
+function ensureChoice(){
+  let root=document.getElementById('mobileSaveChoice');
   if(root) return root;
-  root=document.createElement('div');root.id='mSaveChoice';
-  root.innerHTML='<div class="m-save-sheet" role="dialog" aria-modal="true" aria-label="저장 방법">'
-    +'<div class="m-save-sheet-head"><strong>저장 방법을 골라줘</strong><span>아이폰에서도 누르기 편하게 한 줄에 하나씩 표시해요.</span></div>'
-    +'<div class="m-save-three-rows">'
+  root=document.createElement('div');
+  root.id='mobileSaveChoice';
+  root.innerHTML='<div class="mobile-save-panel" role="dialog" aria-modal="true" aria-label="이미지 저장 방법">'
+    +'<div class="mobile-save-title"><strong>저장 방법</strong><span>작은 화면에서도 누르기 쉽도록 한 줄에 하나씩 표시해요.</span></div>'
+    +'<div class="mobile-save-buttons">'
     +'<button type="button" class="primary" data-action="save">↓ 이미지 저장</button>'
     +'<button type="button" data-action="copy">⧉ 이미지 복사</button>'
     +'<button type="button" data-action="close">닫기</button>'
     +'</div></div>';
   document.body.appendChild(root);
   root.addEventListener('click',e=>{
-    if(e.target===root||e.target.closest('[data-action="close"]')){closeSaveChoice();return;}
-    const a=e.target.closest('[data-action]');if(!a)return;
-    if(a.dataset.action==='save'){
-      closeSaveChoice();
-      try{directSaveImage();}catch(err){console.error(err);}
-    }else if(a.dataset.action==='copy'){
-      closeSaveChoice();
-      try{directCopyImage();}catch(err){console.error(err);}
+    if(e.target===root){closeChoice();return;}
+    const btn=e.target.closest('[data-action]');
+    if(!btn) return;
+    const action=btn.dataset.action;
+    if(action==='close'){closeChoice();return;}
+    if(action==='copy'){
+      const p=window.copyImage&&window.copyImage();
+      closeChoice();
+      if(p&&typeof p.catch==='function') p.catch(()=>{});
+      return;
+    }
+    if(action==='save'){
+      closeChoice();
+      createMobileImageViewer();
     }
   });
   return root;
 }
-function openSaveChoice(){
-  if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
-  try{if(typeof mCloseSheet==='function')mCloseSheet();}catch(_){}
-  ensureSaveChoice().classList.add('show');
-  document.body.style.overflow='hidden';
-}
-function closeSaveChoice(){
-  const root=document.getElementById('mSaveChoice');if(root)root.classList.remove('show');
-  const viewer=document.getElementById('mSavedImageViewer');
-  if(!viewer||!viewer.classList.contains('show')) document.body.style.overflow='';
-}
-
 function ensureViewer(){
-  let root=document.getElementById('mSavedImageViewer');
+  let root=document.getElementById('mobileSavedImageViewer');
   if(root) return root;
-  root=document.createElement('div');root.id='mSavedImageViewer';
-  root.innerHTML='<div class="m-save-sheet" role="dialog" aria-modal="true" aria-label="저장 이미지 보기">'
-    +'<div class="m-save-sheet-head"><strong>이미지가 완성됐어</strong><span>이미지를 길게 눌러 직접 저장해도 되고, 아래 버튼을 사용할 수도 있어요.</span></div>'
-    +'<div class="m-saved-preview"><img alt="저장할 이미지 미리보기"></div>'
-    +'<div class="m-save-three-rows">'
-    +'<button type="button" class="primary" data-action="share">↓ 사진 앱에 저장</button>'
+  root=document.createElement('div');
+  root.id='mobileSavedImageViewer';
+  root.innerHTML='<div class="mobile-save-panel" role="dialog" aria-modal="true" aria-label="저장 이미지 보기">'
+    +'<div class="mobile-save-title"><strong>이미지가 완성됐어</strong><span>아이폰에서는 공유 버튼으로 사진 앱에 저장하거나, 이미지를 길게 눌러 저장할 수 있어요.</span></div>'
+    +'<div class="mobile-save-preview"><img alt="저장할 이미지 미리보기"></div>'
+    +'<div class="mobile-save-buttons">'
+    +'<button type="button" class="primary" data-action="share">↗ 공유·사진 앱에 저장</button>'
     +'<button type="button" data-action="copy">⧉ 이미지 복사</button>'
     +'<button type="button" data-action="close">닫기</button>'
     +'</div></div>';
   document.body.appendChild(root);
-  root.addEventListener('click',async e=>{
-    if(e.target===root||e.target.closest('[data-action="close"]')){closeViewer();return;}
-    const a=e.target.closest('[data-action]');if(!a)return;
-    if(a.dataset.action==='share') await shareSavedImage();
-    if(a.dataset.action==='copy') await copySavedImage();
+  root.addEventListener('click',e=>{
+    if(e.target===root){closeViewer();return;}
+    const btn=e.target.closest('[data-action]');
+    if(!btn) return;
+    if(btn.dataset.action==='close') closeViewer();
+    else if(btn.dataset.action==='share') shareSavedImage();
+    else if(btn.dataset.action==='copy') copySavedImage();
   });
   return root;
 }
-async function showViewer(dataUrl,filename){
-  savedDataUrl=dataUrl;savedFilename=filename||'image.png';savedBlob=null;
-  try{savedBlob=await fetch(dataUrl).then(r=>r.blob());}catch(_){}
-  const root=ensureViewer();
-  const img=root.querySelector('img');if(img)img.src=dataUrl;
-  root.classList.add('show');
-  document.body.style.overflow='hidden';
+function openChoice(){
+  if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
+  try{if(typeof window.mCloseSheet==='function') window.mCloseSheet();}catch(_){}
+  ensureChoice().classList.add('show');
+  lockPage();
 }
-function closeViewer(){
-  const root=document.getElementById('mSavedImageViewer');if(root)root.classList.remove('show');
-  document.body.style.overflow='';
+async function createMobileImageViewer(){
+  if(typeof window.__exactPreviewCapture!=='function'){
+    return desktopSaveImage.apply(window,arguments);
+  }
+  try{
+    const dataUrl=await window.__exactPreviewCapture('미리보기 그대로 저장 중...');
+    if(!dataUrl) return;
+    savedDataUrl=dataUrl;
+    savedFilename=(typeof safeFilename==='function'?safeFilename(state.export.filename):'image')+'.png';
+    savedBlob=await fetch(dataUrl).then(r=>r.blob());
+    const root=ensureViewer();
+    root.querySelector('img').src=dataUrl;
+    root.classList.add('show');
+    lockPage();
+  }catch(err){
+    console.error('mobile image viewer failed',err);
+    alert('이미지 저장 중 문제가 생겼어. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어줘.');
+  }
 }
 async function shareSavedImage(){
-  if(!savedBlob&&savedDataUrl){try{savedBlob=await fetch(savedDataUrl).then(r=>r.blob());}catch(_){}}
+  if(!savedBlob&&savedDataUrl){
+    try{savedBlob=await fetch(savedDataUrl).then(r=>r.blob());}catch(_){}
+  }
   if(savedBlob&&navigator.share&&typeof File!=='undefined'){
     try{
       const file=new File([savedBlob],savedFilename,{type:'image/png'});
@@ -6549,58 +6578,34 @@ async function shareSavedImage(){
       }
     }catch(err){
       if(err&&err.name==='AbortError') return;
-      console.warn('native image share failed',err);
+      console.warn('image share failed',err);
     }
   }
-  desktopDownload(savedDataUrl,savedFilename);
+  /* 공유 API가 없는 환경에서는 현재 창의 이미지 자체를 길게 눌러 저장할 수 있다. */
+  alert('공유 기능을 사용할 수 없어. 위 이미지를 길게 눌러 저장해줘.');
 }
 async function copySavedImage(){
-  if(!savedBlob&&savedDataUrl){try{savedBlob=await fetch(savedDataUrl).then(r=>r.blob());}catch(_){}}
+  if(!savedBlob&&savedDataUrl){
+    try{savedBlob=await fetch(savedDataUrl).then(r=>r.blob());}catch(_){}
+  }
   if(!savedBlob||!navigator.clipboard||typeof ClipboardItem==='undefined'){
-    alert('이 브라우저에서는 이미지 복사가 어려워. 위 이미지를 길게 눌러 저장해줘.');return;
+    alert('이 브라우저에서는 이미지 복사가 어려워. 위 이미지를 길게 눌러 저장해줘.');
+    return;
   }
   try{
     await navigator.clipboard.write([new ClipboardItem({'image/png':savedBlob})]);
-    if(typeof toast==='function')toast('이미지를 클립보드에 복사했어요');
+    if(typeof toast==='function') toast('이미지를 클립보드에 복사했어요');
     else alert('이미지를 복사했어!');
   }catch(err){
-    console.error('saved image copy failed',err);
+    console.error('mobile saved image copy failed',err);
     alert('브라우저가 이미지 복사를 막았어. 위 이미지를 길게 눌러 저장해줘.');
   }
 }
-
-window.__downloadDataUrl=function(dataUrl,filename){
-  if(mobileMode()){
-    showViewer(dataUrl,filename);
-    return;
-  }
-  return desktopDownload(dataUrl,filename);
-};
+window.openMobileSaveActions=openChoice;
 window.saveImage=function(){
-  if(mobileMode()) return openSaveChoice();
-  return directSaveImage.apply(this,arguments);
+  if(isMobileSaveUI()) return openChoice();
+  return desktopSaveImage.apply(this,arguments);
 };
-window.openMobileSaveActions=openSaveChoice;
-
-const stage=document.getElementById('stageEl');
-let canvasPinching=false;
-function insideStage(target){return !!(stage&&(target===stage||(target&&target.closest&&target.closest('#stageEl'))));}
-document.addEventListener('touchstart',e=>{
-  if(e.touches&&e.touches.length>=2&&insideStage(e.target)){
-    canvasPinching=true;e.preventDefault();
-  }
-},{passive:false,capture:true});
-document.addEventListener('touchmove',e=>{
-  if(canvasPinching&&e.touches&&e.touches.length>=2)e.preventDefault();
-},{passive:false,capture:true});
-function endCanvasPinch(e){if(!e.touches||e.touches.length<2)canvasPinching=false;}
-document.addEventListener('touchend',endCanvasPinch,{passive:true,capture:true});
-document.addEventListener('touchcancel',endCanvasPinch,{passive:true,capture:true});
-['gesturestart','gesturechange','gestureend'].forEach(type=>{
-  document.addEventListener(type,e=>{
-    if(insideStage(e.target)){e.preventDefault();e.stopPropagation();}
-  },{passive:false,capture:true});
-});
 })();
 </script>
 
