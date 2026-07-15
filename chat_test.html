@@ -5064,78 +5064,116 @@ else setTimeout(__idleLoadRenderer,1200);
     return cur;
   }
 
-  function flowTokens(root){
-    const tokens=[];
+  function flowRuns(root){
+    const runs=[];
+    function pushText(node){
+      const value=node.nodeValue||'';
+      let start=0;
+      const re=/\r\n|\r|\n/g;
+      let m;
+      while((m=re.exec(value))){
+        if(m.index>start) runs.push({type:'text',node,start,end:m.index});
+        runs.push({type:'hard'});
+        start=m.index+m[0].length;
+      }
+      if(start<value.length) runs.push({type:'text',node,start,end:value.length});
+    }
     function walk(parent){
       for(const child of parent.childNodes){
-        if(child.nodeType===Node.TEXT_NODE){
-          const value=child.nodeValue||'';
-          let offset=0;
-          for(const ch of Array.from(value)){
-            const next=offset+ch.length;
-            tokens.push({type:'char',node:child,start:offset,end:next,ch});
-            offset=next;
-          }
-          continue;
-        }
+        if(child.nodeType===Node.TEXT_NODE){pushText(child);continue;}
         if(child.nodeType!==Node.ELEMENT_NODE) continue;
         const el=child;
         if(el.matches('.ctrl,script,style')) continue;
-        if(el.tagName==='BR'){
-          tokens.push({type:'hard'});
-          continue;
-        }
+        if(el.tagName==='BR'){runs.push({type:'hard'});continue;}
         const display=getComputedStyle(el).display;
         const isBlock=/^(block|flex|grid|table|list-item)$/.test(display);
-        if(isBlock) tokens.push({type:'hard'});
+        if(isBlock) runs.push({type:'hard'});
         walk(el);
-        if(isBlock) tokens.push({type:'hard'});
+        if(isBlock) runs.push({type:'hard'});
       }
     }
     walk(root);
-    return tokens;
+    return runs;
   }
 
   function measuredSoftBreaks(root){
     const points=[];
     const range=document.createRange();
-    let band=null;
-    let hardSinceLast=true;
+    let currentBand=null;
 
-    for(const token of flowTokens(root)){
-      if(token.type==='hard'){
-        band=null;
-        hardSinceLast=true;
-        continue;
+    function sameLine(a,b){
+      if(!a||!b) return false;
+      const overlap=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+      const minHeight=Math.max(1,Math.min(a.bottom-a.top,b.bottom-b.top));
+      return overlap>Math.max(1,minHeight*.18);
+    }
+    function groupBands(rects){
+      const bands=[];
+      for(const rect of rects){
+        if(!(rect.width>0&&rect.height>0)) continue;
+        const last=bands[bands.length-1];
+        if(last&&sameLine(last,rect)){
+          last.top=Math.min(last.top,rect.top);
+          last.bottom=Math.max(last.bottom,rect.bottom);
+        }else bands.push({top:rect.top,bottom:rect.bottom});
       }
-      if(!token.ch||/^\s$/u.test(token.ch)) continue;
+      return bands;
+    }
+    function boundariesFor(value,start,end){
+      const result=[start];
+      let offset=start;
+      for(const ch of Array.from(value.slice(start,end))){offset+=ch.length;result.push(offset);}
+      return result;
+    }
+    function bandIndexForRect(rect,bands){
+      for(let i=0;i<bands.length;i++) if(sameLine(rect,bands[i])) return i;
+      let nearest=0,best=Infinity;
+      for(let i=0;i<bands.length;i++){
+        const d=Math.abs(rect.top-bands[i].top);
+        if(d<best){best=d;nearest=i;}
+      }
+      return nearest;
+    }
+    function lastPrefixBand(node,start,end,bands){
+      if(end<=start) return -1;
       try{
-        range.setStart(token.node,token.start);
-        range.setEnd(token.node,token.end);
-        const rect=[...range.getClientRects()].find(r=>r.width>0&&r.height>0);
-        if(!rect) continue;
+        range.setStart(node,start);range.setEnd(node,end);
+        const rects=[...range.getClientRects()].filter(r=>r.width>0&&r.height>0);
+        if(!rects.length) return -1;
+        return bandIndexForRect(rects[rects.length-1],bands);
+      }catch(_){return -1;}
+    }
 
-        if(!band){
-          band={top:rect.top,bottom:rect.bottom};
-          hardSinceLast=false;
-          continue;
-        }
+    for(const run of flowRuns(root)){
+      if(run.type==='hard'){currentBand=null;continue;}
+      const node=run.node;
+      if(!node||run.end<=run.start) continue;
+      let rects=[];
+      try{
+        range.setStart(node,run.start);range.setEnd(node,run.end);
+        rects=[...range.getClientRects()].filter(r=>r.width>0&&r.height>0);
+      }catch(_){continue;}
+      const bands=groupBands(rects);
+      if(!bands.length) continue;
+      const path=nodePath(node,root);
+      if(!path) continue;
 
-        const overlap=Math.min(band.bottom,rect.bottom)-Math.max(band.top,rect.top);
-        const minHeight=Math.max(1,Math.min(band.bottom-band.top,rect.height));
-        const sameLine=overlap>Math.max(1,minHeight*.18);
-        if(!sameLine){
-          if(!hardSinceLast){
-            const path=nodePath(token.node,root);
-            if(path) points.push({path,offset:token.start});
+      if(currentBand&&!sameLine(currentBand,bands[0])) points.push({path,offset:run.start});
+
+      if(bands.length>1){
+        const boundaries=boundariesFor(node.nodeValue||'',run.start,run.end);
+        for(let target=1;target<bands.length;target++){
+          let lo=1,hi=boundaries.length-1;
+          while(lo<hi){
+            const mid=(lo+hi)>>1;
+            const idx=lastPrefixBand(node,run.start,boundaries[mid],bands);
+            if(idx>=target) hi=mid; else lo=mid+1;
           }
-          band={top:rect.top,bottom:rect.bottom};
-        }else{
-          band.top=Math.min(band.top,rect.top);
-          band.bottom=Math.max(band.bottom,rect.bottom);
+          const breakOffset=boundaries[Math.max(0,lo-1)];
+          if(breakOffset>run.start&&breakOffset<run.end) points.push({path,offset:breakOffset});
         }
-        hardSinceLast=false;
-      }catch(_){ }
+      }
+      currentBand=bands[bands.length-1];
     }
     return points;
   }
@@ -5263,41 +5301,127 @@ else setTimeout(__idleLoadRenderer,1200);
     return {host,clone,width,height};
   }
 
-  async function renderSnapshotPng(node,width,height,scale,fontCss){
-    const outWidth=Math.max(1,Math.round(width*scale));
-    const outHeight=Math.max(1,Math.round(height*scale));
-    const base={
-      width,
-      height,
-      canvasWidth:outWidth,
-      canvasHeight:outHeight,
-      pixelRatio:1,
-      skipAutoScale:true,
-      cacheBust:false,
-      preferredFontFormat:'woff2',
-      style:{
-        zoom:'1',transform:'none',transformOrigin:'top left',
-        margin:'0',boxShadow:'none',width:width+'px',height:height+'px'
-      }
-    };
-    if(!state.transparentBg) base.backgroundColor=state.colors.bg;
+  function isTouchWebKit(){
+    return /iPad|iPhone|iPod/i.test(navigator.userAgent||'')||
+      (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  }
 
-    let bitmap;
-    try{
-      bitmap=await __withQuietConsole(()=>window.htmlToImage.toCanvas(
-        node,
-        fontCss?{...base,fontEmbedCSS:fontCss}:base
-      ));
-    }catch(firstError){
-      console.warn('exact preview canvas font retry',firstError);
+  function captureScaleForDevice(width,height,requested){
+    let scale=Math.max(.08,Number(requested)||1);
+    const touch=isTouchWebKit()||((navigator.maxTouchPoints||0)>0&&innerWidth<=900);
+    const maxSide=touch?8192:32767;
+    const maxPixels=touch?12000000:64000000;
+    scale=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
+    return Math.max(.0001,scale*.985);
+  }
+
+  function canvasToPngBlob(canvas){
+    return new Promise((resolve,reject)=>{
       try{
-        bitmap=await __withQuietConsole(()=>window.htmlToImage.toCanvas(node,base));
-      }catch(secondError){
-        console.warn('exact preview canvas loaded-font retry',secondError);
-        bitmap=await __withQuietConsole(()=>window.htmlToImage.toCanvas(node,{...base,skipFonts:true}));
-      }
+        if(canvas.toBlob){
+          canvas.toBlob(blob=>blob&&blob.size?resolve(blob):reject(new Error('PNG blob creation failed')),'image/png');
+          return;
+        }
+        const url=canvas.toDataURL('image/png');
+        fetch(url).then(r=>r.blob()).then(resolve,reject);
+      }catch(err){reject(err);}
+    });
+  }
+
+  function prepareRasterTarget(node,width,height){
+    const touch=isTouchWebKit()||((navigator.maxTouchPoints||0)>0&&innerWidth<=900);
+    const maxSide=touch?8192:16384;
+    const maxPixels=touch?12000000:48000000;
+    const layoutScale=Math.min(1,
+      maxSide/Math.max(1,width),
+      maxSide/Math.max(1,height),
+      Math.sqrt(maxPixels/Math.max(1,width*height))
+    );
+    if(layoutScale>=.9999) return {target:node,width,height,layoutScale:1};
+
+    const shell=document.createElement('div');
+    const shellW=Math.max(1,Math.floor(width*layoutScale));
+    const shellH=Math.max(1,Math.floor(height*layoutScale));
+    Object.assign(shell.style,{
+      position:'relative',display:'block',overflow:'hidden',margin:'0',padding:'0',
+      width:shellW+'px',height:shellH+'px',minWidth:shellW+'px',minHeight:shellH+'px',
+      maxWidth:shellW+'px',maxHeight:shellH+'px',boxSizing:'border-box',
+      background:'transparent',isolation:'isolate'
+    });
+    const parent=node.parentNode;
+    if(parent) parent.insertBefore(shell,node);
+    shell.appendChild(node);
+    node.style.setProperty('position','absolute','important');
+    node.style.setProperty('left','0','important');
+    node.style.setProperty('top','0','important');
+    node.style.setProperty('transform','scale('+layoutScale+')','important');
+    node.style.setProperty('transform-origin','top left','important');
+    return {target:shell,width:shellW,height:shellH,layoutScale};
+  }
+
+  async function renderSnapshotBlob(node,width,height,requestedScale,fontCss){
+    const raster=prepareRasterTarget(node,width,height);
+    const firstScale=captureScaleForDevice(width,height,requestedScale);
+    const attempts=[];
+    for(const factor of [1,.82,.67,.54,.43,.34]){
+      const candidate=Math.max(.0001,firstScale*factor);
+      if(!attempts.some(v=>Math.abs(v-candidate)<.01)) attempts.push(candidate);
     }
-    return bitmap.toDataURL('image/png');
+    let lastError=null;
+    for(const scale of attempts){
+      const outWidth=Math.max(1,Math.floor(width*scale));
+      const outHeight=Math.max(1,Math.floor(height*scale));
+      const base={
+        width:raster.width,
+        height:raster.height,
+        canvasWidth:outWidth,
+        canvasHeight:outHeight,
+        pixelRatio:1,
+        skipAutoScale:true,
+        cacheBust:false,
+        preferredFontFormat:'woff2',
+        style:{
+          zoom:'1',transform:'none',transformOrigin:'top left',
+          margin:'0',boxShadow:'none',width:raster.width+'px',height:raster.height+'px'
+        }
+      };
+      if(!state.transparentBg) base.backgroundColor=state.colors.bg;
+      const variants=[];
+      if(fontCss) variants.push({...base,fontEmbedCSS:fontCss});
+      variants.push(base,{...base,skipFonts:true});
+      for(const options of variants){
+        let bitmap=null;
+        try{
+          bitmap=await __withQuietConsole(()=>window.htmlToImage.toCanvas(raster.target,options));
+          if(!bitmap||bitmap.width!==outWidth||bitmap.height!==outHeight) throw new Error('renderer returned an invalid canvas');
+          const blob=await canvasToPngBlob(bitmap);
+          bitmap.width=1;bitmap.height=1;
+          return {blob,scale,requestedScale:Number(requestedScale)||1};
+        }catch(err){
+          lastError=err;
+          if(bitmap){try{bitmap.width=1;bitmap.height=1;}catch(_){}}
+        }
+      }
+      await new Promise(resolve=>setTimeout(resolve,0));
+    }
+    throw lastError||new Error('The image is too large for this browser to save.');
+  }
+
+  function blobToDataUrl(blob){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result);
+      reader.onerror=reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function downloadPngBlob(blob,filename){
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.download=filename;a.href=url;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
   }
 
   async function captureExactPreview(message){
@@ -5338,7 +5462,7 @@ else setTimeout(__idleLoadRenderer,1200);
         }
       }catch(_){fontCss='';}
 
-      return await renderSnapshotPng(snapshot.clone,snapshot.width,snapshot.height,scale,fontCss);
+      return await renderSnapshotBlob(snapshot.clone,snapshot.width,snapshot.height,scale,fontCss);
     }finally{
       if(snapshot&&snapshot.host) snapshot.host.remove();
       hideSaving();
@@ -5346,18 +5470,30 @@ else setTimeout(__idleLoadRenderer,1200);
     }
   }
 
-  window.__exactPreviewCapture=captureExactPreview;
+  window.__exactPreviewCaptureBlob=async function(message){
+    const result=await captureExactPreview(message);
+    return result&&result.blob||null;
+  };
+  window.__exactPreviewCapture=async function(message){
+    const blob=await window.__exactPreviewCaptureBlob(message);
+    return blob?blobToDataUrl(blob):null;
+  };
   window.saveImage=async function(){
     if(captureBusy) return;
     if(!state.messages.length){alert('먼저 메시지를 추가해줘.');return;}
     try{
-      const dataUrl=await captureExactPreview('미리보기 그대로 저장 중...');
-      if(dataUrl) __downloadDataUrl(dataUrl,safeFilename(state.export.filename)+'.png');
+      const result=await captureExactPreview('미리보기 그대로 저장 중...');
+      if(result&&result.blob){
+        downloadPngBlob(result.blob,safeFilename(state.export.filename)+'.png');
+        if(result.scale+0.02<result.requestedScale&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
+      }
     }catch(err){
       console.error('exact preview image export failed',err);
       const detail=String(err&&err.message||'');
       if(/renderer|script|timeout/i.test(detail)){
         alert('이미지 저장 기능을 불러오지 못했어. 인터넷 연결을 확인한 뒤 다시 눌러줘.');
+      }else if(/too large|canvas|blob|memory|size/i.test(detail)){
+        alert('글이 너무 길어 이 브라우저의 이미지 한도를 넘었어. 저장 배율을 낮춘 뒤 다시 눌러줘.');
       }else{
         alert('이미지 저장 중 문제가 생겼어. 외부 링크 이미지를 사용했다면 파일 업로드로 다시 넣어줘.');
       }
@@ -5371,10 +5507,9 @@ else setTimeout(__idleLoadRenderer,1200);
       alert('이 브라우저는 이미지 클립보드 복사를 지원하지 않아. 대신 "이미지 저장"을 사용해줘.');
       return;
     }
-    const dataUrlPromise=captureExactPreview('이미지 복사 준비 중...');
-    const blobPromise=dataUrlPromise.then(dataUrl=>{
-      if(!dataUrl) throw new Error('capture busy');
-      return fetch(dataUrl).then(r=>r.blob());
+    const blobPromise=window.__exactPreviewCaptureBlob('이미지 복사 준비 중...').then(blob=>{
+      if(!blob) throw new Error('capture busy');
+      return blob;
     });
     const done=()=>{try{if(typeof toast==='function'){toast('이미지를 클립보드에 복사했어요');return;}}catch(_){ }alert('이미지를 클립보드에 복사했어!');};
     try{
@@ -6670,7 +6805,7 @@ stage.addEventListener('touchend',e=>{
 <script id="mobile-save-dialog-script">
 (function(){
 'use strict';
-let savedDataUrl='',savedBlob=null,savedFilename='image.png';
+let savedDataUrl='',savedBlob=null,savedObjectUrl='',savedFilename='image.png';
 let previousBodyOverflow='';
 const desktopSaveImage=window.saveImage;
 
@@ -6697,6 +6832,7 @@ function closeChoice(){
 function closeViewer(){
   const root=document.getElementById('mobileSavedImageViewer');
   if(root) root.classList.remove('show');
+  if(savedObjectUrl){URL.revokeObjectURL(savedObjectUrl);savedObjectUrl='';}
   unlockPage();
 }
 function ensureChoice(){
@@ -6762,17 +6898,26 @@ function openChoice(){
   lockPage();
 }
 async function createMobileImageViewer(){
-  if(typeof window.__exactPreviewCapture!=='function'){
+  if(typeof window.__exactPreviewCaptureBlob!=='function'&&typeof window.__exactPreviewCapture!=='function'){
     return desktopSaveImage.apply(window,arguments);
   }
   try{
-    const dataUrl=await window.__exactPreviewCapture('미리보기 그대로 저장 중...');
-    if(!dataUrl) return;
-    savedDataUrl=dataUrl;
+    savedDataUrl='';
+    savedBlob=typeof window.__exactPreviewCaptureBlob==='function'
+      ?await window.__exactPreviewCaptureBlob('미리보기 그대로 저장 중...')
+      :null;
+    if(!savedBlob){
+      const dataUrl=await window.__exactPreviewCapture('미리보기 그대로 저장 중...');
+      if(!dataUrl) return;
+      savedDataUrl=dataUrl;
+      savedBlob=await fetch(dataUrl).then(r=>r.blob());
+    }
+    if(!savedBlob) return;
     savedFilename=(typeof safeFilename==='function'?safeFilename(state.export.filename):'image')+'.png';
-    savedBlob=await fetch(dataUrl).then(r=>r.blob());
+    if(savedObjectUrl) URL.revokeObjectURL(savedObjectUrl);
+    savedObjectUrl=URL.createObjectURL(savedBlob);
     const root=ensureViewer();
-    root.querySelector('img').src=dataUrl;
+    root.querySelector('img').src=savedObjectUrl;
     root.classList.add('show');
     lockPage();
   }catch(err){
