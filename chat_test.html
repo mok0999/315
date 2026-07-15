@@ -6802,11 +6802,12 @@ stage.addEventListener('touchend',e=>{
 }
 .mobile-save-preview img{display:block;max-width:100%;height:auto;box-shadow:0 5px 18px rgba(0,0,0,.14);-webkit-touch-callout:default}
 </style>
-<script id="exact-preview-export-layout-repair-v6">
-/* ===== exact preview export layout repair v6 =====
-   The export clone always keeps the live preview's original CSS width, height,
-   font metrics and measured line starts. Large images are rasterized in tiles;
-   the DOM itself is never scaled before capture. */
+<script id="exact-preview-export-scaled-raster-v7">
+/* ===== exact preview + mobile-safe scaled raster v7 =====
+   Keep the live preview's original CSS geometry and line breaks. On browsers
+   that cannot create a huge bitmap, only the OUTER SVG/canvas resolution is
+   reduced; the cloned DOM is not reflowed. The previous transformed-DOM method
+   remains as a final fallback for very restrictive mobile WebKit builds. */
 (function(){
   'use strict';
   let busy=false;
@@ -6814,10 +6815,13 @@ stage.addEventListener('touchend',e=>{
   const nextPaint=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   const yieldThread=()=>new Promise(resolve=>setTimeout(resolve,0));
 
-  function isMobileEngine(){
+  function isTouchWebKit(){
     return /iPad|iPhone|iPod/i.test(navigator.userAgent||'')||
-      (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)||
-      ((navigator.maxTouchPoints||0)>0&&innerWidth<=900);
+      (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  }
+
+  function isMobileEngine(){
+    return isTouchWebKit()||((navigator.maxTouchPoints||0)>0&&innerWidth<=900);
   }
 
   function waitForImages(root){
@@ -6885,55 +6889,83 @@ stage.addEventListener('touchend',e=>{
     return runs;
   }
 
-  async function measuredSoftBreaks(root){
+  function measuredSoftBreaks(root){
     const points=[];
     const range=document.createRange();
-    let band=null;
-    let hardSinceLast=true;
-    let checked=0;
+    let currentBand=null;
+
+    function sameLine(a,b){
+      if(!a||!b) return false;
+      const overlap=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+      const minHeight=Math.max(1,Math.min(a.bottom-a.top,b.bottom-b.top));
+      return overlap>Math.max(1,minHeight*.18);
+    }
+    function groupBands(rects){
+      const bands=[];
+      for(const rect of rects){
+        if(!(rect.width>0&&rect.height>0)) continue;
+        const last=bands[bands.length-1];
+        if(last&&sameLine(last,rect)){
+          last.top=Math.min(last.top,rect.top);
+          last.bottom=Math.max(last.bottom,rect.bottom);
+        }else bands.push({top:rect.top,bottom:rect.bottom});
+      }
+      return bands;
+    }
+    function boundaries(value,start,end){
+      const result=[start];
+      let offset=start;
+      for(const ch of Array.from(value.slice(start,end))){offset+=ch.length;result.push(offset);}
+      return result;
+    }
+    function bandIndex(rect,bands){
+      for(let i=0;i<bands.length;i++) if(sameLine(rect,bands[i])) return i;
+      let nearest=0,best=Infinity;
+      for(let i=0;i<bands.length;i++){
+        const distance=Math.abs(rect.top-bands[i].top);
+        if(distance<best){best=distance;nearest=i;}
+      }
+      return nearest;
+    }
+    function lastPrefixBand(node,start,end,bands){
+      if(end<=start) return -1;
+      try{
+        range.setStart(node,start);
+        range.setEnd(node,end);
+        const rects=[...range.getClientRects()].filter(r=>r.width>0&&r.height>0);
+        if(!rects.length) return -1;
+        return bandIndex(rects[rects.length-1],bands);
+      }catch(_){return -1;}
+    }
 
     for(const run of flowRuns(root)){
-      if(run.type==='hard'){
-        band=null;
-        hardSinceLast=true;
-        continue;
-      }
-      const value=run.node.nodeValue||'';
-      let offset=run.start;
-      for(const ch of Array.from(value.slice(run.start,run.end))){
-        const next=offset+ch.length;
-        if(!/^\s$/u.test(ch)){
-          try{
-            range.setStart(run.node,offset);
-            range.setEnd(run.node,next);
-            const rect=[...range.getClientRects()].find(r=>r.width>0&&r.height>0);
-            if(rect){
-              if(!band){
-                band={top:rect.top,bottom:rect.bottom};
-                hardSinceLast=false;
-              }else{
-                const overlap=Math.min(band.bottom,rect.bottom)-Math.max(band.top,rect.top);
-                const minHeight=Math.max(1,Math.min(band.bottom-band.top,rect.height));
-                const sameLine=overlap>Math.max(1,minHeight*.18);
-                if(!sameLine){
-                  if(!hardSinceLast){
-                    const path=nodePath(run.node,root);
-                    if(path) points.push({path,offset});
-                  }
-                  band={top:rect.top,bottom:rect.bottom};
-                }else{
-                  band.top=Math.min(band.top,rect.top);
-                  band.bottom=Math.max(band.bottom,rect.bottom);
-                }
-                hardSinceLast=false;
-              }
-            }
-          }catch(_){ }
-          checked++;
-          if(checked%700===0) await yieldThread();
+      if(run.type==='hard'){currentBand=null;continue;}
+      if(!run.node||run.end<=run.start) continue;
+      let rects=[];
+      try{
+        range.setStart(run.node,run.start);
+        range.setEnd(run.node,run.end);
+        rects=[...range.getClientRects()].filter(r=>r.width>0&&r.height>0);
+      }catch(_){continue;}
+      const bands=groupBands(rects);
+      if(!bands.length) continue;
+      const path=nodePath(run.node,root);
+      if(!path) continue;
+      if(currentBand&&!sameLine(currentBand,bands[0])) points.push({path,offset:run.start});
+      if(bands.length>1){
+        const cuts=boundaries(run.node.nodeValue||'',run.start,run.end);
+        for(let target=1;target<bands.length;target++){
+          let lo=1,hi=cuts.length-1;
+          while(lo<hi){
+            const mid=(lo+hi)>>1;
+            if(lastPrefixBand(run.node,run.start,cuts[mid],bands)>=target) hi=mid;
+            else lo=mid+1;
+          }
+          const offset=cuts[Math.max(0,lo-1)];
+          if(offset>run.start&&offset<run.end) points.push({path,offset});
         }
-        offset=next;
       }
+      currentBand=bands[bands.length-1];
     }
     return points;
   }
@@ -7001,7 +7033,9 @@ stage.addEventListener('touchend',e=>{
     root.removeAttribute('aria-live');
     root.querySelectorAll('.ctrl,#selToolbar,[data-export-soft-break]').forEach(el=>el.remove());
     root.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
-    root.querySelectorAll('.editing,.ctrl-open,.dragging').forEach(el=>el.classList.remove('editing','ctrl-open','dragging'));
+    root.querySelectorAll('.editing,.ctrl-open,.dragging,.drop-before,.drop-after').forEach(el=>{
+      el.classList.remove('editing','ctrl-open','dragging','drop-before','drop-after');
+    });
     root.querySelectorAll('.editable,.pmsg').forEach(el=>{
       el.style.setProperty('outline','none','important');
       el.style.setProperty('outline-offset','0','important');
@@ -7013,8 +7047,10 @@ stage.addEventListener('touchend',e=>{
     const height=Math.max(1,Math.ceil(source.offsetHeight));
     const sourceFlows=[...source.querySelectorAll('.glyph-scale')];
     const breakSets=[];
-    for(const flow of sourceFlows){
-      breakSets.push(getComputedStyle(flow).textAlign==='justify'?[]:await measuredSoftBreaks(flow));
+    for(let i=0;i<sourceFlows.length;i++){
+      const flow=sourceFlows[i];
+      breakSets.push(getComputedStyle(flow).textAlign==='justify'?[]:measuredSoftBreaks(flow));
+      if(i&&i%20===0) await yieldThread();
     }
 
     const host=document.createElement('div');
@@ -7054,16 +7090,18 @@ stage.addEventListener('touchend',e=>{
       cloneFlows[i].style.setProperty('word-break','normal','important');
       cloneFlows[i].style.setProperty('overflow-wrap','normal','important');
     }
+    await waitForImages(clone);
+    await nextPaint();
     return {host,clone,width,height};
   }
 
-  function boundedScale(width,height,requested){
-    let scale=Math.max(.0001,Number(requested)||1);
+  function captureScaleForDevice(width,height,requested){
+    let scale=Math.max(.08,Number(requested)||1);
     const mobile=isMobileEngine();
     const maxSide=mobile?8192:32767;
     const maxPixels=mobile?12000000:64000000;
-    const limited=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
-    return Math.max(.0001,limited<scale?limited*.985:scale);
+    scale=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
+    return Math.max(.0001,scale*.985);
   }
 
   function canvasBlob(canvas){
@@ -7073,127 +7111,159 @@ stage.addEventListener('touchend',e=>{
           canvas.toBlob(blob=>blob&&blob.size?resolve(blob):reject(new Error('PNG blob creation failed')),'image/png');
           return;
         }
-        fetch(canvas.toDataURL('image/png')).then(r=>r.blob()).then(resolve,reject);
+        const url=canvas.toDataURL('image/png');
+        fetch(url).then(r=>r.blob()).then(resolve,reject);
       }catch(err){reject(err);}
     });
   }
 
-  async function renderCanvas(node,options,fontCss){
-    const variants=[];
-    if(fontCss) variants.push({...options,fontEmbedCSS:fontCss});
-    variants.push(options,{...options,skipFonts:true});
-    let lastError=null;
-    for(const opts of variants){
-      try{return await __withQuietConsole(()=>window.htmlToImage.toCanvas(node,opts));}
-      catch(err){lastError=err;}
-    }
-    throw lastError||new Error('renderer failed');
-  }
-
-  function baseOptions(width,height,outWidth,outHeight){
-    const options={
-      width,height,canvasWidth:outWidth,canvasHeight:outHeight,pixelRatio:1,
-      skipAutoScale:true,cacheBust:false,preferredFontFormat:'woff2',
-      style:{zoom:'1',transform:'none',transformOrigin:'top left',margin:'0',boxShadow:'none',width:width+'px',height:height+'px'}
-    };
-    if(!state.transparentBg) options.backgroundColor=state.colors.bg;
-    return options;
-  }
-
-  async function renderDirect(node,width,height,scale,fontCss){
-    const outWidth=Math.max(1,Math.round(width*scale));
-    const outHeight=Math.max(1,Math.round(height*scale));
-    const canvas=await renderCanvas(node,baseOptions(width,height,outWidth,outHeight),fontCss);
-    if(!canvas||canvas.width!==outWidth||canvas.height!==outHeight) throw new Error('renderer returned an invalid canvas');
-    const blob=await canvasBlob(canvas);
-    try{canvas.width=1;canvas.height=1;}catch(_){ }
-    return blob;
-  }
-
-  async function renderTiled(snapshot,width,height,scale,fontCss){
-    const outWidth=Math.max(1,Math.round(width*scale));
-    const outHeight=Math.max(1,Math.round(height*scale));
-    const finalCanvas=document.createElement('canvas');
-    finalCanvas.width=outWidth;
-    finalCanvas.height=outHeight;
-    const ctx=finalCanvas.getContext('2d');
-    if(!ctx) throw new Error('canvas context unavailable');
-
-    const mobile=isMobileEngine();
-    const maxOutTile=mobile?1792:3072;
-    const sourceTileW=Math.max(128,Math.floor(maxOutTile/Math.max(scale,.0001)));
-    const sourceTileH=Math.max(128,Math.floor(maxOutTile/Math.max(scale,.0001)));
-
-    const tileHost=document.createElement('div');
-    tileHost.setAttribute('aria-hidden','true');
-    Object.assign(tileHost.style,{
-      position:'fixed',left:'-100000px',top:'0',margin:'0',padding:'0',overflow:'hidden',
-      pointerEvents:'none',zIndex:'-2147483647',contain:'layout style paint',background:'transparent'
+  function loadSvgImage(svgText){
+    return new Promise((resolve,reject)=>{
+      const blob=new Blob([svgText],{type:'image/svg+xml;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const img=new Image();
+      img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};
+      img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('SVG image decode failed'));};
+      img.src=url;
     });
-    const tileRoot=snapshot.cloneNode(true);
-    tileRoot.style.setProperty('position','absolute','important');
-    tileRoot.style.setProperty('margin','0','important');
-    tileRoot.style.setProperty('zoom','1','important');
-    tileRoot.style.setProperty('transform','none','important');
-    tileRoot.style.setProperty('transform-origin','top left','important');
-    tileRoot.style.setProperty('width',width+'px','important');
-    tileRoot.style.setProperty('height',height+'px','important');
-    tileHost.appendChild(tileRoot);
-    document.body.appendChild(tileHost);
-    await waitForImages(tileRoot);
-    await nextPaint();
-
-    try{
-      for(let sy=0;sy<height;sy+=sourceTileH){
-        const sh=Math.min(sourceTileH,height-sy);
-        const oy0=Math.round(sy*scale);
-        const oy1=Math.round((sy+sh)*scale);
-        const oh=Math.max(1,oy1-oy0);
-        for(let sx=0;sx<width;sx+=sourceTileW){
-          const sw=Math.min(sourceTileW,width-sx);
-          const ox0=Math.round(sx*scale);
-          const ox1=Math.round((sx+sw)*scale);
-          const ow=Math.max(1,ox1-ox0);
-          tileHost.style.width=sw+'px';
-          tileHost.style.height=sh+'px';
-          tileRoot.style.setProperty('left',(-sx)+'px','important');
-          tileRoot.style.setProperty('top',(-sy)+'px','important');
-          const tile=await renderCanvas(tileHost,baseOptions(sw,sh,ow,oh),fontCss);
-          ctx.drawImage(tile,0,0,ow,oh,ox0,oy0,ow,oh);
-          try{tile.width=1;tile.height=1;}catch(_){ }
-          await yieldThread();
-        }
-      }
-      return await canvasBlob(finalCanvas);
-    }finally{
-      tileHost.remove();
-      try{finalCanvas.width=1;finalCanvas.height=1;}catch(_){ }
-    }
   }
 
-  async function renderExact(snapshot,width,height,requestedScale,fontCss){
-    const firstScale=boundedScale(width,height,requestedScale);
+  async function scaledSvgText(node,width,height,outWidth,outHeight,baseOptions){
+    const dataUrl=await __withQuietConsole(()=>window.htmlToImage.toSvg(node,baseOptions));
+    const svgText=await fetch(dataUrl).then(response=>{
+      if(!response.ok) throw new Error('SVG snapshot creation failed');
+      return response.text();
+    });
+    const doc=new DOMParser().parseFromString(svgText,'image/svg+xml');
+    if(doc.querySelector('parsererror')) throw new Error('SVG snapshot parse failed');
+    const svg=doc.documentElement;
+    svg.setAttribute('width',String(outWidth));
+    svg.setAttribute('height',String(outHeight));
+    svg.setAttribute('viewBox','0 0 '+width+' '+height);
+    svg.setAttribute('preserveAspectRatio','none');
+    return new XMLSerializer().serializeToString(svg);
+  }
+
+  async function renderExactScaled(node,width,height,scale,fontCss){
+    const outWidth=Math.max(1,Math.floor(width*scale));
+    const outHeight=Math.max(1,Math.floor(height*scale));
+    const base={
+      width,height,pixelRatio:1,skipAutoScale:true,cacheBust:false,preferredFontFormat:'woff2',
+      style:{
+        zoom:'1',position:'relative',left:'0',top:'0',transform:'none',transformOrigin:'top left',
+        margin:'0',boxShadow:'none',width:width+'px',height:height+'px',
+        minWidth:width+'px',maxWidth:width+'px',minHeight:height+'px',maxHeight:height+'px'
+      }
+    };
+    if(!state.transparentBg) base.backgroundColor=state.colors.bg;
+    const variants=[];
+    if(fontCss) variants.push({...base,fontEmbedCSS:fontCss});
+    variants.push(base,{...base,skipFonts:true});
+    let lastError=null;
+    for(const options of variants){
+      let canvas=null;
+      try{
+        const svgText=await scaledSvgText(node,width,height,outWidth,outHeight,options);
+        const img=await loadSvgImage(svgText);
+        canvas=document.createElement('canvas');
+        canvas.width=outWidth;
+        canvas.height=outHeight;
+        const ctx=canvas.getContext('2d',{alpha:true});
+        if(!ctx) throw new Error('Canvas context unavailable');
+        if(!state.transparentBg){ctx.fillStyle=state.colors.bg;ctx.fillRect(0,0,outWidth,outHeight);}
+        ctx.drawImage(img,0,0,outWidth,outHeight);
+        const blob=await canvasBlob(canvas);
+        canvas.width=1;canvas.height=1;
+        return blob;
+      }catch(err){
+        lastError=err;
+        if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}}
+      }
+    }
+    throw lastError||new Error('Exact scaled SVG rendering failed');
+  }
+
+  function prepareLegacyRasterTarget(node,width,height){
+    const mobile=isMobileEngine();
+    const maxSide=mobile?8192:16384;
+    const maxPixels=mobile?12000000:48000000;
+    const layoutScale=Math.min(1,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
+    if(layoutScale>=.9999) return {target:node,width,height};
+    const shell=document.createElement('div');
+    const shellW=Math.max(1,Math.floor(width*layoutScale));
+    const shellH=Math.max(1,Math.floor(height*layoutScale));
+    Object.assign(shell.style,{
+      position:'relative',display:'block',overflow:'hidden',margin:'0',padding:'0',
+      width:shellW+'px',height:shellH+'px',minWidth:shellW+'px',minHeight:shellH+'px',
+      maxWidth:shellW+'px',maxHeight:shellH+'px',boxSizing:'border-box',background:'transparent',isolation:'isolate'
+    });
+    const parent=node.parentNode;
+    if(parent) parent.insertBefore(shell,node);
+    shell.appendChild(node);
+    node.style.setProperty('position','absolute','important');
+    node.style.setProperty('left','0','important');
+    node.style.setProperty('top','0','important');
+    node.style.setProperty('transform','scale('+layoutScale+')','important');
+    node.style.setProperty('transform-origin','top left','important');
+    return {target:shell,width:shellW,height:shellH};
+  }
+
+  async function renderLegacyFallback(node,width,height,scale,fontCss){
+    const raster=prepareLegacyRasterTarget(node,width,height);
+    const outWidth=Math.max(1,Math.floor(width*scale));
+    const outHeight=Math.max(1,Math.floor(height*scale));
+    const base={
+      width:raster.width,height:raster.height,canvasWidth:outWidth,canvasHeight:outHeight,
+      pixelRatio:1,skipAutoScale:true,cacheBust:false,preferredFontFormat:'woff2',
+      style:{zoom:'1',transform:'none',transformOrigin:'top left',margin:'0',boxShadow:'none',width:raster.width+'px',height:raster.height+'px'}
+    };
+    if(!state.transparentBg) base.backgroundColor=state.colors.bg;
+    const variants=[];
+    if(fontCss) variants.push({...base,fontEmbedCSS:fontCss});
+    variants.push(base,{...base,skipFonts:true});
+    let lastError=null;
+    for(const options of variants){
+      let canvas=null;
+      try{
+        canvas=await __withQuietConsole(()=>window.htmlToImage.toCanvas(raster.target,options));
+        if(!canvas||canvas.width!==outWidth||canvas.height!==outHeight) throw new Error('renderer returned an invalid canvas');
+        const blob=await canvasBlob(canvas);
+        canvas.width=1;canvas.height=1;
+        return blob;
+      }catch(err){
+        lastError=err;
+        if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}}
+      }
+    }
+    throw lastError||new Error('Legacy scaled rendering failed');
+  }
+
+  async function renderSnapshot(node,width,height,requestedScale,fontCss){
+    const firstScale=captureScaleForDevice(width,height,requestedScale);
     const attempts=[];
     for(const factor of [1,.82,.67,.54,.43,.34]){
       const candidate=Math.max(.0001,firstScale*factor);
-      if(!attempts.some(v=>Math.abs(v-candidate)<.0001)) attempts.push(candidate);
+      if(!attempts.some(value=>Math.abs(value-candidate)<.0001)) attempts.push(candidate);
     }
     let lastError=null;
     for(const scale of attempts){
-      const mobile=isMobileEngine();
-      const directSide=mobile?7000:14000;
-      const directPixels=mobile?10000000:42000000;
-      const outPixels=(width*scale)*(height*scale);
-      if(width<=directSide&&height<=directSide&&outPixels<=directPixels){
-        try{
-          const blob=await renderDirect(snapshot,width,height,scale,fontCss);
-          return {blob,scale,requestedScale:Number(requestedScale)||1};
-        }catch(err){lastError=err;}
-      }
       try{
-        const blob=await renderTiled(snapshot,width,height,scale,fontCss);
-        return {blob,scale,requestedScale:Number(requestedScale)||1};
+        const blob=await renderExactScaled(node,width,height,scale,fontCss);
+        return {blob,scale,requestedScale:Number(requestedScale)||1,method:'exact-svg'};
       }catch(err){lastError=err;}
+      try{
+        const fallbackNode=node.cloneNode(true);
+        const fallbackHost=document.createElement('div');
+        fallbackHost.setAttribute('aria-hidden','true');
+        Object.assign(fallbackHost.style,{position:'fixed',left:'-100000px',top:'0',width:width+'px',height:height+'px',overflow:'hidden',pointerEvents:'none'});
+        fallbackHost.appendChild(fallbackNode);
+        document.body.appendChild(fallbackHost);
+        try{
+          const blob=await renderLegacyFallback(fallbackNode,width,height,scale,fontCss);
+          return {blob,scale,requestedScale:Number(requestedScale)||1,method:'legacy-fallback'};
+        }finally{fallbackHost.remove();}
+      }catch(err){lastError=err;}
+      await yieldThread();
     }
     throw lastError||new Error('The image is too large for this browser to save.');
   }
@@ -7237,9 +7307,7 @@ stage.addEventListener('touchend',e=>{
       await nextPaint();
 
       snapshot=await makeSnapshot(source);
-      await nextPaint();
       await __loadHtmlToImage();
-
       const requested=(typeof getExportScale==='function')?getExportScale():1;
       let fontCss='';
       try{
@@ -7248,7 +7316,7 @@ stage.addEventListener('touchend',e=>{
           fontCss=String(fontCss||'').replace(/font-display\s*:\s*[^;]+;/gi,'font-display:block;');
         }
       }catch(_){fontCss='';}
-      return await renderExact(snapshot.clone,snapshot.width,snapshot.height,requested,fontCss);
+      return await renderSnapshot(snapshot.clone,snapshot.width,snapshot.height,requested,fontCss);
     }finally{
       if(snapshot&&snapshot.host) snapshot.host.remove();
       hideSaving();
@@ -7275,7 +7343,7 @@ stage.addEventListener('touchend',e=>{
         if(result.scale+0.02<result.requestedScale&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
       }
     }catch(err){
-      console.error('exact preview export repair failed',err);
+      console.error('exact preview scaled raster export failed',err);
       const detail=String(err&&err.message||'');
       if(/renderer|script|timeout/i.test(detail)) alert('이미지 저장 기능을 불러오지 못했어요. 인터넷 연결을 확인한 뒤 다시 눌러 주세요.');
       else if(/too large|canvas|blob|memory|size/i.test(detail)) alert('글이 너무 길어 이 브라우저의 이미지 한도를 넘었어요. 저장 배율을 낮춘 뒤 다시 눌러 주세요.');
@@ -7287,7 +7355,7 @@ stage.addEventListener('touchend',e=>{
     if(busy) return;
     if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
     if(!navigator.clipboard||typeof window.ClipboardItem==='undefined'||typeof navigator.clipboard.write!=='function'){
-      alert('이 브라우저는 이미지 클립보드 복사를 지원하지 않아요. 대신 "이미지 저장"을 사용해 주세요.');
+      alert('이 브라우저는 이미지 클립보드 복사를 지원하지 않아요. 대신 “이미지 저장”을 사용해 주세요.');
       return;
     }
     try{
@@ -7300,8 +7368,8 @@ stage.addEventListener('touchend',e=>{
       if(typeof toast==='function') toast('이미지를 클립보드에 복사했어요');
       else alert('이미지를 클립보드에 복사했어요!');
     }catch(err){
-      console.error('exact preview copy repair failed',err);
-      alert('이미지 복사 중 문제가 생겼어요. 대신 "이미지 저장"을 사용해 주세요.');
+      console.error('exact preview scaled raster copy failed',err);
+      alert('이미지 복사 중 문제가 생겼어요. 대신 “이미지 저장”을 사용해 주세요.');
     }
   };
 })();
