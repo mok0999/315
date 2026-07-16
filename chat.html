@@ -8379,8 +8379,129 @@ decorateBulkRows();
     const cb=document.getElementById('askSavePathToggle');
     if(cb) cb.checked=!!window.__askSavePath;
   });
-  const cb=document.getElementById('askSavePathToggle');
-  if(cb) cb.checked=!!window.__askSavePath;
+<style id="mobile-fixes-v2-styles">
+/* ===== [1] 모바일 여러 개 선택 삭제 칩 (멤버·설정 칩 줄 맨 오른쪽) ===== */
+#mBulkChip .mav,#mBulkCancelChip .mav{display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+  border-radius:50%;background:var(--panel);border:1.5px dashed var(--line-2,#C9C9CE);color:var(--muted);font-size:15px;font-weight:700}
+#mBulkChip .nm,#mBulkCancelChip .nm{max-width:none}
+#mBulkChip.on .mav{background:#D14343;border-color:#D14343;border-style:solid;color:#fff}
+#mBulkChip.on .nm{color:#D14343;font-weight:700}
+/* ===== [3] 캔버스를 줄여도(축소 배율) 메시지 수정 툴바(⠿▲▼⧉✎×)는 실제 크기를 유지 ===== */
+.mobile-ui #chat .pmsg .ctrl{transform:scale(var(--m-ctrl-scale,1));transform-origin:top right}
+/* ===== [4] 모바일 CSS(.ctrl button{touch-action:manipulation})가 드래그 핸들의
+   touch-action:none을 덮어써 ⠿ 드래그가 시작되자마자 스크롤로 먹히던 문제 복원 ===== */
+.mobile-ui .pmsg .ctrl button.drag-handle{touch-action:none!important}
+</style>
+<script id="mobile-fixes-v2-script">
+(function(){
+'use strict';
+const isAndroid=/Android/i.test(navigator.userAgent||'');
+
+/* ===================== [1] 모바일 여러 개 선택 삭제 =====================
+   데스크톱의 toggleBulkDeleteMode / cancelBulkDeleteMode를 그대로 재사용한다.
+   칩 줄(#mChips)은 renderMobileChips가 통째로 다시 그리므로,
+   childList 관찰로 사라질 때마다 칩을 다시 붙인다. */
+function syncBulkChips(){
+  const del=document.getElementById('mBulkChip'), cancel=document.getElementById('mBulkCancelChip');
+  if(!del) return;
+  const chat=document.getElementById('chat');
+  const active=!!(chat&&chat.classList.contains('bulk-delete-mode'));
+  const n=active?chat.querySelectorAll('.pmsg.bulk-selected').length:0;
+  del.classList.toggle('on',active);
+  const av=del.querySelector('.mav'), nm=del.querySelector('.nm');
+  if(av) av.textContent=active&&n?String(n):'☑';
+  if(nm) nm.textContent=active?(n?n+'개 삭제':'로그 선택'):'선택 삭제';
+  if(cancel) cancel.style.display=active?'':'none';
+}
+function appendBulkChips(){
+  const box=document.getElementById('mChips'); if(!box) return;
+  if(box.querySelector('#mBulkChip')){ syncBulkChips(); return; }
+  const shape=(window.state&&state.shape==='rounded')?'rounded':'circle';
+  const mk=(id,icon,label,fn)=>{
+    const b=document.createElement('button'); b.type='button'; b.id=id; b.className='mchip '+shape;
+    b.innerHTML='<span class="mav">'+icon+'</span><span class="nm">'+label+'</span>';
+    b.onclick=fn; return b;
+  };
+  box.appendChild(mk('mBulkChip','☑','선택 삭제',()=>{ try{ window.toggleBulkDeleteMode(); }catch(_){} }));
+  const c=mk('mBulkCancelChip','✕','선택 취소',()=>{ try{ window.cancelBulkDeleteMode(); }catch(_){} });
+  c.style.display='none';
+  box.appendChild(c);
+  syncBulkChips();
+}
+function watchChips(){
+  const box=document.getElementById('mChips');
+  if(!box||box.dataset.bulkWatch==='1') return false;
+  box.dataset.bulkWatch='1';
+  new MutationObserver(appendBulkChips).observe(box,{childList:true});
+  appendBulkChips();
+  return true;
+}
+if(!watchChips()){
+  const bodyMO=new MutationObserver(()=>{ if(watchChips()) bodyMO.disconnect(); });
+  bodyMO.observe(document.body,{childList:true,subtree:true});
+}
+/* 선택 개수·모드 변화를 칩 라벨에 반영 (bulk 모드가 #chat의 class를 바꾸는 것을 관찰) */
+(function(){
+  const chat=document.getElementById('chat'); if(!chat) return;
+  new MutationObserver(syncBulkChips).observe(chat,{attributes:true,subtree:true,attributeFilter:['class']});
+})();
+
+/* ============ [2] 안드로이드: 확대 상태에서 한 손가락 스크롤 ============
+   두 손가락 핀치의 touchstart가 preventDefault되면 안드로이드는 같은 제스처의
+   남은 손가락에 네이티브 스크롤을 시작해 주지 않고, 기기·웹뷰에 따라
+   transform된 콘텐츠 위 터치 스크롤이 아예 무시되기도 한다.
+   → 안드로이드에서만 한 손가락 팬을 JS로 직접 처리. (아이폰은 기존 그대로) */
+(function(){
+  if(!isAndroid) return;
+  const stage=document.getElementById('stageEl'); if(!stage) return;
+  let pan=null;
+  const overflowing=()=>stage.scrollWidth>stage.clientWidth+2||stage.scrollHeight>stage.clientHeight+2;
+  function seed(t,blocked){
+    pan={x:t.clientX,y:t.clientY,left:stage.scrollLeft,top:stage.scrollTop,active:false,blocked:!!blocked};
+  }
+  stage.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1){ pan=null; return; }   /* 두 손가락 = 핀치 (기존 코드 담당) */
+    const t=e.target;
+    const blocked=!!(t&&t.closest&&t.closest('.drag-handle,.ctrl,button,a,input,select,textarea,[contenteditable="true"]'));
+    seed(e.touches[0],blocked);
+  },{passive:true});
+  stage.addEventListener('touchend',e=>{
+    if(e.touches.length===1) seed(e.touches[0],false);   /* 핀치에서 손가락 하나를 뗀 직후에도 바로 팬 가능 */
+    else if(!e.touches.length) pan=null;
+  },{passive:true});
+  stage.addEventListener('touchcancel',()=>{ pan=null; },{passive:true});
+  stage.addEventListener('touchmove',e=>{
+    if(!pan||pan.blocked||e.touches.length!==1) return;
+    if(!overflowing()) return;
+    const t=e.touches[0];
+    const dx=t.clientX-pan.x, dy=t.clientY-pan.y;
+    if(!pan.active&&Math.hypot(dx,dy)<6) return;   /* 탭(말풍선 선택 등)은 방해하지 않음 */
+    pan.active=true;
+    e.preventDefault();
+    stage.scrollLeft=pan.left-dx;
+    stage.scrollTop=pan.top-dy;
+  },{passive:false});
+})();
+
+/* ========= [3] 수정 툴바 크기 유지: 캔버스 배율의 역수로 카운터 스케일 ========= */
+function syncCtrlScale(){
+  const c=document.getElementById('canvas'); if(!c) return;
+  if(!document.body.classList.contains('mobile-ui')){ c.style.removeProperty('--m-ctrl-scale'); return; }
+  const w=c.offsetWidth; if(!w) return;
+  const scale=c.getBoundingClientRect().width/w;
+  if(!isFinite(scale)||scale<=0) return;
+  c.style.setProperty('--m-ctrl-scale',String(Math.max(0.12,Math.min(6,1/scale)).toFixed(4)));
+}
+const prevFit=window.fitPreview;
+if(typeof prevFit==='function'){
+  window.fitPreview=function(){
+    const r=prevFit.apply(this,arguments);
+    requestAnimationFrame(syncCtrlScale);
+    return r;
+  };
+}
+window.addEventListener('resize',()=>requestAnimationFrame(syncCtrlScale),{passive:true});
+requestAnimationFrame(syncCtrlScale);
 })();
 </script>
 
