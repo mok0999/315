@@ -138,6 +138,14 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .sw input:checked+.track{background:var(--accent)}
 .sw input:checked+.track:before{transform:translateX(18px)}
+/* 말풍선 패널 상단 토글 컴팩트 2열 그리드 */
+.toggle-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.toggle-grid .toggle.compact{padding:7px 10px;gap:8px;min-width:0}
+.toggle-grid .toggle.compact .t-lb{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.toggle-grid .toggle.compact .sw{width:34px;height:20px}
+.toggle-grid .toggle.compact .sw .track:before{width:14px;height:14px}
+.toggle-grid .toggle.compact .sw input:checked+.track:before{transform:translateX(14px)}
+@media(max-width:360px){.toggle-grid{grid-template-columns:1fr}}
 
 /* buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
@@ -149,6 +157,10 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
 .btn.danger-ghost{color:var(--danger);border-color:var(--danger-soft);background:var(--danger-soft)}
 .btn.danger-ghost:hover{background:#E6E6E8}
+.btn.danger-strong{color:#D14343;border-color:#E8A2A2;background:#FBEEEE;font-weight:700}
+.btn.danger-strong:hover{background:#D14343;border-color:#D14343;color:#fff}
+.mini-check{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);cursor:pointer;user-select:none}
+.mini-check input{width:14px;height:14px;accent-color:var(--ink);margin:0;flex:0 0 auto}
 .btn.full{width:100%}
 .btn.sm{padding:7px 11px;font-size:12px}
 
@@ -699,6 +711,20 @@ body{min-width:0}
 .member-preset-flat .preset-head{justify-content:flex-end;margin-bottom:8px}
 .member-preset-flat .preset-head > span{display:none}
 .member-preset-flat .preset-tools{margin-left:auto}
+/* 프리셋 아코디언 (멤버/테마 공용, native details 사용 — 레거시 .acc 시스템과 무관) */
+.preset-acc{margin:0 0 12px;border:1px solid #E7E7E9;border-radius:11px;background:#F2F2F4;overflow:hidden}
+.preset-acc>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;padding:10px 12px;font-size:12.5px;font-weight:700;color:var(--ink);user-select:none}
+.preset-acc>summary::-webkit-details-marker{display:none}
+.preset-acc>summary:after{content:'▾';margin-left:auto;font-size:11px;color:var(--muted);transition:transform .15s}
+.preset-acc[open]>summary:after{transform:rotate(180deg)}
+.preset-acc .preset-acc-cnt{font-size:11px;font-weight:700;color:var(--muted)}
+.preset-acc .preset-acc-cnt:not(:empty):before{content:'('}
+.preset-acc .preset-acc-cnt:not(:empty):after{content:')'}
+.preset-acc>.preset-acc-bd{padding:0 12px 12px}
+.preset-acc .preset-bar{margin:0!important;border:0!important;padding:0!important;background:transparent!important}
+.preset-acc .preset-head{justify-content:flex-end;margin-bottom:9px}
+.preset-acc .preset-tools{margin-left:auto}
+.preset-acc+.flat-tool-section,.preset-acc+.panel-section{border-top:0}
 /* Old accordion controls cannot reappear even if legacy classes are added by cached JS. */
 .tool-panel-body .acc-hd .acc-caret,
 .tool-panel-body .flat-tool-title .acc-caret{display:none !important}
@@ -1266,12 +1292,23 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 </div>
 </div><section class="card settings-card"><div class="hd settings-card-hd"><h2>도구</h2><span class="settings-hint">필요한 설정만 열어두세요</span></div><div class="settings-card-body"><div aria-label="편집 도구" class="tool-tabs">
 <button id="toolBtn-members" onclick="switchToolPanel('members')" type="button"><span>👥</span>멤버</button>
-<button id="toolBtn-style" onclick="switchToolPanel('style')" type="button"><span>◐</span>스타일</button>
-<button id="toolBtn-font" onclick="switchToolPanel('font')" type="button"><span>가</span>글꼴</button>
-<button id="toolBtn-layout" onclick="switchToolPanel('layout')" type="button"><span>↔</span>레이아웃</button>
+<button id="toolBtn-style" onclick="switchToolPanel('style')" type="button"><span>◐</span>테마·배경</button>
+<button id="toolBtn-font" onclick="switchToolPanel('font')" type="button"><span>가</span>텍스트·간격</button>
+<button id="toolBtn-layout" onclick="switchToolPanel('layout')" type="button"><span>↔</span>여백</button>
 <button id="toolBtn-bubble" onclick="switchToolPanel('bubble')" type="button"><span>▰</span>말풍선</button>
 <button id="toolBtn-export" onclick="switchToolPanel('export')" type="button"><span>↓</span>저장</button>
-</div><div class="tool-panels" id="toolPanels"><section class="tool-panel" id="panel-members"><div class="tool-panel-head"><div><strong>멤버</strong><span class="cnt panel-count" id="memberCnt">0</span></div></div><div class="tool-panel-body" tabindex="0"><section class="member-list-section panel-section"><div class="section-title-row"><div><strong>등록된 멤버</strong><small>클릭 없이 발신자 목록에 바로 반영돼요</small></div><button class="btn sm member-new-btn" onclick="openMemberEditor()" type="button">+ 새 멤버</button></div><div class="mlist" id="memberList">
+</div><div class="tool-panels" id="toolPanels"><section class="tool-panel" id="panel-members"><div class="tool-panel-head"><div><strong>멤버</strong><span class="cnt panel-count" id="memberCnt">0</span></div></div><div class="tool-panel-body" tabindex="0"><details class="preset-acc" id="memberPresetAcc"><summary>⭐ 멤버 프리셋<span class="preset-acc-cnt" id="memberPresetCnt"></span></summary><div class="preset-acc-bd"><div class="preset-bar">
+<div class="preset-head">
+<div class="preset-tools">
+<button class="mini" onclick="savePresetFromForm()" title="현재 입력한 이름·프사·색을 프리셋으로 저장">＋ 현재 입력</button>
+<button class="mini" onclick="exportPresets()" title="프리셋을 파일로 백업">↓</button>
+<label class="mini" title="프리셋 파일 불러오기">↑
+                <input accept="application/json,.json" hidden="" onchange="importPresets(event)" type="file"/></label>
+</div>
+</div>
+<div class="preset-chips" id="presetChips"></div>
+<div class="preset-hint" id="presetHint"></div>
+</div></div></details><section class="member-list-section panel-section"><div class="section-title-row"><div><strong>등록된 멤버</strong><small>클릭 없이 발신자 목록에 바로 반영돼요</small></div><button class="btn sm member-new-btn" onclick="openMemberEditor()" type="button">+ 새 멤버</button></div><div class="mlist" id="memberList">
 <div class="empty">아직 멤버가 없어요</div>
 </div></section><section class="member-editor panel-section" id="memberEditor"><div class="section-title-row member-editor-head"><div><strong id="memberEditorTitle">새 멤버</strong><small>이름만 입력해도 추가할 수 있어요</small></div><button class="panel-close" onclick="closeMemberEditor()" title="등록 폼 닫기" type="button">×</button></div><div class="member-form-grid"><div class="field">
 <label class="lb">이름</label>
@@ -1299,20 +1336,12 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 </div><div class="field">
 <label class="lb">닉네임 색상</label>
 <div class="colorrow" data-color="draftColor"></div>
-</div></div><button class="btn primary full" id="memberBtn" onclick="addOrUpdateMember()">+ 멤버 추가</button></section><div class="flat-tool-section member-preset-flat" id="accMemberPresets"><div class="flat-tool-title"><strong>멤버 프리셋</strong></div><div class="flat-tool-body"><div class="preset-bar">
+</div><div class="field">
+<label class="lb">말풍선 색상</label>
+<label class="mini-check" style="margin-bottom:6px"><input id="draftBubbleUse" onchange="toggleDraftBubbleUse(this.checked)" type="checkbox"/><span>이 멤버만 개별 말풍선 색 사용</span></label>
+<div class="colorrow" data-color="draftBubbleColor" id="draftBubbleRow" style="display:none"></div>
+</div></div><button class="btn primary full" id="memberBtn" onclick="addOrUpdateMember()">+ 멤버 추가</button></section></div></section><section class="tool-panel" id="panel-style"><div class="tool-panel-head"><div><strong>테마·배경</strong></div></div><div class="tool-panel-body" tabindex="0"><details class="preset-acc" id="themePresetAcc"><summary>🎨 테마 프리셋<span class="preset-acc-cnt" id="themePresetCnt"></span></summary><div class="preset-acc-bd"><div class="preset-bar">
 <div class="preset-head">
-<div class="preset-tools">
-<button class="mini" onclick="savePresetFromForm()" title="현재 입력한 이름·프사·색을 프리셋으로 저장">＋ 현재 입력</button>
-<button class="mini" onclick="exportPresets()" title="프리셋을 파일로 백업">↓</button>
-<label class="mini" title="프리셋 파일 불러오기">↑
-                <input accept="application/json,.json" hidden="" onchange="importPresets(event)" type="file"/></label>
-</div>
-</div>
-<div class="preset-chips" id="presetChips"></div>
-<div class="preset-hint" id="presetHint"></div>
-</div></div></div></div></section><section class="tool-panel" id="panel-style"><div class="tool-panel-head"><div><strong>스타일</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="preset-bar theme-preset-bottom" style="margin-top:0;margin-bottom:16px">
-<div class="preset-head">
-<span>🎨 테마 프리셋</span>
 <div class="preset-tools">
 <button class="mini" onclick="saveThemePrompt()" title="지금 색·여백·글꼴·너비를 테마로 저장">＋ 현재 테마</button>
 <button class="mini" onclick="exportThemes()" title="테마를 파일로 백업">↓</button>
@@ -1322,7 +1351,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 </div>
 <div class="preset-chips" id="themeChips"></div>
 <div class="preset-hint" id="themeHint"></div>
-</div><div class="flat-tool-section" id="accAppearance"><div class="flat-tool-title"><strong>색상 · 프로필</strong></div><div class="flat-tool-body"><div class="field">
+</div></div></details><div class="flat-tool-section" id="accAppearance"><div class="flat-tool-title"><strong>색상 · 프로필</strong></div><div class="flat-tool-body"><div class="field">
 <label class="lb">아바타 모양</label>
 <div class="seg" id="shapeSeg">
 <button class="on" onclick="setShape('circle')">● 원형</button>
@@ -1340,7 +1369,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <label class="lb">말풍선 글자색</label>
 <div class="colorrow" data-color="nText"></div>
 </div>
-</div></div></div><div class="flat-tool-section" id="backgroundImageSection"><div class="flat-tool-title"><strong>배경 이미지</strong></div><div class="flat-tool-body"><div class="field"><label class="lb">이미지 불러오기</label><div class="bg-image-load-row"><label class="btn sm bg-upload-btn">↑ 파일<input accept="image/*" hidden="" id="bgImgFile" onchange="onBackgroundImageFile(event)" type="file"/></label><input id="bgImgUrl" placeholder="이미지 URL" type="text"/><button class="btn sm" onclick="loadBackgroundImageUrl()" type="button">불러오기</button><button class="btn sm danger-ghost" onclick="clearBackgroundImage()" type="button">지우기</button></div><div class="bg-image-preview" id="bgImgPreviewWrap" style="display:none"><img alt="배경 이미지 미리보기" id="bgImgPreview"/><span>배경 이미지 적용 중</span></div></div><div class="colorgrid bg-image-controls"><div class="field"><label class="lb">이미지 크기</label><div class="rangewrap"><input id="bgImgSize" max="600" min="40" oninput="setBackgroundImageValue('size',this.value)" step="1" type="range" value="100"/><span class="val" id="bgImgSizeV">100%</span></div></div><div class="field"><label class="lb">회전</label><div class="rangewrap"><input id="bgImgRotation" max="360" min="0" oninput="setBackgroundImageValue('rotation',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgRotationV">0°</span></div></div><div class="field"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bgImgX" max="100" min="0" oninput="setBackgroundImageValue('x',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgXV">50%</span></div></div><div class="field"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bgImgY" max="100" min="0" oninput="setBackgroundImageValue('y',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgYV">50%</span></div></div><div class="field"><label class="lb">블러 농도</label><div class="rangewrap"><input id="bgImgBlur" max="30" min="0" oninput="setBackgroundImageValue('blur',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgBlurV">0px</span></div></div><div class="field bg-overlay-field" style="grid-column:1/-1;margin-bottom:0"><label class="lb">오버레이</label><div class="overlay-row"><div class="colorrow overlay-colorrow" data-color="bgOverlay"></div><div class="rangewrap overlay-opacity"><input id="bgOverlayOpacity" max="100" min="0" oninput="setBackgroundImageValue('overlayOpacity',this.value)" step="1" type="range" value="0"/><span class="val" id="bgOverlayOpacityV">0%</span></div></div></div></div></div></div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>글꼴</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
+</div></div></div><div class="flat-tool-section" id="backgroundImageSection"><div class="flat-tool-title"><strong>배경 이미지</strong></div><div class="flat-tool-body"><div class="field"><label class="lb">이미지 불러오기</label><div class="bg-image-load-row"><label class="btn sm bg-upload-btn">↑ 파일<input accept="image/*" hidden="" id="bgImgFile" onchange="onBackgroundImageFile(event)" type="file"/></label><input id="bgImgUrl" placeholder="이미지 URL" type="text"/><button class="btn sm" onclick="loadBackgroundImageUrl()" type="button">불러오기</button><button class="btn sm danger-ghost" onclick="clearBackgroundImage()" type="button">지우기</button></div><div class="bg-image-preview" id="bgImgPreviewWrap" style="display:none"><img alt="배경 이미지 미리보기" id="bgImgPreview"/><span>배경 이미지 적용 중</span></div></div><div class="colorgrid bg-image-controls"><div class="field"><label class="lb">이미지 크기</label><div class="rangewrap"><input id="bgImgSize" max="600" min="40" oninput="setBackgroundImageValue('size',this.value)" step="1" type="range" value="100"/><span class="val" id="bgImgSizeV">100%</span></div></div><div class="field"><label class="lb">회전</label><div class="rangewrap"><input id="bgImgRotation" max="360" min="0" oninput="setBackgroundImageValue('rotation',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgRotationV">0°</span></div></div><div class="field"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bgImgX" max="100" min="0" oninput="setBackgroundImageValue('x',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgXV">50%</span></div></div><div class="field"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bgImgY" max="100" min="0" oninput="setBackgroundImageValue('y',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgYV">50%</span></div></div><div class="field"><label class="lb">블러 농도</label><div class="rangewrap"><input id="bgImgBlur" max="30" min="0" oninput="setBackgroundImageValue('blur',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgBlurV">0px</span></div></div><div class="field bg-overlay-field" style="grid-column:1/-1;margin-bottom:0"><label class="lb">오버레이</label><div class="overlay-row"><div class="colorrow overlay-colorrow" data-color="bgOverlay"></div><div class="rangewrap overlay-opacity"><input id="bgOverlayOpacity" max="100" min="0" oninput="setBackgroundImageValue('overlayOpacity',this.value)" step="1" type="range" value="0"/><span class="val" id="bgOverlayOpacityV">0%</span></div></div></div></div></div></div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>텍스트·간격</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
 <div class="flat-tool-title"><strong>글꼴 · 텍스트</strong></div>
 <div class="flat-tool-body">
 <div class="field">
@@ -1361,6 +1390,10 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <div class="rangewrap"><input id="lyLh" max="2.2" min="1.1" oninput="setLayout('lh',this.value)" step="0.05" type="range" value="1.55"/><span class="val" id="lyLhV">1.55</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">문단 간격</label>
 <div class="rangewrap"><input id="lyBlockGap" max="60" min="0" oninput="setLayout('blockGap',this.value)" type="range" value="16"/><span class="val" id="lyBlockGapV">16px</span></div><div class="field-help">글 블럭과 다음 글 블럭 사이에만 적용돼요.</div></div>
+<div class="field" style="margin-bottom:14px"><label class="lb">메시지 간격</label>
+<div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div></div>
+<div class="field" style="margin-bottom:14px"><label class="lb">채팅 ↔ 글 간격</label>
+<div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="25"/><span class="val" id="lyTextGapV">25px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">장평</label>
 <div class="rangewrap"><input id="lyWidthScale" max="130" min="70" oninput="setLayout('widthScale',this.value)" step="1" type="range" value="100"/><span class="val" id="lyWidthScaleV">100%</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">자간</label>
@@ -1381,7 +1414,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="textShadow"></div></div><div class="field" style="margin:0"><label class="lb">그림자 세기</label><div class="rangewrap"><input id="textShadowStrength" max="20" min="0" oninput="setTextShadow('strength',this.value)" type="range" value="4"/><span class="val" id="textShadowStrengthV">4px</span></div></div></div>
 </div>
 </div>
-</div></div></section><section class="tool-panel" id="panel-layout"><div class="tool-panel-head"><div><strong>레이아웃</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accMargin">
+</div></div></section><section class="tool-panel" id="panel-layout"><div class="tool-panel-head"><div><strong>여백</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accMargin">
 <div class="flat-tool-title"><strong>바깥 여백</strong></div>
 <div class="flat-tool-body">
 <div class="field">
@@ -1407,15 +1440,19 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <option value="16:9">16 : 9 가로</option>
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
-</div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="field" style="margin-bottom:0"><div class="toggle"><div class="t-lb">프로필 사진 표시<span>일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요</span></div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div><div class="field" style="margin:8px 0 0"><div class="toggle"><div class="t-lb">내 프로필·이름 표시<span>‘내 계정’으로 지정한 캐릭터의 프로필과 이름을 모든 모드에서 켜고 꺼요</span></div><label class="sw"><input id="showMyIdentity" onchange="state.showMyIdentity=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div></div><div class="field" style="margin:8px 0 0"><div class="toggle"><div class="t-lb">말풍선 꼬리<span>SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요</span></div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div></div>
-<div class="shadow-control-group bubble-shadow-controls" style="margin-top:9px"><div class="field" style="margin-bottom:9px"><div class="toggle"><div class="t-lb">말풍선 그림자<span>말풍선과 꼬리에 그림자를 적용해요</span></div><label class="sw"><input id="bubbleShadowOn" onchange="setBubbleShadow('on',this.checked)" type="checkbox"/><span class="track"></span></label></div></div><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">그림자 세기</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div></div>
-</div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양 · 간격</strong></div><div class="flat-tool-body"><div class="colorgrid">
+</div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
+<div class="toggle compact" title="일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요"><div class="t-lb">프로필 사진</div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
+<div class="toggle compact" title="‘내 계정’으로 지정한 캐릭터의 프로필과 이름을 모든 모드에서 켜고 꺼요"><div class="t-lb">내 프로필·이름</div><label class="sw"><input id="showMyIdentity" onchange="state.showMyIdentity=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
+<div class="toggle compact" title="SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요"><div class="t-lb">말풍선 꼬리</div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div>
+<div class="toggle compact" title="말풍선과 꼬리에 그림자를 적용해요"><div class="t-lb">말풍선 그림자</div><label class="sw"><input id="bubbleShadowOn" onchange="setBubbleShadow('on',this.checked)" type="checkbox"/><span class="track"></span></label></div>
+</div>
+<label class="mini-check" style="margin:9px 0 0 2px"><input id="hideNames" onchange="state.hideNames=this.checked; renderPreview()" type="checkbox"/><span>말풍선 이름 삭제 — 체크하면 이름 줄도 함께 숨겨요</span></label>
+<div class="shadow-control-group bubble-shadow-controls" style="margin-top:12px"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">그림자 세기</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div></div>
+</div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양</strong></div><div class="flat-tool-body"><div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">이름 크기</label><div class="rangewrap"><input id="lyNameSize" max="24" min="9" oninput="setLayout('nameSize',this.value)" type="range" value="12"/><span class="val" id="lyNameSizeV">12px</span></div></div>
-<div class="field" style="margin:0"><label class="lb">메시지 간격</label><div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div></div>
-<div class="field" style="margin:0"><label class="lb">채팅 ↔ 글 간격</label><div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="25"/><span class="val" id="lyTextGapV">25px</span></div></div>
 <div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div><div class="field bubble-align-field"><label class="lb">말풍선 정렬</label><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div><div class="field-help bubble-align-help">가운데 정렬은 프로필이 있으면 프로필 중심부터 말풍선 끝까지, 프로필이 없으면 말풍선 자체의 양 끝을 기준으로 맞춰요. 메신저 모드는 발신자 기준 정렬을 유지해요.</div></div></div>
 </div></div></div><div class="messenger-settings" id="messengerSettings"><div class="messenger-settings-head"><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></div><div class="messenger-settings-body"><div class="field">
 <label class="lb">내 계정 (오른쪽 정렬)</label>
@@ -1439,6 +1476,12 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <div class="toggle">
 <div class="t-lb">배경 투명화<span>PNG · HTML 저장 시 배경 없이 로그만 남아요</span></div>
 <label class="sw"><input id="transparentOn" onchange="setTransparent(this.checked)" type="checkbox"/><span class="track"></span></label>
+</div>
+</div>
+<div class="field" style="margin-top:8px;margin-bottom:0">
+<div class="toggle">
+<div class="t-lb">저장 위치 직접 선택<span>저장할 때마다 폴더와 파일명을 고르는 창을 띄워요 (Chrome·Edge)</span></div>
+<label class="sw"><input id="askSavePathToggle" onchange="setAskSavePath(this.checked)" type="checkbox"/><span class="track"></span></label>
 </div>
 </div>
 <div style="font-size:11px;color:var(--muted);margin-top:10px;padding-left:2px;line-height:1.6">
@@ -1499,9 +1542,9 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <button class="btn" onclick="saveImage()">↓ 이미지 저장</button>
 <button class="btn" onclick="copyImage()">⧉ 이미지 복사</button>
 <button class="btn" onclick="exportHTML()">↓ HTML 내보내기</button>
-<button class="btn danger-ghost" id="bulkDeleteBtn" onclick="toggleBulkDeleteMode()">☑ 여러 개 삭제</button>
+<button class="btn danger-strong" id="bulkDeleteBtn" onclick="toggleBulkDeleteMode()">☑ 여러 개 삭제</button>
 <button class="btn" id="bulkDeleteCancelBtn" onclick="cancelBulkDeleteMode()" style="display:none">선택 취소</button>
-<button class="btn danger-ghost" onclick="openClear()">전부 지우기</button>
+<button class="btn danger-strong" onclick="openClear()">전부 지우기</button>
 </div>
 </div>
 <div class="preview-surface stage" id="stageEl">
@@ -1535,7 +1578,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <div class="mbd">멤버와 메시지가 모두 삭제돼요. 지운 내용은 되돌릴 수 없어요.</div>
 <div class="mft">
 <button class="btn" onclick="closeClear()">취소</button>
-<button class="btn danger-ghost" onclick="doClear()">전부 지우기</button>
+<button class="btn danger-strong" onclick="doClear()">전부 지우기</button>
 </div>
 </div>
 </div>
@@ -1562,6 +1605,7 @@ const state = {
   mode:'normal',
   shape:'circle',
   showProfile:true,
+  hideNames:false,
   showMyIdentity:false,
   meId:'',
   parenOn:false,
@@ -1580,6 +1624,7 @@ const state = {
     myBubble:'#424448', myText:'#FFFFFF',
     otBubble:'#FFFFFF', otText:'#424448',
     draftColor:'#424448',
+    draftBubbleColor:'#FFFFFF',
     highlight:'#E4E4E6',
     partial:'#D14343',
     paren:'#8A8F98',
@@ -1605,6 +1650,7 @@ const state = {
 let editingMemberId=null;
 let imgTab='file';
 let draftAvatar=null;      // cropped dataURL for member being added
+let draftBubbleUse=false;  // whether the member being added uses a personal bubble color
 let draftMsgImg=null;      // dataURL for message image
 let composerEditId=null;   // id of an existing message being edited in the composer
 let uid=()=>Math.random().toString(36).slice(2,9);
@@ -1634,10 +1680,23 @@ function buildColorRow(row){
   });
 }
 function afterColor(key){
-  if(key==='draftColor') return; // only used when adding member
-  renderPreview();
+  if(key==='draftColor'||key==='draftBubbleColor') return; // only used when adding member
+  /* 배경/메시지 이미지가 있을 때 컬러피커를 드래그하면 input 이벤트마다 전체 미리보기를
+     다시 그려 이미지 디코딩 비용으로 렉이 생긴다. 120ms 간격으로 묶어 그리되
+     마지막 값은 반드시 반영되도록 트레일링 호출을 남긴다. */
+  const now=performance.now(), wait=120;
+  if(now-__colorRenderLast>=wait){ __colorRenderLast=now; renderPreview(); }
+  else if(!__colorRenderTimer){
+    __colorRenderTimer=setTimeout(()=>{ __colorRenderTimer=null; __colorRenderLast=performance.now(); renderPreview(); },wait-(now-__colorRenderLast));
+  }
 }
+let __colorRenderTimer=null,__colorRenderLast=0;
 function refreshColorRows(){document.querySelectorAll('.colorrow').forEach(buildColorRow);}
+function toggleDraftBubbleUse(on){
+  draftBubbleUse=!!on;
+  const cb=document.getElementById('draftBubbleUse'); if(cb) cb.checked=draftBubbleUse;
+  const row=document.getElementById('draftBubbleRow'); if(row) row.style.display=draftBubbleUse?'':'none';
+}
 
 /* ================= mode / shape ================= */
 function setMode(m){
@@ -2180,16 +2239,18 @@ function addOrUpdateMember(){
   if(editingMemberId){
     const m=state.members.find(x=>x.id===editingMemberId);
     m.name=name; m.color=state.colors.draftColor;
+    m.bubbleColor=draftBubbleUse?state.colors.draftBubbleColor:null;
     if(draftAvatar) m.image=draftAvatar;
     editingMemberId=null; memberBtn.textContent='+ 멤버 추가';
   }else{
-    state.members.push({id:uid(),name,image:draftAvatar,color:state.colors.draftColor});
+    state.members.push({id:uid(),name,image:draftAvatar,color:state.colors.draftColor,bubbleColor:draftBubbleUse?state.colors.draftBubbleColor:null});
   }
   resetMemberForm();
   renderMembers(); renderSenders(); renderMeSelect(); renderPreview();
 }
 function resetMemberForm(){
   mName.value=''; mLink.value=''; draftAvatar=null;
+  toggleDraftBubbleUse(false);
   avPreviewWrap.style.display='none';
   fileFake.childNodes[0].nodeValue='↑ 파일 선택 — 선택 안 됨 ';
   mFile.value='';
@@ -2198,6 +2259,8 @@ function editMember(id){
   const m=state.members.find(x=>x.id===id);
   editingMemberId=id; mName.value=m.name;
   state.colors.draftColor=m.color||'#424448';
+  if(m.bubbleColor) state.colors.draftBubbleColor=m.bubbleColor;
+  toggleDraftBubbleUse(!!m.bubbleColor);
   draftAvatar=m.image||null;
   if(m.image){avPreview.src=m.image;avPreviewWrap.style.display='flex';}
   else avPreviewWrap.style.display='none';
@@ -2274,7 +2337,7 @@ function renderPresets(){
     box.innerHTML=presets.map(p=>{
       const av=p.image?`<img class="pav" src="${p.image}">`
         :`<div class="pav" style="background:${p.color}">${initials(p.name)}</div>`;
-      return `<div class="pchip ${state.shape}" onclick="usePreset('${p.id}')" title="클릭하면 입력창에 불러와요">
+      return `<div class="pchip ${state.shape}" onclick="usePreset('${p.id}')" title="클릭하면 바로 멤버로 등록돼요">
         ${av}<span class="pdot" style="background:${p.color}"></span>
         <span class="pnm">${esc(p.name)}</span>
         <button class="px" title="프리셋 삭제" onclick="event.stopPropagation();deletePreset('${p.id}')">×</button>
@@ -2284,29 +2347,26 @@ function renderPresets(){
   hint.textContent = storageOK
     ? '다운로드해서 열면 이 브라우저에 자동 저장돼요. ↓ 로 백업, ↑ 로 불러오기.'
     : '이 환경에선 자동 저장이 안 돼요 — ↓ 내보내기로 프리셋을 파일로 백업해줘.';
+  const cnt=document.getElementById('memberPresetCnt'); if(cnt) cnt.textContent=presets.length?String(presets.length):'';
 }
-function addPreset(name,image,color){
+function addPreset(name,image,color,bubbleColor){
   if(!name){alert('먼저 이름을 입력해 주세요.');return;}
-  presets.push({id:uid(),name,image:image||null,color:color||'#424448'});
+  presets.push({id:uid(),name,image:image||null,color:color||'#424448',bubbleColor:bubbleColor||null});
   persistPresets(); renderPresets();
 }
 function savePresetFromForm(){
-  addPreset(mName.value.trim(),draftAvatar,state.colors.draftColor);
+  addPreset(mName.value.trim(),draftAvatar,state.colors.draftColor,draftBubbleUse?state.colors.draftBubbleColor:null);
 }
 function savePresetFromMember(id){
   const m=state.members.find(x=>x.id===id); if(!m) return;
-  addPreset(m.name,m.image,m.color);
+  addPreset(m.name,m.image,m.color,m.bubbleColor);
 }
 function usePreset(id){
+  /* 프리셋 클릭 시 폼을 거치지 않고 곧바로 멤버로 등록한다. */
   const p=presets.find(x=>x.id===id); if(!p) return;
   editingMemberId=null; memberBtn.textContent='+ 멤버 추가';
-  mName.value=p.name;
-  state.colors.draftColor=p.color||'#424448';
-  draftAvatar=p.image||null;
-  if(p.image){avPreview.src=p.image;avPreviewWrap.style.display='flex';}
-  else avPreviewWrap.style.display='none';
-  refreshColorRows();
-  mName.focus();
+  state.members.push({id:uid(),name:p.name,image:p.image||null,color:p.color||'#424448',bubbleColor:p.bubbleColor||null});
+  renderMembers(); renderSenders(); renderMeSelect(); renderPreview();
 }
 function deletePreset(id){
   presets=presets.filter(x=>x.id!==id);
@@ -2315,8 +2375,7 @@ function deletePreset(id){
 function exportPresets(){
   if(!presets.length){alert('내보낼 프리셋이 없어요.');return;}
   const blob=new Blob([JSON.stringify(presets,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.download='member-presets.json'; a.href=URL.createObjectURL(blob); a.click();
+  window.__saveBlobAs(blob,'member-presets.json',()=>{const a=document.createElement('a');a.download='member-presets.json';a.href=URL.createObjectURL(blob);a.click();});
 }
 function importPresets(e){
   const f=e.target.files[0]; if(!f) return;
@@ -2413,7 +2472,7 @@ function persistThemes(){
   catch(e){ themeStorageOK=false; }
 }
 function currentTheme(name){
-  const {draftColor,...cols}=state.colors;
+  const {draftColor,draftBubbleColor,...cols}=state.colors;
   return {id:uid(),name,shape:state.shape,parenOn:state.parenOn,transparentBg:!!state.transparentBg,
     colors:JSON.parse(JSON.stringify(cols)),
     layout:JSON.parse(JSON.stringify(state.layout)),
@@ -2461,6 +2520,7 @@ function renderThemes(){
       </div>`;
     }).join('');
   }
+  const tcnt=document.getElementById('themePresetCnt'); if(tcnt) tcnt.textContent=themes.length?String(themes.length):'';
   hint.textContent = themeStorageOK
     ? '색·여백·글꼴·너비를 통째로 저장해요. ↓ 백업 / ↑ 불러오기.'
     : '이 환경에선 자동 저장이 안 돼요 — ↓ 내보내기로 백업해줘.';
@@ -2468,8 +2528,7 @@ function renderThemes(){
 function exportThemes(){
   if(!themes.length){alert('내보낼 테마가 없어요.');return;}
   const blob=new Blob([JSON.stringify(themes,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.download='chat-themes.json'; a.href=URL.createObjectURL(blob); a.click();
+  window.__saveBlobAs(blob,'chat-themes.json',()=>{const a=document.createElement('a');a.download='chat-themes.json';a.href=URL.createObjectURL(blob);a.click();});
 }
 function importThemes(e){
   const f=e.target.files[0]; if(!f) return;
@@ -2988,13 +3047,13 @@ function normalRow(m,mem,gap,continued=false){
   const hasAvatarColumn=!!state.showProfile&&showIdentity;
   const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
   const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
-  const name=showIdentity&&!continued?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>`:'';
   return `<div class="pmsg n-msg ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
     ${avatar||avatarSpacer}
     <div class="n-body">
       ${name}
-      <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle(state.colors.nBubble,state.colors.nText,'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
+      <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle((mem&&mem.bubbleColor)||state.colors.nBubble,state.colors.nText,'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
     </div>
   </div>`;
 }
@@ -3006,7 +3065,7 @@ function logRow(m,mem,gap,continued=false){
   const plain=`color:${state.colors.nText};font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
   const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
   const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
-  const name=showIdentity&&!continued?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>`:'';
   return `<div class="pmsg n-msg ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
     ${avatar||avatarSpacer}
@@ -3019,12 +3078,12 @@ function logRow(m,mem,gap,continued=false){
 function msgrRow(m,mem,gap,continued=false){
   const mine=(m.senderId===state.meId);
   const showIdentity=!mine||!!state.showMyIdentity;
-  const bub=mine?state.colors.myBubble:state.colors.otBubble;
+  const bub=(mem&&mem.bubbleColor)||(mine?state.colors.myBubble:state.colors.otBubble);
   const txt=mine?state.colors.myText:state.colors.otText;
   const hasAvatarColumn=!!state.showProfile&&showIdentity;
   const showAvatar=hasAvatarColumn&&!continued;
   const avatar=showAvatar?avatarHTML(mem,state.shape):'';
-  const name=showIdentity&&!continued?`<div class="m-name" style="font-size:${state.layout.nameSize}px;color:${mem.color||'#555'}">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  const name=showIdentity&&!continued&&!state.hideNames?`<div class="m-name" style="font-size:${state.layout.nameSize}px;color:${mem.color||'#555'}">${typeInline(esc(mem.name||'?'))}</div>`:'';
   // Keep the appropriate avatar column during a consecutive run even though the avatar itself is hidden.
   const noAvatarColumn=hasAvatarColumn?'':'no-av';
   const ownIdentityClass=mine&&showIdentity?'own-identity':'';
@@ -3257,6 +3316,9 @@ function initPreciseControls(){
   enhanceRange('lyFs','lyFsV',{min:11,max:22,step:1,nudge:1});
   enhanceRange('lyLh','lyLhV',{min:1.1,max:2.2,step:0.05,nudge:0.05});
   enhanceRange('lyPara','lyParaV',{min:0,max:40,step:1,nudge:2});
+  enhanceRange('lyBlockGap','lyBlockGapV',{min:0,max:60,step:1,nudge:2});
+  enhanceRange('creditSize','creditSizeV',{min:9,max:18,step:1,nudge:1});
+  enhanceRange('creditGap','creditGapV',{min:0,max:80,step:1,nudge:2});
 }
 
 
@@ -3281,7 +3343,7 @@ function closeMemberEditor(){
 const __editMember=editMember;
 editMember=function(id){ __editMember(id); switchToolPanel('members',true); openMemberEditor(true); };
 const __usePreset=usePreset;
-usePreset=function(id){ __usePreset(id); switchToolPanel('members',true); openMemberEditor(false); };
+usePreset=function(id){ __usePreset(id); switchToolPanel('members',true); };
 const __addOrUpdateMember=addOrUpdateMember;
 addOrUpdateMember=function(){
   const before=state.members.length, wasEditing=!!editingMemberId;
@@ -3525,7 +3587,9 @@ exportHTML=function(){
   const bodyBg=state.transparentBg?'transparent':state.colors.bg;
   const transparentCss=state.transparentBg?'html,body,#canvas,#chat{background:transparent!important}#canvasBgImage,#canvasBgOverlay{display:none!important}':'';
   const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>채팅 발췌</title><style>'+css+'html,body{height:auto;min-height:100%;overflow:auto}body{background:'+bodyBg+';display:flex;justify-content:center;padding:0;margin:0}'+transparentCss+'</style></head><body>'+node.outerHTML+'</body></html>';
-  const blob=new Blob([html],{type:'text/html'});const a=document.createElement('a');a.download=safeFilename(state.export.filename)+'.html';a.href=URL.createObjectURL(blob);a.click();
+  const blob=new Blob([html],{type:'text/html'});
+  const fname=safeFilename(state.export.filename)+'.html';
+  window.__saveBlobAs(blob,fname,()=>{const a=document.createElement('a');a.download=fname;a.href=URL.createObjectURL(blob);a.click();});
 };
 
 initRichComposer();
@@ -5614,7 +5678,7 @@ function toast(msg,opt){
 function hideToast(){const el=document.getElementById('upToast'); if(el) el.classList.remove('show');}
 
 /* ---------- 프로젝트 스냅샷 (직렬화) ---------- */
-const SNAP_KEYS=['mode','shape','showProfile','showMyIdentity','meId','parenOn','members','messages',
+const SNAP_KEYS=['mode','shape','showProfile','hideNames','showMyIdentity','meId','parenOn','members','messages',
   'export','transparentBg','backgroundImage','credit','colors','layout'];
 function projectSnapshot(){
   const o={};
@@ -5626,13 +5690,14 @@ function applyProject(d){
   if(Array.isArray(d.members)) state.members=d.members;
   if(Array.isArray(d.messages)) state.messages=d.messages;
   ['mode','shape','meId'].forEach(k=>{ if(typeof d[k]==='string') state[k]=d[k]; });
-  ['showProfile','showMyIdentity','parenOn','transparentBg'].forEach(k=>{ if(typeof d[k]==='boolean') state[k]=d[k]; });
+  ['showProfile','hideNames','showMyIdentity','parenOn','transparentBg'].forEach(k=>{ if(typeof d[k]==='boolean') state[k]=d[k]; });
   ['export','backgroundImage','credit','colors','layout'].forEach(k=>{
     if(d[k]&&typeof d[k]==='object') Object.assign(state[k],JSON.parse(JSON.stringify(d[k])));
   });
   try{ setMode(state.mode); }catch(_){}
   try{ syncControlsFromState(); }catch(_){}
   const sp=document.getElementById('showProfile'); if(sp) sp.checked=!!state.showProfile;
+  const hn=document.getElementById('hideNames'); if(hn) hn.checked=!!state.hideNames;
   const smi=document.getElementById('showMyIdentity'); if(smi) smi.checked=!!state.showMyIdentity;
   try{ renderMembers(); renderSenders(); renderMeSelect(); }catch(_){}
   if(typeof applyBackgroundLayers==='function'){ try{ applyBackgroundLayers(); }catch(_){} }
@@ -5845,10 +5910,12 @@ window.exportProject=function(){
   const snap=projectSnapshot();
   snap.__type='chat-extractor-project'; snap.__v=1; snap.__savedAt=Date.now();
   const blob=new Blob([JSON.stringify(snap)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.download=safeFilename(state.export.filename||'chat')+'-project.json';
-  a.href=URL.createObjectURL(blob); a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  const pfname=safeFilename(state.export.filename||'chat')+'-project.json';
+  window.__saveBlobAs(blob,pfname,()=>{
+    const a=document.createElement('a');
+    a.download=pfname; a.href=URL.createObjectURL(blob); a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  });
   toast('프로젝트를 파일로 저장했어요');
 };
 window.importProject=function(ev){
@@ -7301,6 +7368,24 @@ stage.addEventListener('touchend',e=>{
   }
 
   function downloadBlob(blob,filename){
+    /* '저장 위치 직접 선택'이 켜져 있으면 saveImage 시작 시 미리 골라 둔 파일 핸들에 기록한다. */
+    const picked=window.__pickedSaveHandle;
+    if(picked){
+      window.__pickedSaveHandle=null;
+      (async()=>{
+        try{
+          const w=await picked.createWritable(); await w.write(blob); await w.close();
+          if(typeof toast==='function') toast('저장 완료: '+picked.name);
+        }catch(e){ /* 기록 실패 시 일반 다운로드로 대체 */
+          const url=URL.createObjectURL(blob);
+          const a=document.createElement('a');
+          a.download=filename; a.href=url;
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(()=>URL.revokeObjectURL(url),30000);
+        }
+      })();
+      return;
+    }
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.download=filename;
@@ -7591,7 +7676,7 @@ window.saveImage=function(){
   box-shadow:0 2px 7px rgba(0,0,0,.2);pointer-events:none}
 #chat.bulk-delete-mode .bulk-select-mark{display:flex}
 #chat.bulk-delete-mode .pmsg.bulk-selected .bulk-select-mark{background:var(--accent)}
-#bulkDeleteBtn.bulk-active{background:var(--danger);border-color:var(--danger);color:#fff}
+#bulkDeleteBtn.bulk-active{background:#D14343;border-color:#D14343;color:#fff}
 @media(max-width:520px){.shadow-control-row{grid-template-columns:1fr}}
 </style>
 <script id="requested-feature-upgrades-script-v1">
@@ -7774,6 +7859,84 @@ if(typeof enhanceRange==='function'){
 window.syncControlsFromState();
 applyRequestedVisuals();
 decorateBulkRows();
+})();
+</script>
+
+<script id="save-path-picker-script">
+/* ===== 저장 위치 직접 선택 =====
+   브라우저 보안상 웹페이지가 경로를 몰래 지정할 수는 없고, File System Access API
+   (showSaveFilePicker)로 '다른 이름으로 저장' 창을 띄워 사용자가 폴더를 고르게 한다.
+   Chrome·Edge에서 동작하며, 브라우저가 사이트별 마지막 저장 폴더를 기억해 준다.
+   미지원 브라우저(Safari·Firefox·모바일)에서는 기존 다운로드 방식으로 자동 대체. */
+(function(){
+  const KEY='chatEditorAskSavePath_v1';
+  window.__askSavePath=false;
+  try{ window.__askSavePath=localStorage.getItem(KEY)==='1'; }catch(_){}
+  window.__pickedSaveHandle=null;
+
+  function supported(){ return typeof window.showSaveFilePicker==='function'; }
+
+  window.setAskSavePath=function(on){
+    window.__askSavePath=!!on;
+    try{ localStorage.setItem(KEY,on?'1':'0'); }catch(_){}
+    const cb=document.getElementById('askSavePathToggle'); if(cb) cb.checked=!!on;
+    if(on&&!supported()){
+      if(typeof toast==='function') toast('이 브라우저는 위치 선택 창을 지원하지 않아 기본 다운로드로 저장돼요');
+    }
+  };
+
+  function typesFor(filename){
+    const ext=String(filename).split('.').pop().toLowerCase();
+    if(ext==='png')  return [{description:'PNG 이미지',accept:{'image/png':['.png']}}];
+    if(ext==='html') return [{description:'HTML 문서',accept:{'text/html':['.html']}}];
+    if(ext==='json') return [{description:'JSON 파일',accept:{'application/json':['.json']}}];
+    return undefined;
+  }
+
+  /* 동기 내보내기(HTML·JSON)용: 켜져 있으면 위치 선택 창, 아니면 fallback(기존 다운로드) 실행.
+     선택 창에서 취소하면 아무 것도 저장하지 않는다. */
+  window.__saveBlobAs=function(blob,filename,fallback){
+    if(!window.__askSavePath||!supported()){ fallback(); return; }
+    (async()=>{
+      try{
+        const handle=await showSaveFilePicker({suggestedName:filename,types:typesFor(filename)});
+        const w=await handle.createWritable(); await w.write(blob); await w.close();
+        if(typeof toast==='function') toast('저장 완료: '+handle.name);
+      }catch(e){
+        if(e&&e.name==='AbortError') return;   // 사용자가 취소 → 저장 안 함
+        fallback();                             // 권한 오류 등 → 기존 다운로드
+      }
+    })();
+  };
+
+  /* 이미지 저장: 캡처가 오래 걸리면 사용자 클릭 유효 시간이 지나 선택 창이 막히므로,
+     저장 버튼을 누른 직후(캡처 전에) 위치를 먼저 고르고 완성된 PNG를 그 파일에 기록한다. */
+  const prevSaveImage=window.saveImage;
+  window.saveImage=async function(){
+    window.__pickedSaveHandle=null;
+    const mobileUI=(typeof isMobileSaveUI==='function')&&isMobileSaveUI();
+    if(window.__askSavePath&&supported()&&!mobileUI&&state.messages.length){
+      try{
+        window.__pickedSaveHandle=await showSaveFilePicker({
+          suggestedName:safeFilename(state.export.filename)+'.png',
+          types:typesFor('a.png')
+        });
+      }catch(e){
+        window.__pickedSaveHandle=null;
+        if(e&&e.name==='AbortError') return;   // 위치 선택 취소 → 저장 취소
+      }
+    }
+    try{ return await prevSaveImage.apply(this,arguments); }
+    finally{ window.__pickedSaveHandle=null; }
+  };
+
+  /* 시작 시 저장된 설정을 토글에 반영 */
+  document.addEventListener('DOMContentLoaded',()=>{
+    const cb=document.getElementById('askSavePathToggle');
+    if(cb) cb.checked=!!window.__askSavePath;
+  });
+  const cb=document.getElementById('askSavePathToggle');
+  if(cb) cb.checked=!!window.__askSavePath;
 })();
 </script>
 
