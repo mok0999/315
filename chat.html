@@ -1410,6 +1410,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <option value="'Noto Sans KR',sans-serif">본고딕 (Noto)</option>
 <option value="'Nanum Myeongjo',serif">나눔명조</option>
 <option value="'Gowun Dodum',sans-serif">고운돋움</option>
+<option value="'Mona12',sans-serif">Mona12 (픽셀 · 12px 권장)</option>
 <option value="-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif">시스템 기본</option>
 </select>
 <div class="field-help">중국어·일본어 문자는 자동 감지해 Noto Sans SC / JP로 보완하고, 이미지 저장에도 함께 포함해요.</div>
@@ -1441,7 +1442,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
                 </div>
 </div>
 <div class="shadow-control-group" style="margin-top:14px">
-<div class="field" style="margin-bottom:9px"><div class="toggle"><div class="t-lb">그림자<span>모든 텍스트에 그림자를 적용해요</span></div><label class="sw"><input id="textShadowOn" onchange="setTextShadow('on',this.checked)" type="checkbox"/><span class="track"></span></label></div></div>
+<div class="field" style="margin-bottom:9px"><div class="toggle"><div class="t-lb">그림자<span>모든 텍스트에 그림자를 적용해요</span></div><label class="sw"><input id="textShadowOn" onchange="setTextShadow('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><label class="mini-check" style="margin:9px 0 0 2px"><input id="textShadowBubblesOff" onchange="setTextShadow('bubblesOff',this.checked)" type="checkbox"/><span>말풍선 그림자 삭제 — 체크하면 글 블럭 텍스트에만 그림자를 적용해요</span></label></div>
 <div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="textShadow"></div></div><div class="field" style="margin:0"><label class="lb">그림자 세기</label><div class="rangewrap"><input id="textShadowStrength" max="20" min="0" oninput="setTextShadow('strength',this.value)" type="range" value="4"/><span class="val" id="textShadowStrengthV">4px</span></div></div></div>
 </div>
 </div>
@@ -1690,7 +1691,7 @@ const state = {
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
     gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, nameSize:12, widthScale:100, letterSpacing:0,
-    textShadowOn:false, textShadowStrength:4, bubbleShadowOn:false, bubbleShadowStrength:4,
+    textShadowOn:false, textShadowBubblesOff:false, textShadowStrength:4, bubbleShadowOn:false, bubbleShadowStrength:4,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
     textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
     dividerMargin:8,   // 가름선 위·아래 여백
@@ -2457,7 +2458,7 @@ let themeStorageOK=true;
 
 function defaultLayout(){
   return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,
-    radius:14,fs:16,lh:1.55,para:0,nameSize:12,widthScale:100,letterSpacing:0,textShadowOn:false,textShadowStrength:4,bubbleShadowOn:false,bubbleShadowStrength:4,tailOn:true,tailSize:10,tailY:0,tailX:0,
+    radius:14,fs:16,lh:1.55,para:0,nameSize:12,widthScale:100,letterSpacing:0,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,bubbleShadowOn:false,bubbleShadowStrength:4,tailOn:true,tailSize:10,tailY:0,tailX:0,
     linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerWidth:100,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
@@ -3114,7 +3115,7 @@ function renderPreview(){
       <ol>
         <li><b>멤버</b> 탭에서 캐릭터를 등록해요 — 프리셋을 누르면 바로 등록!</li>
         <li>작성창 타입을 <b>글</b>로 두고 글을 통째로 붙여넣으면, 문단마다 블럭이 자동으로 나뉘어요.</li>
-        <li>말풍선으로 바꿀 블럭은 ✎ 수정을 눌러 <b>‘말풍선으로 변경’</b>에 체크하고 발신자를 골라요.</li>
+        <li>말풍선으로 바꿀 블럭은 ✎ 수정을 누른 뒤, 작성창 타입을 <b>말풍선</b> 탭으로 바꾸고 발신자를 골라 <b>✓ 수정 완료</b>를 눌러요.</li>
         <li><b>테마·배경 / 텍스트·간격 / 말풍선</b> 탭에서 꾸민 뒤 저장하면 끝!</li>
       </ol>
       <span class="pg-tip">“📝 글 끼워넣기”로 채팅 사이에 내레이션도 넣을 수 있어요</span></div>`;
@@ -3801,6 +3802,7 @@ const __RUNTIME_FONT_CONFIG={
   'Noto Sans KR':{css:'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap',weights:[400,700]},
   'Nanum Myeongjo':{css:'https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap',weights:[400,700]},
   'Gowun Dodum':{css:'https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap',weights:[400]},
+  'Mona12':{css:'https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css',weights:[400,700]},
   'Pretendard':{css:'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css',weights:[400,500,600,700,800]}
 };
 const __runtimeFontLinks=new Map();
@@ -7889,6 +7891,24 @@ stage.addEventListener('touchend',e=>{
 let savedDataUrl='',savedBlob=null,savedObjectUrl='',savedFilename='image.png';
 let previousBodyOverflow='';
 const desktopSaveImage=window.saveImage;
+/* 안드로이드 전용 저장 경로: iOS와 달리 <a download>가 가장 확실하게 동작한다.
+   (안드로이드 공유 시트에는 '사진에 저장'이 없는 기기가 많아 저장 실패 문의가 잦음) */
+const isAndroid=/Android/i.test(navigator.userAgent||'');
+function downloadSavedImage(){
+  if(!savedBlob){alert('이미지가 아직 준비되지 않았어요. 다시 시도해 주세요.');return false;}
+  try{
+    if(!savedObjectUrl) savedObjectUrl=URL.createObjectURL(savedBlob);
+    const a=document.createElement('a');
+    a.href=savedObjectUrl; a.download=savedFilename; a.rel='noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    if(typeof toast==='function') toast('다운로드 시작! 갤러리나 파일 앱의 Download 폴더를 확인해 주세요');
+    return true;
+  }catch(err){
+    console.warn('android image download failed',err);
+    alert('다운로드가 막혔어요. 위 이미지를 길게 눌러 저장하거나, Chrome 등 기본 브라우저에서 열어 주세요.');
+    return false;
+  }
+}
 
 function isMobileSaveUI(){
   return document.body.classList.contains('mobile-ui')||
@@ -7957,7 +7977,8 @@ function ensureViewer(){
     +'<div class="mobile-save-title"><strong>이미지가 완성됐어요!</strong></div>'
     +'<div class="mobile-save-preview"><img alt="저장할 이미지 미리보기"></div>'
     +'<div class="mobile-save-buttons">'
-    +'<button type="button" class="primary" data-action="share">↗ 공유·사진 앱에 저장</button>'
+    +(isAndroid?'<button type="button" class="primary" data-action="download">↓ 이미지 다운로드</button>':'')
+    +'<button type="button" class="'+(isAndroid?'':'primary')+'" data-action="share">↗ 공유·사진 앱에 저장</button>'
     +'<button type="button" data-action="close">닫기</button>'
     +'</div></div>';
   document.body.appendChild(root);
@@ -7966,6 +7987,7 @@ function ensureViewer(){
     const btn=e.target.closest('[data-action]');
     if(!btn) return;
     if(btn.dataset.action==='close') closeViewer();
+    else if(btn.dataset.action==='download') downloadSavedImage();
     else if(btn.dataset.action==='share') shareSavedImage();
     else if(btn.dataset.action==='copy') copySavedImage();
   });
@@ -8021,6 +8043,8 @@ async function shareSavedImage(){
       console.warn('image share failed',err);
     }
   }
+  /* 안드로이드: 공유 API가 없거나 실패하면(인앱 브라우저 등) 직접 다운로드로 대체 */
+  if(isAndroid){ downloadSavedImage(); return; }
   /* 공유 API가 없는 환경에서는 현재 창의 이미지 자체를 길게 눌러 저장할 수 있다. */
   alert('공유 기능을 사용할 수 없어요. 위 이미지를 길게 눌러 저장해 주세요.');
 }
@@ -8057,6 +8081,10 @@ window.saveImage=function(){
 #chat.text-shadow-on .t-inner,#chat.text-shadow-on .n-bubble,#chat.text-shadow-on .n-plain,#chat.text-shadow-on .m-bubble,#chat.text-shadow-on .n-name,#chat.text-shadow-on .m-name,#chat.text-shadow-on .credit,#chat.text-shadow-on .divider-pill{
   text-shadow:0 1px var(--text-shadow-strength) var(--text-shadow-color)
 }
+/* '말풍선 그림자 삭제' — 그림자를 글 블럭 텍스트(.t-inner)에만 남긴다 */
+#chat.text-shadow-on.text-shadow-bubbles-off .n-bubble,#chat.text-shadow-on.text-shadow-bubbles-off .n-plain,#chat.text-shadow-on.text-shadow-bubbles-off .m-bubble,#chat.text-shadow-on.text-shadow-bubbles-off .n-name,#chat.text-shadow-on.text-shadow-bubbles-off .m-name,#chat.text-shadow-on.text-shadow-bubbles-off .credit,#chat.text-shadow-on.text-shadow-bubbles-off .divider-pill{
+  text-shadow:none
+}
 #chat.bubble-shadow-on .n-bubble,#chat.bubble-shadow-on .m-bubble,
 #chat.bubble-shadow-on .n-msg > .av,#chat.bubble-shadow-on .m-msg > .av{
   box-shadow:0 3px calc(var(--bubble-shadow-strength) * 1.4) var(--bubble-shadow-color)
@@ -8087,6 +8115,7 @@ state.backgroundImage=Object.assign({src:'',size:100,rotation:0,x:50,y:50,blur:0
 state.colors.textShadow=state.colors.textShadow||'#000000';
 state.colors.bubbleShadow=state.colors.bubbleShadow||'#000000';
 state.layout.textShadowOn=!!state.layout.textShadowOn;
+state.layout.textShadowBubblesOff=!!state.layout.textShadowBubblesOff;
 state.layout.textShadowStrength=Math.max(0,Math.min(20,Number(state.layout.textShadowStrength)||4));
 state.layout.bubbleShadowOn=!!state.layout.bubbleShadowOn;
 state.layout.bubbleShadowStrength=Math.max(0,Math.min(20,Number(state.layout.bubbleShadowStrength)||4));
@@ -8095,6 +8124,7 @@ function applyRequestedVisuals(){
   const chat=document.getElementById('chat');
   if(!chat) return;
   chat.classList.toggle('text-shadow-on',!!state.layout.textShadowOn);
+  chat.classList.toggle('text-shadow-bubbles-off',!!state.layout.textShadowBubblesOff);
   chat.style.setProperty('--text-shadow-strength',(Number(state.layout.textShadowStrength)||0)+'px');
   chat.style.setProperty('--text-shadow-color',state.colors.textShadow||'#000000');
   chat.classList.toggle('bubble-shadow-on',!!state.layout.bubbleShadowOn);
@@ -8103,6 +8133,7 @@ function applyRequestedVisuals(){
 }
 window.setTextShadow=function(field,value){
   if(field==='on') state.layout.textShadowOn=!!value;
+  else if(field==='bubblesOff') state.layout.textShadowBubblesOff=!!value;
   else{
     const n=Math.max(0,Math.min(20,parseFloat(value)||0));
     state.layout.textShadowStrength=n;
@@ -8125,6 +8156,7 @@ const previousSync=window.syncControlsFromState;
 window.syncControlsFromState=function(){
   const result=previousSync&&previousSync.apply(this,arguments);
   const textOn=document.getElementById('textShadowOn'); if(textOn) textOn.checked=!!state.layout.textShadowOn;
+  const textBubblesOff=document.getElementById('textShadowBubblesOff'); if(textBubblesOff) textBubblesOff.checked=!!state.layout.textShadowBubblesOff;
   const textStrength=document.getElementById('textShadowStrength'); if(textStrength) textStrength.value=state.layout.textShadowStrength;
   const textStrengthV=document.getElementById('textShadowStrengthV'); if(textStrengthV) textStrengthV.textContent=Math.round(state.layout.textShadowStrength)+'px';
   const bubbleOn=document.getElementById('bubbleShadowOn'); if(bubbleOn) bubbleOn.checked=!!state.layout.bubbleShadowOn;
