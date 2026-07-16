@@ -1643,7 +1643,7 @@ const state = {
   layout:{
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
-    gap:12, textGap:25, blockGap:16, continuationGap:8, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, nameSize:12, widthScale:100, letterSpacing:0,
+    gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, nameSize:12, widthScale:100, letterSpacing:0,
     textShadowOn:false, textShadowStrength:4, bubbleShadowOn:false, bubbleShadowStrength:4,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
     textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
@@ -2410,7 +2410,7 @@ let themes=[];
 let themeStorageOK=true;
 
 function defaultLayout(){
-  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:8,bpy:9,bpx:13,
+  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,
     radius:14,fs:16,lh:1.55,para:0,nameSize:12,widthScale:100,letterSpacing:0,textShadowOn:false,textShadowStrength:4,bubbleShadowOn:false,bubbleShadowStrength:4,tailOn:true,tailSize:10,tailY:0,tailX:0,
     linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerWidth:100,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
@@ -2979,8 +2979,8 @@ function renderPreview(){
     const nextContinued=isChat(m)&&isChat(next)&&m.senderId===next.senderId;
     // Spacing inside a consecutive same-sender run stays fixed. The message-gap control
     // moves the whole run relative to surrounding items instead of stretching its bubbles.
-    const continuationGap=Number.isFinite(Number(state.layout.continuationGap))
-      ? Number(state.layout.continuationGap) : 8;
+    /* 같은 캐릭터가 연속으로 이어지는 하위 말풍선 간격은 6px로 고정한다. */
+    const continuationGap=6;
     // Spacing to the next item is governed by whichever element "owns" that seam, so the
     // bubble panel's spacing controls only affect bubble(+글) spacing — never 가름선/사진.
     // priority: 가름선 > 사진 > 글 > 말풍선
@@ -4714,11 +4714,11 @@ else setTimeout(__idleLoadRenderer,1200);
 
 
 <style id="profile-aware-center-and-format-toggle-fix">
-/* 가운데 정렬: 실제 프로필 전체가 아니라 프로필 중심(원의 절반 지점)을
-   말풍선 블록의 왼쪽 기준으로 삼는다. 또한 연속(continuation) 말풍선 묶음은
-   묶음 안에서 가장 긴 말풍선을 기준으로 왼쪽 기준선을 공유해서, 행마다
-   따로 가운데 정렬되며 케이크처럼 쌓이지 않는다. JS가 전체 여백을 넘지
-   않는 범위에서 정확한 이동량을 --profile-aware-center-shift 로 넣는다. */
+/* 가운데 정렬: 각 독립 메시지는 자기 말풍선 폭으로 따로 가운데를 잡는다.
+   같은 캐릭터의 연속(continuation) 메시지만 하나의 묶음으로 계산하며, 그 묶음
+   안에서 가장 긴 말풍선을 기준으로 가운데를 잡고 모든 하위 말풍선은 첫 말풍선의
+   실제 왼쪽선을 공유한다. 프로필이 있으면 프로필 중심부터 말풍선 오른쪽 끝까지를
+   실질 블록으로 본다. JS가 정확한 이동량을 --profile-aware-center-shift 로 넣는다. */
 .n-msg.bubble-align-center > .av,
 .n-msg.bubble-align-center > .av-continuation-spacer,
 .n-msg.bubble-align-center > .n-body{
@@ -4730,10 +4730,10 @@ else setTimeout(__idleLoadRenderer,1200);
 (function(){
   'use strict';
 
-  /* ---------- profile-aware center alignment (group-based) ---------- */
-  /* 같은 발신자의 연속 말풍선(continuation) 묶음을 하나의 그룹으로 보고,
-     그룹에서 가장 긴 말풍선을 기준으로 "프로필 중심 = 블록 왼쪽" 규칙으로
-     가운데 정렬한 뒤, 나머지 말풍선들은 그 왼쪽 기준선에 맞춰 붙인다. */
+  /* ---------- profile-aware center alignment (per message / continuation group) ---------- */
+  /* 독립 메시지는 각각 자기 폭으로 가운데 정렬한다.
+     같은 발신자의 연속 메시지만 한 묶음으로 보고, 묶음 안의 가장 긴 말풍선을
+     기준으로 가운데를 잡은 뒤 모든 하위 말풍선의 왼쪽선을 첫 말풍선에 맞춘다. */
   function applyProfileAwareBubbleCentering(){
     const chat=document.getElementById('chat');
     if(!chat) return;
@@ -4741,63 +4741,113 @@ else setTimeout(__idleLoadRenderer,1200);
     rows.forEach(row=>row.style.setProperty('--profile-aware-center-shift','0px'));
     if(!rows.length) return;
 
-    /* 연속 묶음 만들기: continuation이면서 바로 앞 형제가 같은 그룹의
-       마지막 행일 때만 이어 붙인다. 그 외에는 새 그룹 시작. */
+    /* 미리보기에서는 #canvas 전체가 scale()로 축소될 수 있다. getBoundingClientRect()
+       값은 축소된 화면 좌표이고 clientWidth/패딩은 실제 CSS px이므로, 두 단위를
+       그대로 섞으면 가운데 이동량이 과하게 계산되어 프로젝트 여백을 뚫는다.
+       아래에서는 모든 좌표를 행 내부의 실제 CSS px로 환산해 계산한다. */
+    const chatRect=chat.getBoundingClientRect();
+    const chatStyle=getComputedStyle(chat);
+    const chatScaleX=(chat.offsetWidth&&chatRect.width)
+      ? chatRect.width/chat.offsetWidth
+      : 1;
+    const safeChatScale=(Number.isFinite(chatScaleX)&&chatScaleX>0)?chatScaleX:1;
+    const projectLeftViewport=chatRect.left+(parseFloat(chatStyle.paddingLeft)||0)*safeChatScale;
+    const projectRightViewport=chatRect.right-(parseFloat(chatStyle.paddingRight)||0)*safeChatScale;
+
+    /* 각 행의 현재 좌표와 말풍선 폭을 기록한다.
+       프로필이 있는 첫 메시지의 실질 왼쪽 기준은 프로필 사진의 중심이며,
+       프로필이 없는 메시지는 말풍선 자체의 왼쪽 끝이 기준이다. */
+    const infos=rows.map(row=>{
+      const body=row.querySelector(':scope > .n-body');
+      const bubble=body&&body.querySelector(':scope > .n-bubble, :scope > .n-plain');
+      if(!body||!bubble) return null;
+
+      const rowRect=row.getBoundingClientRect();
+      const bubbleRect=bubble.getBoundingClientRect();
+      const rowScaleX=(row.offsetWidth&&rowRect.width)
+        ? rowRect.width/row.offsetWidth
+        : safeChatScale;
+      const scaleX=(Number.isFinite(rowScaleX)&&rowScaleX>0)?rowScaleX:safeChatScale;
+      const toCssPx=value=>value/scaleX;
+
+      const noAv=row.classList.contains('no-av');
+      const avatar=noAv?null:row.querySelector(':scope > .av, :scope > .av-continuation-spacer');
+      const avatarRect=avatar?avatar.getBoundingClientRect():null;
+      const rowStyle=getComputedStyle(row);
+      const rowPadLeft=parseFloat(rowStyle.paddingLeft)||0;
+      const rowPadRight=parseFloat(rowStyle.paddingRight)||0;
+
+      /* 행 자체의 말풍선 좌우 여백과 프로젝트 전체 좌우 여백을 모두 지킨다. */
+      const projectLeftInRow=toCssPx(projectLeftViewport-rowRect.left);
+      const projectRightInRow=toCssPx(projectRightViewport-rowRect.left);
+      const innerLeft=Math.max(rowPadLeft,projectLeftInRow);
+      const innerRight=Math.min((row.clientWidth||0)-rowPadRight,projectRightInRow);
+
+      const bubbleLeft=toCssPx(bubbleRect.left-rowRect.left);
+      const bubbleRight=toCssPx(bubbleRect.right-rowRect.left);
+      const avatarLeft=avatarRect?toCssPx(avatarRect.left-rowRect.left):bubbleLeft;
+      const avatarWidth=avatarRect?toCssPx(avatarRect.width):0;
+      const leftEdge=avatarRect?avatarLeft:bubbleLeft;
+      const effLeft=avatarRect?avatarLeft+(avatarWidth/2):bubbleLeft;
+
+      return {
+        row,
+        bubbleLeft,
+        bubbleRight,
+        bubbleWidth:Math.max(0,bubbleRight-bubbleLeft),
+        leftEdge,
+        effLeft,
+        innerLeft,
+        innerRight
+      };
+    }).filter(Boolean);
+    if(!infos.length) return;
+
+    /* 바로 앞 형제가 같은 발신자의 continuation일 때만 같은 묶음이다.
+       글·사진·가름선·다른 발신자가 끼면 새 독립 묶음으로 시작한다. */
     const groups=[];
-    let current=null, prevRow=null;
-    rows.forEach(row=>{
-      const chained=current&&row.classList.contains('continuation')&&row.previousElementSibling===prevRow;
-      if(chained){ current.push(row); }
-      else { current=[row]; groups.push(current); }
-      prevRow=row;
+    let current=null, prevInfo=null;
+    infos.forEach(info=>{
+      const chained=current
+        && info.row.classList.contains('continuation')
+        && info.row.previousElementSibling===prevInfo.row;
+      if(chained) current.push(info);
+      else { current=[info]; groups.push(current); }
+      prevInfo=info;
     });
 
     groups.forEach(group=>{
-      const infos=group.map(row=>{
-        const body=row.querySelector(':scope > .n-body');
-        const bubble=body&&body.querySelector(':scope > .n-bubble, :scope > .n-plain');
-        if(!body||!bubble) return null;
+      const first=group[0];
+      const longestBubbleWidth=Math.max(...group.map(info=>info.bubbleWidth));
+      const profileToBubbleLeft=Math.max(0,first.bubbleLeft-first.effLeft);
+      const effectiveGroupWidth=profileToBubbleLeft+longestBubbleWidth;
+      const availableWidth=Math.max(0,first.innerRight-first.innerLeft);
+      const centeredEffLeft=first.innerLeft+Math.max(0,availableWidth-effectiveGroupWidth)/2;
+      let targetBubbleLeft=centeredEffLeft+profileToBubbleLeft;
 
-        const rowRect=row.getBoundingClientRect();
-        const bubbleRect=bubble.getBoundingClientRect();
-        const noAv=row.classList.contains('no-av');
-        const avatar=noAv?null:row.querySelector(':scope > .av, :scope > .av-continuation-spacer');
-        const avatarRect=avatar?avatar.getBoundingClientRect():null;
+      /* 연속 묶음은 공통 왼쪽선을 유지하되, 프로필/말풍선 어느 쪽도 프로젝트
+         전체 여백과 말풍선 전용 좌우 여백을 넘어갈 수 없도록 공통 범위를 구한다. */
+      const minBubbleLeft=Math.max(...group.map(info=>
+        info.innerLeft+(info.bubbleLeft-info.leftEdge)
+      ));
+      const maxBubbleLeft=Math.min(...group.map(info=>
+        info.innerRight+(info.bubbleLeft-info.bubbleRight)
+      ));
 
-        const bubbleLeft=bubbleRect.left-rowRect.left;
-        const bubbleRight=bubbleRect.right-rowRect.left;
-        const avatarLeft=avatarRect?avatarRect.left-rowRect.left:bubbleLeft;
-        const anchorLeft=avatarRect
-          ? avatarLeft+avatarRect.width/2
-          : bubbleLeft;
+      if(minBubbleLeft<=maxBubbleLeft){
+        targetBubbleLeft=Math.max(minBubbleLeft,Math.min(maxBubbleLeft,targetBubbleLeft));
+      }else{
+        /* 폭 때문에 공통 이동 가능 구간이 없는 예외에서는 원래 레이아웃을 유지한다.
+           원래 위치는 flex 레이아웃상 프로젝트 여백 안에 있으므로 바깥으로 밀지 않는다. */
+        targetBubbleLeft=first.bubbleLeft;
+      }
 
-        /* 프로필이 있으면 프로필 중심부터 말풍선 오른쪽 끝까지,
-           프로필이 없으면 실제 말풍선의 왼쪽 끝부터 오른쪽 끝까지 측정한다. */
-        return {
-          row,
-          leftEdge:avatarRect?avatarLeft:bubbleLeft,
-          rightEdge:bubbleRight,
-          effLeft:anchorLeft,
-          effWidth:Math.max(0,bubbleRight-anchorLeft)
-        };
-      }).filter(Boolean);
-      if(!infos.length) return;
-
-      /* 연속 말풍선은 가장 긴 시각적 폭을 기준으로 같은 왼쪽 기준선을 공유한다. */
-      const widest=infos.reduce((a,b)=>(b.effWidth>a.effWidth?b:a));
-      const rowStyle=getComputedStyle(widest.row);
-      const innerLeft=parseFloat(rowStyle.paddingLeft)||0;
-      const innerRight=(widest.row.clientWidth||0)-(parseFloat(rowStyle.paddingRight)||0);
-
-      let targetEffLeft=innerLeft+Math.max(0,innerRight-innerLeft-widest.effWidth)/2;
-      /* 프로필이 켜진 경우에만 프로필의 실제 왼쪽 반쪽이 여백 밖으로 나가지 않게 한다.
-         프로필이 꺼진 행은 effLeft와 leftEdge가 같은 말풍선 왼쪽 끝이므로 보정값이 0이다. */
-      targetEffLeft=Math.max(targetEffLeft,innerLeft+(widest.effLeft-widest.leftEdge));
-
-      infos.forEach(info=>{
-        let shift=targetEffLeft-info.effLeft;
-        shift=Math.min(shift,innerRight-info.rightEdge); /* 말풍선 오른쪽 여백 보호 */
-        shift=Math.max(shift,innerLeft-info.leftEdge);   /* 프로필 또는 말풍선 왼쪽 여백 보호 */
+      group.forEach(info=>{
+        let shift=targetBubbleLeft-info.bubbleLeft;
+        /* 소수점 반올림이나 브라우저 렌더링 오차까지 마지막으로 한 번 제한한다. */
+        const minShift=info.innerLeft-info.leftEdge;
+        const maxShift=info.innerRight-info.bubbleRight;
+        shift=Math.max(minShift,Math.min(maxShift,shift));
         info.row.style.setProperty('--profile-aware-center-shift',shift.toFixed(2)+'px');
       });
     });
@@ -6927,6 +6977,143 @@ stage.addEventListener('touchend',e=>{
     return isTouchWebKit()||((navigator.maxTouchPoints||0)>0&&innerWidth<=900);
   }
 
+  /* ===== WebKit 이미지 수동 합성 =====
+     iOS WebKit은 SVG(foreignObject) 내부의 <img>·CSS 배경 이미지를 캔버스로
+     래스터할 때 디코드 완료를 보장하지 않아 삽입 이미지가 누락될 수 있다.
+     타이밍에 기대는 대신: 스냅샷에서 이미지들의 위치·모서리·핏을 측정해 SVG에서는
+     숨기고, 최종 캔버스에 일반 drawImage(사파리에서 항상 안정적)로 직접 그린다. */
+  const __overlayRasterCache=new Map();
+  function loadRasterImage(src){
+    if(__overlayRasterCache.has(src)) return __overlayRasterCache.get(src);
+    const p=new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>resolve(img);
+      img.onerror=()=>reject(new Error('overlay image decode failed'));
+      img.src=src;
+    });
+    __overlayRasterCache.set(src,p);
+    return p;
+  }
+  function parseCornerRadius(value,w,h){
+    const parts=String(value||'0').trim().split(/\s+/);
+    const resolve=(token,basis)=>{
+      if(!token) return 0;
+      if(token.endsWith('%')) return basis*(parseFloat(token)||0)/100;
+      return parseFloat(token)||0;
+    };
+    const rh=resolve(parts[0],w), rv=resolve(parts[1]||parts[0],h);
+    return Math.max(0,Math.min(rh,rv,w/2,h/2));
+  }
+  function roundedPath(ctx,x,y,w,h,r){
+    const [tl,tr,br,bl]=r;
+    ctx.beginPath();
+    ctx.moveTo(x+tl,y);
+    ctx.lineTo(x+w-tr,y); if(tr) ctx.quadraticCurveTo(x+w,y,x+w,y+tr);
+    ctx.lineTo(x+w,y+h-br); if(br) ctx.quadraticCurveTo(x+w,y+h,x+w-br,y+h);
+    ctx.lineTo(x+bl,y+h); if(bl) ctx.quadraticCurveTo(x,y+h,x,y+h-bl);
+    ctx.lineTo(x,y+tl); if(tl) ctx.quadraticCurveTo(x,y,x+tl,y);
+    ctx.closePath();
+  }
+  function collectImageOverlays(clone,width,height){
+    if(!isTouchWebKit()) return null;
+    const rootRect=clone.getBoundingClientRect();
+    if(!(rootRect.width>0&&rootRect.height>0)) return null;
+    const imgs=[];
+    for(const img of clone.querySelectorAll('img')){
+      const src=img.currentSrc||img.src;
+      if(!src) continue;
+      const rect=img.getBoundingClientRect();
+      if(!(rect.width>0&&rect.height>0)) continue;
+      const cs=getComputedStyle(img);
+      if(cs.visibility==='hidden'||cs.display==='none') continue;
+      const w=rect.width,h=rect.height;
+      imgs.push({
+        src,
+        x:rect.left-rootRect.left, y:rect.top-rootRect.top, w, h,
+        radii:[
+          parseCornerRadius(cs.borderTopLeftRadius,w,h),
+          parseCornerRadius(cs.borderTopRightRadius,w,h),
+          parseCornerRadius(cs.borderBottomRightRadius,w,h),
+          parseCornerRadius(cs.borderBottomLeftRadius,w,h)
+        ],
+        cover:cs.objectFit==='cover',
+        opacity:parseFloat(cs.opacity)
+      });
+      img.style.setProperty('visibility','hidden','important');
+    }
+    let bg=null;
+    const bgLayer=clone.querySelector('.canvas-bg-image');
+    const ovLayer=clone.querySelector('.canvas-bg-overlay');
+    const B=state.backgroundImage;
+    if(bgLayer&&B&&B.src&&!state.transparentBg&&getComputedStyle(bgLayer).display!=='none'){
+      bg={
+        src:B.src, size:Number(B.size)||100,
+        posX:Number(B.x)||0, posY:Number(B.y)||0,
+        blur:Number(B.blur)||0, rotation:Number(B.rotation)||0,
+        overlayColor:(state.colors&&state.colors.bgOverlay)||'#000000',
+        overlayOpacity:(Number(B.overlayOpacity)||0)/100,
+        w:width, h:height
+      };
+      bgLayer.style.setProperty('visibility','hidden','important');
+      if(ovLayer) ovLayer.style.setProperty('visibility','hidden','important');
+      /* 수동으로 깔 배경이 SVG 래스터에 가려지지 않도록 SVG 쪽 배경은 투명하게 */
+      clone.style.setProperty('background','transparent','important');
+      const chatEl=clone.querySelector('#chat');
+      if(chatEl) chatEl.style.setProperty('background','transparent','important');
+    }
+    if(!imgs.length&&!bg) return null;
+    return {imgs,bg};
+  }
+  async function drawOverlayBackground(ctx,bg,scale){
+    let raster=null;
+    try{ raster=await loadRasterImage(bg.src); }catch(_){ return; }
+    const layerW=bg.w*scale, layerH=bg.h*scale;
+    const iw=raster.naturalWidth||1, ih=raster.naturalHeight||1;
+    const drawW=layerW*bg.size/100, drawH=drawW*(ih/iw);
+    const offX=(layerW-drawW)*bg.posX/100, offY=(layerH-drawH)*bg.posY/100;
+    const bgScale=bg.blur?1.06:1;
+    ctx.save();
+    try{
+      ctx.beginPath(); ctx.rect(0,0,layerW,layerH); ctx.clip();
+      if(bg.rotation||bgScale!==1){
+        ctx.translate(layerW/2,layerH/2);
+        ctx.rotate(bg.rotation*Math.PI/180);
+        ctx.scale(bgScale,bgScale);
+        ctx.translate(-layerW/2,-layerH/2);
+      }
+      if(bg.blur&&('filter' in ctx)){ try{ ctx.filter='blur('+(bg.blur*scale)+'px)'; }catch(_){} }
+      ctx.drawImage(raster,offX,offY,drawW,drawH);
+    }finally{ ctx.restore(); }
+    if(bg.overlayOpacity>0){
+      ctx.save();
+      ctx.globalAlpha=Math.max(0,Math.min(1,bg.overlayOpacity));
+      ctx.fillStyle=bg.overlayColor;
+      ctx.fillRect(0,0,layerW,layerH);
+      ctx.restore();
+    }
+  }
+  async function drawOverlayImages(ctx,imgs,scale){
+    for(const item of imgs){
+      let raster=null;
+      try{ raster=await loadRasterImage(item.src); }catch(_){ continue; }
+      const x=item.x*scale,y=item.y*scale,w=item.w*scale,h=item.h*scale;
+      ctx.save();
+      try{
+        if(Number.isFinite(item.opacity)&&item.opacity<1) ctx.globalAlpha=Math.max(0,item.opacity);
+        roundedPath(ctx,x,y,w,h,item.radii.map(r=>r*scale));
+        ctx.clip();
+        if(item.cover){
+          const iw=raster.naturalWidth||1, ih=raster.naturalHeight||1;
+          const s=Math.max(w/iw,h/ih);
+          const dw=iw*s, dh=ih*s;
+          ctx.drawImage(raster,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+        }else{
+          ctx.drawImage(raster,x,y,w,h);
+        }
+      }finally{ ctx.restore(); }
+    }
+  }
+
   function waitForImages(root){
     return Promise.all([...root.querySelectorAll('img')].map(img=>{
       if(img.complete&&img.naturalWidth>0) return img.decode?img.decode().catch(()=>{}):Promise.resolve();
@@ -7195,7 +7382,9 @@ stage.addEventListener('touchend',e=>{
     }
     await waitForImages(clone);
     await nextPaint();
-    return {host,clone,width,height};
+    const overlays=collectImageOverlays(clone,width,height);
+    if(overlays) await nextPaint();
+    return {host,clone,width,height,overlays};
   }
 
   function captureScaleForDevice(width,height,requested){
@@ -7266,7 +7455,7 @@ stage.addEventListener('touchend',e=>{
     return new XMLSerializer().serializeToString(svg);
   }
 
-  async function renderExactScaled(node,width,height,scale,fontCss){
+  async function renderExactScaled(node,width,height,scale,fontCss,overlays){
     const outWidth=Math.max(1,Math.floor(width*scale));
     const outHeight=Math.max(1,Math.floor(height*scale));
     const base={
@@ -7277,7 +7466,7 @@ stage.addEventListener('touchend',e=>{
         minWidth:width+'px',maxWidth:width+'px',minHeight:height+'px',maxHeight:height+'px'
       }
     };
-    if(!state.transparentBg) base.backgroundColor=state.colors.bg;
+    if(!state.transparentBg&&!(overlays&&overlays.bg)) base.backgroundColor=state.colors.bg;
     const variants=[];
     if(fontCss) variants.push({...base,fontEmbedCSS:fontCss});
     variants.push(base,{...base,skipFonts:true});
@@ -7292,16 +7481,19 @@ stage.addEventListener('touchend',e=>{
         canvas.height=outHeight;
         const ctx=canvas.getContext('2d',{alpha:true});
         if(!ctx) throw new Error('Canvas context unavailable');
-        if(!state.transparentBg){ctx.fillStyle=state.colors.bg;ctx.fillRect(0,0,outWidth,outHeight);}
-        ctx.drawImage(img,0,0,outWidth,outHeight);
-        if(isTouchWebKit()){
-          /* 1차 드로우가 WebKit의 내부 이미지 디코드를 마저 강제한다.
-             잠시 후 캔버스를 지우고 다시 그리면 삽입 이미지까지 온전한 래스터를 얻는다. */
-          await new Promise(r=>setTimeout(r,100));
+        const paint=async()=>{
+          ctx.clearRect(0,0,outWidth,outHeight);
           if(!state.transparentBg){ctx.fillStyle=state.colors.bg;ctx.fillRect(0,0,outWidth,outHeight);}
-          else ctx.clearRect(0,0,outWidth,outHeight);
+          if(overlays&&overlays.bg) await drawOverlayBackground(ctx,overlays.bg,scale);
           ctx.drawImage(img,0,0,outWidth,outHeight);
+        };
+        await paint();
+        if(isTouchWebKit()){
+          /* 1차 드로우가 WebKit의 남은 디코드를 강제한다. 잠시 후 다시 그린 결과를 쓴다. */
+          await new Promise(r=>setTimeout(r,100));
+          await paint();
         }
+        if(overlays&&overlays.imgs&&overlays.imgs.length) await drawOverlayImages(ctx,overlays.imgs,scale);
         const blob=await canvasBlob(canvas);
         canvas.width=1;canvas.height=1;
         return blob;
@@ -7338,7 +7530,7 @@ stage.addEventListener('touchend',e=>{
     return {target:shell,width:shellW,height:shellH};
   }
 
-  async function renderLegacyFallback(node,width,height,scale,fontCss){
+  async function renderLegacyFallback(node,width,height,scale,fontCss,overlays){
     const raster=prepareLegacyRasterTarget(node,width,height);
     const outWidth=Math.max(1,Math.floor(width*scale));
     const outHeight=Math.max(1,Math.floor(height*scale));
@@ -7347,7 +7539,7 @@ stage.addEventListener('touchend',e=>{
       pixelRatio:1,skipAutoScale:true,cacheBust:false,preferredFontFormat:'woff2',
       style:{zoom:'1',transform:'none',transformOrigin:'top left',margin:'0',boxShadow:'none',width:raster.width+'px',height:raster.height+'px'}
     };
-    if(!state.transparentBg) base.backgroundColor=state.colors.bg;
+    if(!state.transparentBg&&!(overlays&&overlays.bg)) base.backgroundColor=state.colors.bg;
     const variants=[];
     if(fontCss) variants.push({...base,fontEmbedCSS:fontCss});
     variants.push(base,{...base,skipFonts:true});
@@ -7357,6 +7549,18 @@ stage.addEventListener('touchend',e=>{
       try{
         canvas=await __withQuietConsole(()=>window.htmlToImage.toCanvas(raster.target,options));
         if(!canvas||canvas.width!==outWidth||canvas.height!==outHeight) throw new Error('renderer returned an invalid canvas');
+        if(overlays){
+          const out=document.createElement('canvas');
+          out.width=outWidth; out.height=outHeight;
+          const octx=out.getContext('2d',{alpha:true});
+          if(!octx) throw new Error('Canvas context unavailable');
+          if(!state.transparentBg){octx.fillStyle=state.colors.bg;octx.fillRect(0,0,outWidth,outHeight);}
+          if(overlays.bg) await drawOverlayBackground(octx,overlays.bg,scale);
+          octx.drawImage(canvas,0,0);
+          if(overlays.imgs&&overlays.imgs.length) await drawOverlayImages(octx,overlays.imgs,scale);
+          canvas.width=1;canvas.height=1;
+          canvas=out;
+        }
         const blob=await canvasBlob(canvas);
         canvas.width=1;canvas.height=1;
         return blob;
@@ -7368,7 +7572,7 @@ stage.addEventListener('touchend',e=>{
     throw lastError||new Error('Legacy scaled rendering failed');
   }
 
-  async function renderSnapshot(node,width,height,requestedScale,fontCss){
+  async function renderSnapshot(node,width,height,requestedScale,fontCss,overlays){
     const firstScale=captureScaleForDevice(width,height,requestedScale);
     const attempts=[];
     for(const factor of [1,.82,.67,.54,.43,.34]){
@@ -7378,7 +7582,7 @@ stage.addEventListener('touchend',e=>{
     let lastError=null;
     for(const scale of attempts){
       try{
-        const blob=await renderExactScaled(node,width,height,scale,fontCss);
+        const blob=await renderExactScaled(node,width,height,scale,fontCss,overlays);
         return {blob,scale,requestedScale:Number(requestedScale)||1,method:'exact-svg'};
       }catch(err){lastError=err;}
       try{
@@ -7389,7 +7593,7 @@ stage.addEventListener('touchend',e=>{
         fallbackHost.appendChild(fallbackNode);
         document.body.appendChild(fallbackHost);
         try{
-          const blob=await renderLegacyFallback(fallbackNode,width,height,scale,fontCss);
+          const blob=await renderLegacyFallback(fallbackNode,width,height,scale,fontCss,overlays);
           return {blob,scale,requestedScale:Number(requestedScale)||1,method:'legacy-fallback'};
         }finally{fallbackHost.remove();}
       }catch(err){lastError=err;}
@@ -7464,7 +7668,7 @@ stage.addEventListener('touchend',e=>{
           fontCss=String(fontCss||'').replace(/font-display\s*:\s*[^;]+;/gi,'font-display:block;');
         }
       }catch(_){fontCss='';}
-      return await renderSnapshot(snapshot.clone,snapshot.width,snapshot.height,requested,fontCss);
+      return await renderSnapshot(snapshot.clone,snapshot.width,snapshot.height,requested,fontCss,snapshot.overlays);
     }finally{
       if(snapshot&&snapshot.host) snapshot.host.remove();
       hideSaving();
