@@ -4894,6 +4894,11 @@ else setTimeout(__idleLoadRenderer,1200);
   function applyProfileAwareBubbleCentering(){
     const chat=document.getElementById('chat');
     if(!chat) return;
+    /* 모바일에서 시트·키보드·전환 중 미리보기가 잠깐 숨겨진 채 이 함수가 돌면
+       모든 rect가 0으로 측정되어 시프트가 0으로 초기화된 채 남는다.
+       크기가 없으면 기존 시프트를 유지하고 다음 트리거에서 다시 계산한다. */
+    const chatVisibleRect=chat.getBoundingClientRect();
+    if(!chatVisibleRect.width||!chatVisibleRect.height) return;
     const rows=Array.from(chat.querySelectorAll('.n-msg.bubble-align-center'));
     rows.forEach(row=>row.style.setProperty('--profile-aware-center-shift','0px'));
     if(!rows.length) return;
@@ -8502,6 +8507,53 @@ if(typeof prevFit==='function'){
 }
 window.addEventListener('resize',()=>requestAnimationFrame(syncCtrlScale),{passive:true});
 requestAnimationFrame(syncCtrlScale);
+
+/* ========= [5] 말풍선 가운데 정렬(묶음 왼쪽 정렬) 모바일 재계산 =========
+   데스크톱은 창 resize 이벤트가 재계산을 걸어 주지만 모바일은 그 트리거가
+   없어서, 전환 타이밍에 시프트가 0으로 남으면 각 말풍선이 따로 가운데
+   정렬된 채 고정된다. 레이아웃이 안정된 뒤 한 번 더 계산하도록 보강한다. */
+(function(){
+  function recenter(){
+    try{
+      if(typeof window.applyProfileAwareBubbleCentering==='function') window.applyProfileAwareBubbleCentering();
+    }catch(_){}
+  }
+  let queued=false;
+  function queueRecenter(){
+    if(queued) return; queued=true;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ queued=false; recenter(); }));  /* 같은 프레임의 transform·리플로우가 끝난 뒤 */
+  }
+  /* 렌더 직후 한 프레임 뒤 안정화 패스 */
+  const prevRender=window.renderPreview;
+  if(typeof prevRender==='function'){
+    window.renderPreview=function(){
+      const r=prevRender.apply(this,arguments);
+      queueRecenter();
+      return r;
+    };
+  }
+  /* 캔버스 배율 변경(핀치 줌·화면 맞춤) 뒤 */
+  const prevFit2=window.fitPreview;
+  if(typeof prevFit2==='function'){
+    window.fitPreview=function(){
+      const r=prevFit2.apply(this,arguments);
+      queueRecenter();
+      return r;
+    };
+  }
+  /* 모바일 회전·키보드·주소창 변화, 웹폰트 지연 로드 */
+  window.addEventListener('orientationchange',()=>setTimeout(recenter,180));
+  if(window.visualViewport) window.visualViewport.addEventListener('resize',queueRecenter);
+  try{
+    if(document.fonts){
+      if(document.fonts.ready) document.fonts.ready.then(queueRecenter).catch(()=>{});
+      document.fonts.addEventListener&&document.fonts.addEventListener('loadingdone',queueRecenter);
+    }
+  }catch(_){}
+  /* 시트 열림/닫힘처럼 미리보기가 가려졌다 돌아오는 경우 */
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) queueRecenter(); });
+  queueRecenter();
+})();
 })();
 </script>
 
