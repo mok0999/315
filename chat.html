@@ -4996,10 +4996,18 @@ else setTimeout(__idleLoadRenderer,1200);
         info.innerRight+(info.bubbleLeft-info.bubbleRight)
       ));
 
-      if(minBubbleLeft<=maxBubbleLeft){
-        targetBubbleLeft=Math.max(minBubbleLeft,Math.min(maxBubbleLeft,targetBubbleLeft));
+      /* transform:scale()을 쓰는 모바일에서는 viewport↔CSS px 환산 과정의
+         소수점 반올림 때문에 사실상 같은 경계가 0.001px 미만으로 뒤집힐 수 있다.
+         이 정도 오차를 실제 충돌로 보지 않고 공통 왼쪽선을 유지한다. */
+      const centerRangeEpsilon=.5;
+      if(minBubbleLeft<=maxBubbleLeft+centerRangeEpsilon){
+        if(minBubbleLeft<=maxBubbleLeft){
+          targetBubbleLeft=Math.max(minBubbleLeft,Math.min(maxBubbleLeft,targetBubbleLeft));
+        }else{
+          targetBubbleLeft=(minBubbleLeft+maxBubbleLeft)/2;
+        }
       }else{
-        /* 폭 때문에 공통 이동 가능 구간이 없는 예외에서는 원래 레이아웃을 유지한다.
+        /* 폭 때문에 공통 이동 가능 구간이 정말 없는 예외에서는 원래 레이아웃을 유지한다.
            원래 위치는 flex 레이아웃상 프로젝트 여백 안에 있으므로 바깥으로 밀지 않는다. */
         targetBubbleLeft=first.bubbleLeft;
       }
@@ -8384,6 +8392,9 @@ decorateBulkRows();
     const cb=document.getElementById('askSavePathToggle');
     if(cb) cb.checked=!!window.__askSavePath;
   });
+})();
+</script>
+
 <style id="mobile-fixes-v2-styles">
 /* ===== [1] 모바일 여러 개 선택 삭제 칩 (멤버·설정 칩 줄 맨 오른쪽) ===== */
 #mBulkChip .mav,#mBulkCancelChip .mav{display:flex;align-items:center;justify-content:center;box-sizing:border-box;
@@ -8460,9 +8471,21 @@ if(!watchChips()){
   if(!isAndroid) return;
   const stage=document.getElementById('stageEl'); if(!stage) return;
   let pan=null;
-  const overflowing=()=>stage.scrollWidth>stage.clientWidth+2||stage.scrollHeight>stage.clientHeight+2;
+  function overflowState(){
+    const page=document.scrollingElement||document.documentElement;
+    return {
+      x:stage.scrollWidth>stage.clientWidth+2,
+      y:stage.scrollHeight>stage.clientHeight+2,
+      pageY:!!(page&&page.scrollHeight>window.innerHeight+2)
+    };
+  }
   function seed(t,blocked){
-    pan={x:t.clientX,y:t.clientY,left:stage.scrollLeft,top:stage.scrollTop,active:false,blocked:!!blocked};
+    pan={
+      x:t.clientX,y:t.clientY,
+      left:stage.scrollLeft,top:stage.scrollTop,
+      pageLeft:window.scrollX||0,pageTop:window.scrollY||0,
+      active:false,blocked:!!blocked
+    };
   }
   stage.addEventListener('touchstart',e=>{
     if(e.touches.length!==1){ pan=null; return; }   /* 두 손가락 = 핀치 (기존 코드 담당) */
@@ -8477,14 +8500,19 @@ if(!watchChips()){
   stage.addEventListener('touchcancel',()=>{ pan=null; },{passive:true});
   stage.addEventListener('touchmove',e=>{
     if(!pan||pan.blocked||e.touches.length!==1) return;
-    if(!overflowing()) return;
+    const over=overflowState();
+    if(!over.x&&!over.y&&!over.pageY) return;
     const t=e.touches[0];
     const dx=t.clientX-pan.x, dy=t.clientY-pan.y;
     if(!pan.active&&Math.hypot(dx,dy)<6) return;   /* 탭(말풍선 선택 등)은 방해하지 않음 */
     pan.active=true;
     e.preventDefault();
-    stage.scrollLeft=pan.left-dx;
-    stage.scrollTop=pan.top-dy;
+    /* 확대 캔버스가 stage 안에서 넘치는 축은 stage를 팬한다. 모바일 레이아웃처럼
+       stage 자체가 콘텐츠 높이만큼 늘어난 경우에는 세로 이동을 문서 스크롤로 넘겨,
+       핀치 직후에도 한 손가락으로 위아래를 계속 볼 수 있게 한다. */
+    if(over.x) stage.scrollLeft=pan.left-dx;
+    if(over.y) stage.scrollTop=pan.top-dy;
+    else if(over.pageY) window.scrollTo(pan.pageLeft,pan.pageTop-dy);
   },{passive:false});
 })();
 
