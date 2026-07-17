@@ -7555,9 +7555,21 @@ stage.addEventListener('touchend',e=>{
     const srcCanvasRect=source.getBoundingClientRect();
     const geomScale=(source.offsetWidth&&srcCanvasRect.width)?srcCanvasRect.width/source.offsetWidth:1;
     const safeGeomScale=(Number.isFinite(geomScale)&&geomScale>0)?geomScale:1;
-    const bubbleWidths=[...source.querySelectorAll(BUBBLE_PIN_SEL)].map(b=>{
-      const w=b.getBoundingClientRect().width/safeGeomScale;
-      return (Number.isFinite(w)&&w>0)?w:0;
+    /* 저장용 foreignObject가 한 줄짜리 말풍선에도 빈 줄 높이를 덧붙이는 경우가 있어
+       폭뿐 아니라 미리보기의 실제 높이까지 함께 고정한다. 입력 내용이나 줄바꿈은
+       건드리지 않고, 미리보기에서 이미 확정된 말풍선 상자 기하만 그대로 복제한다. */
+    const bubbleBoxes=[...source.querySelectorAll(BUBBLE_PIN_SEL)].map(b=>{
+      const rect=b.getBoundingClientRect();
+      const flow=b.querySelector(':scope > .glyph-scale');
+      const flowRect=flow&&flow.getBoundingClientRect();
+      const w=rect.width/safeGeomScale;
+      const h=rect.height/safeGeomScale;
+      const flowH=flowRect?flowRect.height/safeGeomScale:0;
+      return {
+        w:(Number.isFinite(w)&&w>0)?w:0,
+        h:(Number.isFinite(h)&&h>0)?h:0,
+        flowH:(Number.isFinite(flowH)&&flowH>0)?flowH:0
+      };
     });
 
     const host=document.createElement('div');
@@ -7600,12 +7612,23 @@ stage.addEventListener('touchend',e=>{
     /* 위에서 실측해 둔 말풍선 폭을 클론에 고정 (원본과 클론은 같은 트리 구조라
        querySelectorAll 순서가 1:1로 대응한다) */
     const cloneBubbles=[...clone.querySelectorAll(BUBBLE_PIN_SEL)];
-    for(let i=0;i<Math.min(cloneBubbles.length,bubbleWidths.length);i++){
-      const w=bubbleWidths[i];
-      if(!w) continue;
-      cloneBubbles[i].style.setProperty('box-sizing','border-box','important');
-      cloneBubbles[i].style.setProperty('width',w.toFixed(2)+'px','important');
-      cloneBubbles[i].style.setProperty('max-width','none','important');
+    for(let i=0;i<Math.min(cloneBubbles.length,bubbleBoxes.length);i++){
+      const box=bubbleBoxes[i];
+      if(!box||!box.w||!box.h) continue;
+      const bubble=cloneBubbles[i];
+      bubble.style.setProperty('box-sizing','border-box','important');
+      bubble.style.setProperty('width',box.w.toFixed(2)+'px','important');
+      bubble.style.setProperty('min-width',box.w.toFixed(2)+'px','important');
+      bubble.style.setProperty('max-width',box.w.toFixed(2)+'px','important');
+      bubble.style.setProperty('height',box.h.toFixed(2)+'px','important');
+      bubble.style.setProperty('min-height',box.h.toFixed(2)+'px','important');
+      bubble.style.setProperty('max-height',box.h.toFixed(2)+'px','important');
+      const flow=bubble.querySelector(':scope > .glyph-scale');
+      if(flow&&box.flowH){
+        flow.style.setProperty('height',box.flowH.toFixed(2)+'px','important');
+        flow.style.setProperty('min-height',box.flowH.toFixed(2)+'px','important');
+        flow.style.setProperty('max-height',box.flowH.toFixed(2)+'px','important');
+      }
     }
     await waitForImages(clone);
     await nextPaint();
