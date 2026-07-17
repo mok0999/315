@@ -1281,16 +1281,15 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <button class="i" onclick="wrapFmt('*')" title="기울임">I</button>
 <button class="s" onclick="wrapFmt('~~')" title="취소선">S</button>
 <button class="u" onclick="wrapFmt('++')" title="밑줄">U</button>
-<span class="fmt-div"></span>
-<button class="hl" onclick="wrapFmt('==')" title="형광펜">✎</button>
-<span class="swatch fmt-swatch" style="background:#E4E4E6" title="형광펜 색 선택"><input id="highlightColor" oninput="setHighlightColor(this.value)" type="color" value="#E4E4E6"/></span>
-<span class="fmt-div"></span>
-<button class="paren-fmt-btn" id="parenFmtBtn" onclick="toggleParenQuick()" title="괄호 ( ) 안 글자 자동 색칠 켜기/끄기">( )</button>
-<span class="swatch fmt-swatch paren-color-swatch" style="background:#8A8F98" title="괄호 안 글자 색 선택"><input id="parenColor" oninput="setParenColor(this.value)" type="color" value="#8A8F98"/></span>
+<span class="fmt-pair"><button class="qt" onclick="wrapFmt('%%')" title="인용구">❝</button>
+<span class="swatch fmt-swatch" style="background:#8A8F98" title="인용구 선 색 선택"><input id="quoteColor" oninput="setQuoteColor(this.value)" type="color" value="#8A8F98"/></span></span>
+<span class="fmt-pair"><button class="hl" onclick="wrapFmt('==')" title="형광펜">✎</button>
+<span class="swatch fmt-swatch" style="background:#E4E4E6" title="형광펜 색 선택"><input id="highlightColor" oninput="setHighlightColor(this.value)" type="color" value="#E4E4E6"/></span></span>
+<span class="fmt-pair"><button class="paren-fmt-btn" id="parenFmtBtn" onclick="toggleParenQuick()" title="괄호 ( ) 안 글자 자동 색칠 켜기/끄기">( )</button>
+<span class="swatch fmt-swatch paren-color-swatch" style="background:#8A8F98" title="괄호 안 글자 색 선택"><input id="parenColor" oninput="setParenColor(this.value)" type="color" value="#8A8F98"/></span></span>
 <input hidden="" id="parenOn" onchange="setParen(this.checked)" type="checkbox"/>
-<span class="fmt-div"></span>
-<button class="cbtn" id="colorBtn" onclick="wrapColor()" title="선택한 글자 색 바꾸기">A</button>
-<span class="swatch fmt-swatch" style="background:#D14343" title="글자 색 선택"><input id="partialColor" oninput="setPartialColor(this.value)" type="color" value="#D14343"/></span>
+<span class="fmt-pair"><button class="cbtn" id="colorBtn" onclick="wrapColor()" title="선택한 글자 색 바꾸기">A</button>
+<span class="swatch fmt-swatch" style="background:#D14343" title="글자 색 선택"><input id="partialColor" oninput="setPartialColor(this.value)" type="color" value="#D14343"/></span></span>
 </div>
 <div aria-multiline="true" class="rich-composer" contenteditable="true" data-placeholder="내용을 입력하세요" id="msgContent" role="textbox" spellcheck="false"></div>
 </div>
@@ -1680,6 +1679,7 @@ const state = {
     draftColor:'#424448',
     draftBubbleColor:'#FFFFFF',
     highlight:'#E4E4E6',
+    quote:'#8A8F98',
     partial:'#D14343',
     paren:'#8A8F98',
     credit:'#8A8F98',
@@ -2611,6 +2611,7 @@ function syncControlsFromState(){
   partialColor.parentElement.style.background=state.colors.partial;
   parenColor.value=state.colors.paren; parenColor.parentElement.style.background=state.colors.paren;
   const hlI=document.getElementById('highlightColor'); if(hlI){ hlI.value=state.colors.highlight; if(hlI.parentElement) hlI.parentElement.style.background=state.colors.highlight; }
+  const qtI=document.getElementById('quoteColor'); if(qtI){ const qc=state.colors.quote||'#8A8F98'; qtI.value=qc; if(qtI.parentElement) qtI.parentElement.style.background=qc; }
   parenOn.checked=state.parenOn;
   updateParenButton();
   // avatar shape
@@ -2700,6 +2701,18 @@ function toggleParenQuick(){
 function setParen(on){ state.parenOn=!!on; updateParenButton(); renderPreview(); }
 function setParenColor(v){ state.colors.paren=v.toUpperCase(); parenColor.parentElement.style.background=v; renderPreview(); }
 function setHighlightColor(v){ state.colors.highlight=v.toUpperCase(); const el=document.getElementById('highlightColor'); if(el&&el.parentElement) el.parentElement.style.background=v; renderPreview(); }
+function setQuoteColor(v){
+  state.colors.quote=v.toUpperCase();
+  const el=document.getElementById('quoteColor'); if(el&&el.parentElement) el.parentElement.style.background=v;
+  /* 열려 있는 수정 창(작성창 편집·인라인 편집) 안의 인용구 선 색을 즉시 바꾼다.
+     저장 시 색이 %%[#RRGGBB]…%%로 함께 저장되므로 블럭마다 다른 색을 가질 수 있다. */
+  const border='3px solid '+state.colors.quote;
+  const ed=document.getElementById('msgContent');
+  if(ed&&ed.querySelectorAll) ed.querySelectorAll('.quote-fmt').forEach(q=>{q.style.borderLeft=border;});
+  const live=document.querySelector('.editable.editing');
+  if(live) live.querySelectorAll('.quote-fmt').forEach(q=>{q.style.borderLeft=border;});
+  renderPreview();
+}
 /* ===== 사진(중간 삽입 이미지) — draft 전용 모델 ===== */
 let draftImgSize=60, draftImgMargin=6, draftImgRound=true;
 
@@ -2989,6 +3002,11 @@ function htmlToMarkup(node){
     if(tag==='i'||tag==='em'||/font-style:\s*italic/.test(style)){ out+='*'+inner+'*'; return; }
     if(tag==='s'||tag==='strike'||tag==='del'||/text-decoration[^;]*line-through/.test(style)){ out+='~~'+inner+'~~'; return; }
     if(tag==='u'||/text-decoration[^;]*underline/.test(style)){ out+='++'+inner+'++'; return; }
+    if(ch.classList&&ch.classList.contains('quote-fmt')){
+      const qhex=rgbToHex((ch.style&&ch.style.borderLeftColor)||'');
+      out+=qhex?('%%[#'+qhex.slice(1)+']'+inner+'%%'):('%%'+inner+'%%');
+      return;
+    }
     if(tag==='mark'||/background(-color)?:\s*(?!transparent|none)[^;]+/.test(style)){ out+='=='+inner+'=='; return; }
     let hex=null;
     const cm=style.match(/(?:^|;)\s*color:\s*([^;]+)/);
@@ -3068,6 +3086,8 @@ function fmtText(raw,edit){
   t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
   t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
   t=t.replace(/==([^=]+)==/g,`<mark style="background:${state.colors.highlight};color:inherit;padding:0 2px;border-radius:0">$1</mark>`);
+  // 인용구: %%[#RRGGBB]텍스트%% → 인용 블럭. 색이 저장돼 있으면 그 색, 없으면 전역 인용구 색
+  t=t.replace(/%%(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)%%/g,(w,qhex,body)=>`<span class="quote-fmt" style="border-left:3px solid ${qhex?('#'+qhex.toUpperCase()):(state.colors.quote||'#8A8F98')}">${body}</span>`);
   // partial text color: [#RRGGBB]text[/]
   t=t.replace(/\[#([0-9A-Fa-f]{6})\]([\s\S]*?)\[\/\]/g,'<span style="color:#$1">$2</span>');
   // partial title sizing, used only by the inserted-text composer buttons.
@@ -3116,7 +3136,7 @@ function renderPreview(){
         <li><b>멤버</b> 탭에서 캐릭터를 등록해요 — 프리셋을 누르면 바로 등록!</li>
         <li>작성창 타입을 <b>글</b>로 두고 글을 통째로 붙여넣으면, 문단마다 블럭이 자동으로 나뉘어요.</li>
         <li>말풍선으로 바꿀 블럭은 ✎ 수정을 누른 뒤, 작성창 타입을 <b>말풍선</b> 탭으로 바꾸고 발신자를 골라 <b>✓ 수정 완료</b>를 눌러요.</li>
-        <li><b>테마·배경 / 텍스트·간격 / 말풍선</b> 탭에서 꾸민 뒤 저장하면 끝!</li>
+        <li><b>테마·배경 / 텍스트·간격 / 여백 / 말풍선</b> 탭에서 꾸민 뒤 저장하면 끝!</li>
       </ol>
       </div>`;
     applyCanvas();
@@ -3635,6 +3655,7 @@ function wrapRichSelection(tag,styleText,className,dataAttrs){
   ed.focus();
 }
 wrapFmt=function(mark){
+  if(mark==='%%'){wrapRichSelection('span','border-left:3px solid '+(state.colors.quote||'#8A8F98')+';display:block;padding:9px 0 9px 17px','quote-fmt');return;}
   const spec={'**':['strong',''],'*':['em',''],'~~':['s',''],'++':['u',''],'==':['mark','background:'+state.colors.highlight+';color:inherit;padding:0 2px;border-radius:0']};
   const [tag,style]=spec[mark]||spec['**'];wrapRichSelection(tag,style);
 };
@@ -5040,7 +5061,7 @@ else setTimeout(__idleLoadRenderer,1200);
 
   /* ---------- rich editor format helpers ---------- */
   const FORMAT_QUERY=[
-    'strong','b','em','i','s','strike','del','u','mark','font[color]',
+    'strong','b','em','i','s','strike','del','u','mark','font[color]','span.quote-fmt',
     'span[data-heading]','span.text-heading-1','span.text-heading-2','span[style*="color"]'
   ].join(',');
 
@@ -5093,6 +5114,7 @@ else setTimeout(__idleLoadRenderer,1200);
     if(tag==='MARK') return 'highlight';
     if(el.dataset&&el.dataset.heading) return 'heading';
     if(el.classList&&(el.classList.contains('text-heading-1')||el.classList.contains('text-heading-2'))) return 'heading';
+    if(el.classList&&el.classList.contains('quote-fmt')) return 'quote';
     if(tag==='FONT'&&el.getAttribute('color')) return 'color';
     if(tag==='SPAN'&&el.style&&el.style.color) return 'color';
     return '';
@@ -5184,6 +5206,11 @@ else setTimeout(__idleLoadRenderer,1200);
     else if(type==='highlight'){
       el=document.createElement('mark');
       el.style.background=options.color;el.style.color='inherit';el.style.padding='0 2px';el.style.borderRadius='0';
+    }else if(type==='quote'){
+      el=document.createElement('span');
+      el.className='quote-fmt';
+      el.style.borderLeft='3px solid '+(options.color||'#8A8F98');
+      el.style.display='block';el.style.padding='9px 0 9px 17px';
     }else if(type==='color'){
       el=document.createElement('span');el.style.color=options.color;
     }else if(type==='heading'){
@@ -5280,12 +5307,15 @@ else setTimeout(__idleLoadRenderer,1200);
   }
 
   function typeFromMark(mark){
-    return {'**':'bold','*':'italic','~~':'strike','++':'underline','==':'highlight'}[mark]||'bold';
+    return {'**':'bold','*':'italic','~~':'strike','++':'underline','==':'highlight','%%':'quote'}[mark]||'bold';
   }
   window.wrapFmt=function(mark){
     const root=editorRoot();if(!root)return;
     const type=typeFromMark(mark);
-    toggleSimpleFormat(root,type,type==='highlight'?{color:state.colors.highlight}:{});
+    toggleSimpleFormat(root,type,
+      type==='highlight'?{color:state.colors.highlight}
+      :type==='quote'?{color:state.colors.quote||'#8A8F98'}
+      :{});
     cleanupEmptyFormats(root);
   };
   window.wrapColor=function(){
@@ -8616,6 +8646,39 @@ requestAnimationFrame(syncCtrlScale);
 })();
 </script>
 
+<style id="fmt-split-button-capsule">
+/* ===== 인용구 서식 ===== */
+.quote-fmt{display:block;border-left:3px solid #8A8F98;padding:9px 0 9px 17px;margin:3px 0}
+.fmt .qt{font-size:15px;line-height:1}
+/* ===== 미리보기 헤더: 확대·축소 버튼과 설명을 '미리보기' 글자 바로 옆 한 줄에 ===== */
+.preview-heading{flex-wrap:nowrap;align-items:center;position:relative}
+.preview-zoom-tools{flex:1 1 auto;min-width:0}
+.preview-zoom-help{min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* '✓ 자동 저장됨' 배지가 opacity:0으로 숨어도 자리를 차지해 '미리보기'와
+   확대 버튼 사이에 유령 간격을 만들었다. 흐름에서 빼서 라벨 아래에 겹쳐 띄운다. */
+#autosaveBadge{position:absolute;left:0;top:calc(100% + 3px);margin-left:0;white-space:nowrap;
+  background:rgba(255,255,255,.92);padding:2px 7px;border-radius:6px;pointer-events:none;z-index:3}
+/* ===== 서식 버튼 + 색 선택 통합 캡슐 (워드식 분할 버튼) =====
+   [기능 버튼][색 스와치]가 따로 놓여 있으면 스와치가 '누르는 버튼'인지
+   알아보기 어렵다. 한 캡슐로 붙이고, 색 세그먼트에 ▾ 캐럿을 얹어
+   "여기를 누르면 색을 고른다"는 신호를 준다. 기능·JS는 그대로. */
+.fmt-pair{display:inline-flex;align-items:stretch;flex:0 0 auto;
+  border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel-2)}
+.fmt-pair>button{border:0;border-radius:0;margin:0}
+.fmt-pair>button:hover{border:0}
+.fmt-pair>.fmt-swatch{width:19px;height:auto;min-height:0;align-self:stretch;flex:0 0 auto;
+  border:0;border-left:1px solid var(--line);border-radius:0;position:relative;box-shadow:none}
+.fmt-pair>.fmt-swatch::after{content:"▾";position:absolute;inset:0;display:flex;
+  align-items:center;justify-content:center;font-size:10px;line-height:1;color:#fff;
+  text-shadow:0 0 3px rgba(0,0,0,.65),0 1px 2px rgba(0,0,0,.4);pointer-events:none}
+/* 모바일 독: 기존 버튼 flex 배분 규칙에 캡슐을 참여시킨다 */
+.mobile-ui.m-tools-open #mDock .composer-top-grid .fmt .fmt-pair{flex:1.5 1 0;display:inline-flex;
+  min-width:44px;border-radius:8px}
+.mobile-ui.m-tools-open #mDock .composer-top-grid .fmt .fmt-pair>button{flex:1 1 auto;height:38px;
+  min-width:24px;padding:0;font-size:13.5px}
+.mobile-ui.m-tools-open #mDock .composer-top-grid .fmt .fmt-pair .fmt-swatch{flex:0 0 auto;
+  width:20px;height:auto;align-self:stretch;border-radius:0}
+</style>
 <style id="mobile-topbar-float">
 /* ===== 모바일 상단 바 플로팅 =====
    '.top{position:relative}' 패치(compact viewport fix)가 헤더의 sticky를 전역으로
