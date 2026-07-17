@@ -1065,7 +1065,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 .divider-row.plain .divider-pill{background:transparent;color:rgba(0,0,0,.42);font-weight:700;padding:2px 4px}
 /* plain line divider (----) shown when the date is left empty */
 .divider-row.line-only{justify-content:center}
-.divider-row.line-only .divider-line{display:block;flex:0 0 auto;width:100%;max-width:100%;height:0;border-top:1px solid rgba(0,0,0,.16)}
+.divider-row.line-only .divider-line{display:block;flex:0 0 auto;width:100%;max-width:100%;height:0;border-top:2px solid rgba(0,0,0,.16)}
 
 /* 가름선 모드: 입력창은 날짜 2줄 정도 + 서식바 숨김 */
 .composer-card.divider-mode #composerTextField .fmt{display:none}
@@ -2706,7 +2706,7 @@ function setQuoteColor(v){
   const el=document.getElementById('quoteColor'); if(el&&el.parentElement) el.parentElement.style.background=v;
   /* 열려 있는 수정 창(작성창 편집·인라인 편집) 안의 인용구 선 색을 즉시 바꾼다.
      저장 시 색이 %%[#RRGGBB]…%%로 함께 저장되므로 블럭마다 다른 색을 가질 수 있다. */
-  const border='3px solid '+state.colors.quote;
+  const border='3.5px solid '+state.colors.quote;
   const ed=document.getElementById('msgContent');
   if(ed&&ed.querySelectorAll) ed.querySelectorAll('.quote-fmt').forEach(q=>{q.style.borderLeft=border;});
   const live=document.querySelector('.editable.editing');
@@ -3087,7 +3087,7 @@ function fmtText(raw,edit){
   t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
   t=t.replace(/==([^=]+)==/g,`<mark style="background:${state.colors.highlight};color:inherit;padding:0 2px;border-radius:0">$1</mark>`);
   // 인용구: %%[#RRGGBB]텍스트%% → 인용 블럭. 색이 저장돼 있으면 그 색, 없으면 전역 인용구 색
-  t=t.replace(/%%(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)%%/g,(w,qhex,body)=>`<span class="quote-fmt" style="border-left:3px solid ${qhex?('#'+qhex.toUpperCase()):(state.colors.quote||'#8A8F98')}">${body}</span>`);
+  t=t.replace(/%%(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)%%/g,(w,qhex,body)=>`<span class="quote-fmt" style="border-left:3.5px solid ${qhex?('#'+qhex.toUpperCase()):(state.colors.quote||'#8A8F98')}">${body}</span>`);
   // partial text color: [#RRGGBB]text[/]
   t=t.replace(/\[#([0-9A-Fa-f]{6})\]([\s\S]*?)\[\/\]/g,'<span style="color:#$1">$2</span>');
   // partial title sizing, used only by the inserted-text composer buttons.
@@ -3655,7 +3655,7 @@ function wrapRichSelection(tag,styleText,className,dataAttrs){
   ed.focus();
 }
 wrapFmt=function(mark){
-  if(mark==='%%'){wrapRichSelection('span','border-left:3px solid '+(state.colors.quote||'#8A8F98')+';display:block;padding:9px 0 9px 17px','quote-fmt');return;}
+  if(mark==='%%'){wrapRichSelection('span','border-left:3.5px solid '+(state.colors.quote||'#8A8F98')+';display:block;padding:4px 0 4px 20px','quote-fmt');return;}
   const spec={'**':['strong',''],'*':['em',''],'~~':['s',''],'++':['u',''],'==':['mark','background:'+state.colors.highlight+';color:inherit;padding:0 2px;border-radius:0']};
   const [tag,style]=spec[mark]||spec['**'];wrapRichSelection(tag,style);
 };
@@ -5209,8 +5209,8 @@ else setTimeout(__idleLoadRenderer,1200);
     }else if(type==='quote'){
       el=document.createElement('span');
       el.className='quote-fmt';
-      el.style.borderLeft='3px solid '+(options.color||'#8A8F98');
-      el.style.display='block';el.style.padding='9px 0 9px 17px';
+      el.style.borderLeft='3.5px solid '+(options.color||'#8A8F98');
+      el.style.display='block';el.style.padding='4px 0 4px 20px';
     }else if(type==='color'){
       el=document.createElement('span');el.style.color=options.color;
     }else if(type==='heading'){
@@ -8648,7 +8648,7 @@ requestAnimationFrame(syncCtrlScale);
 
 <style id="fmt-split-button-capsule">
 /* ===== 인용구 서식 ===== */
-.quote-fmt{display:block;border-left:3px solid #8A8F98;padding:9px 0 9px 17px;margin:3px 0}
+.quote-fmt{display:block;border-left:3.5px solid #8A8F98;padding:4px 0 4px 20px;margin:3px 0}
 .fmt .qt{font-size:15px;line-height:1}
 /* ===== 미리보기 헤더: 확대·축소 버튼과 설명을 '미리보기' 글자 바로 옆 한 줄에 ===== */
 .preview-heading{flex-wrap:nowrap;align-items:center;position:relative}
