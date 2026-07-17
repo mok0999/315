@@ -7515,6 +7515,21 @@ stage.addEventListener('touchend',e=>{
       if(i&&i%20===0) await yieldThread();
     }
 
+    /* 말풍선 폭 고정 — 캡처 렌더러가 임베드 폰트로 글자를 미세하게 다른 폭으로
+       그리면 shrink-to-fit 말풍선 폭이 변해, 미리보기 실측값으로 계산해 둔
+       가운데 정렬 이동량(--profile-aware-center-shift)이 어긋나 보인다.
+       줄바꿈을 고정하는 것과 같은 원리로, 미리보기에서 실측한 폭을 클론에
+       그대로 박아 상자 기하 전체를 미리보기와 1:1로 고정한다.
+       (미리보기가 transform/zoom으로 축소된 상태여도 CSS px로 환산해 측정) */
+    const BUBBLE_PIN_SEL='.n-bubble,.m-bubble,.n-plain';
+    const srcCanvasRect=source.getBoundingClientRect();
+    const geomScale=(source.offsetWidth&&srcCanvasRect.width)?srcCanvasRect.width/source.offsetWidth:1;
+    const safeGeomScale=(Number.isFinite(geomScale)&&geomScale>0)?geomScale:1;
+    const bubbleWidths=[...source.querySelectorAll(BUBBLE_PIN_SEL)].map(b=>{
+      const w=b.getBoundingClientRect().width/safeGeomScale;
+      return (Number.isFinite(w)&&w>0)?w:0;
+    });
+
     const host=document.createElement('div');
     host.setAttribute('aria-hidden','true');
     Object.assign(host.style,{
@@ -7551,6 +7566,16 @@ stage.addEventListener('touchend',e=>{
       cloneFlows[i].style.setProperty('white-space','nowrap','important');
       cloneFlows[i].style.setProperty('word-break','normal','important');
       cloneFlows[i].style.setProperty('overflow-wrap','normal','important');
+    }
+    /* 위에서 실측해 둔 말풍선 폭을 클론에 고정 (원본과 클론은 같은 트리 구조라
+       querySelectorAll 순서가 1:1로 대응한다) */
+    const cloneBubbles=[...clone.querySelectorAll(BUBBLE_PIN_SEL)];
+    for(let i=0;i<Math.min(cloneBubbles.length,bubbleWidths.length);i++){
+      const w=bubbleWidths[i];
+      if(!w) continue;
+      cloneBubbles[i].style.setProperty('box-sizing','border-box','important');
+      cloneBubbles[i].style.setProperty('width',w.toFixed(2)+'px','important');
+      cloneBubbles[i].style.setProperty('max-width','none','important');
     }
     await waitForImages(clone);
     await nextPaint();
@@ -7829,6 +7854,10 @@ stage.addEventListener('touchend',e=>{
       try{if(document.fonts&&document.fonts.ready) await document.fonts.ready;}catch(_){ }
       await waitForImages(source);
       await nextPaint();
+
+      /* 가운데 정렬 이동량을 캡처 직전의 실제 레이아웃 기준으로 한 번 더 굳힌다.
+         (폰트 지연 로드·리사이즈 직후의 미세한 stale 값이 그대로 찍히는 것 방지) */
+      try{if(typeof window.applyProfileAwareBubbleCentering==='function') window.applyProfileAwareBubbleCentering();}catch(_){}
 
       snapshot=await makeSnapshot(source);
       await __loadHtmlToImage();
