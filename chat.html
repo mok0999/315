@@ -126,6 +126,30 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   text-transform:uppercase;letter-spacing:.03em}
 .colorgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
+/* 자체 헥스 컬러 피커 (브라우저 기본 RGB 다이얼로그 대체) */
+#hexPicker{position:fixed;z-index:400;display:none;width:216px;padding:12px;box-sizing:border-box;
+  background:var(--panel,#fff);border:1px solid var(--line,#E4E4E7);border-radius:12px;
+  box-shadow:0 14px 40px rgba(66,68,72,.22);user-select:none}
+#hexPicker.show{display:block}
+#hexPicker .hp-sv{position:relative;width:100%;height:130px;border-radius:8px;cursor:default;touch-action:none;
+  background-color:#f00;
+  background-image:linear-gradient(to top,#000,rgba(0,0,0,0)),linear-gradient(to right,#fff,rgba(255,255,255,0))}
+#hexPicker .hp-dot{position:absolute;width:14px;height:14px;border-radius:50%;border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.35);transform:translate(-50%,-50%);pointer-events:none}
+#hexPicker .hp-hue{width:100%;margin:10px 0 8px;height:12px;-webkit-appearance:none;appearance:none;border-radius:6px;outline:none;cursor:default;
+  background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+#hexPicker .hp-hue::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:#fff;border:1px solid rgba(0,0,0,.2);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:default}
+#hexPicker .hp-hue::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,.2);cursor:default}
+#hexPicker .hp-row{display:flex;align-items:center;gap:8px}
+#hexPicker .hp-prev{width:30px;height:30px;border-radius:8px;border:1px solid var(--line,#E4E4E7);flex:0 0 auto}
+#hexPicker .hp-hex{flex:1;min-width:0;padding:7px 9px;border:1px solid var(--line,#E4E4E7);border-radius:8px;
+  background:var(--panel-2,#F7F7F8);color:var(--ink,#1A1B1F);font-size:13px;outline:none;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;letter-spacing:.03em}
+#hexPicker .hp-hex:focus{border-color:var(--accent,#424448);background:var(--panel,#fff)}
+#hexPicker .hp-ok{flex:0 0 auto;width:30px;height:30px;border:none;border-radius:8px;cursor:default;
+  background:var(--accent,#424448);color:#fff;font-weight:700;font-size:13px}
+
 /* toggle */
 .toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:11px 13px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius-sm)}
@@ -1746,6 +1770,95 @@ function afterColor(key){
 }
 let __colorRenderTimer=null,__colorRenderLast=0;
 function refreshColorRows(){document.querySelectorAll('.colorrow').forEach(buildColorRow);}
+
+/* ===== 자체 헥스 컬러 피커 =====
+   브라우저 기본 컬러 다이얼로그(RGB 수치 표시) 대신, 모든 input[type=color] 클릭 시
+   #FFFFFF 헥스 코드 기반의 자체 피커를 띄운다. 값 반영은 기존 input에 value를 넣고
+   'input' 이벤트를 그대로 발생시키는 방식이라 기존 색상 처리 로직은 전혀 건드리지 않는다. */
+(function(){
+  let target=null,hsv={h:0,s:0,v:1},raf=0;
+  const pop=document.createElement('div');pop.id='hexPicker';
+  pop.innerHTML='<div class="hp-sv"><div class="hp-dot"></div></div>'+
+    '<input class="hp-hue" type="range" min="0" max="360" step="1" value="0">'+
+    '<div class="hp-row"><span class="hp-prev"></span><input class="hp-hex" type="text" maxlength="7" spellcheck="false"><button class="hp-ok" type="button" title="닫기">✓</button></div>';
+  document.body.appendChild(pop);
+  const sv=pop.querySelector('.hp-sv'),dot=pop.querySelector('.hp-dot'),hue=pop.querySelector('.hp-hue'),
+        prev=pop.querySelector('.hp-prev'),hexIn=pop.querySelector('.hp-hex'),ok=pop.querySelector('.hp-ok');
+  function hexToHsv(hex){
+    const m=/^#?([0-9a-f]{6})$/i.exec((hex||'').trim());if(!m)return null;
+    const n=parseInt(m[1],16),r=(n>>16)/255,g=((n>>8)&255)/255,b=(n&255)/255;
+    const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;
+    if(d){h=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;h=Math.round(h*60);if(h<0)h+=360;}
+    return {h:h,s:mx?d/mx:0,v:mx};
+  }
+  function hsvToHex(h,s,v){
+    const c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;
+    let r=0,g=0,b=0;
+    if(h<60){r=c;g=x;}else if(h<120){r=x;g=c;}else if(h<180){g=c;b=x;}
+    else if(h<240){g=x;b=c;}else if(h<300){r=x;b=c;}else{r=c;b=x;}
+    return '#'+[r+m,g+m,b+m].map(n=>Math.round(n*255).toString(16).padStart(2,'0')).join('').toUpperCase();
+  }
+  function paint(fromHexInput){
+    const hex=hsvToHex(hsv.h,hsv.s,hsv.v);
+    sv.style.backgroundColor='hsl('+hsv.h+',100%,50%)';
+    dot.style.left=(hsv.s*100)+'%';dot.style.top=((1-hsv.v)*100)+'%';
+    hue.value=hsv.h;prev.style.background=hex;
+    if(!fromHexInput)hexIn.value=hex;
+  }
+  let pendingHex=null;
+  function push(exactHex){
+    if(!target)return;
+    pendingHex=exactHex||null;
+    if(raf)return;
+    raf=requestAnimationFrame(()=>{
+      raf=0;if(!target)return;
+      target.value=pendingHex||hsvToHex(hsv.h,hsv.s,hsv.v);
+      pendingHex=null;
+      target.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+  }
+  function openPicker(input){
+    target=input;
+    hsv=hexToHsv(input.value)||{h:0,s:0,v:1};
+    paint(false);
+    pop.classList.add('show');
+    const r=input.getBoundingClientRect(),pw=pop.offsetWidth,ph=pop.offsetHeight;
+    let x=r.left,y=r.bottom+8;
+    if(x+pw>innerWidth-8)x=innerWidth-pw-8;if(x<8)x=8;
+    if(y+ph>innerHeight-8)y=r.top-ph-8;if(y<8)y=8;
+    pop.style.left=x+'px';pop.style.top=y+'px';
+  }
+  function closePicker(){pop.classList.remove('show');target=null;}
+  document.addEventListener('click',e=>{
+    const t=e.target;
+    if(t&&t.tagName==='INPUT'&&t.type==='color'){e.preventDefault();openPicker(t);return;}
+    if(pop.classList.contains('show')&&!pop.contains(t))closePicker();
+  },true);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closePicker();});
+  function svPick(e){
+    const r=sv.getBoundingClientRect();
+    hsv.s=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+    hsv.v=1-Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
+    paint(false);push();
+  }
+  sv.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    try{sv.setPointerCapture(e.pointerId);}catch(_){}
+    svPick(e);
+    const mv=ev=>svPick(ev);
+    const up=()=>{sv.removeEventListener('pointermove',mv);sv.removeEventListener('pointerup',up);sv.removeEventListener('pointercancel',up);};
+    sv.addEventListener('pointermove',mv);
+    sv.addEventListener('pointerup',up);
+    sv.addEventListener('pointercancel',up);
+  });
+  hue.addEventListener('input',()=>{hsv.h=Number(hue.value)||0;paint(false);push();});
+  hexIn.addEventListener('input',()=>{
+    let v=hexIn.value.trim();if(v&&!v.startsWith('#'))v='#'+v;
+    const p=hexToHsv(v);if(p){hsv=p;paint(true);push(v.toUpperCase());}
+  });
+  hexIn.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();closePicker();}});
+  ok.addEventListener('click',()=>closePicker());
+})();
 function toggleDraftBubbleUse(on){
   draftBubbleUse=!!on;
   const cb=document.getElementById('draftBubbleUse'); if(cb) cb.checked=draftBubbleUse;
@@ -2700,17 +2813,58 @@ function toggleParenQuick(){
 }
 function setParen(on){ state.parenOn=!!on; updateParenButton(); renderPreview(); }
 function setParenColor(v){ state.colors.paren=v.toUpperCase(); parenColor.parentElement.style.background=v; renderPreview(); }
-function setHighlightColor(v){ state.colors.highlight=v.toUpperCase(); const el=document.getElementById('highlightColor'); if(el&&el.parentElement) el.parentElement.style.background=v; renderPreview(); }
+/* ===== 커서 위치 기반 색 변경 =====
+   드래그하지 않아도, 커서가 형광펜(mark)/인용구(.quote-fmt) 안에 있으면
+   색 스와치를 바꿀 때 그 요소의 색이 바로 바뀐다. 스와치를 누르며 포커스가
+   편집기 밖으로 나가는 경우를 대비해 마지막 커서 위치도 기억해 둔다. */
+let __caretTintMark=null,__caretTintQuote=null;
+document.addEventListener('selectionchange',()=>{
+  const sel=window.getSelection&&window.getSelection();
+  if(!sel||!sel.rangeCount)return;
+  let n=sel.getRangeAt(0).commonAncestorContainer;
+  if(n&&n.nodeType===3)n=n.parentElement;
+  if(!n||!n.closest)return;
+  const root=n.closest('#msgContent, .editable.editing');
+  if(!root)return; /* 편집기 밖 클릭은 기억값 유지(사용 시 연결 여부로 검증) */
+  const mk=n.closest('mark'), qt=n.closest('.quote-fmt');
+  __caretTintMark=(mk&&root.contains(mk))?mk:null;
+  __caretTintQuote=(qt&&root.contains(qt))?qt:null;
+});
+function __caretTintTarget(type){
+  const sel=window.getSelection&&window.getSelection();
+  if(sel&&sel.rangeCount){
+    let n=sel.getRangeAt(0).commonAncestorContainer;
+    if(n&&n.nodeType===3)n=n.parentElement;
+    if(n&&n.closest){
+      const root=n.closest('#msgContent, .editable.editing');
+      if(root){
+        const el=type==='highlight'?n.closest('mark'):n.closest('.quote-fmt');
+        return (el&&root.contains(el))?el:null;
+      }
+    }
+  }
+  const st=type==='highlight'?__caretTintMark:__caretTintQuote;
+  return (st&&st.isConnected)?st:null;
+}
+function __recolorCaretTint(type,color){
+  const el=__caretTintTarget(type);
+  if(!el)return false;
+  if(type==='highlight')el.style.background=color;
+  else el.style.borderLeftColor=color;
+  return true;
+}
+function setHighlightColor(v){
+  state.colors.highlight=v.toUpperCase();
+  const el=document.getElementById('highlightColor'); if(el&&el.parentElement) el.parentElement.style.background=v;
+  __recolorCaretTint('highlight',state.colors.highlight);
+  renderPreview();
+}
 function setQuoteColor(v){
   state.colors.quote=v.toUpperCase();
   const el=document.getElementById('quoteColor'); if(el&&el.parentElement) el.parentElement.style.background=v;
-  /* 열려 있는 수정 창(작성창 편집·인라인 편집) 안의 인용구 선 색을 즉시 바꾼다.
-     저장 시 색이 %%[#RRGGBB]…%%로 함께 저장되므로 블럭마다 다른 색을 가질 수 있다. */
-  const border='3.5px solid '+state.colors.quote;
-  const ed=document.getElementById('msgContent');
-  if(ed&&ed.querySelectorAll) ed.querySelectorAll('.quote-fmt').forEach(q=>{q.style.borderLeft=border;});
-  const live=document.querySelector('.editable.editing');
-  if(live) live.querySelectorAll('.quote-fmt').forEach(q=>{q.style.borderLeft=border;});
+  /* 커서가 놓인 인용구가 있으면 그 인용구만 즉시 색 변경.
+     그 외에는 다음 적용 색으로만 쓰인다(색 없는 옛 마크업 폴백 포함). */
+  __recolorCaretTint('quote',state.colors.quote);
   renderPreview();
 }
 /* ===== 사진(중간 삽입 이미지) — draft 전용 모델 ===== */
@@ -3007,7 +3161,11 @@ function htmlToMarkup(node){
       out+=qhex?('%%[#'+qhex.slice(1)+']'+inner+'%%'):('%%'+inner+'%%');
       return;
     }
-    if(tag==='mark'||/background(-color)?:\s*(?!transparent|none)[^;]+/.test(style)){ out+='=='+inner+'=='; return; }
+    if(tag==='mark'||/background(-color)?:\s*(?!transparent|none)[^;]+/.test(style)){
+      const hhex=rgbToHex((ch.style&&(ch.style.backgroundColor||ch.style.background))||'');
+      out+=hhex?('==[#'+hhex.slice(1)+']'+inner+'=='):('=='+inner+'==');
+      return;
+    }
     let hex=null;
     const cm=style.match(/(?:^|;)\s*color:\s*([^;]+)/);
     if(cm) hex=rgbToHex(cm[1]);
@@ -3079,13 +3237,42 @@ document.addEventListener('selectionchange',()=>{ if(editingId) updateSelToolbar
 
 /* ================= render preview ================= */
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+/* 색 정보 없는 형광펜·인용구 마크업에 현재 전역 색을 구워 넣는다(한 번 고정) */
+function normalizeTintMarkup(s){
+  if(typeof s!=='string'||!s)return s;
+  const hl=(state.colors.highlight||'#E4E4E6').replace('#',''), qt=(state.colors.quote||'#8A8F98').replace('#','');
+
+  /* 맞닿은 형광펜은 닫힘 == 뒤에 다음 열림 ==가 바로 이어져 ====가 된다.
+     정규식으로 전체 문자열을 훑으면 이 경계를 새 형광펜으로 오인하므로,
+     형광펜 한 쌍씩 왼쪽부터 분리해 색 없는 항목에만 현재 색을 넣는다. */
+  let normalized='', pos=0;
+  while(pos<s.length){
+    const start=s.indexOf('==',pos);
+    if(start<0){ normalized+=s.slice(pos); break; }
+    normalized+=s.slice(pos,start);
+
+    let bodyStart=start+2;
+    const colorPrefix=s.slice(bodyStart).match(/^\[#[0-9A-Fa-f]{6}\]/);
+    const prefix=colorPrefix?colorPrefix[0]:'[#'+hl+']';
+    if(colorPrefix) bodyStart+=colorPrefix[0].length;
+
+    const end=s.indexOf('==',bodyStart);
+    if(end<0){ normalized+=s.slice(start); break; }
+    normalized+='=='+prefix+s.slice(bodyStart,end)+'==';
+    pos=end+2;
+  }
+  s=normalized;
+
+  s=s.replace(/%%(?!\[#[0-9A-Fa-f]{6}\])([\s\S]+?)%%/g,(w,body)=>'%%[#'+qt+']'+body+'%%');
+  return s;
+}
 function fmtText(raw,edit){
   let t=esc(raw);
   t=t.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
   t=t.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<i>$1</i>');
   t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
   t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
-  t=t.replace(/==([^=]+)==/g,`<mark style="background:${state.colors.highlight};color:inherit;padding:0 2px;border-radius:0">$1</mark>`);
+  t=t.replace(/==(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)==/g,(w,hhex,body)=>`<mark style="background:${hhex?('#'+hhex.toUpperCase()):state.colors.highlight};color:inherit;padding:0 2px;border-radius:0">${body}</mark>`);
   // 인용구: %%[#RRGGBB]텍스트%% → 인용 블럭. 색이 저장돼 있으면 그 색, 없으면 전역 인용구 색
   t=t.replace(/%%(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)%%/g,(w,qhex,body)=>`<span class="quote-fmt" style="border-left:3.5px solid ${qhex?('#'+qhex.toUpperCase()):(state.colors.quote||'#8A8F98')}">${body}</span>`);
   // partial text color: [#RRGGBB]text[/]
@@ -3145,6 +3332,15 @@ function renderPreview(){
   const M=state.layout.margin;
   chat.style.padding=`${M.t}px ${M.r}px ${M.b}px ${M.l}px`;
   const msgs=state.messages;
+  /* 색 정보가 없는 옛 형광펜·인용구 마크업(==텍스트==, %%텍스트%%)은
+     처음 렌더링되는 순간의 전역 색으로 고정(==[#RRGGBB]텍스트==)해 저장한다.
+     이후 스와치 색을 바꿔도 이미 적용된 부분은 절대 변하지 않는다. */
+  msgs.forEach(m=>{
+    if(!m||typeof m.content!=='string')return;
+    if(m.type&&m.type!=='chat'&&m.type!=='text')return;
+    if(m.content.indexOf('==')<0&&m.content.indexOf('%%')<0)return;
+    m.content=normalizeTintMarkup(m.content);
+  });
   let html=msgs.map((m,i)=>{
     const prev=msgs[i-1];
     const next=msgs[i+1];
@@ -3681,7 +3877,8 @@ function updateBackgroundImageControls(){
   const vals=[['bgImgSize','bgImgSizeV',B.size,'%'],['bgImgRotation','bgImgRotationV',B.rotation||0,'°'],['bgImgX','bgImgXV',B.x,'%'],['bgImgY','bgImgYV',B.y,'%'],['bgImgBlur','bgImgBlurV',B.blur,'px'],['bgOverlayOpacity','bgOverlayOpacityV',B.overlayOpacity,'%']];
   vals.forEach(([id,vid,v,u])=>{const el=document.getElementById(id),ve=document.getElementById(vid);if(el)el.value=v;if(ve)ve.textContent=v+u;});
   const wrap=document.getElementById('bgImgPreviewWrap'),img=document.getElementById('bgImgPreview');
-  if(wrap)wrap.style.display=B.src?'flex':'none'; if(img&&B.src)img.src=B.src;
+  if(wrap)wrap.style.display=B.src?'flex':'none';
+  if(img&&B.src&&img.__srcCache!==B.src){img.__srcCache=B.src;img.src=B.src;}
 }
 function setBackgroundImageValue(key,v){
   const limits={size:[40,600],rotation:[0,360],x:[0,100],y:[0,100],blur:[0,30],overlayOpacity:[0,100]};
@@ -3702,11 +3899,28 @@ function applyBackgroundLayers(){
   const B=state.backgroundImage, hidden=state.transparentBg||!B.src;
   canvas.style.position='relative';canvas.style.overflow='hidden';chat.style.background='transparent';
   image.style.display=hidden?'none':'block';overlay.style.display=hidden?'none':'block';
-  image.style.backgroundImage=hidden?'none':`url("${String(B.src).replace(/"/g,'%22')}")`;
+  /* 큰 data URL을 매 렌더마다 재가공/재할당하면 컬러 피커 드래그가 렉걸린다.
+     src·표시 여부가 바뀌었을 때만 backgroundImage를 갱신한다. */
+  if(image.__bgSrcCache!==B.src||image.__bgHiddenCache!==hidden){
+    image.__bgSrcCache=B.src;image.__bgHiddenCache=hidden;
+    image.style.backgroundImage=hidden?'none':`url("${String(B.src).replace(/"/g,'%22')}")`;
+  }
   image.style.backgroundSize=B.size+'% auto';image.style.backgroundPosition=B.x+'% '+B.y+'%';
   image.style.filter=B.blur?'blur('+B.blur+'px)':'none';
-  const rotation=Number(B.rotation)||0, bgScale=B.blur?1.06:1;
-  image.style.transform=(rotation||bgScale!==1)?`rotate(${rotation}deg) scale(${bgScale})`:'none';
+  const rotation=Number(B.rotation)||0;
+  const lw=image.offsetWidth||canvas.offsetWidth||1, lh=image.offsetHeight||canvas.offsetHeight||1;
+  /* 블러는 레이어 가장자리를 반투명하게 번지게 해 비네팅을 만든다.
+     블러 세기에 비례해 번짐 폭만큼 확대해서 가장자리를 캔버스 밖으로 밀어낸다. */
+  const bgScale=B.blur?1+(B.blur*3)/Math.max(1,Math.min(lw,lh)):1;
+  /* 회전 시 모서리 여백이 생기지 않도록, 회전 각도·레이어 비율에 맞춰
+     레이어가 캔버스를 항상 덮는 최소 배율(cover scale)을 곱해 준다. */
+  let coverScale=1;
+  if(rotation%360!==0){
+    const rad=rotation*Math.PI/180, rc=Math.abs(Math.cos(rad)), rs=Math.abs(Math.sin(rad));
+    coverScale=Math.max((lw*rc+lh*rs)/lw,(lw*rs+lh*rc)/lh);
+  }
+  const totalScale=bgScale*coverScale;
+  image.style.transform=(rotation||totalScale!==1)?`rotate(${rotation}deg) scale(${totalScale})`:'none';
   image.style.transformOrigin='center center';
   overlay.style.background=state.colors.bgOverlay;overlay.style.opacity=String(B.overlayOpacity/100);
   chat.classList.toggle('bubble-tail-off',!state.layout.tailOn);
@@ -5282,6 +5496,35 @@ else setTimeout(__idleLoadRenderer,1200);
     }
     wrapCurrentSelection(root,'color',{color});
   }
+  /* 형광펜·인용구를 글자 색과 같은 규칙으로: 같은 색으로 다시 적용하면 해제,
+     다른 색이면 그 부분만 색 교체. 색은 요소에 인라인으로 저장돼 선택 영역마다 독립적이다. */
+  function elementTint(el,type){
+    if(!el||!el.style) return '';
+    if(type==='highlight') return rgbLikeToHex(el.style.backgroundColor||el.style.background||'');
+    if(type==='quote') return rgbLikeToHex(el.style.borderLeftColor||'');
+    return '';
+  }
+  function applyTintedFormat(root,type,color){
+    color=rgbLikeToHex(color)||String(color||'').toUpperCase();
+    const found=ensureEditorSelection(root),range=found.sel.getRangeAt(0);
+    const active=commonFormat(range,root,type);
+    if(active){
+      if(elementTint(active,type)===color){
+        transformKeepingSelection(root,()=>unwrapElement(active));
+      }else{
+        if(type==='highlight') active.style.background=color;
+        else active.style.borderLeftColor=color;
+      }
+      root.focus();return;
+    }
+    const hits=range.collapsed?[]:intersectingFormats(range,root,type);
+    if(hits.length){
+      const allSame=hits.every(el=>elementTint(el,type)===color);
+      transformKeepingSelection(root,()=>hits.forEach(unwrapElement));
+      if(allSame){root.focus();return;}
+    }
+    wrapCurrentSelection(root,type,{color});
+  }
   function applyHeadingFormat(root,level){
     if(root.id==='msgContent'&&state.composerType!=='text') return;
     level=Number(level)===1?1:2;
@@ -5312,10 +5555,9 @@ else setTimeout(__idleLoadRenderer,1200);
   window.wrapFmt=function(mark){
     const root=editorRoot();if(!root)return;
     const type=typeFromMark(mark);
-    toggleSimpleFormat(root,type,
-      type==='highlight'?{color:state.colors.highlight}
-      :type==='quote'?{color:state.colors.quote||'#8A8F98'}
-      :{});
+    if(type==='highlight') applyTintedFormat(root,'highlight',state.colors.highlight);
+    else if(type==='quote') applyTintedFormat(root,'quote',state.colors.quote||'#8A8F98');
+    else toggleSimpleFormat(root,type,{});
     cleanupEmptyFormats(root);
   };
   window.wrapColor=function(){
@@ -5336,7 +5578,7 @@ else setTimeout(__idleLoadRenderer,1200);
     const root=document.querySelector('.editable.editing');
     if(!root) return;
     if(cmd==='color') applyColorFormat(root,state.colors.partial);
-    else if(cmd==='hilite') toggleSimpleFormat(root,'highlight',{color:state.colors.highlight});
+    else if(cmd==='hilite') applyTintedFormat(root,'highlight',state.colors.highlight);
     else if(cmd==='clear'){
       const found=selectionInside(root);
       if(found&&!found.range.collapsed){
@@ -7273,14 +7515,23 @@ stage.addEventListener('touchend',e=>{
     const iw=raster.naturalWidth||1, ih=raster.naturalHeight||1;
     const drawW=layerW*bg.size/100, drawH=drawW*(ih/iw);
     const offX=(layerW-drawW)*bg.posX/100, offY=(layerH-drawH)*bg.posY/100;
-    const bgScale=bg.blur?1.06:1;
+    /* 미리보기와 동일: 블러 번짐 폭만큼 확대해 가장자리 비네팅 제거 */
+    const minDim=Math.max(1,Math.min(layerW,layerH));
+    const bgScale=bg.blur?1+(bg.blur*scale*3)/minDim:1;
+    /* 미리보기와 동일하게: 회전해도 모서리 여백이 안 생기도록 cover 배율을 곱한다 */
+    let coverScale=1;
+    if(bg.rotation%360!==0){
+      const rad=bg.rotation*Math.PI/180, rc=Math.abs(Math.cos(rad)), rs=Math.abs(Math.sin(rad));
+      coverScale=Math.max((layerW*rc+layerH*rs)/layerW,(layerW*rs+layerH*rc)/layerH);
+    }
+    const totalScale=bgScale*coverScale;
     ctx.save();
     try{
       ctx.beginPath(); ctx.rect(0,0,layerW,layerH); ctx.clip();
-      if(bg.rotation||bgScale!==1){
+      if(bg.rotation||totalScale!==1){
         ctx.translate(layerW/2,layerH/2);
         ctx.rotate(bg.rotation*Math.PI/180);
-        ctx.scale(bgScale,bgScale);
+        ctx.scale(totalScale,totalScale);
         ctx.translate(-layerW/2,-layerH/2);
       }
       if(bg.blur&&('filter' in ctx)){ try{ ctx.filter='blur('+(bg.blur*scale)+'px)'; }catch(_){} }
