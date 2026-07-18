@@ -120,8 +120,9 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .colorrow{display:flex;align-items:center;gap:8px}
 .swatch{position:relative;width:40px;height:40px;border-radius:10px;border:1px solid var(--line);
   overflow:hidden;flex:0 0 auto;cursor:pointer;box-shadow:inset 0 0 0 3px #fff}
-.swatch input[type=color]{position:absolute;inset:-6px;width:150%;height:150%;
-  border:none;padding:0;cursor:pointer;background:transparent}
+.swatch .color-proxy{position:absolute;inset:0;width:100%;height:100%;
+  border:0;padding:0;margin:0;opacity:0;cursor:pointer;background:transparent;
+  appearance:none;-webkit-appearance:none;user-select:none;-webkit-user-select:none}
 .colorrow input[type=text]{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   text-transform:uppercase;letter-spacing:.03em}
 .colorgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -1306,14 +1307,14 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <button class="s" onclick="wrapFmt('~~')" title="취소선">S</button>
 <button class="u" onclick="wrapFmt('++')" title="밑줄">U</button>
 <span class="fmt-pair"><button class="qt" onclick="wrapFmt('%%')" title="인용구"><svg aria-hidden="true" viewBox="0 0 18 16" width="18" height="16" fill="none"><line x1="3" y1="2" x2="3" y2="14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><line x1="7" y1="5" x2="15" y2="5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="7" y1="10" x2="13" y2="10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
-<span class="swatch fmt-swatch" style="background:#8A8F98" title="인용구 선 색 선택"><input id="quoteColor" oninput="setQuoteColor(this.value)" type="color" value="#8A8F98"/></span></span>
+<span class="swatch fmt-swatch" style="background:#8A8F98" title="인용구 선 색 선택"><input id="quoteColor" class="color-proxy" oninput="setQuoteColor(this.value)" type="text" value="#8A8F98" readonly inputmode="none" aria-label="인용구 선 색 선택"/></span></span>
 <span class="fmt-pair"><button class="hl" onclick="wrapFmt('==')" title="형광펜">✎</button>
-<span class="swatch fmt-swatch" style="background:#E4E4E6" title="형광펜 색 선택"><input id="highlightColor" oninput="setHighlightColor(this.value)" type="color" value="#E4E4E6"/></span></span>
+<span class="swatch fmt-swatch" style="background:#E4E4E6" title="형광펜 색 선택"><input id="highlightColor" class="color-proxy" oninput="setHighlightColor(this.value)" type="text" value="#E4E4E6" readonly inputmode="none" aria-label="형광펜 색 선택"/></span></span>
 <span class="fmt-pair"><button class="paren-fmt-btn" id="parenFmtBtn" onclick="toggleParenQuick()" title="괄호 ( ) 안 글자 자동 색칠 켜기/끄기">( )</button>
-<span class="swatch fmt-swatch paren-color-swatch" style="background:#8A8F98" title="괄호 안 글자 색 선택"><input id="parenColor" oninput="setParenColor(this.value)" type="color" value="#8A8F98"/></span></span>
+<span class="swatch fmt-swatch paren-color-swatch" style="background:#8A8F98" title="괄호 안 글자 색 선택"><input id="parenColor" class="color-proxy" oninput="setParenColor(this.value)" type="text" value="#8A8F98" readonly inputmode="none" aria-label="괄호 안 글자 색 선택"/></span></span>
 <input hidden="" id="parenOn" onchange="setParen(this.checked)" type="checkbox"/>
 <span class="fmt-pair"><button class="cbtn" id="colorBtn" onclick="wrapColor()" title="선택한 글자 색 바꾸기">A</button>
-<span class="swatch fmt-swatch" style="background:#D14343" title="글자 색 선택"><input id="partialColor" oninput="setPartialColor(this.value)" type="color" value="#D14343"/></span></span>
+<span class="swatch fmt-swatch" style="background:#D14343" title="글자 색 선택"><input id="partialColor" class="color-proxy" oninput="setPartialColor(this.value)" type="text" value="#D14343" readonly inputmode="none" aria-label="글자 색 선택"/></span></span>
 </div>
 <div aria-multiline="true" class="rich-composer" contenteditable="true" data-placeholder="내용을 입력하세요" id="msgContent" role="textbox" spellcheck="false"></div>
 </div>
@@ -1739,9 +1740,9 @@ function buildColorRow(row){
   const val=state.colors[key];
   row.innerHTML=`
     <span class="swatch" style="background:${val}">
-      <input type="color" value="${val}"></span>
-    <input type="text" value="${val.toUpperCase()}" maxlength="7">`;
-  const [colorInput,textInput]=[row.querySelector('input[type=color]'),row.querySelector('input[type=text]')];
+      <input class="color-proxy" type="text" value="${val}" readonly inputmode="none" aria-label="색 선택"></span>
+    <input class="color-code-input" type="text" value="${val.toUpperCase()}" maxlength="7">`;
+  const [colorInput,textInput]=[row.querySelector('.color-proxy'),row.querySelector('.color-code-input')];
   const swatch=row.querySelector('.swatch');
   colorInput.addEventListener('input',()=>{
     const v=colorInput.value.toUpperCase();
@@ -1772,8 +1773,8 @@ let __colorRenderTimer=null,__colorRenderLast=0;
 function refreshColorRows(){document.querySelectorAll('.colorrow').forEach(buildColorRow);}
 
 /* ===== 자체 헥스 컬러 피커 =====
-   브라우저 기본 컬러 다이얼로그(RGB 수치 표시) 대신, 모든 input[type=color] 클릭 시
-   #FFFFFF 헥스 코드 기반의 자체 피커를 띄운다. 값 반영은 기존 input에 value를 넣고
+   브라우저 기본 컬러 다이얼로그가 절대 열리지 않도록 네이티브 input[type=color]를 사용하지 않고,
+   모든 .color-proxy 선택 시 #FFFFFF 헥스 코드 기반의 자체 피커만 띄운다. 값 반영은 프록시에 value를 넣고
    'input' 이벤트를 그대로 발생시키는 방식이라 기존 색상 처리 로직은 전혀 건드리지 않는다. */
 (function(){
   let target=null,hsv={h:0,s:0,v:1},raf=0;
@@ -1829,10 +1830,28 @@ function refreshColorRows(){document.querySelectorAll('.colorrow').forEach(build
     pop.style.left=x+'px';pop.style.top=y+'px';
   }
   function closePicker(){pop.classList.remove('show');target=null;}
+  /* pointerdown 단계에서 기본 동작과 포커스를 막아 iOS의 시스템 컬러피커/키보드 및
+     visual viewport 이동이 발생하지 않게 한다. */
+  document.addEventListener('pointerdown',e=>{
+    const t=e.target&&e.target.closest?e.target.closest('.color-proxy'):null;
+    if(t){
+      e.preventDefault();
+      try{t.blur();}catch(_){}
+      openPicker(t);
+      return;
+    }
+    if(pop.classList.contains('show')&&!pop.contains(e.target))closePicker();
+  },true);
+  /* 구형 iOS에서 pointer 이벤트가 누락되는 경우를 위한 클릭 폴백. */
   document.addEventListener('click',e=>{
-    const t=e.target;
-    if(t&&t.tagName==='INPUT'&&t.type==='color'){e.preventDefault();openPicker(t);return;}
-    if(pop.classList.contains('show')&&!pop.contains(t))closePicker();
+    const t=e.target&&e.target.closest?e.target.closest('.color-proxy'):null;
+    if(t){
+      e.preventDefault();
+      try{t.blur();}catch(_){}
+      if(!pop.classList.contains('show')||target!==t)openPicker(t);
+      return;
+    }
+    if(pop.classList.contains('show')&&!pop.contains(e.target))closePicker();
   },true);
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closePicker();});
   function svPick(e){
