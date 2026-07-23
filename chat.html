@@ -1248,6 +1248,15 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
   }
 }
 </style>
+
+<style id="ios-text-autosizing-fix">
+/* iPhone/iPad Safari가 좁은 화면에서 일부 텍스트만 임의로 확대·축소하는 현상 방지.
+   미리보기와 html-to-image 저장본에 동일하게 적용된다. */
+html, body, #canvas, #chat, #canvas * {
+  -webkit-text-size-adjust: 100% !important;
+  text-size-adjust: 100% !important;
+}
+</style>
 </head>
 <body>
 <div class="top">
@@ -1422,7 +1431,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <div class="colorrow" data-color="nBubble"></div>
 </div>
 <div class="field" style="margin:0">
-<label class="lb">말풍선 글자색</label>
+<label class="lb">전체 글자색</label>
 <div class="colorrow" data-color="nText"></div>
 </div>
 </div></div></div><div class="flat-tool-section" id="backgroundImageSection"><div class="flat-tool-title"><strong>배경 이미지</strong></div><div class="flat-tool-body"><div class="field"><label class="lb">이미지 불러오기</label><div class="bg-image-load-row"><label class="btn sm bg-upload-btn">↑ 파일<input accept="image/*" hidden="" id="bgImgFile" onchange="onBackgroundImageFile(event)" type="file"/></label><input id="bgImgUrl" onchange="loadBackgroundImageUrl()" onkeydown="if(event.key==='Enter'){event.preventDefault();loadBackgroundImageUrl();}" placeholder="이미지 URL · 붙여넣고 Enter" type="text"/><button class="btn sm danger-ghost" onclick="clearBackgroundImage()" type="button">지우기</button></div><div class="bg-image-preview" id="bgImgPreviewWrap" style="display:none"><img alt="배경 이미지 미리보기" id="bgImgPreview"/><span>배경 이미지 적용 중</span></div></div><div class="colorgrid bg-image-controls"><div class="field"><label class="lb">이미지 크기</label><div class="rangewrap"><input id="bgImgSize" max="600" min="40" oninput="setBackgroundImageValue('size',this.value)" step="1" type="range" value="100"/><span class="val" id="bgImgSizeV">100%</span></div></div><div class="field"><label class="lb">회전</label><div class="rangewrap"><input id="bgImgRotation" max="360" min="0" oninput="setBackgroundImageValue('rotation',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgRotationV">0°</span></div></div><div class="field"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bgImgX" max="100" min="0" oninput="setBackgroundImageValue('x',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgXV">50%</span></div></div><div class="field"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bgImgY" max="100" min="0" oninput="setBackgroundImageValue('y',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgYV">50%</span></div></div><div class="field"><label class="lb">블러 농도</label><div class="rangewrap"><input id="bgImgBlur" max="30" min="0" oninput="setBackgroundImageValue('blur',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgBlurV">0px</span></div></div><div class="field bg-overlay-field" style="grid-column:1/-1;margin-bottom:0"><label class="lb">오버레이</label><div class="overlay-row"><div class="colorrow overlay-colorrow" data-color="bgOverlay"></div><div class="rangewrap overlay-opacity"><input id="bgOverlayOpacity" max="100" min="0" oninput="setBackgroundImageValue('overlayOpacity',this.value)" step="1" type="range" value="0"/><span class="val" id="bgOverlayOpacityV">0%</span></div></div></div></div></div></div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>텍스트·간격</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
@@ -1498,18 +1507,25 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
 </div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
+<div class="toggle compact" title='큰따옴표("")가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">"" 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
+<div class="toggle compact" title="말풍선 안에서만 큰따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">"" 기호 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요"><div class="t-lb">프로필 사진</div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="‘내 계정’으로 지정한 캐릭터의 프로필과 이름을 모든 모드에서 켜고 꺼요"><div class="t-lb">내 프로필·이름</div><label class="sw"><input id="showMyIdentity" onchange="state.showMyIdentity=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요"><div class="t-lb">말풍선 꼬리</div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선과 꼬리에 그림자를 적용해요"><div class="t-lb">말풍선 그림자</div><label class="sw"><input id="bubbleShadowOn" onchange="setBubbleShadow('on',this.checked)" type="checkbox"/><span class="track"></span></label></div>
 </div>
-<label class="mini-check" style="margin:9px 0 0 2px"><input id="hideNames" onchange="state.hideNames=this.checked; renderPreview()" type="checkbox"/><span>말풍선 이름 삭제 — 체크하면 이름 줄도 함께 숨겨요</span></label>
+<div style="display:flex;flex-wrap:wrap;gap:6px 20px;margin:9px 0 0 2px">
+<label class="mini-check" style="margin:0" title="대사 앞 이름｜ 이름표만 지워요 ([ ]가 있어도 함께) · ( ) 해석은 그대로 남아요"><input id="stripNameTagOn" onchange="state.stripSpeakerName=this.checked; renderPreview()" type="checkbox"/><span>대사 앞 이름 삭제</span></label>
+<label class="mini-check" style="margin:0" title="체크하면 말풍선 위 이름 줄도 함께 숨겨요"><input id="hideNames" onchange="state.hideNames=this.checked; renderPreview()" type="checkbox"/><span>말풍선 이름 삭제</span></label>
+</div>
 <div class="shadow-control-group bubble-shadow-controls" style="margin-top:12px"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">그림자 세기</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div></div>
 </div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양</strong></div><div class="flat-tool-body"><div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
-<div class="field" style="margin:0"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
-<div class="field" style="margin:0"><label class="lb">이름 크기</label><div class="rangewrap"><input id="lyNameSize" max="24" min="9" oninput="setLayout('nameSize',this.value)" type="range" value="12"/><span class="val" id="lyNameSizeV">12px</span></div></div>
+<div class="field" style="margin-bottom:14px"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
+<div class="field" style="margin-bottom:14px"><label class="lb">이름 크기</label><div class="rangewrap"><input id="lyNameSize" max="24" min="9" oninput="setLayout('nameSize',this.value)" type="range" value="12"/><span class="val" id="lyNameSizeV">12px</span></div></div>
+<div class="field" style="margin:0"><label class="lb">말풍선 투명도</label><div class="rangewrap"><input id="bubbleOpacity" max="100" min="0" oninput="setBubbleOpacity(this.value)" type="range" value="100"/><span class="val" id="bubbleOpacityV">100%</span></div></div>
+<div class="field" style="margin:0"><label class="lb">말풍선 글씨 투명도</label><div class="rangewrap"><input id="bubbleTextOpacity" max="100" min="0" oninput="setBubbleTextOpacity(this.value)" type="range" value="100"/><span class="val" id="bubbleTextOpacityV">100%</span></div></div>
 <div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div><div class="field bubble-align-field"><label class="lb">말풍선 정렬</label><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div><div class="field-help bubble-align-help">가운데 정렬은 프로필이 있으면 프로필 중심부터 말풍선 끝까지, 프로필이 없으면 말풍선 자체의 양 끝을 기준으로 맞춰요. 메신저 모드는 발신자 기준 정렬을 유지해요.</div></div></div>
 </div></div></div><div class="messenger-settings" id="messengerSettings"><div class="messenger-settings-head"><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></div><div class="messenger-settings-body"><div class="field">
 <label class="lb">내 계정 (오른쪽 정렬)</label>
@@ -1685,6 +1701,9 @@ const state = {
   shape:'circle',
   showProfile:true,
   hideNames:false,
+  autoQuoteBubble:false,   // ""가 있는 글 블럭을 말풍선으로 자동 변환
+  stripSpeakerName:false,  // [이름｜] 이름표 삭제 (표시 전용)
+  stripQuoteMarks:false,   // "" 기호 삭제 (말풍선에서, 표시 전용)
   showMyIdentity:false,
   meId:'',
   parenOn:false,
@@ -1718,6 +1737,7 @@ const state = {
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
     gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, nameSize:12, widthScale:100, letterSpacing:0,
     textShadowOn:false, textShadowBubblesOff:false, textShadowStrength:4, bubbleShadowOn:false, bubbleShadowStrength:4,
+    bubbleOpacity:100, bubbleTextOpacity:100,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
     textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
     dividerMargin:8,   // 가름선 위·아래 여백
@@ -2286,9 +2306,52 @@ function wbStyle(){
     ? 'word-break:break-all;overflow-wrap:normal'
     : 'word-break:keep-all;overflow-wrap:break-word';
 }
+/* 말풍선 투명도 — 투명 시 배경·꼬리를 .bubble-bg 한 레이어로 합쳐 opacity를 준다
+   (rgba 방식은 꼬리가 겹쳐 비치는 문제가 있어 합성 레이어 방식으로 변경) */
+function bubbleOpacityVal(){
+  const v=(state.layout.bubbleOpacity!=null)?Number(state.layout.bubbleOpacity):100;
+  return Math.max(0,Math.min(100,isNaN(v)?100:v));
+}
+function bubbleBgLayer(){
+  return (bubbleOpacityVal()<100&&!bubbleBlendable())?'<span class="bubble-bg" aria-hidden="true"></span>':'';
+}
+function setBubbleOpacity(v){
+  const n=Math.max(0,Math.min(100,parseInt(v,10)||0));
+  state.layout.bubbleOpacity=n;
+  const lab=document.getElementById('bubbleOpacityV'); if(lab) lab.textContent=n+'%';
+  renderPreview();
+}
+function bubbleTextOpacityVal(){
+  const v=(state.layout.bubbleTextOpacity!=null)?Number(state.layout.bubbleTextOpacity):100;
+  return Math.max(0,Math.min(100,isNaN(v)?100:v));
+}
+/* 단색 배경이면 투명색을 배경색과 미리 섞어 '불투명'으로 그린다.
+   결과는 진짜 반투명과 픽셀 단위로 동일하면서, 말풍선+꼬리가 완전한 한 덩어리가 되고
+   그림자도 투명도와 무관하게 제 세기를 유지한다.
+   배경 이미지·투명 캔버스에서는 섞을 색이 없으므로 진짜 알파 레이어(.bubble-bg)를 쓴다. */
+function bubbleBlendable(){
+  return !(state.backgroundImage&&state.backgroundImage.src)&&!state.transparentBg;
+}
+function blendHex(fgHex,bgHex,a){
+  const f=/^#([0-9a-fA-F]{6})$/.exec((fgHex||'').trim());
+  const g=/^#([0-9a-fA-F]{6})$/.exec((bgHex||'').trim());
+  if(!f||!g) return fgHex;
+  const F=parseInt(f[1],16),G=parseInt(g[1],16);
+  const mix=(x,y)=>Math.round(x*a+y*(1-a));
+  const r=mix((F>>16)&255,(G>>16)&255),gr=mix((F>>8)&255,(G>>8)&255),b=mix(F&255,G&255);
+  return '#'+((1<<24)+(r<<16)+(gr<<8)+b).toString(16).slice(1).toUpperCase();
+}
+function setBubbleTextOpacity(v){
+  const n=Math.max(0,Math.min(100,parseInt(v,10)||0));
+  state.layout.bubbleTextOpacity=n;
+  const lab=document.getElementById('bubbleTextOpacityV'); if(lab) lab.textContent=n+'%';
+  renderPreview();
+}
 function bubbleStyle(bg,color,tailCorner){
   const L=state.layout;
   const r=Number(L.radius)||0;
+  const __o=bubbleOpacityVal();
+  if(__o<100&&bubbleBlendable()) bg=blendHex(bg,state.colors.bg,__o/100);
   /* Keep the tail at the exact 15px geometry for radii 0–15.
      Only the amount above 15 changes the tail: its bubble-side base widens,
      while the outward point rises gradually toward the avatar. */
@@ -2390,18 +2453,59 @@ function clampCrop(){
   crop.x=Math.min(0,Math.max(BOX-w,crop.x));
   crop.y=Math.min(0,Math.max(BOX-h,crop.y));
 }
+const cropPointers=new Map(); let cropPinch=null;
+function setCropScale(next,cx,cy){
+  if(!crop.img) return;
+  const mn=parseFloat(cropZoom&&cropZoom.min)||1, mx=parseFloat(cropZoom&&cropZoom.max)||3;
+  next=Math.min(mx,Math.max(mn,next));
+  const k=next/crop.scale;
+  crop.x=cx-(cx-crop.x)*k;
+  crop.y=cy-(cy-crop.y)*k;
+  crop.scale=next;
+  if(cropZoom) cropZoom.value=String(next);
+  clampCrop(); applyCropTransform();
+}
+function startCropDragFrom(x,y){ crop.dragging=true; cropBox.classList.add('grab'); crop.sx=x; crop.sy=y; crop.ox=crop.x; crop.oy=crop.y; }
 cropBox.addEventListener('pointerdown',e=>{
-  crop.dragging=true; cropBox.classList.add('grab');
-  crop.sx=e.clientX; crop.sy=e.clientY; crop.ox=crop.x; crop.oy=crop.y;
-  cropBox.setPointerCapture(e.pointerId);
+  cropPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  try{ cropBox.setPointerCapture(e.pointerId); }catch(_){}
+  if(cropPointers.size>=2){
+    crop.dragging=false; cropBox.classList.remove('grab');
+    const p=[...cropPointers.values()];
+    cropPinch={d:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1,scale:crop.scale};
+    return;
+  }
+  startCropDragFrom(e.clientX,e.clientY);
 });
 cropBox.addEventListener('pointermove',e=>{
+  if(cropPointers.has(e.pointerId)) cropPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(cropPinch&&cropPointers.size>=2){
+    const p=[...cropPointers.values()];
+    const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;
+    const r=cropBox.getBoundingClientRect();
+    setCropScale(cropPinch.scale*(d/cropPinch.d),(p[0].x+p[1].x)/2-r.left,(p[0].y+p[1].y)/2-r.top);
+    return;
+  }
   if(!crop.dragging) return;
   crop.x=crop.ox+(e.clientX-crop.sx);
   crop.y=crop.oy+(e.clientY-crop.sy);
   clampCrop(); applyCropTransform();
 });
-cropBox.addEventListener('pointerup',()=>{crop.dragging=false;cropBox.classList.remove('grab')});
+function endCropPointer(e){
+  cropPointers.delete(e.pointerId);
+  if(cropPointers.size<2) cropPinch=null;
+  if(cropPointers.size===1){ const p=[...cropPointers.values()][0]; startCropDragFrom(p.x,p.y); }
+  else if(cropPointers.size===0){ crop.dragging=false; cropBox.classList.remove('grab'); }
+}
+cropBox.addEventListener('pointerup',endCropPointer);
+cropBox.addEventListener('pointercancel',endCropPointer);
+cropBox.addEventListener('wheel',e=>{
+  if(!crop.img) return;
+  e.preventDefault();
+  const r=cropBox.getBoundingClientRect();
+  const f=Math.exp(-e.deltaY*(e.deltaMode===1?0.05:0.0022));
+  setCropScale(crop.scale*f,e.clientX-r.left,e.clientY-r.top);
+},{passive:false});
 function closeCrop(){cropModal.classList.remove('show')}
 function applyCrop(){
   const out=document.createElement('canvas'); out.width=256; out.height=256;
@@ -3043,12 +3147,63 @@ function confirmMsgCrop(){
     setDraftMsgImage(data);closeMsgCropModal();
   }catch(_){ alert('이미지를 자르지 못했어요. 원본 사용을 눌러주세요.'); }
 }
+function scaleMsgCropSel(factor,cx,cy){
+  const d=msgCropState.display,s=msgCropState.sel; if(!d||!s||!(factor>0)) return;
+  const minSize=28;
+  const maxF=Math.min(d.w/s.w,d.h/s.h), minF=Math.max(minSize/s.w,minSize/s.h);
+  factor=Math.max(Math.min(minF,maxF),Math.min(maxF,factor));
+  const w=s.w*factor,h=s.h*factor;
+  let x=cx-(cx-s.x)*factor, y=cy-(cy-s.y)*factor;
+  x=clampMsgCrop(x,d.x,d.x+d.w-w);
+  y=clampMsgCrop(y,d.y,d.y+d.h-h);
+  msgCropState.sel={x,y,w,h};
+  updateMsgCropSelection();
+}
 const msgCropStageEl=document.getElementById('msgCropStage');
+const msgCropPointers=new Map(); let msgCropPinch=null;
+function msgCropPointerDown(e){
+  msgCropPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(msgCropPointers.size>=2){
+    msgCropState.drag=null;
+    try{ msgCropStageEl.setPointerCapture(e.pointerId); }catch(_){}
+    const p=[...msgCropPointers.values()];
+    msgCropPinch={d:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1};
+    e.preventDefault();
+    return;
+  }
+  beginMsgCropDrag(e);
+}
+function msgCropPointerMove(e){
+  if(msgCropPointers.has(e.pointerId)) msgCropPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(msgCropPinch&&msgCropPointers.size>=2){
+    e.preventDefault();
+    const p=[...msgCropPointers.values()];
+    const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;
+    const r=msgCropStageEl.getBoundingClientRect();
+    scaleMsgCropSel(d/msgCropPinch.d,(p[0].x+p[1].x)/2-r.left,(p[0].y+p[1].y)/2-r.top);
+    msgCropPinch.d=d;
+    return;
+  }
+  moveMsgCropDrag(e);
+}
+function msgCropPointerUp(e){
+  msgCropPointers.delete(e.pointerId);
+  if(msgCropPointers.size<2) msgCropPinch=null;
+  try{ if(msgCropStageEl&&msgCropStageEl.hasPointerCapture(e.pointerId)) msgCropStageEl.releasePointerCapture(e.pointerId); }catch(_){}
+  endMsgCropDrag(e);
+}
 if(msgCropStageEl){
-  msgCropStageEl.addEventListener('pointerdown',beginMsgCropDrag);
-  msgCropStageEl.addEventListener('pointermove',moveMsgCropDrag);
-  msgCropStageEl.addEventListener('pointerup',endMsgCropDrag);
-  msgCropStageEl.addEventListener('pointercancel',endMsgCropDrag);
+  msgCropStageEl.addEventListener('pointerdown',msgCropPointerDown);
+  msgCropStageEl.addEventListener('pointermove',msgCropPointerMove);
+  msgCropStageEl.addEventListener('pointerup',msgCropPointerUp);
+  msgCropStageEl.addEventListener('pointercancel',msgCropPointerUp);
+  msgCropStageEl.addEventListener('wheel',e=>{
+    if(!msgCropState.sel||!msgCropState.display) return;
+    e.preventDefault();
+    const r=msgCropStageEl.getBoundingClientRect();
+    const f=Math.exp(-e.deltaY*(e.deltaMode===1?0.05:0.0022));
+    scaleMsgCropSel(f,e.clientX-r.left,e.clientY-r.top);
+  },{passive:false});
 }
 function addMessage(){
   if(composerEditId){ commitComposerEdit(); return; }
@@ -3111,9 +3266,16 @@ function editMsgPrompt(id){ beginComposerEdit(id); }
 function beginComposerEdit(id){
   const m=state.messages.find(x=>x.id===id); if(!m) return;
   composerEditId=id;
-  const type=(m.type==='chat')?'chat':(m.type==='divider')?'divider':(m.type==='image')?'image':'text';
+  let type=(m.type==='chat')?'chat':(m.type==='divider')?'divider':(m.type==='image')?'image':'text';
+  let effSender=m.senderId;
+  /* "" 자동 말풍선으로 변환되어 보이는 글 블럭은 작성창에서도 '말풍선'으로 인식 —
+     발신자까지 채워서 열어주고, 글 탭으로 바꿔 저장하면 다시 글로 되돌릴 수 있다 */
+  if(type==='text'){
+    const eff=bubbleViewMsg(m);
+    if(eff!==m&&eff.type==='chat'){ type='chat'; effSender=eff.senderId; }
+  }
   setMsgType(type);
-  if(type==='chat' && m.senderId){ try{ senderSel.value=m.senderId; }catch(_){} }
+  if(type==='chat' && effSender){ try{ senderSel.value=effSender; }catch(_){} }
   if(type==='text'){ setAlign(m.align||'left'); }
   if(type==='image'){
     draftMsgImg=m.image||null;
@@ -3256,6 +3418,60 @@ function fmtSel(e,cmd){
 document.addEventListener('selectionchange',()=>{ if(editingId) updateSelToolbar(); });
 
 /* ================= render preview ================= */
+/* ── "" 자동 말풍선 · [이름｜] 삭제 · "" 기호 삭제 ──
+   원본(state.messages)은 절대 건드리지 않는 표시 전용 변환.
+   체크를 끄면 언제든 원래대로 돌아온다. */
+const NAME_PREFIX_RE=/^\s*\[?([^\[\]｜|]{1,40})[｜|]\s*([\s\S]*)$/;
+function parseNamePrefix(s){
+  const m=NAME_PREFIX_RE.exec(s||'');
+  if(!m) return null;
+  let rest=m[2];
+  const t=rest.replace(/\s+$/,'');
+  if(t.endsWith(']')) rest=t.slice(0,-1);   // 끝에 ] 가 있으면 함께 제거 — ( ) 안 내용은 그대로 둔다
+  return {name:m[1].trim(), rest:rest};
+}
+function matchMemberByName(name){
+  if(!name||!state.members.length) return null;
+  const n=name.trim(); if(!n) return null;
+  return state.members.find(x=>(x.name||'').trim()===n)
+      || state.members.find(x=>{const xn=(x.name||'').trim(); return xn&&(xn.includes(n)||n.includes(xn));})
+      || null;
+}
+function bubbleViewMsg(m){
+  if(!m||typeof m.content!=='string') return m;
+  const baseType=m.type||'chat';
+  if(baseType!=='chat'&&baseType!=='text') return m;
+  let effType=baseType, senderId=m.senderId, content=m.content, changed=false;
+  const pre=parseNamePrefix(content);
+  // 1) "" 자동 말풍선 — 큰따옴표가 있는 글 블럭을 통째로 말풍선으로.
+  //    이름 인식은 '처음 일치했을 때 한 번만': 일치한 멤버의 id를 메시지에 고정해 두므로
+  //    이후 프로필 이름을 바꿔도 첫 번째 캐릭터로 되돌아가지 않는다.
+  //    아직 일치하는 멤버가 없어 첫 멤버로 임시 표시 중일 때는 고정하지 않고 계속 인식하므로,
+  //    나중에 해당 멤버를 추가하면 그때 자동으로 연결·고정된다.
+  if(state.autoQuoteBubble&&baseType==='text'&&!m.noAutoQuote&&/["“”]/.test(content)&&state.members.length){
+    let mem=null;
+    if(m.autoSenderId){
+      mem=state.members.find(x=>x.id===m.autoSenderId)||null;
+      if(!mem) delete m.autoSenderId;            // 고정했던 멤버가 삭제됨 → 다시 인식
+    }
+    if(!mem){
+      const matched=pre&&matchMemberByName(pre.name);
+      if(matched){ mem=matched; m.autoSenderId=mem.id; }   // 이름 일치 → 고정
+      else mem=state.members[0];                            // 임시 폴백 (고정 안 함)
+    }
+    effType='chat'; senderId=mem.id; changed=true;
+  }
+  // 2) [이름｜] 이름표 삭제 — 괄호 해석 부분은 유지
+  if(state.stripSpeakerName&&pre){ content=pre.rest; changed=true; }
+  // 3) "" 기호 삭제 — 말풍선(자동 변환 포함)에서만
+  if(state.stripQuoteMarks&&effType==='chat'&&/["“”]/.test(content)){
+    content=content.replace(/["“”]/g,''); changed=true;
+  }
+  if(!changed) return m;
+  const c=Object.assign({},m,{type:effType,content:content});
+  if(effType==='chat') c.senderId=senderId;
+  return c;
+}
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 /* 색 정보 없는 형광펜·인용구 마크업에 현재 전역 색을 구워 넣는다(한 번 고정) */
 function normalizeTintMarkup(s){
@@ -3330,6 +3546,10 @@ function ctrlHTML(id){
 function renderPreview(){
   commitEditIfAny();
   const chat=document.getElementById('chat');
+  const __bop=bubbleOpacityVal();
+  chat.classList.toggle('bubble-translucent',__bop<100&&!bubbleBlendable());
+  chat.style.setProperty('--bubble-opacity',String(__bop/100));
+  chat.style.setProperty('--bubble-text-opacity',String(bubbleTextOpacityVal()/100));
   chat.style.background=state.colors.bg;
   chat.style.fontFamily=state.layout.font;
   chat.style.width=state.layout.width+'px';
@@ -3361,9 +3581,10 @@ function renderPreview(){
     if(m.content.indexOf('==')<0&&m.content.indexOf('%%')<0)return;
     m.content=normalizeTintMarkup(m.content);
   });
-  let html=msgs.map((m,i)=>{
-    const prev=msgs[i-1];
-    const next=msgs[i+1];
+  const viewMsgs=msgs.map(bubbleViewMsg);   // 표시 전용 변환("" 자동 말풍선 등) — 원본 보존
+  let html=viewMsgs.map((m,i)=>{
+    const prev=viewMsgs[i-1];
+    const next=viewMsgs[i+1];
     // A run continues only when the immediately preceding item is another chat
     // message from the same sender. Text, dividers, images, or another sender break it.
     const isChat=x=>x&&(!x.type||x.type==='chat');
@@ -3460,7 +3681,7 @@ function normalRow(m,mem,gap,continued=false){
     ${avatar||avatarSpacer}
     <div class="n-body">
       ${name}
-      <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle((mem&&mem.bubbleColor)||state.colors.nBubble,state.colors.nText,'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
+      <div class="n-bubble editable" data-id="${m.id}" style="${bubbleStyle((mem&&mem.bubbleColor)||state.colors.nBubble,state.colors.nText,'tl')}">${bubbleBgLayer()}${typeWrap(m.content.trim()?fmtText(m.content):'')}</div>
     </div>
   </div>`;
 }
@@ -3499,7 +3720,7 @@ function msgrRow(m,mem,gap,continued=false){
     ${ctrlHTML(m.id)}
     ${avatar}
     ${name}
-    <div class="m-bubble editable" data-id="${m.id}" style="${bubbleStyle(bub,txt,mine?'tr':'tl')}">${typeWrap(m.content.trim()?fmtText(m.content):'',mine?'right':'left')}</div>
+    <div class="m-bubble editable" data-id="${m.id}" style="${bubbleStyle(bub,txt,mine?'tr':'tl')}">${bubbleBgLayer()}${typeWrap(m.content.trim()?fmtText(m.content):'',mine?'right':'left')}</div>
   </div>`;
 }
 
@@ -3686,7 +3907,7 @@ function enhanceRange(rangeId,valueId,opts={}){
   const wrap=range.closest('.rangewrap'); wrap.classList.add('has-stepper');
   const box=document.createElement('div'); box.className='stepper';
   const minus=document.createElement('button'); minus.type='button'; minus.textContent='−'; minus.title='줄이기';
-  const num=document.createElement('input'); num.type='number'; num.min=String(min); num.max=String(max); num.step=String(step); num.value=range.value;
+  const num=document.createElement('input'); num.type='number'; num.min=String(min); num.max=String(max); num.step=String(step); num.value=range.value; num.dataset.stepperFor=rangeId;
   const plus=document.createElement('button'); plus.type='button'; plus.textContent='+'; plus.title='늘리기';
   box.append(minus,num,plus); wrap.append(box);
   const apply=v=>{
@@ -3700,6 +3921,11 @@ function enhanceRange(rangeId,valueId,opts={}){
   num.addEventListener('change',()=>apply(num.value));
   num.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();apply(num.value);num.blur();} });
   range.addEventListener('input',()=>{num.value=range.value});
+}
+function syncStepperBoxes(){
+  document.querySelectorAll('.stepper input[data-stepper-for]').forEach(n=>{
+    const r=document.getElementById(n.dataset.stepperFor); if(r) n.value=r.value;
+  });
 }
 function initPreciseControls(){
   enhanceRange('lyWidth','lyWidthV',{min:300,max:1000,step:1,nudge:10});
@@ -3726,6 +3952,8 @@ function initPreciseControls(){
   enhanceRange('lyBlockGap','lyBlockGapV',{min:0,max:60,step:1,nudge:2});
   enhanceRange('creditSize','creditSizeV',{min:9,max:18,step:1,nudge:1});
   enhanceRange('creditGap','creditGapV',{min:0,max:80,step:1,nudge:2});
+  enhanceRange('bubbleOpacity','bubbleOpacityV',{min:0,max:100,step:1,nudge:5});
+  enhanceRange('bubbleTextOpacity','bubbleTextOpacityV',{min:0,max:100,step:1,nudge:5});
 }
 
 
@@ -6205,7 +6433,7 @@ function toast(msg,opt){
 function hideToast(){const el=document.getElementById('upToast'); if(el) el.classList.remove('show');}
 
 /* ---------- 프로젝트 스냅샷 (직렬화) ---------- */
-const SNAP_KEYS=['mode','shape','showProfile','hideNames','showMyIdentity','meId','parenOn','members','messages',
+const SNAP_KEYS=['mode','shape','showProfile','hideNames','showMyIdentity','meId','parenOn','autoQuoteBubble','stripSpeakerName','stripQuoteMarks','members','messages',
   'export','transparentBg','backgroundImage','credit','colors','layout'];
 function projectSnapshot(){
   const o={};
@@ -6217,7 +6445,7 @@ function applyProject(d){
   if(Array.isArray(d.members)) state.members=d.members;
   if(Array.isArray(d.messages)) state.messages=d.messages;
   ['mode','shape','meId'].forEach(k=>{ if(typeof d[k]==='string') state[k]=d[k]; });
-  ['showProfile','hideNames','showMyIdentity','parenOn','transparentBg'].forEach(k=>{ if(typeof d[k]==='boolean') state[k]=d[k]; });
+  ['showProfile','hideNames','showMyIdentity','parenOn','transparentBg','autoQuoteBubble','stripSpeakerName','stripQuoteMarks'].forEach(k=>{ if(typeof d[k]==='boolean') state[k]=d[k]; });
   ['export','backgroundImage','credit','colors','layout'].forEach(k=>{
     if(d[k]&&typeof d[k]==='object') Object.assign(state[k],JSON.parse(JSON.stringify(d[k])));
   });
@@ -8453,14 +8681,16 @@ window.saveImage=function(){
 #chat.text-shadow-on.text-shadow-bubbles-off .n-bubble,#chat.text-shadow-on.text-shadow-bubbles-off .n-plain,#chat.text-shadow-on.text-shadow-bubbles-off .m-bubble,#chat.text-shadow-on.text-shadow-bubbles-off .n-name,#chat.text-shadow-on.text-shadow-bubbles-off .m-name,#chat.text-shadow-on.text-shadow-bubbles-off .credit,#chat.text-shadow-on.text-shadow-bubbles-off .divider-pill{
   text-shadow:none
 }
-#chat.bubble-shadow-on .n-bubble,#chat.bubble-shadow-on .m-bubble,
+/* 말풍선 그림자 — 말풍선+꼬리를 한 실루엣으로 보고 그림자 '하나'만 만든다.
+   (box-shadow 사각형 + 꼬리 개별 그림자 조합은 이음새에서 두 개로 갈라져 보이므로
+   요소 전체 drop-shadow 방식으로 통일. 불투명 말풍선에선 글자가 실루엣 안쪽이라
+   글자 그림자가 생기지 않는다.) */
 #chat.bubble-shadow-on .n-msg > .av,#chat.bubble-shadow-on .m-msg > .av{
   box-shadow:0 3px calc(var(--bubble-shadow-strength) * 1.4) var(--bubble-shadow-color)
 }
-#chat.bubble-shadow-on:not(.bubble-tail-off) .n-bubble:before,
-#chat.bubble-shadow-on:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble:before,
-#chat.bubble-shadow-on:not(.bubble-tail-off) .m-msg.mine .m-bubble:after{
-  filter:drop-shadow(0 2px var(--bubble-shadow-strength) var(--bubble-shadow-color))
+#chat.bubble-shadow-on:not(.bubble-translucent) .n-bubble,
+#chat.bubble-shadow-on:not(.bubble-translucent) .m-bubble{
+  filter:drop-shadow(0 3px calc(var(--bubble-shadow-strength) * 1.2) var(--bubble-shadow-color))
 }
 #chat.bulk-delete-mode .ctrl{display:none!important}
 #chat.bulk-delete-mode .pmsg{cursor:pointer;transition:outline-color .12s,background-color .12s}
@@ -8472,6 +8702,77 @@ window.saveImage=function(){
 #chat.bulk-delete-mode .bulk-select-mark{display:flex}
 #chat.bulk-delete-mode .pmsg.bulk-selected .bulk-select-mark{background:var(--accent)}
 #bulkDeleteBtn.bulk-active{background:#D14343;border-color:#D14343;color:#fff}
+/* 수정 모드 하단 버튼 통일 — 말풍선 수정도 글·가름·사진처럼
+   [✓ 수정 완료] 아래에 [취소]가 전체 폭으로 오도록 */
+@media(min-width:861px){
+  .composer-card.composer-editing .composer-bottom-row{grid-template-columns:1fr!important}
+  .composer-card.composer-editing #addBtn,
+  .composer-card.composer-editing #cancelEditBtn{grid-column:1/-1!important}
+  .composer-card.composer-editing #cancelEditBtn{height:34px}
+}
+/* 토글 라벨 아래 아주 작은 부가 설명 */
+.toggle-grid .toggle.compact .t-lb .t-sub{display:block;font-size:9.5px;font-weight:500;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ── 말풍선 투명도: 배경+꼬리를 .bubble-bg 한 레이어로 합쳐 한 번에 투명하게 ──
+   말풍선과 꼬리를 각각 rgba로 칠하면 겹치는 부분이 비쳐 보이므로,
+   투명도 100% 미만일 때만 배경을 자식 레이어로 옮기고 그 레이어에 opacity를 준다.
+   레이어 안에서는 배경·꼬리가 불투명하게 그려진 뒤 통째로 합성되어 절대 비치지 않는다. */
+#chat.bubble-translucent .n-bubble,
+#chat.bubble-translucent .m-bubble{background:transparent!important;isolation:isolate}
+#chat.bubble-translucent .n-bubble:before,
+#chat.bubble-translucent .m-bubble:before,
+#chat.bubble-translucent .m-bubble:after{content:none!important}
+#chat.bubble-translucent .bubble-bg{
+  position:absolute;inset:0;z-index:-1;
+  border-radius:var(--bubble-radius,14px);
+  background:var(--bubble-bg);
+  opacity:var(--bubble-opacity,1);
+  pointer-events:none;
+}
+/* 받은/일반 말풍선 → 왼쪽 꼬리 (기존 지오메트리 그대로) */
+#chat.bubble-translucent:not(.bubble-tail-off) .n-bubble .bubble-bg:before,
+#chat.bubble-translucent:not(.bubble-tail-off) .m-msg:not(.mine) .m-bubble .bubble-bg:before{
+  content:'';
+  position:absolute;
+  top:calc(7.6px - var(--bubble-tail-radius-delta,0px) * 0.02 + var(--bubble-tail-y,0px));
+  left:calc(var(--bubble-tail-size,10px) * -0.9 + var(--bubble-tail-inward-delta,0px) * 0.55 + var(--bubble-tail-x,0px) + 1px);
+  width:0;
+  height:0;
+  border-top:calc(var(--bubble-tail-size,10px) * 0.08 + 0.6px - var(--bubble-tail-radius-delta,0px) * 0.01) solid transparent;
+  border-bottom:calc(var(--bubble-tail-size,10px) * 1.48 + 3.6px + var(--bubble-tail-radius-delta,0px) * 0.31) solid transparent;
+  border-right:calc(var(--bubble-tail-size,10px) * 1.28 + var(--bubble-tail-radius-base,15px) - var(--bubble-tail-inward-delta,0px) * 0.45) solid var(--bubble-bg);
+  pointer-events:none;
+}
+/* 보낸 말풍선 → 오른쪽 꼬리 (거울) */
+#chat.bubble-translucent:not(.bubble-tail-off) .m-msg.mine .m-bubble .bubble-bg:after{
+  content:'';
+  position:absolute;
+  top:calc(7.6px - var(--bubble-tail-radius-delta,0px) * 0.02 + var(--bubble-tail-y,0px));
+  right:calc(var(--bubble-tail-size,10px) * -0.9 + var(--bubble-tail-inward-delta,0px) * 0.55 + var(--bubble-tail-x,0px) + 1px);
+  width:0;
+  height:0;
+  border-top:calc(var(--bubble-tail-size,10px) * 0.08 + 0.6px - var(--bubble-tail-radius-delta,0px) * 0.01) solid transparent;
+  border-bottom:calc(var(--bubble-tail-size,10px) * 1.48 + 3.6px + var(--bubble-tail-radius-delta,0px) * 0.31) solid transparent;
+  border-left:calc(var(--bubble-tail-size,10px) * 1.28 + var(--bubble-tail-radius-base,15px) - var(--bubble-tail-inward-delta,0px) * 0.45) solid var(--bubble-bg);
+  pointer-events:none;
+}
+/* 연속 말풍선은 첫 번째만 꼬리 */
+#chat.bubble-translucent:not(.bubble-tail-off) .n-msg.continuation .bubble-bg:before,
+#chat.bubble-translucent:not(.bubble-tail-off) .m-msg.continuation:not(.mine) .m-bubble .bubble-bg:before,
+#chat.bubble-translucent:not(.bubble-tail-off) .m-msg.continuation.mine .m-bubble .bubble-bg:after{content:none!important}
+/* 투명 모드 그림자 — 합쳐진 배경+꼬리 레이어 하나에 그림자 '하나'.
+   (배경 이미지 위에서는 반투명 실루엣에서 계산되어 투명도에 비례해 은은해진다 — 유리처럼.
+    단색 배경에서는 아래 JS 블렌딩으로 불투명 렌더링되어 그림자 세기가 그대로 유지된다) */
+#chat.bubble-translucent.bubble-shadow-on .n-bubble,
+#chat.bubble-translucent.bubble-shadow-on .m-bubble{box-shadow:none!important;filter:none!important}
+#chat.bubble-translucent.bubble-shadow-on .bubble-bg{
+  filter:drop-shadow(0 3px calc(var(--bubble-shadow-strength) * 1.2) var(--bubble-shadow-color))
+}
+/* 말풍선 글씨 투명도 — 배경 투명도와 완전히 별개로 글자만 */
+#chat .n-bubble > .glyph-scale,
+#chat .m-bubble > .glyph-scale{opacity:var(--bubble-text-opacity,1)}
+/* 인라인 수정 중에는 배경 레이어가 잠시 사라지므로 불투명 배경으로 보여준다 */
+#chat.bubble-translucent .n-bubble.editing,
+#chat.bubble-translucent .m-bubble.editing{background:var(--bubble-bg)!important}
 @media(max-width:520px){.shadow-control-row{grid-template-columns:1fr}}
 </style>
 <script id="requested-feature-upgrades-script-v1">
@@ -8530,7 +8831,17 @@ window.syncControlsFromState=function(){
   const bubbleOn=document.getElementById('bubbleShadowOn'); if(bubbleOn) bubbleOn.checked=!!state.layout.bubbleShadowOn;
   const bubbleStrength=document.getElementById('bubbleShadowStrength'); if(bubbleStrength) bubbleStrength.value=state.layout.bubbleShadowStrength;
   const bubbleStrengthV=document.getElementById('bubbleShadowStrengthV'); if(bubbleStrengthV) bubbleStrengthV.textContent=Math.round(state.layout.bubbleShadowStrength)+'px';
+  const bo=document.getElementById('bubbleOpacity'); const boVal=(state.layout.bubbleOpacity!=null?state.layout.bubbleOpacity:100);
+  if(bo) bo.value=boVal;
+  const boV=document.getElementById('bubbleOpacityV'); if(boV) boV.textContent=Math.round(boVal)+'%';
+  const bto=document.getElementById('bubbleTextOpacity'); const btoVal=(state.layout.bubbleTextOpacity!=null?state.layout.bubbleTextOpacity:100);
+  if(bto) bto.value=btoVal;
+  const btoV=document.getElementById('bubbleTextOpacityV'); if(btoV) btoV.textContent=Math.round(btoVal)+'%';
+  const aq=document.getElementById('autoQuoteOn'); if(aq) aq.checked=!!state.autoQuoteBubble;
+  const sq=document.getElementById('stripQuotesOn'); if(sq) sq.checked=!!state.stripQuoteMarks;
+  const sn=document.getElementById('stripNameTagOn'); if(sn) sn.checked=!!state.stripSpeakerName;
   if(typeof updateBackgroundImageControls==='function') updateBackgroundImageControls();
+  if(typeof syncStepperBoxes==='function') syncStepperBoxes();
   applyRequestedVisuals();
   return result;
 };
@@ -8554,12 +8865,17 @@ window.commitComposerEdit=function(){
     if(!content.trim()){ alert('내용을 입력해 주세요.'); return; }
     m.type='text'; m.content=content; m.align=state.draftAlign||'left';
     delete m.senderId; delete m.image; delete m.imgSize; delete m.imgMargin; delete m.round;
+    /* "" 자동 말풍선이 켜져 있어도, 글로 저장한 블럭은 다시 말풍선으로 바뀌지 않도록 고정 */
+    if(state.autoQuoteBubble&&/["“”]/.test(content)) m.noAutoQuote=true;
+    else delete m.noAutoQuote;
+    delete m.autoSenderId;
   }else{
     const sid=senderSel.value;
     if(!sid){ alert('발신자를 선택해 주세요.'); return; }
     if(!content.trim()){ alert('내용을 입력해 주세요.'); return; }
     m.type='chat'; m.senderId=sid; m.content=content;
     delete m.align; delete m.image; delete m.imgSize; delete m.imgMargin; delete m.round;
+    delete m.noAutoQuote; delete m.autoSenderId;
   }
   endComposerEdit();
   renderPreview();
