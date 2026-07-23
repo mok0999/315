@@ -5293,8 +5293,10 @@ else setTimeout(__idleLoadRenderer,1200);
 
     const mobileTransformOnly=(
       document.body.classList.contains('mobile-ui')||
+      document.body.classList.contains('ipad-tablet')||
       (window.matchMedia&&window.matchMedia('(max-width:860px)').matches)||
-      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent||'')
+      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent||'')||
+      ((navigator.maxTouchPoints||0)>1&&/Macintosh|MacIntel/i.test((navigator.userAgent||'')+' '+(navigator.platform||'')))
     );
     /* clientWidth includes stage padding. On mobile, fitting against that full
        number lets the scaled wrapper protrude into the right padding and creates
@@ -7374,20 +7376,30 @@ applyMQ();
 
 <style id="pinch-zoom-styles">
 /* ===== 캔버스 전용 핀치 줌 ===== */
-.mobile-ui .preview-pane{
+.mobile-ui .preview-pane,
+.ipad-tablet .preview-pane{
   width:100%;min-width:0;max-width:100%;overflow:hidden;contain:layout;
 }
-.mobile-ui .preview-surface.stage{
+.mobile-ui .preview-surface.stage,
+.ipad-tablet .preview-surface.stage{
   box-sizing:border-box;width:100%;max-width:100%;min-width:0;overflow:auto!important;
   -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
   touch-action:pan-x pan-y;contain:layout paint;isolation:isolate;
 }
-.mobile-ui #canvasFit{
+.mobile-ui #canvasFit,
+.ipad-tablet #canvasFit{
   position:relative;flex:0 0 auto;min-width:0;min-height:0;max-width:none;
 }
 /* Never let Mobile Safari's zoom implementation participate in preview layout.
    JavaScript supplies transform:scale() and the exact scaled wrapper size. */
-.mobile-ui #canvas{zoom:1!important;max-width:none!important;transform-origin:top left!important}
+.mobile-ui #canvas,
+.ipad-tablet #canvas{zoom:1!important;max-width:none!important;transform-origin:top left!important}
+/* iPad 가로 화면에서도 한 손가락 팬은 유지하고, 두 손가락 브라우저 확대는 막아
+   아래 JS가 캔버스 전용 핀치를 안정적으로 처리하게 한다. */
+.ipad-tablet .preview-surface.stage{
+  touch-action:pan-x pan-y!important;
+  overscroll-behavior:contain!important;
+}
 #mZoomBadge{position:fixed;top:0;left:50%;transform:translate(-50%,10px);z-index:95;
   background:rgba(26,27,31,.86);color:#fff;font-size:12px;font-weight:700;
   padding:6px 12px;border-radius:999px;pointer-events:none;opacity:0;transition:opacity .18s}
