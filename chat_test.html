@@ -2444,18 +2444,59 @@ function clampCrop(){
   crop.x=Math.min(0,Math.max(BOX-w,crop.x));
   crop.y=Math.min(0,Math.max(BOX-h,crop.y));
 }
+const cropPointers=new Map(); let cropPinch=null;
+function setCropScale(next,cx,cy){
+  if(!crop.img) return;
+  const mn=parseFloat(cropZoom&&cropZoom.min)||1, mx=parseFloat(cropZoom&&cropZoom.max)||3;
+  next=Math.min(mx,Math.max(mn,next));
+  const k=next/crop.scale;
+  crop.x=cx-(cx-crop.x)*k;
+  crop.y=cy-(cy-crop.y)*k;
+  crop.scale=next;
+  if(cropZoom) cropZoom.value=String(next);
+  clampCrop(); applyCropTransform();
+}
+function startCropDragFrom(x,y){ crop.dragging=true; cropBox.classList.add('grab'); crop.sx=x; crop.sy=y; crop.ox=crop.x; crop.oy=crop.y; }
 cropBox.addEventListener('pointerdown',e=>{
-  crop.dragging=true; cropBox.classList.add('grab');
-  crop.sx=e.clientX; crop.sy=e.clientY; crop.ox=crop.x; crop.oy=crop.y;
-  cropBox.setPointerCapture(e.pointerId);
+  cropPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  try{ cropBox.setPointerCapture(e.pointerId); }catch(_){}
+  if(cropPointers.size>=2){
+    crop.dragging=false; cropBox.classList.remove('grab');
+    const p=[...cropPointers.values()];
+    cropPinch={d:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1,scale:crop.scale};
+    return;
+  }
+  startCropDragFrom(e.clientX,e.clientY);
 });
 cropBox.addEventListener('pointermove',e=>{
+  if(cropPointers.has(e.pointerId)) cropPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(cropPinch&&cropPointers.size>=2){
+    const p=[...cropPointers.values()];
+    const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;
+    const r=cropBox.getBoundingClientRect();
+    setCropScale(cropPinch.scale*(d/cropPinch.d),(p[0].x+p[1].x)/2-r.left,(p[0].y+p[1].y)/2-r.top);
+    return;
+  }
   if(!crop.dragging) return;
   crop.x=crop.ox+(e.clientX-crop.sx);
   crop.y=crop.oy+(e.clientY-crop.sy);
   clampCrop(); applyCropTransform();
 });
-cropBox.addEventListener('pointerup',()=>{crop.dragging=false;cropBox.classList.remove('grab')});
+function endCropPointer(e){
+  cropPointers.delete(e.pointerId);
+  if(cropPointers.size<2) cropPinch=null;
+  if(cropPointers.size===1){ const p=[...cropPointers.values()][0]; startCropDragFrom(p.x,p.y); }
+  else if(cropPointers.size===0){ crop.dragging=false; cropBox.classList.remove('grab'); }
+}
+cropBox.addEventListener('pointerup',endCropPointer);
+cropBox.addEventListener('pointercancel',endCropPointer);
+cropBox.addEventListener('wheel',e=>{
+  if(!crop.img) return;
+  e.preventDefault();
+  const r=cropBox.getBoundingClientRect();
+  const f=Math.exp(-e.deltaY*(e.deltaMode===1?0.05:0.0022));
+  setCropScale(crop.scale*f,e.clientX-r.left,e.clientY-r.top);
+},{passive:false});
 function closeCrop(){cropModal.classList.remove('show')}
 function applyCrop(){
   const out=document.createElement('canvas'); out.width=256; out.height=256;
@@ -3097,12 +3138,63 @@ function confirmMsgCrop(){
     setDraftMsgImage(data);closeMsgCropModal();
   }catch(_){ alert('이미지를 자르지 못했어요. 원본 사용을 눌러주세요.'); }
 }
+function scaleMsgCropSel(factor,cx,cy){
+  const d=msgCropState.display,s=msgCropState.sel; if(!d||!s||!(factor>0)) return;
+  const minSize=28;
+  const maxF=Math.min(d.w/s.w,d.h/s.h), minF=Math.max(minSize/s.w,minSize/s.h);
+  factor=Math.max(Math.min(minF,maxF),Math.min(maxF,factor));
+  const w=s.w*factor,h=s.h*factor;
+  let x=cx-(cx-s.x)*factor, y=cy-(cy-s.y)*factor;
+  x=clampMsgCrop(x,d.x,d.x+d.w-w);
+  y=clampMsgCrop(y,d.y,d.y+d.h-h);
+  msgCropState.sel={x,y,w,h};
+  updateMsgCropSelection();
+}
 const msgCropStageEl=document.getElementById('msgCropStage');
+const msgCropPointers=new Map(); let msgCropPinch=null;
+function msgCropPointerDown(e){
+  msgCropPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(msgCropPointers.size>=2){
+    msgCropState.drag=null;
+    try{ msgCropStageEl.setPointerCapture(e.pointerId); }catch(_){}
+    const p=[...msgCropPointers.values()];
+    msgCropPinch={d:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1};
+    e.preventDefault();
+    return;
+  }
+  beginMsgCropDrag(e);
+}
+function msgCropPointerMove(e){
+  if(msgCropPointers.has(e.pointerId)) msgCropPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(msgCropPinch&&msgCropPointers.size>=2){
+    e.preventDefault();
+    const p=[...msgCropPointers.values()];
+    const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1;
+    const r=msgCropStageEl.getBoundingClientRect();
+    scaleMsgCropSel(d/msgCropPinch.d,(p[0].x+p[1].x)/2-r.left,(p[0].y+p[1].y)/2-r.top);
+    msgCropPinch.d=d;
+    return;
+  }
+  moveMsgCropDrag(e);
+}
+function msgCropPointerUp(e){
+  msgCropPointers.delete(e.pointerId);
+  if(msgCropPointers.size<2) msgCropPinch=null;
+  try{ if(msgCropStageEl&&msgCropStageEl.hasPointerCapture(e.pointerId)) msgCropStageEl.releasePointerCapture(e.pointerId); }catch(_){}
+  endMsgCropDrag(e);
+}
 if(msgCropStageEl){
-  msgCropStageEl.addEventListener('pointerdown',beginMsgCropDrag);
-  msgCropStageEl.addEventListener('pointermove',moveMsgCropDrag);
-  msgCropStageEl.addEventListener('pointerup',endMsgCropDrag);
-  msgCropStageEl.addEventListener('pointercancel',endMsgCropDrag);
+  msgCropStageEl.addEventListener('pointerdown',msgCropPointerDown);
+  msgCropStageEl.addEventListener('pointermove',msgCropPointerMove);
+  msgCropStageEl.addEventListener('pointerup',msgCropPointerUp);
+  msgCropStageEl.addEventListener('pointercancel',msgCropPointerUp);
+  msgCropStageEl.addEventListener('wheel',e=>{
+    if(!msgCropState.sel||!msgCropState.display) return;
+    e.preventDefault();
+    const r=msgCropStageEl.getBoundingClientRect();
+    const f=Math.exp(-e.deltaY*(e.deltaMode===1?0.05:0.0022));
+    scaleMsgCropSel(f,e.clientX-r.left,e.clientY-r.top);
+  },{passive:false});
 }
 function addMessage(){
   if(composerEditId){ commitComposerEdit(); return; }
@@ -3806,7 +3898,7 @@ function enhanceRange(rangeId,valueId,opts={}){
   const wrap=range.closest('.rangewrap'); wrap.classList.add('has-stepper');
   const box=document.createElement('div'); box.className='stepper';
   const minus=document.createElement('button'); minus.type='button'; minus.textContent='−'; minus.title='줄이기';
-  const num=document.createElement('input'); num.type='number'; num.min=String(min); num.max=String(max); num.step=String(step); num.value=range.value;
+  const num=document.createElement('input'); num.type='number'; num.min=String(min); num.max=String(max); num.step=String(step); num.value=range.value; num.dataset.stepperFor=rangeId;
   const plus=document.createElement('button'); plus.type='button'; plus.textContent='+'; plus.title='늘리기';
   box.append(minus,num,plus); wrap.append(box);
   const apply=v=>{
@@ -3820,6 +3912,11 @@ function enhanceRange(rangeId,valueId,opts={}){
   num.addEventListener('change',()=>apply(num.value));
   num.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();apply(num.value);num.blur();} });
   range.addEventListener('input',()=>{num.value=range.value});
+}
+function syncStepperBoxes(){
+  document.querySelectorAll('.stepper input[data-stepper-for]').forEach(n=>{
+    const r=document.getElementById(n.dataset.stepperFor); if(r) n.value=r.value;
+  });
 }
 function initPreciseControls(){
   enhanceRange('lyWidth','lyWidthV',{min:300,max:1000,step:1,nudge:10});
@@ -3846,6 +3943,8 @@ function initPreciseControls(){
   enhanceRange('lyBlockGap','lyBlockGapV',{min:0,max:60,step:1,nudge:2});
   enhanceRange('creditSize','creditSizeV',{min:9,max:18,step:1,nudge:1});
   enhanceRange('creditGap','creditGapV',{min:0,max:80,step:1,nudge:2});
+  enhanceRange('bubbleOpacity','bubbleOpacityV',{min:0,max:100,step:1,nudge:5});
+  enhanceRange('bubbleTextOpacity','bubbleTextOpacityV',{min:0,max:100,step:1,nudge:5});
 }
 
 
@@ -8733,6 +8832,7 @@ window.syncControlsFromState=function(){
   const sq=document.getElementById('stripQuotesOn'); if(sq) sq.checked=!!state.stripQuoteMarks;
   const sn=document.getElementById('stripNameTagOn'); if(sn) sn.checked=!!state.stripSpeakerName;
   if(typeof updateBackgroundImageControls==='function') updateBackgroundImageControls();
+  if(typeof syncStepperBoxes==='function') syncStepperBoxes();
   applyRequestedVisuals();
   return result;
 };
