@@ -1248,6 +1248,15 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
   }
 }
 </style>
+
+<style id="ios-text-autosizing-fix">
+/* iPhone/iPad Safari가 좁은 화면에서 일부 텍스트만 임의로 확대·축소하는 현상 방지.
+   미리보기와 html-to-image 저장본에 동일하게 적용된다. */
+html, body, #canvas, #chat, #canvas * {
+  -webkit-text-size-adjust: 100% !important;
+  text-size-adjust: 100% !important;
+}
+</style>
 </head>
 <body>
 <div class="top">
@@ -1498,7 +1507,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
 </div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
-<div class="toggle compact" title='큰따옴표("")가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">"" 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="state.autoQuoteBubble=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
+<div class="toggle compact" title='큰따옴표("")가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">"" 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선 안에서만 큰따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">"" 기호 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요"><div class="t-lb">프로필 사진</div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="‘내 계정’으로 지정한 캐릭터의 프로필과 이름을 모든 모드에서 켜고 꺼요"><div class="t-lb">내 프로필·이름</div><label class="sw"><input id="showMyIdentity" onchange="state.showMyIdentity=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
