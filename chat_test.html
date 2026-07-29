@@ -1331,6 +1331,7 @@ html, body, #canvas, #chat, #canvas * {
 <input hidden="" id="parenOn" onchange="setParen(this.checked)" type="checkbox"/>
 <span class="fmt-grp" data-lb="글자 색"><span class="fmt-pair"><button class="cbtn" id="colorBtn" onclick="wrapColor()" title="선택한 글자 색 바꾸기">A</button>
 <span class="swatch fmt-swatch" style="background:#D14343" title="글자 색 선택"><input id="partialColor" class="color-proxy" oninput="setPartialColor(this.value)" type="text" value="#D14343" readonly inputmode="none" aria-label="글자 색 선택"/></span></span></span>
+<span class="fmt-grp fmt-grp-clear" data-lb="지우기"><button class="clearfmt" id="clearFmtBtn" onclick="clearFmt()" title="선택한 부분의 서식 지우기 — 선택 없이 누르면 입력창 전체" aria-label="서식 지우기"><svg aria-hidden="true" viewBox="0 0 18 18" width="15" height="15" fill="none"><path d="M3.5 5h11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M7.2 5V3.8c0-.5.4-.9.9-.9h1.8c.5 0 .9.4.9.9V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5.2 5l.7 8.6c0 .8.7 1.4 1.5 1.4h3.2c.8 0 1.5-.6 1.5-1.4L12.8 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span>
 </div>
 <div aria-multiline="true" class="rich-composer" contenteditable="true" data-placeholder="내용을 입력하세요" id="msgContent" role="textbox" spellcheck="false"></div>
 </div>
@@ -3631,8 +3632,10 @@ function renderPreview(){
     // A run continues only when the immediately preceding item is another chat
     // message from the same sender. Text, dividers, images, or another sender break it.
     const isChat=x=>x&&(!x.type||x.type==='chat');
-    const continued=isChat(m)&&isChat(prev)&&m.senderId===prev.senderId;
-    const nextContinued=isChat(m)&&isChat(next)&&m.senderId===next.senderId;
+    /* 페이지가 나뉘는 자리에서는 연속 묶음도 끊는다.
+       새 장의 첫 말풍선은 그 장의 맨 위이므로 프로필 사진과 이름이 다시 나와야 한다. */
+    const continued=isChat(m)&&isChat(prev)&&m.senderId===prev.senderId&&!m.splitBefore;
+    const nextContinued=isChat(m)&&isChat(next)&&m.senderId===next.senderId&&!(next&&next.splitBefore);
     // Spacing inside a consecutive same-sender run stays fixed. The message-gap control
     // moves the whole run relative to surrounding items instead of stretching its bubbles.
     /* 같은 캐릭터가 연속으로 이어지는 하위 말풍선 간격을 모드별로 고정한다.
@@ -5854,6 +5857,26 @@ else setTimeout(__idleLoadRenderer,1200);
     const root=editorRoot();if(!root)return;
     applyColorFormat(root,state.colors.partial);
     cleanupEmptyFormats(root);
+  };
+  /* 서식 지우기 — 선택 영역이 있으면 그 부분만, 없으면 입력창 전체 */
+  window.clearFmt=function(){
+    const root=editorRoot();if(!root)return;
+    const all=[...root.querySelectorAll(FORMAT_QUERY)];
+    const found=selectionInside(root);
+    const ranged=!!(found&&found.range&&!found.range.collapsed);
+    let targets=all;
+    if(ranged){
+      targets=all.filter(el=>{try{return found.range.intersectsNode(el);}catch(_){return false;}});
+    }
+    if(!targets.length){
+      if(typeof window.toast==='function') window.toast('지울 서식이 없어요');
+      root.focus(); return;
+    }
+    targets.sort((a,b)=>nodeDepth(b)-nodeDepth(a));
+    transformKeepingSelection(root,()=>targets.forEach(unwrapElement));
+    cleanupEmptyFormats(root);
+    root.focus();
+    if(!ranged&&typeof window.toast==='function') window.toast('입력창의 서식을 모두 지웠어요');
   };
   window.wrapTextHeading=function(level){
     const root=editorRoot();if(!root)return;
@@ -10924,6 +10947,15 @@ window.__pageOfMsgId=function(id){
   if(i<0) return curPage;
   return pageOfIndex()[i]||1;
 };
+window.__currentPage=function(){ return clampPage(),curPage; };
+window.__pageCount=function(){ return pageCount(); };
+/* 지금 보고 있는 장에 속한 블럭 id 목록 */
+window.__idsOnCurrentPage=function(){
+  const ms=state.messages||[];
+  const pages=pageOfIndex();
+  clampPage();
+  return ms.filter((m,i)=>m&&pages[i]===curPage).map(m=>m.id);
+};
 
 /* ---------- 렌더 훅 ---------- */
 const _renderPreview=window.renderPreview;
@@ -10989,7 +11021,22 @@ document.addEventListener('DOMContentLoaded',()=>{
 .pmsg .ctrl button.merge-btn{font-size:12px;line-height:1}
 .pmsg .ctrl button.merge-btn:disabled,.pmsg .ctrl button.split-btn:disabled{
   opacity:.26;cursor:default;pointer-events:none}
-#btnStripFmt{white-space:nowrap}
+
+/* ===== 서식 지우기(휴지통) — 서식 줄 오른쪽 끝 =====
+   flex 경쟁에 끼지 않도록 고정 폭으로 두고, 서식 줄 자체는 줄바꿈을 막아
+   버튼이 하나 늘어도 지금의 1행 배치가 그대로 유지되게 한다. */
+.composer-card .fmt{flex-wrap:nowrap!important;row-gap:0!important;overflow:visible}
+.composer-card .fmt .fmt-grp{flex-shrink:1;min-width:0}
+.composer-card .fmt .fmt-grp>button{min-width:24px}
+.fmt-grp.fmt-grp-clear{flex:0 0 auto!important;min-width:0!important;margin-left:1px}
+.fmt-grp.fmt-grp-clear>button.clearfmt{display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 auto;width:28px;min-width:28px;padding:0}
+.mobile-ui.m-tools-open #mDock .composer-top-grid .fmt .fmt-grp.fmt-grp-clear{
+  flex:0 0 auto!important;min-width:0!important}
+.mobile-ui.m-tools-open #mDock .composer-top-grid .fmt .fmt-grp.fmt-grp-clear>button.clearfmt{
+  width:30px;min-width:30px}
+.fmt-grp.fmt-grp-clear>button.clearfmt:hover{color:#D14343}
+#btnDelPage{white-space:nowrap}
 </style>
 <script id="format-tools-script">
 (function(){
@@ -11038,20 +11085,28 @@ function countFormatted(){
   },0);
 }
 
-window.stripAllFormatting=function(){
+window.deleteCurrentPage=function(){
   const ms=state.messages||[];
   if(!ms.length){ T('아직 블럭이 없어요'); return; }
-  const n=countFormatted();
-  if(!n){ T('지울 서식이 없어요'); return; }
+  const total=(typeof window.__pageCount==='function')?window.__pageCount():1;
+  const page=(typeof window.__currentPage==='function')?window.__currentPage():1;
+  const ids=(typeof window.__idsOnCurrentPage==='function')?window.__idsOnCurrentPage():ms.map(m=>m.id);
+  if(!ids.length){ T('이 장에는 지울 블럭이 없어요'); return; }
+
   const okGo=window.confirm(
-    '블럭 '+n+'개에서 서식을 모두 지울까요?\n\n'
-    +'굵게 · 기울임 · 밑줄 · 취소선 · 형광펜 · 인용구 · 글자색 · 제목 크기가 사라지고\n'
-    +'글자만 남아요. 되돌리기(Ctrl+Z)로 복구할 수 있어요.');
+    (total>1?(page+'/'+total+'장'):'현재 화면')+'에 있는 블럭 '+ids.length+'개를 지울까요?\n\n'
+    +(total>1?'다른 장은 그대로 남아요. ':'남는 블럭이 없어요. ')
+    +'되돌리기(Ctrl+Z)로 복구할 수 있어요.');
   if(!okGo) return;
-  try{ if(typeof window.pushUndo==='function') window.pushUndo('모든 서식 삭제'); }catch(_){}
-  ms.forEach(m=>{ if(m&&typeof m.content==='string') m.content=stripFormatting(m.content); });
+
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('페이지 삭제'); }catch(_){}
+  const gone=new Set(ids);
+  state.messages=ms.filter(m=>!(m&&gone.has(m.id)));
+  /* 지운 자리에서 새 장이 시작되고 있었다면 그 표시도 같이 정리한다 */
+  if(state.messages[0]) delete state.messages[0].splitBefore;
   renderPreview();
-  withUndo('블럭 '+n+'개의 서식을 지웠어요');
+  try{ if(typeof window.gotoPage==='function') window.gotoPage(Math.min(page,(window.__pageCount?window.__pageCount():1))); }catch(_){}
+  withUndo(ids.length+'개 블럭을 지웠어요');
 };
 
 /* ---------------------------------------------------------------
@@ -11116,14 +11171,14 @@ window.ctrlHTML=function(id){
 
 /* ---------- '모든 서식 삭제' 버튼 심기 ---------- */
 function addStripButton(){
-  if(document.getElementById('btnStripFmt')) return;
+  if(document.getElementById('btnDelPage')) return;
   const host=document.querySelector('.preview-actions');
   if(!host) return;
   const b=document.createElement('button');
-  b.id='btnStripFmt'; b.type='button'; b.className='btn';
-  b.textContent='\u232B 모든 서식 삭제';
-  b.title='모든 블럭에서 굵게·형광펜·인용구·글자색 같은 서식을 지우고 글자만 남겨요';
-  b.onclick=()=>window.stripAllFormatting();
+  b.id='btnDelPage'; b.type='button'; b.className='btn';
+  b.textContent='\uD83D\uDDD1 이 페이지 삭제';
+  b.title='지금 미리보기에 보이는 장의 블럭을 모두 지워요';
+  b.onclick=()=>window.deleteCurrentPage();
   const bulk=host.querySelector('[onclick*="toggleBulkDeleteMode"]');
   if(bulk) host.insertBefore(b,bulk); else host.appendChild(b);
 }
@@ -11131,11 +11186,11 @@ function addMobileStripButton(){
   const qa=document.getElementById('mQuickActions');
   if(!qa||qa.querySelector('[data-strip-fmt]')) return;
   const b=document.createElement('button');
-  b.type='button'; b.className='btn sm'; b.textContent='\u232B 모든 서식 삭제';
+  b.type='button'; b.className='btn sm'; b.textContent='\uD83D\uDDD1 이 페이지 삭제';
   b.setAttribute('data-strip-fmt','1');
   b.onclick=()=>{
     try{ if(typeof closeSheet==='function') closeSheet(); }catch(_){}
-    setTimeout(()=>window.stripAllFormatting(),60);
+    setTimeout(()=>window.deleteCurrentPage(),60);
   };
   qa.appendChild(b);
 }
