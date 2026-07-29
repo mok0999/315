@@ -315,6 +315,12 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .n-msg.circle .av{border-radius:50%}.n-msg.rounded .av{border-radius:12px}
 /* Consecutive messages keep the avatar column without drawing the avatar again. */
 .n-msg .av-continuation-spacer{flex:0 0 40px;width:40px;height:0;pointer-events:none}
+/* 로그 모드에서 이름을 숨기면 전체 문단이 아니라 첫 줄의 중심을
+   프로필 사진 중심에 맞춰요. 프로필 아래 남는 높이는 행 높이에서 빼서
+   이어지는 같은 캐릭터 로그가 설정된 간격 그대로 붙습니다. */
+.n-msg.log-row.log-name-hidden:not(.continuation){align-items:flex-start}
+.n-msg.log-row.log-name-hidden:not(.continuation)>.n-body{padding-top:var(--log-first-line-offset,0px)}
+.n-msg.log-row.log-name-hidden:not(.continuation)>.av{margin-bottom:var(--log-avatar-overhang,0px)}
 .n-body{flex:1;min-width:0}
 .n-name{font-size:12px;font-weight:700;margin-bottom:5px;line-height:1.25}
 .n-bubble{display:inline-block;vertical-align:top;max-width:100%;word-break:break-word}
@@ -1507,8 +1513,8 @@ html, body, #canvas, #chat, #canvas * {
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
 </div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
-<div class="toggle compact" title='큰따옴표("")가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">"" 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
-<div class="toggle compact" title="말풍선 안에서만 큰따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">"" 기호 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
+<div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
+<div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요"><div class="t-lb">프로필 사진</div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="‘내 계정’으로 지정한 캐릭터의 프로필과 이름을 모든 모드에서 켜고 꺼요"><div class="t-lb">내 프로필·이름</div><label class="sw"><input id="showMyIdentity" onchange="state.showMyIdentity=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요"><div class="t-lb">말풍선 꼬리</div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div>
@@ -1598,7 +1604,42 @@ html, body, #canvas, #chat, #canvas * {
 </div></div>
 </div>
 </div>
-</div></div></section></div></div></section></aside><main class="preview-pane">
+</div>
+<div class="flat-tool-section" id="accSplit">
+<div class="flat-tool-title"><strong>✂️ 페이지 나누기</strong></div>
+<div class="flat-tool-body">
+<div class="field">
+<div class="field-help" id="splitCountHelp">블럭에 마우스를 올리면 나오는 <b>✂</b> 버튼으로 분할 지점을 표시해요.</div>
+</div>
+<div class="field">
+<div class="toggle">
+<div class="t-lb">페이지 번호<span>서명과 같은 줄에 이미지로 새겨져요</span></div>
+<label class="sw"><input id="pageNumOn" onchange="setPageNum('on',this.checked)" type="checkbox"/><span class="track"></span></label>
+</div>
+</div>
+<div class="field" style="margin-top:14px;margin-bottom:14px">
+<label class="lb">위치 (정렬)</label>
+<div class="seg" id="pageNumAlignSeg">
+<button class="on" onclick="setPageNum('align','left')" type="button">좌</button>
+<button onclick="setPageNum('align','center')" type="button">가운데</button>
+<button onclick="setPageNum('align','right')" type="button">우</button>
+</div>
+</div>
+<div class="colorgrid">
+<div class="field" style="margin:0"><label class="lb">글자 크기</label>
+<div class="rangewrap"><input id="pageNumSize" max="18" min="9" oninput="setPageNum('size',this.value)" type="range" value="12"/><span class="val" id="pageNumSizeV">12px</span></div></div>
+<div class="field" style="margin:0"><label class="lb">색상</label>
+<div class="colorrow" data-color="pageNum"></div></div>
+<div class="field" style="grid-column:1/-1;margin:0"><label class="lb">번호 형식</label>
+<div class="seg" id="pageNumFmtSeg">
+<button class="on" onclick="setPageNum('format','slash')" type="button">1/3</button>
+<button onclick="setPageNum('format','dash')" type="button">- 1 -</button>
+<button onclick="setPageNum('format','pad')" type="button">01</button>
+<button onclick="setPageNum('format','plain')" type="button">1</button>
+</div></div>
+</div>
+</div>
+</div></section></div></div></section></aside><main class="preview-pane">
 <div class="preview-toolbar">
 <div class="preview-heading">
 <strong>미리보기</strong>
@@ -1648,7 +1689,7 @@ html, body, #canvas, #chat, #canvas * {
 <div class="overlay" id="clearModal">
 <div class="modal">
 <div class="mhd">채팅을 전부 지울까요?</div>
-<div class="mbd">멤버와 메시지가 모두 삭제돼요. 지운 내용은 되돌릴 수 없어요.</div>
+<div class="mbd">메시지가 모두 삭제돼요. 등록한 멤버는 그대로 남아요.</div>
 <div class="mft">
 <button class="btn" onclick="closeClear()">취소</button>
 <button class="btn danger-strong" onclick="doClear()">전부 지우기</button>
@@ -1716,6 +1757,7 @@ const state = {
   previewZoom:1,
   backgroundImage:{src:'',size:100,rotation:0,x:50,y:50,blur:0,overlayOpacity:0},
   credit:{ on:false, maker:'', character:'', align:'right', size:12, gap:16, sep:'dot' },
+  pageNum:{ on:false, align:'left', size:12, format:'slash' },
   colors:{
     bg:'#EDEDEE',
     nBubble:'#FFFFFF', nText:'#424448',
@@ -1728,6 +1770,7 @@ const state = {
     partial:'#D14343',
     paren:'#8A8F98',
     credit:'#8A8F98',
+    pageNum:'#8A8F98',
     bgOverlay:'#000000',
     textShadow:'#000000',
     bubbleShadow:'#000000'
@@ -3448,7 +3491,7 @@ function bubbleViewMsg(m){
   //    이후 프로필 이름을 바꿔도 첫 번째 캐릭터로 되돌아가지 않는다.
   //    아직 일치하는 멤버가 없어 첫 멤버로 임시 표시 중일 때는 고정하지 않고 계속 인식하므로,
   //    나중에 해당 멤버를 추가하면 그때 자동으로 연결·고정된다.
-  if(state.autoQuoteBubble&&baseType==='text'&&!m.noAutoQuote&&/["“”]/.test(content)&&state.members.length){
+  if(state.autoQuoteBubble&&baseType==='text'&&!m.noAutoQuote&&/["“”「」]/.test(content)&&state.members.length){
     let mem=null;
     if(m.autoSenderId){
       mem=state.members.find(x=>x.id===m.autoSenderId)||null;
@@ -3464,8 +3507,8 @@ function bubbleViewMsg(m){
   // 2) [이름｜] 이름표 삭제 — 괄호 해석 부분은 유지
   if(state.stripSpeakerName&&pre){ content=pre.rest; changed=true; }
   // 3) "" 기호 삭제 — 말풍선(자동 변환 포함)에서만
-  if(state.stripQuoteMarks&&effType==='chat'&&/["“”]/.test(content)){
-    content=content.replace(/["“”]/g,''); changed=true;
+  if(state.stripQuoteMarks&&effType==='chat'&&/["“”「」]/.test(content)){
+    content=content.replace(/["“”「」]/g,''); changed=true;
   }
   if(!changed) return m;
   const c=Object.assign({},m,{type:effType,content:content});
@@ -3592,10 +3635,9 @@ function renderPreview(){
     const nextContinued=isChat(m)&&isChat(next)&&m.senderId===next.senderId;
     // Spacing inside a consecutive same-sender run stays fixed. The message-gap control
     // moves the whole run relative to surrounding items instead of stretching its bubbles.
-    /* 같은 캐릭터가 연속으로 이어지는 하위 말풍선 간격은 6px로 고정한다.
-       로그 모드도 현재는 6px — 아래 숫자만 바꾸면 로그 모드만 따로 조절된다.
-       (기본·메신저 모드는 항상 6px.) */
-    const continuationGap=(state.mode==='log')?6:6;
+    /* 같은 캐릭터가 연속으로 이어지는 하위 말풍선 간격을 모드별로 고정한다.
+       로그 모드는 3px, 기본·메신저 모드는 기존과 동일하게 6px. */
+    const continuationGap=(state.mode==='log')?3:6;
     // Spacing to the next item is governed by whichever element "owns" that seam, so the
     // bubble panel's spacing controls only affect bubble(+글) spacing — never 가름선/사진.
     // priority: 가름선 > 사진 > 글 > 말풍선
@@ -3694,7 +3736,7 @@ function logRow(m,mem,gap,continued=false){
   const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
   const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
   const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>`:'';
-  return `<div class="pmsg n-msg ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
+  return `<div class="pmsg n-msg log-row ${state.hideNames?'log-name-hidden':''} ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
     ${avatar||avatarSpacer}
     <div class="n-body">
@@ -6153,8 +6195,10 @@ else setTimeout(__idleLoadRenderer,1200);
     const touch=isTouchWebKit()||((navigator.maxTouchPoints||0)>0&&innerWidth<=900);
     const maxSide=touch?8192:32767;
     const maxPixels=touch?12000000:64000000;
-    scale=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
-    return Math.max(.0001,scale*.985);
+    const limited=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
+    /* 한도에 걸렸을 때만 1.5% 여유를 둔다. 걸리지 않았으면 요청한 배율 그대로 저장한다. */
+    if(limited>=scale) return Math.max(.0001,scale);
+    return Math.max(.0001,limited*.985);
   }
 
   function canvasToPngBlob(canvas){
@@ -6327,7 +6371,7 @@ else setTimeout(__idleLoadRenderer,1200);
       const result=await captureExactPreview('미리보기 그대로 저장 중...');
       if(result&&result.blob){
         downloadPngBlob(result.blob,safeFilename(state.export.filename)+'.png');
-        if(result.scale+0.02<result.requestedScale&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
+        if(result.scale<result.requestedScale*0.97&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
       }
     }catch(err){
       console.error('exact preview image export failed',err);
@@ -6434,7 +6478,7 @@ function hideToast(){const el=document.getElementById('upToast'); if(el) el.clas
 
 /* ---------- 프로젝트 스냅샷 (직렬화) ---------- */
 const SNAP_KEYS=['mode','shape','showProfile','hideNames','showMyIdentity','meId','parenOn','autoQuoteBubble','stripSpeakerName','stripQuoteMarks','members','messages',
-  'export','transparentBg','backgroundImage','credit','colors','layout'];
+  'export','transparentBg','backgroundImage','credit','pageNum','colors','layout'];
 function projectSnapshot(){
   const o={};
   SNAP_KEYS.forEach(k=>{ o[k]=state[k]; });
@@ -6446,7 +6490,7 @@ function applyProject(d){
   if(Array.isArray(d.messages)) state.messages=d.messages;
   ['mode','shape','meId'].forEach(k=>{ if(typeof d[k]==='string') state[k]=d[k]; });
   ['showProfile','hideNames','showMyIdentity','parenOn','transparentBg','autoQuoteBubble','stripSpeakerName','stripQuoteMarks'].forEach(k=>{ if(typeof d[k]==='boolean') state[k]=d[k]; });
-  ['export','backgroundImage','credit','colors','layout'].forEach(k=>{
+  ['export','backgroundImage','credit','pageNum','colors','layout'].forEach(k=>{
     if(d[k]&&typeof d[k]==='object') Object.assign(state[k],JSON.parse(JSON.stringify(d[k])));
   });
   try{ setMode(state.mode); }catch(_){}
@@ -6560,6 +6604,10 @@ function undoLast(){
   toast('“'+u.label+'” 실행을 취소했어요');
 }
 
+/* 뒤에 붙는 스크립트에서도 토스트·실행 취소를 그대로 쓸 수 있게 내보낸다 */
+window.toast=toast; window.hideToast=hideToast;
+window.pushUndo=pushUndo; window.undoLast=undoLast;
+
 /* 기존 삭제 함수들을 감싸서 실행 취소 지원 */
 const __delMsg0=window.delMsg;
 window.delMsg=function(id){
@@ -6597,7 +6645,7 @@ window.ctrlHTML=function(id){
     +'<button type="button" title="위로" onclick="moveMsg(\''+id+'\',-1)">▲</button>'
     +'<button type="button" title="아래로" onclick="moveMsg(\''+id+'\',1)">▼</button>'
     +'<button type="button" title="복제" onclick="dupMsg(\''+id+'\')">⧉</button>'
-    +'<button type="button" title="수정" onclick="editMsgPrompt(\''+id+'\')">✎</button>'
+    +'<button type="button" class="edit-btn" title="수정" onclick="editMsgPrompt(\''+id+'\')">✎</button>'
     +'<button type="button" class="del" title="삭제" onclick="delMsg(\''+id+'\')">×</button>'
     +'</div>';
 };
@@ -8141,8 +8189,10 @@ stage.addEventListener('touchend',e=>{
     const mobile=isMobileEngine();
     const maxSide=mobile?8192:32767;
     const maxPixels=mobile?12000000:64000000;
-    scale=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
-    return Math.max(.0001,scale*.985);
+    const limited=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
+    /* 한도에 걸렸을 때만 1.5% 여유를 둔다. 걸리지 않았으면 요청한 배율 그대로 저장한다. */
+    if(limited>=scale) return Math.max(.0001,scale);
+    return Math.max(.0001,limited*.985);
   }
 
   function canvasBlob(canvas){
@@ -8445,7 +8495,7 @@ stage.addEventListener('touchend',e=>{
       const result=await capture('미리보기 그대로 저장 중...');
       if(result&&result.blob){
         downloadBlob(result.blob,safeFilename(state.export.filename)+'.png');
-        if(result.scale+0.02<result.requestedScale&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
+        if(result.scale<result.requestedScale*0.97&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
       }
     }catch(err){
       console.error('exact preview scaled raster export failed',err);
@@ -8866,7 +8916,7 @@ window.commitComposerEdit=function(){
     m.type='text'; m.content=content; m.align=state.draftAlign||'left';
     delete m.senderId; delete m.image; delete m.imgSize; delete m.imgMargin; delete m.round;
     /* "" 자동 말풍선이 켜져 있어도, 글로 저장한 블럭은 다시 말풍선으로 바뀌지 않도록 고정 */
-    if(state.autoQuoteBubble&&/["“”]/.test(content)) m.noAutoQuote=true;
+    if(state.autoQuoteBubble&&/["“”「」]/.test(content)) m.noAutoQuote=true;
     else delete m.noAutoQuote;
     delete m.autoSenderId;
   }else{
@@ -9554,5 +9604,1485 @@ if(typeof previousFit==='function'){
 queue();
 })();
 </script>
+<style id="feature-pack-v4-styles">
+/* =====================================================================
+   추가 기능 팩 v3 (전부 추가형 — 기존 규칙은 덮어쓰지 않음)
+   1) 찾기·바꾸기(정규식)   2) 공백만 있어도 블럭 추가
+   3) 말풍선 인용구를 프로필 앞으로   4) 글자 색 우선   5) 글 정렬 통일
+   ===================================================================== */
+
+/* ---- 3) 말풍선 인용구 막대 ----
+   막대를 flex 아이템으로 끼우면 행의 flex 줄 폭이 23.5px 늘어나는데,
+   .n-body 의 max-width:calc(100% - 52px) 는 프로필(40)+gap(12)만 계산한 값이라
+   가운데·오른쪽 정렬에서 그만큼 줄이 넘쳐 여백 밖으로 밀려났다.
+   → 막대를 흐름에서 빼서(absolute) 행 padding-left 로만 자리를 만든다.
+     그러면 flex 줄 폭은 예전 그대로라 어떤 정렬에서도 절대 넘치지 않는다.
+   두께는 글 블럭 인용구(.quote-fmt)와 똑같이 border-left 3.5px 로 그린다. */
+.n-msg.has-row-quote>.row-quote-bar{
+  position:absolute;top:0;bottom:0;width:3.5px;box-sizing:border-box;background:none}
+/* 메신저 모드(.m-msg)는 flex가 아니라 절대배치 아바타 구조 */
+.m-msg.has-row-quote{padding-left:70.5px}
+.m-msg.has-row-quote.no-av,.m-msg.has-row-quote.mine{padding-left:20.5px}
+.m-msg.has-row-quote.mine.own-avatar-column{padding-left:20.5px;padding-right:50px}
+.m-msg.has-row-quote>.av{left:20.5px}
+.m-msg.has-row-quote.mine.own-avatar-column>.av{left:auto;right:0}
+.m-msg.has-row-quote>.row-quote-bar{position:absolute;left:0;top:0;bottom:0;width:3.5px;background:none}
+
+/* ---- 1) 찾기·바꾸기 패널 ---- */
+#accFindReplace .fr-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#accFindReplace input[type="text"]{width:100%}
+#accFindReplace .fr-opts{display:flex;flex-wrap:wrap;gap:10px 14px;margin:9px 0 4px}
+#accFindReplace .fr-opts label{display:inline-flex;align-items:center;gap:5px;
+  font-size:11.5px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none}
+#accFindReplace .fr-opts input{accent-color:var(--accent);width:14px;height:14px;margin:0;cursor:pointer}
+#accFindReplace .fr-btns{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+#accFindReplace .fr-btns .btn{flex:1 1 0;min-width:88px}
+#accFindReplace .fr-result{margin-top:8px;font-size:11.5px;font-weight:600;color:var(--muted);min-height:15px}
+#accFindReplace .fr-result.bad{color:var(--danger,#D14343)}
+@media (max-width:520px){#accFindReplace .fr-row{grid-template-columns:1fr}}
+</style>
+<script id="feature-pack-v4-script">
+(function(){
+'use strict';
+
+function toastMsg(msg){
+  let el=document.getElementById('upToast');
+  if(!el){ el=document.createElement('div'); el.id='upToast'; document.body.appendChild(el); }
+  el.innerHTML=''; const sp=document.createElement('span'); sp.textContent=msg; el.appendChild(sp);
+  el.classList.add('show');
+  clearTimeout(el.__fpT); el.__fpT=setTimeout(()=>el.classList.remove('show'),3200);
+}
+/* 글자는 하나도 없고 공백(스페이스·탭·전각공백 등)만 있는 내용인가 */
+function blankOnly(s){ s=String(s==null?'':s); return s.length>0 && !/[^\s\u200B]/.test(s); }
+
+/* ================================================================
+   4) 글자 색을 다른 서식보다 우선 — fmtText 재정의
+   기존 순서: … → 글자 색 → 괄호 자동 색  (괄호 색이 나중이라 안쪽을 덮어썼다)
+   새 순서  : 글자 색을 자리표시자로 빼둔 뒤 괄호 색을 칠하고 마지막에 되돌린다.
+   + 2) 공백만 있는 내용은 스페이스를 &nbsp;로 바꿔 빈 줄 높이를 살린다.
+   ================================================================ */
+window.fmtText=function(raw,edit){
+  raw=String(raw==null?'':raw);
+  if(blankOnly(raw)) raw=raw.replace(/ /g,'\u00A0');
+  let t=esc(raw);
+  t=t.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+  t=t.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<i>$1</i>');
+  t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
+  t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
+  t=t.replace(/==(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)==/g,(w,hhex,body)=>
+    `<mark style="background:${hhex?('#'+hhex.toUpperCase()):state.colors.highlight};color:inherit;padding:0 2px;border-radius:0">${body}</mark>`);
+  t=t.replace(/%%(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)%%/g,(w,qhex,body)=>
+    `<span class="quote-fmt" style="border-left:3.5px solid ${qhex?('#'+qhex.toUpperCase()):(state.colors.quote||'#8A8F98')}">${body}</span>`);
+  /* 직접 지정한 글자 색 → 자리표시자로 보호 */
+  const slots=[];
+  t=t.replace(/\[#([0-9A-Fa-f]{6})\]([\s\S]*?)\[\/\]/g,(w,hex,body)=>{
+    slots.push('<span data-hard-color="1" style="color:#'+hex.toUpperCase()+'">'+body+'</span>');
+    return '\u0001'+(slots.length-1)+'\u0001';
+  });
+  t=t.replace(/\[##\]([\s\S]*?)\[\/##\]/g,'<span class="text-heading text-heading-2" data-heading="2">$1</span>');
+  t=t.replace(/\[#\]([\s\S]*?)\[\/#\]/g,'<span class="text-heading text-heading-1" data-heading="1">$1</span>');
+  if(!edit&&state.parenOn){
+    t=t.replace(/(（[^（）]*）|\([^()]*\))/g,`<span style="color:${state.colors.paren}">$1</span>`);
+  }
+  t=t.replace(/\u0001(\d+)\u0001/g,(w,i)=>slots[Number(i)]||'');
+  t=t.replace(/\n/g,'<br>');
+  return t;
+};
+
+/* ================================================================
+   3) 말풍선 인용구 → 행 전체를 감싸는 인용 막대
+   ================================================================ */
+const QUOTE_ANY=/%%(?:\[#([0-9A-Fa-f]{6})\])?[\s\S]+?%%/;
+const QUOTE_ALL=/%%(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)%%/g;
+function rowQuote(content){
+  if(typeof content!=='string'||content.indexOf('%%')<0) return null;
+  const m=QUOTE_ANY.exec(content);
+  if(!m) return null;
+  return {
+    color:m[1]?('#'+m[1].toUpperCase()):(state.colors.quote||'#8A8F98'),
+    stripped:content.replace(QUOTE_ALL,'$1')
+  };
+}
+const BAR_W=3.5, BAR_GAP=17, BAR_TOTAL=BAR_W+BAR_GAP;   /* 3.5 + 17 = 20.5 */
+function barHTML(color,left){
+  /* 글 블럭 인용구(.quote-fmt)와 동일하게 border-left 로 그려 두께를 완전히 맞춘다 */
+  return '<span class="row-quote-bar" aria-hidden="true" style="position:absolute;left:'+left+'px;'
+    +'top:0;bottom:0;width:'+BAR_W+'px;box-sizing:border-box;border-left:'+BAR_W+'px solid '+color+'"></span>';
+}
+function injectBar(html,rowClass,color,mode){
+  const key='class="pmsg '+rowClass+' ';
+  const at=html.indexOf(key);
+  if(at<0) return html;
+  html=html.slice(0,at)+'class="pmsg '+rowClass+' has-row-quote '+html.slice(at+key.length);
+  /* 막대가 놓일 자리 = 현재 '말풍선 여백'(padding-left) 선. 여백을 줄이면 같이 따라온다. */
+  let left=0;
+  if(mode==='flex'){
+    left=Number(state.layout.textPadL)||0;
+    /* 인라인 style 뒤쪽에 padding-left 를 덧붙이면 같은 선언 블럭 안에서 나중 것이 이긴다 */
+    const si=html.indexOf('style="');
+    if(si>=0){
+      const end=html.indexOf('"',si+7);
+      if(end>si){
+        const sep=(html[end-1]===';'||html[end-1]==='"')?'':';';
+        html=html.slice(0,end)+sep+'padding-left:'+(left+BAR_TOTAL)+'px;'+html.slice(end);
+      }
+    }
+  }
+  const gt=html.indexOf('>');
+  if(gt<0) return html;
+  return html.slice(0,gt+1)+barHTML(color,left)+html.slice(gt+1);
+}
+function wrapRow(fnName,rowClass,mode){
+  const orig=window[fnName];
+  if(typeof orig!=='function') return;
+  window[fnName]=function(m,mem,gap,continued){
+    const q=(m&&typeof m.content==='string')?rowQuote(m.content):null;
+    const src=q?Object.assign({},m,{content:q.stripped}):m;
+    const out=orig.call(this,src,mem,gap,continued);
+    return q?injectBar(out,rowClass,q.color,mode):out;
+  };
+}
+wrapRow('normalRow','n-msg','flex');
+wrapRow('logRow','n-msg','flex');
+wrapRow('msgrRow','m-msg','abs');
+
+/* 막대가 흐름 밖(absolute)에 있으므로 flex 줄 폭은 인용구가 없을 때와 완전히 동일하다.
+   → 가운데·오른쪽 정렬의 넘침이 구조적으로 사라지고, 프로필 반쪽 기준 가운데 보정도
+     늘어난 padding-left 안쪽에서만 움직이므로 막대보다 왼쪽으로 갈 수 없다. */
+
+/* ================================================================
+   5) 글 정렬 — 블럭별이 아니라 모든 글 블럭 공통
+   ================================================================ */
+if(state.layout.textAlign==null){
+  const firstText=(state.messages||[]).find(m=>m&&m.type==='text'&&m.align);
+  state.layout.textAlign=(firstText&&firstText.align)||state.draftAlign||'left';
+}
+const ALIGNS=['justify','left','center','right'];
+let alignSilent=false;
+function syncAlignSeg(){
+  const seg=document.getElementById('alignSeg'); if(!seg) return;
+  const a=state.layout.textAlign||'left';
+  [...seg.children].forEach((b,i)=>b.classList.toggle('on',ALIGNS[i]===a));
+}
+window.setAlign=function(a){
+  if(alignSilent){ syncAlignSeg(); return; }
+  a=ALIGNS.indexOf(a)>=0?a:'left';
+  state.draftAlign=a;
+  state.layout.textAlign=a;
+  (state.messages||[]).forEach(m=>{ if(m&&m.type==='text') m.align=a; });
+  syncAlignSeg();
+  try{ renderPreview(); }catch(_){}
+};
+const _textRow=window.textRow;
+if(typeof _textRow==='function'){
+  window.textRow=function(t,gap){
+    return _textRow.call(this,Object.assign({},t,{align:state.layout.textAlign||'left'}),gap);
+  };
+}
+const _begin=window.beginComposerEdit;
+if(typeof _begin==='function'){
+  window.beginComposerEdit=function(){
+    alignSilent=true;
+    try{ return _begin.apply(this,arguments); }
+    finally{ alignSilent=false; state.draftAlign=state.layout.textAlign||'left'; syncAlignSeg(); }
+  };
+}
+const _sync=window.syncControlsFromState;
+if(typeof _sync==='function'){
+  window.syncControlsFromState=function(){
+    const r=_sync.apply(this,arguments);
+    if(state.layout.textAlign==null) state.layout.textAlign=state.draftAlign||'left';
+    state.draftAlign=state.layout.textAlign;
+    syncAlignSeg();
+    return r;
+  };
+}
+(function relabelAlign(){
+  const seg=document.getElementById('alignSeg'); if(!seg) return;
+  const lb=seg.parentElement&&seg.parentElement.querySelector('.lb');
+  if(lb) lb.textContent='글 정렬 (모든 글 블럭 공통)';
+})();
+syncAlignSeg();
+
+/* ================================================================
+   2) 공백만 입력해도 그대로 블럭으로 추가
+   ================================================================ */
+/* 작성창 value 게터가 줄 끝 공백을 잘라내서 " " 한 칸이 ""가 돼 버린다.
+   공백만 있는 입력일 때만 자르지 않고 그대로 돌려준다. (그 외 동작은 동일) */
+(function keepBlankValue(){
+  const ed=document.getElementById('msgContent');
+  if(!ed||typeof htmlToMarkup!=='function') return;
+  try{
+    Object.defineProperty(ed,'value',{
+      configurable:true,
+      get(){
+        const raw=htmlToMarkup(ed).replace(/\n{3,}/g,'\n\n');
+        if(blankOnly(raw)) return raw;
+        return raw.replace(/[ \t]+$/gm,'');
+      },
+      set(v){ ed.innerHTML=v?fmtText(String(v),true):''; }
+    });
+  }catch(_){}
+})();
+/* 메시지 추가: 공백만 있어도 통과 */
+const _addMessage=window.addMessage;
+window.addMessage=function(){
+  try{
+    const editing=(typeof composerEditId!=='undefined')&&composerEditId;
+    const raw=msgContent.value;
+    if(!editing&&blankOnly(raw)){
+      const t=state.composerType;
+      if(t==='text'){
+        state.messages.push({id:uid(),type:'text',content:raw,align:state.layout.textAlign||'left'});
+        msgContent.value=''; renderPreview(); return;
+      }
+      if(t==='chat'){
+        const sid=senderSel.value;
+        if(!sid){ alert('발신자를 먼저 선택해 주세요. (멤버 추가가 필요해요)'); return; }
+        state.messages.push({id:uid(),type:'chat',senderId:sid,content:raw});
+        msgContent.value=''; renderPreview(); return;
+      }
+    }
+  }catch(_){}
+  return _addMessage.apply(this,arguments);
+};
+/* 수정 완료: 공백만 있어도 통과 */
+const _commit=window.commitComposerEdit;
+window.commitComposerEdit=function(){
+  try{
+    const m=state.messages.find(x=>x.id===composerEditId);
+    const raw=msgContent.value;
+    if(m&&blankOnly(raw)){
+      const base=m.type||'chat';
+      const target=((base==='text'||base==='chat')&&(state.composerType==='text'||state.composerType==='chat'))
+        ? state.composerType : base;
+      if(target==='text'){
+        m.type='text'; m.content=raw; m.align=state.layout.textAlign||'left';
+        delete m.senderId; endComposerEdit(); renderPreview(); return;
+      }
+      if(target==='chat'){
+        const sid=senderSel.value;
+        if(!sid){ alert('발신자를 선택해 주세요.'); return; }
+        m.type='chat'; m.senderId=sid; m.content=raw;
+        delete m.align; endComposerEdit(); renderPreview(); return;
+      }
+    }
+  }catch(_){}
+  return _commit.apply(this,arguments);
+};
+/* 말풍선·로그 행은 content.trim() 으로 비었는지 보기 때문에 공백만 있으면 사라진다.
+   보이지 않는 폭 없는 문자를 앞에 덧대 '내용 있음'으로 인식시킨다. */
+['normalRow','logRow','msgrRow'].forEach(fn=>{
+  const orig=window[fn];
+  if(typeof orig!=='function') return;
+  window[fn]=function(m,mem,gap,continued){
+    if(m&&blankOnly(m.content)) m=Object.assign({},m,{content:'\u200B'+m.content});
+    return orig.call(this,m,mem,gap,continued);
+  };
+});
+
+/* ================================================================
+   1) 찾기·바꾸기 (정규식) — '텍스트·간격' 패널
+   서식 기호(**, ==[#hex], %%, [#hex]…[/] 등)는 건드리지 않고
+   실제 글자 부분에만 적용한다.
+   ================================================================ */
+const MARK_TOKEN=/(\*\*|~~|\+\+|==\[#[0-9A-Fa-f]{6}\]|==|%%\[#[0-9A-Fa-f]{6}\]|%%|\[#[0-9A-Fa-f]{6}\]|\[\/\]|\[##\]|\[\/##\]|\[#\]|\[\/#\]|\*)/g;
+let frUndo=null;
+
+function frExpand(tpl,match,groups){
+  return String(tpl).replace(/\$(\d{1,2}|&|\$)/g,(w,g)=>{
+    if(g==='$') return '$';
+    if(g==='&') return match;
+    const i=parseInt(g,10);
+    return groups[i-1]!=null?groups[i-1]:'';
+  });
+}
+function frRegex(find,useRe,caseSens){
+  const flags='g'+(caseSens?'':'i');
+  return useRe ? new RegExp(find,flags)
+               : new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),flags);
+}
+function frReplaceContent(content,re,rep,useRe,counter){
+  const parts=String(content).split(MARK_TOKEN);
+  for(let i=0;i<parts.length;i+=2){
+    const seg=parts[i];
+    if(!seg) continue;
+    re.lastIndex=0;
+    parts[i]=seg.replace(re,function(match){
+      counter.n++;
+      if(!useRe) return rep;
+      let rest=[].slice.call(arguments,1);
+      if(rest.length&&typeof rest[rest.length-1]==='object') rest.pop();
+      rest=rest.slice(0,-2);
+      return frExpand(rep,match,rest);
+    });
+  }
+  return parts.join('');
+}
+function frTargets(){
+  const on=id=>{ const e=document.getElementById(id); return !e||e.checked; };
+  return {chat:on('frInChat'),text:on('frInText'),divider:on('frInDivider')};
+}
+function frSay(msg,bad){
+  const el=document.getElementById('frResult'); if(!el) return;
+  el.textContent=msg||'';
+  el.classList.toggle('bad',!!bad);
+}
+function frRun(doReplace){
+  const findEl=document.getElementById('frFind');
+  const repEl=document.getElementById('frReplace');
+  if(!findEl) return;
+  const find=findEl.value;
+  if(!find){ frSay('찾을 내용을 입력해 주세요.',true); return; }
+  const useRe=!!(document.getElementById('frRegex')||{}).checked;
+  const caseSens=!!(document.getElementById('frCase')||{}).checked;
+  let re;
+  try{ re=frRegex(find,useRe,caseSens); }
+  catch(err){ frSay('정규식이 올바르지 않아요 — '+err.message,true); return; }
+  const rep=repEl?repEl.value:'';
+  const tg=frTargets();
+  const counter={n:0};
+  const before=[];
+  let blocks=0;
+  (state.messages||[]).forEach(m=>{
+    if(!m||typeof m.content!=='string') return;
+    const type=m.type||'chat';
+    if(type==='chat'&&!tg.chat) return;
+    if(type==='text'&&!tg.text) return;
+    if(type==='divider'&&!tg.divider) return;
+    if(type==='image') return;
+    const hit={n:0};
+    const next=frReplaceContent(m.content,re,rep,useRe,hit);
+    if(!hit.n) return;
+    counter.n+=hit.n; blocks++;
+    if(doReplace&&next!==m.content){ before.push({id:m.id,content:m.content}); m.content=next; }
+  });
+  if(!counter.n){ frSay('일치하는 내용이 없어요.'); return; }
+  if(!doReplace){ frSay('🔎 '+counter.n+'곳 발견 (블럭 '+blocks+'개)'); return; }
+  frUndo=before;
+  const btn=document.getElementById('frUndoBtn'); if(btn) btn.disabled=!before.length;
+  try{ renderPreview(); }catch(_){}
+  frSay('✓ '+counter.n+'곳을 바꿨어요 (블럭 '+blocks+'개)');
+  toastMsg('✓ '+counter.n+'곳을 바꿨어요');
+}
+window.frFindOnly=function(){ frRun(false); };
+window.frReplaceAll=function(){ frRun(true); };
+window.frUndoReplace=function(){
+  if(!frUndo||!frUndo.length){ frSay('되돌릴 내용이 없어요.'); return; }
+  frUndo.forEach(o=>{
+    const m=(state.messages||[]).find(x=>x.id===o.id);
+    if(m) m.content=o.content;
+  });
+  frUndo=null;
+  const btn=document.getElementById('frUndoBtn'); if(btn) btn.disabled=true;
+  try{ renderPreview(); }catch(_){}
+  frSay('↩ 바꾸기 전으로 되돌렸어요.');
+  toastMsg('↩ 되돌렸어요');
+};
+(function insertFindReplaceUI(){
+  const body=document.querySelector('#panel-font .tool-panel-body');
+  if(!body||document.getElementById('accFindReplace')) return;
+  const sec=document.createElement('div');
+  sec.className='flat-tool-section';
+  sec.id='accFindReplace';
+  sec.innerHTML=
+    '<div class="flat-tool-title"><strong>🔎 찾기 · 바꾸기</strong></div>'
+   +'<div class="flat-tool-body">'
+   +'<div class="fr-row">'
+   +'<div class="field" style="margin:0"><label class="lb">찾을 내용</label>'
+   +'<input id="frFind" type="text" placeholder="예) 세르게이"></div>'
+   +'<div class="field" style="margin:0"><label class="lb">바꿀 내용</label>'
+   +'<input id="frReplace" type="text" placeholder="비우면 삭제"></div>'
+   +'</div>'
+   +'<div class="fr-opts">'
+   +'<label><input type="checkbox" id="frRegex">정규식 사용</label>'
+   +'<label><input type="checkbox" id="frCase">대소문자 구분</label>'
+   +'<label><input type="checkbox" id="frInChat" checked>말풍선</label>'
+   +'<label><input type="checkbox" id="frInText" checked>글</label>'
+   +'<label><input type="checkbox" id="frInDivider" checked>가름선</label>'
+   +'</div>'
+   +'<div class="fr-btns">'
+   +'<button class="btn sm" type="button" onclick="frFindOnly()">🔎 몇 개인지 보기</button>'
+   +'<button class="btn sm primary" type="button" onclick="frReplaceAll()">모두 바꾸기</button>'
+   +'<button class="btn sm" type="button" id="frUndoBtn" onclick="frUndoReplace()" disabled>↩ 되돌리기</button>'
+   +'</div>'
+   +'<div class="fr-result" id="frResult"></div>'
+   +'<div class="field-help" style="margin-top:8px">프로젝트 안의 모든 블럭에 한 번에 적용돼요. '
+   +'굵게·형광펜·색 같은 서식 기호는 건드리지 않고 글자만 바꿔요. '
+   +'정규식을 켜면 <code>(.+?)</code> 같은 패턴과 <code>$1</code> 치환을 쓸 수 있어요.</div>'
+   +'</div>';
+  body.appendChild(sec);
+  ['frFind','frReplace'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){ e.preventDefault(); frRun(false); }
+    });
+  });
+})();
+
+
+/* 같은 발신자의 연속 인용 말풍선은 행 사이 여백까지 막대를 늘려
+   하나의 끊김 없는 인용선처럼 보이게 한다. 인용이 없거나 발신자가 바뀌면 연결하지 않는다. */
+function stitchConsecutiveRowQuotes(){
+  const chatEl=document.getElementById('chat');
+  if(!chatEl) return;
+  const rows=Array.from(chatEl.children);
+  rows.forEach((row,index)=>{
+    if(!row.classList||!row.classList.contains('pmsg')) return;
+    const bar=row.querySelector(':scope > .row-quote-bar');
+    if(!bar) return;
+    bar.style.bottom='0px';
+    const next=rows[index+1];
+    if(!next||!next.classList||!next.classList.contains('has-row-quote')||!next.classList.contains('continuation')) return;
+    const gap=parseFloat(row.style.marginBottom||getComputedStyle(row).marginBottom)||0;
+    if(gap>0) bar.style.bottom=(-gap)+'px';
+  });
+}
+const _renderPreviewWithQuoteStitch=window.renderPreview;
+if(typeof _renderPreviewWithQuoteStitch==='function'){
+  window.renderPreview=function(){
+    const result=_renderPreviewWithQuoteStitch.apply(this,arguments);
+    stitchConsecutiveRowQuotes();
+    return result;
+  };
+}
+stitchConsecutiveRowQuotes();
+
+})();
+</script>
+
+
+<script id="log-hidden-name-avatar-center-fix">
+(function(){
+  'use strict';
+
+  /* 이름이 없는 로그는 문단 전체 높이가 아니라 첫 줄의 line-height를 기준으로
+     프로필 사진 가운데에 맞춰요. 첫 줄 아래의 나머지 줄은 자연스럽게 아래로
+     이어지고, 프로필만 남아서 생기는 아래쪽 빈 높이는 행에서 제외합니다. */
+  function alignHiddenLogFirstRows(){
+    const chat=document.getElementById('chat');
+    if(!chat) return;
+    chat.querySelectorAll('.n-msg.log-row.log-name-hidden:not(.continuation):not(.no-av)').forEach(row=>{
+      const avatar=row.querySelector(':scope > .av');
+      const body=row.querySelector(':scope > .n-body');
+      const plain=body&&body.querySelector(':scope > .n-plain');
+      if(!avatar||!body||!plain) return;
+
+      /* 이전 렌더 보정을 제거한 뒤 현재 폰트·줄 간격으로 다시 계산해요. */
+      row.style.removeProperty('align-items');
+      row.style.removeProperty('--log-first-line-offset');
+      row.style.removeProperty('--log-avatar-overhang');
+      body.style.removeProperty('padding-top');
+      avatar.style.removeProperty('margin-bottom');
+
+      const avatarHeight=avatar.getBoundingClientRect().height;
+      const plainStyle=getComputedStyle(plain);
+      let firstLineHeight=parseFloat(plainStyle.lineHeight);
+      if(!Number.isFinite(firstLineHeight)){
+        firstLineHeight=parseFloat(plainStyle.fontSize)||0;
+      }
+      if(!avatarHeight||!firstLineHeight) return;
+
+      /* 첫 줄 line box의 중심 = 프로필 사진의 중심 */
+      const firstLineOffset=Math.max(0,(avatarHeight-firstLineHeight)/2);
+      row.style.setProperty('--log-first-line-offset',firstLineOffset.toFixed(2)+'px');
+
+      /* padding이 반영된 실제 본문 높이를 잰 뒤, 프로필 아래쪽의 남는 부분만
+         음수 margin으로 접어 다음 연속 로그가 정해진 간격에 맞게 올라오게 해요. */
+      const bodyHeight=body.getBoundingClientRect().height;
+      const lowerAvatarRemainder=Math.max(0,avatarHeight-bodyHeight);
+      row.style.setProperty('--log-avatar-overhang',(-lowerAvatarRemainder).toFixed(2)+'px');
+    });
+  }
+  window.alignHiddenLogFirstRows=alignHiddenLogFirstRows;
+
+  const previousRenderPreview=window.renderPreview;
+  if(typeof previousRenderPreview==='function'){
+    window.renderPreview=function(){
+      const result=previousRenderPreview.apply(this,arguments);
+      alignHiddenLogFirstRows();
+      requestAnimationFrame(alignHiddenLogFirstRows);
+      return result;
+    };
+  }
+
+  window.addEventListener('resize',alignHiddenLogFirstRows,{passive:true});
+  if(document.fonts&&document.fonts.ready){
+    document.fonts.ready.then(alignHiddenLogFirstRows).catch(()=>{});
+  }
+  alignHiddenLogFirstRows();
+})();
+</script>
+
+<script id="quote-first-autobubble-fix">
+/* =====================================================================
+   인용구 우선 패치 (추가형 — 기존 동작은 그대로)
+   말풍선/글에 인용구(%%…%%)나 굵게·형광펜 같은 서식이 걸리면
+   내용 앞뒤에 마크업 문자가 끼어들어
+     · "" 자동 말풍선   · [이름｜] 이름표 삭제   · "" 기호 삭제
+   가 문장을 못 알아보고 실패했다.
+   → 서식 마크업을 '투명하게' 건너뛴 순수 텍스트로 먼저 판정하고,
+     잘라낼 글자만 원본에서 정확히 제거한다. 인용구 마크업은 100% 보존.
+   → 이름표만 지워서 빈 껍데기가 된 서식(**이공팔｜** → ****)은 같이 걷어낸다.
+   ===================================================================== */
+(function(){
+'use strict';
+
+/* 서식 마크업 토큰 (긴 것부터 — [#RRGGBB] 가 [#] 보다 먼저 와야 한다) */
+const FMT_TOKEN=/%%\[#[0-9A-Fa-f]{6}\]|==\[#[0-9A-Fa-f]{6}\]|\[#[0-9A-Fa-f]{6}\]|\[\/##\]|\[##\]|\[\/#\]|\[#\]|\[\/\]|%%|==|\*\*|~~|\+\+|\*/g;
+const NAME_RE=/^\s*\[?([^\[\]｜|]{1,40})[｜|]\s*([\s\S]*)$/;
+const QUOTE_CH=/["“”「」]/;
+
+/* 원본을 [마크업 토큰 / 글자] 조각으로 쪼개고, 마크업을 뺀 순수 텍스트도 만든다 */
+function parseParts(s){
+  const parts=[]; let plain='', last=0, m;
+  FMT_TOKEN.lastIndex=0;
+  const pushText=(a,b)=>{ for(let i=a;i<b;i++){ parts.push({m:false,s:s[i],pi:plain.length}); plain+=s[i]; } };
+  while((m=FMT_TOKEN.exec(s))){
+    pushText(last,m.index);
+    parts.push({m:true,s:m[0]});
+    last=m.index+m[0].length;
+    if(!m[0].length) FMT_TOKEN.lastIndex++;
+  }
+  pushText(last,s.length);
+  return {parts:parts,plain:plain};
+}
+function kindOf(t){
+  if(t.slice(0,2)==='%%') return 'q';
+  if(t.slice(0,2)==='==') return 'h';
+  if(t==='**') return 'b';
+  if(t==='*')  return 'i';
+  if(t==='~~') return 's';
+  if(t==='++') return 'u';
+  if(t==='[/]') return '/c';
+  if(t==='[/#]') return '/h1';
+  if(t==='[/##]') return '/h2';
+  if(t==='[#]') return 'h1';
+  if(t==='[##]') return 'h2';
+  return 'c';
+}
+/* 여는 토큰 a 와 닫는 토큰 b 가 한 쌍인가 */
+function canPair(a,b){
+  const ka=kindOf(a), kb=kindOf(b);
+  if(ka==='c'&&kb==='/c') return true;
+  if(ka==='h1'&&kb==='/h1') return true;
+  if(ka==='h2'&&kb==='/h2') return true;
+  if(ka!==kb) return false;
+  if(ka==='q') return b==='%%';
+  if(ka==='h') return b==='==';
+  return ka==='b'||ka==='i'||ka==='s'||ka==='u';
+}
+/* 순수 텍스트 기준 구간을 원본에서 제거.
+   글자가 지워져 속이 텅 빈 서식 쌍만 함께 지운다.
+   (원래부터 붙어 있던 ==가====나== 같은 경계는 절대 건드리지 않는다) */
+function cutRanges(content,ranges){
+  const pp=parseParts(content), parts=pp.parts;
+  const del=Object.create(null);
+  for(let r=0;r<ranges.length;r++){ for(let i=ranges[r][0];i<ranges[r][1];i++) del[i]=1; }
+  for(let i=0;i<parts.length;i++){ if(!parts[i].m&&del[parts[i].pi]) parts[i].dead=true; }
+  let loop=true;
+  while(loop){
+    loop=false;
+    for(let i=0;i<parts.length;i++){
+      const a=parts[i];
+      if(a.dead||!a.m) continue;
+      let k=i+1, gone=0, j=-1, ok=true;
+      while(k<parts.length){
+        const p=parts[k];
+        if(p.m){ if(p.dead){ k++; continue; } j=k; break; }
+        if(p.dead){ gone++; k++; continue; }
+        ok=false; break;
+      }
+      if(ok&&j>=0&&gone>0&&canPair(a.s,parts[j].s)){ a.dead=true; parts[j].dead=true; loop=true; }
+    }
+  }
+  let out='';
+  for(let i=0;i<parts.length;i++){ if(!parts[i].dead) out+=parts[i].s; }
+  return out;
+}
+/* [이름｜…] 앞머리 인식 — 순수 텍스트 기준 */
+function namePrefixInfo(plain){
+  const m=NAME_RE.exec(plain||'');
+  if(!m) return null;
+  const rest=m[2];
+  const prefixLen=plain.length-rest.length;
+  const trimmed=rest.replace(/\s+$/,'');
+  const ranges=[[0,prefixLen]];
+  if(trimmed.endsWith(']')) ranges.push([prefixLen+trimmed.length-1, plain.length]);
+  return {name:m[1].trim(), ranges:ranges};
+}
+function memberByName(name){
+  if(typeof matchMemberByName==='function') return matchMemberByName(name);
+  if(!name||!state.members.length) return null;
+  const n=name.trim(); if(!n) return null;
+  return state.members.find(x=>(x.name||'').trim()===n)
+      || state.members.find(x=>{const xn=(x.name||'').trim(); return xn&&(xn.includes(n)||n.includes(xn));})
+      || null;
+}
+
+window.bubbleViewMsg=function(m){
+  if(!m||typeof m.content!=='string') return m;
+  const baseType=m.type||'chat';
+  if(baseType!=='chat'&&baseType!=='text') return m;
+  let effType=baseType, senderId=m.senderId, content=m.content, changed=false;
+
+  const pp=parseParts(content);         /* ← 인용구 등 서식을 벗겨낸 판정용 텍스트 */
+  const pre=namePrefixInfo(pp.plain);
+
+  /* 1) "" 자동 말풍선 — 큰따옴표·이름 판정을 순수 텍스트로 (기존 고정 로직 그대로) */
+  if(state.autoQuoteBubble&&baseType==='text'&&!m.noAutoQuote&&QUOTE_CH.test(pp.plain)&&state.members.length){
+    let mem=null;
+    if(m.autoSenderId){
+      mem=state.members.find(x=>x.id===m.autoSenderId)||null;
+      if(!mem) delete m.autoSenderId;
+    }
+    if(!mem){
+      const matched=pre&&memberByName(pre.name);
+      if(matched){ mem=matched; m.autoSenderId=mem.id; }
+      else mem=state.members[0];
+    }
+    effType='chat'; senderId=mem.id; changed=true;
+  }
+  /* 2) [이름｜] 이름표 삭제 — 인용구 마크업은 남기고 이름표 글자만 제거 */
+  if(state.stripSpeakerName&&pre){ content=cutRanges(content,pre.ranges); changed=true; }
+  /* 3) "" 기호 삭제 — 말풍선(자동 변환 포함)에서만 */
+  if(state.stripQuoteMarks&&effType==='chat'&&/["“”「」]/.test(content)){
+    content=content.replace(/["“”「」]/g,''); changed=true;
+  }
+  if(!changed) return m;
+  const c=Object.assign({},m,{type:effType,content:content});
+  if(effType==='chat') c.senderId=senderId;
+  return c;
+};
+
+if(typeof renderPreview==='function'){ try{ renderPreview(); }catch(_){} }
+})();
+</script>
+
+<script id="clear-keeps-members-fix">
+/* =====================================================================
+   '전부 지우기' 는 메시지만 지우고 멤버는 남긴다 (추가형)
+   - 기존 doClear 를 그대로 실행한 뒤 멤버 목록과 '나' 지정만 되돌린다
+   - 실행 취소(undo)는 원래대로 동작
+   ===================================================================== */
+(function(){
+'use strict';
+const prevDoClear=window.doClear;
+if(typeof prevDoClear!=='function') return;
+window.doClear=function(){
+  const keepMembers=(state.members||[]).slice();
+  const keepMe=state.meId||'';
+  const r=prevDoClear.apply(this,arguments);
+  state.members=keepMembers;
+  state.meId=keepMembers.some(x=>x&&x.id===keepMe)?keepMe:'';
+  try{ renderMembers(); }catch(_){}
+  try{ renderSenders(); }catch(_){}
+  try{ renderMeSelect(); }catch(_){}
+  try{ renderPreview(); }catch(_){}
+  try{
+    toast(keepMembers.length?('메시지를 전부 지웠어요 · 멤버 '+keepMembers.length+'명은 그대로예요'):'전부 지웠어요',
+      {action:'실행 취소',onAction:undoLast,duration:8000});
+  }catch(_){}
+  return r;
+};
+})();
+</script>
+
+<style id="paren-live-editor-styles">
+/* 작성창·수정창에서만 쓰이는 괄호 자동 색 표시용 껍데기.
+   inline style 이 아니라 CSS 변수를 쓰므로 저장 마크업에는 전혀 남지 않는다. */
+.paren-auto{color:var(--paren-auto-color,inherit)}
+</style>
+<script id="paren-live-editor">
+/* =====================================================================
+   괄호 ( ) 자동 색을 작성창·수정창에서도 실시간으로 보여준다 (추가형)
+   - 굵게·형광펜처럼 입력창 안에서 바로 색이 보이므로
+     글자 색을 덮어씌울 때 어디가 자동 색인지 구분하기 쉽다
+   - 표시 전용: htmlToMarkup 이 이 span 을 그냥 통과시키므로
+     저장 내용(마크업)에는 아무 것도 추가되지 않는다
+   - 괄호 인식은 '입력창 전체 글자'를 기준으로 하므로, 안쪽 일부에 굵게나
+     다른 글자 색이 걸려 조각이 나뉘어도 괄호 한 덩어리로 본다.
+     직접 색을 입힌 조각만 건너뛰어 그 부분은 지정한 색이 이긴다.
+   ===================================================================== */
+(function(){
+'use strict';
+const PAREN_RE=/（[^（）]*）|\([^()]*\)/g;
+let composing=false, busy=false;
+
+function parenColor(){ return (state&&state.colors&&state.colors.paren)||'#8A8F98'; }
+
+/* 이미 직접 지정한 글자 색 안쪽인가 (mark 의 color:inherit 은 제외) */
+function hardColored(node,root){
+  let el=node&&node.parentNode;
+  while(el&&el!==root&&el.nodeType===1){
+    const st=(el.getAttribute&&el.getAttribute('style'))||'';
+    const m=/(?:^|;)\s*color\s*:\s*([^;]+)/.exec(st);
+    if(m){
+      const v=m[1].trim().toLowerCase();
+      if(v&&v!=='inherit'&&v!=='currentcolor'&&v!=='unset'&&v!=='initial') return true;
+    }
+    if(el.tagName==='FONT'&&el.getAttribute('color')) return true;
+    el=el.parentNode;
+  }
+  return false;
+}
+function textNodes(root){
+  const out=[], w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+  let n; while((n=w.nextNode())) out.push(n);
+  return out;
+}
+/* 껍데기(.paren-auto)를 '없는 셈' 친 구조 지문.
+   껍데기를 붙이거나 떼어도 값이 변하지 않으므로 무한 반복이 생기지 않는다. */
+function sig(root){
+  let s=(state.parenOn?'1':'0')+'|'+parenColor()+'|';
+  (function walk(n){
+    for(let c=n.firstChild;c;c=c.nextSibling){
+      if(c.nodeType===3){ s+=c.nodeValue; continue; }
+      if(c.nodeType!==1) continue;
+      if(c.classList&&c.classList.contains('paren-auto')){ walk(c); continue; }
+      s+='\u0002'+c.tagName+':'+((c.getAttribute&&c.getAttribute('style'))||'')+'\u0002';
+      walk(c);
+      s+='\u0003';
+    }
+  })(root);
+  return s;
+}
+
+function undecorate(root){
+  const list=root.querySelectorAll('span.paren-auto');
+  for(let i=0;i<list.length;i++){
+    const sp=list[i], p=sp.parentNode; if(!p) continue;
+    while(sp.firstChild) p.insertBefore(sp.firstChild,sp);
+    p.removeChild(sp);
+  }
+  try{ root.normalize(); }catch(_){}
+}
+function paint(root){
+  if(!state.parenOn) return;
+  /* 입력창 전체를 한 줄로 이어붙여 괄호 구간을 먼저 찾는다 —
+     굵게·글자 색 때문에 조각이 나뉘어도 괄호가 끊기지 않는다 */
+  const nodes=textNodes(root);
+  const info=[]; let full='';
+  for(let i=0;i<nodes.length;i++){
+    const v=nodes[i].nodeValue;
+    info.push({n:nodes[i],a:full.length,b:full.length+v.length});
+    full+=v;
+  }
+  PAREN_RE.lastIndex=0;
+  const ranges=[]; let m;
+  while((m=PAREN_RE.exec(full))) ranges.push([m.index,m.index+m[0].length]);
+  if(!ranges.length) return;
+  for(let i=0;i<info.length;i++){
+    const it=info[i], t=it.n;
+    if(hardColored(t,root)) continue;          /* 직접 지정한 색이 이긴다 */
+    const segs=[];
+    for(let k=0;k<ranges.length;k++){
+      const a=Math.max(ranges[k][0],it.a), b=Math.min(ranges[k][1],it.b);
+      if(b>a) segs.push([a-it.a,b-it.a]);
+    }
+    if(!segs.length) continue;
+    const s=t.nodeValue;
+    const frag=document.createDocumentFragment();
+    let last=0;
+    for(let k=0;k<segs.length;k++){
+      if(segs[k][0]>last) frag.appendChild(document.createTextNode(s.slice(last,segs[k][0])));
+      const sp=document.createElement('span');
+      sp.className='paren-auto';
+      sp.textContent=s.slice(segs[k][0],segs[k][1]);
+      frag.appendChild(sp);
+      last=segs[k][1];
+    }
+    if(last<s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+    if(t.parentNode) t.parentNode.replaceChild(frag,t);
+  }
+}
+
+/* 커서 위치를 '글자 수'로 기억했다가 되돌린다 */
+function caretOffset(root){
+  const sel=window.getSelection();
+  if(!sel||!sel.rangeCount) return null;
+  const r=sel.getRangeAt(0);
+  if(!root.contains(r.startContainer)) return null;
+  const pre=document.createRange();
+  pre.selectNodeContents(root);
+  try{ pre.setEnd(r.startContainer,r.startOffset); }catch(_){ return null; }
+  return pre.toString().length;
+}
+function setCaret(root,off){
+  if(off==null) return;
+  const list=textNodes(root);
+  let acc=0,target=null,to=0;
+  for(let i=0;i<list.length;i++){
+    const len=list[i].nodeValue.length;
+    if(acc+len>=off){ target=list[i]; to=off-acc; break; }
+    acc+=len;
+  }
+  const sel=window.getSelection(), r=document.createRange();
+  if(target) r.setStart(target,Math.max(0,Math.min(to,target.nodeValue.length)));
+  else { r.selectNodeContents(root); r.collapse(false); }
+  r.collapse(true);
+  try{ sel.removeAllRanges(); sel.addRange(r); }catch(_){}
+}
+
+function decorate(root){
+  if(!root||composing||busy) return;
+  document.documentElement.style.setProperty('--paren-auto-color',parenColor());
+  const now=sig(root);
+  if(root.__parenSig===now) return;
+  const focused=document.activeElement===root||root.contains(document.activeElement);
+  const off=focused?caretOffset(root):null;
+  busy=true;
+  try{
+    undecorate(root);
+    paint(root);
+    if(focused) setCaret(root,off);
+    root.__parenSig=sig(root);
+  }finally{
+    setTimeout(()=>{busy=false;},0);
+  }
+}
+function schedule(root){
+  if(!root) return;
+  clearTimeout(root.__parenT);
+  root.__parenT=setTimeout(()=>decorate(root),180);
+}
+
+/* 입력·서식 적용·붙여넣기 전부를 한 번에 잡는다 */
+function watch(root){
+  if(!root||root.__parenWatched) return;
+  root.__parenWatched=1;
+  root.addEventListener('compositionstart',()=>{composing=true;});
+  root.addEventListener('compositionend',()=>{composing=false;schedule(root);});
+  try{
+    /* 우리가 만든 변화도 일단 예약만 해 둔다 — 구조 지문이 같으면 어차피 아무 일도 안 한다.
+       (여기서 걸러내면 로드 직후 들어온 진짜 변경까지 놓친다) */
+    new MutationObserver(()=>{ schedule(root); })
+      .observe(root,{childList:true,subtree:true,characterData:true});
+  }catch(_){}
+  decorate(root);
+}
+
+const composer=document.getElementById('msgContent');
+if(composer) watch(composer);
+
+/* 미리보기 안에서 바로 고칠 때(더블클릭 수정)도 똑같이 */
+const prevEnterEdit=window.enterEdit;
+if(typeof prevEnterEdit==='function'){
+  window.enterEdit=function(el){
+    const r=prevEnterEdit.apply(this,arguments);
+    try{ if(el&&el.getAttribute&&el.getAttribute('contenteditable')==='true') watch(el); }catch(_){}
+    return r;
+  };
+}
+/* 괄호 색 On/Off · 색 변경 시 작성창도 즉시 반영 (setParen 이 renderPreview 를 부른다) */
+const prevRenderPreview=window.renderPreview;
+if(typeof prevRenderPreview==='function'){
+  window.renderPreview=function(){
+    const r=prevRenderPreview.apply(this,arguments);
+    try{ if(composer) decorate(composer); }catch(_){}
+    return r;
+  };
+}
+})();
+</script>
+
+<script id="paren-fragment-color">
+/* =====================================================================
+   괄호 자동 색을 '조각 단위'로 칠한다 (미리보기·저장본 · 추가형)
+   기존 방식: 괄호 한 덩어리를 span 으로 통째로 감쌌다.
+     → 괄호 여는 쪽만 직접 색을 입히면 태그가 서로 엇갈려(=깨져)
+       나머지 글자가 자동 색을 잃어버렸다.
+   새 방식: 괄호 구간을 먼저 찾은 뒤, 태그 경계마다 끊어 조각별로 칠한다.
+     → 태그가 절대 엇갈리지 않고, 직접 지정한 색 구간은 건너뛰므로
+       그 부분은 지정한 색이 그대로 이긴다.
+     → 작성창(실시간 표시)과 미리보기가 완전히 같은 결과가 된다.
+   ===================================================================== */
+(function(){
+'use strict';
+const PAREN_RE=/（[^（）]*）|\([^()]*\)/g;
+const VOID_TAG=/^<(br|img|hr|input|wbr|source|col)\b/i;
+function blankOnly(s){ s=String(s==null?'':s); return s.length>0 && !/[^\s\u200B]/.test(s); }
+
+/* html 안의 태그는 건드리지 않고, 글자만 괄호 구간인지 판정해서 조각별로 칠한다 */
+function applyParenColor(html,color){
+  if(!html||html.indexOf('(')<0&&html.indexOf('（')<0) return html;
+  const parts=[]; const stack=[]; let hard=0, i=0;
+  while(i<html.length){
+    if(html[i]==='<'){
+      const j=html.indexOf('>',i);
+      if(j<0){ for(;i<html.length;i++) parts.push({t:0,s:html[i],h:hard>0}); break; }
+      const tag=html.slice(i,j+1);
+      parts.push({t:1,s:tag});
+      if(tag.charAt(1)==='/'){ const top=stack.pop(); if(top) hard-=top; }
+      else if(!VOID_TAG.test(tag)&&tag.charAt(tag.length-2)!=='/'){
+        const h=/data-hard-color/.test(tag)?1:0; stack.push(h); hard+=h;
+      }
+      i=j+1; continue;
+    }
+    parts.push({t:0,s:html[i],h:hard>0});
+    i++;
+  }
+  /* 태그를 뺀 글자만 이어붙여 괄호 구간을 찾는다 */
+  let text=''; const idx=[];
+  for(let k=0;k<parts.length;k++){ if(!parts[k].t){ idx.push(k); text+=parts[k].s; } }
+  const inP=new Array(parts.length).fill(false);
+  PAREN_RE.lastIndex=0; let m, found=false;
+  while((m=PAREN_RE.exec(text))){
+    found=true;
+    for(let q=m.index;q<m.index+m[0].length;q++) inP[idx[q]]=true;
+  }
+  if(!found) return html;
+  /* 태그 경계마다 끊어 조각별로 감싼다 — 태그가 엇갈릴 일이 없다 */
+  const OPEN='<span style="color:'+color+'">';
+  let out='', open=false;
+  for(let k=0;k<parts.length;k++){
+    const p=parts[k];
+    if(p.t){ if(open){ out+='</span>'; open=false; } out+=p.s; continue; }
+    const want=inP[k]&&!p.h;
+    if(want&&!open){ out+=OPEN; open=true; }
+    else if(!want&&open){ out+='</span>'; open=false; }
+    out+=p.s;
+  }
+  if(open) out+='</span>';
+  return out;
+}
+window.applyParenColor=applyParenColor;
+
+window.fmtText=function(raw,edit){
+  raw=String(raw==null?'':raw);
+  if(blankOnly(raw)) raw=raw.replace(/ /g,'\u00A0');
+  let t=esc(raw);
+  t=t.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+  t=t.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<i>$1</i>');
+  t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
+  t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
+  t=t.replace(/==(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)==/g,(w,hhex,body)=>
+    '<mark style="background:'+(hhex?('#'+hhex.toUpperCase()):state.colors.highlight)+';color:inherit;padding:0 2px;border-radius:0">'+body+'</mark>');
+  t=t.replace(/%%(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)%%/g,(w,qhex,body)=>
+    '<span class="quote-fmt" style="border-left:3.5px solid '+(qhex?('#'+qhex.toUpperCase()):(state.colors.quote||'#8A8F98'))+'">'+body+'</span>');
+  /* 직접 지정한 글자 색은 자리표시자 없이 그대로 둔다 —
+     아래 applyParenColor 가 data-hard-color 안쪽을 알아서 건너뛴다 */
+  t=t.replace(/\[#([0-9A-Fa-f]{6})\]([\s\S]*?)\[\/\]/g,(w,hex,body)=>
+    '<span data-hard-color="1" style="color:#'+hex.toUpperCase()+'">'+body+'</span>');
+  t=t.replace(/\[##\]([\s\S]*?)\[\/##\]/g,'<span class="text-heading text-heading-2" data-heading="2">$1</span>');
+  t=t.replace(/\[#\]([\s\S]*?)\[\/#\]/g,'<span class="text-heading text-heading-1" data-heading="1">$1</span>');
+  if(!edit&&state.parenOn) t=applyParenColor(t,state.colors.paren);
+  t=t.replace(/\n/g,'<br>');
+  return t;
+};
+})();
+</script>
+
+<style id="split-save-styles">
+/* ===== 페이지 나누기 ===== */
+.pmsg .ctrl button.split-btn.on{background:#D14343;border-color:#D14343;color:#fff}
+
+/* ===== 페이지 이동 바 — 미리보기 아래에 항상 떠 있는다 =====
+   stage 안에 두면 확대했을 때 캔버스와 함께 스크롤돼 사라지므로,
+   스크롤 영역 바깥(preview-pane)에 띄워 배율과 무관하게 자리를 고정한다. */
+.preview-pane{position:relative}
+#pagePager{display:none;position:absolute;left:0;right:0;bottom:var(--pager-bottom,14px);
+  justify-content:center;z-index:24;pointer-events:none;user-select:none}
+#pagePager.show{display:flex}
+#pagePager .pp-box{pointer-events:auto;display:flex;align-items:center;gap:4px;
+  background:var(--panel,#fff);border:1px solid var(--line,#E2E2E6);border-radius:999px;
+  padding:5px 6px;box-shadow:0 6px 20px rgba(0,0,0,.14);max-width:calc(100% - 24px)}
+#pagePager button{border:0;background:transparent;color:var(--ink,#222);cursor:pointer;
+  width:30px;height:30px;border-radius:50%;font-size:15px;line-height:1;display:flex;
+  align-items:center;justify-content:center;padding:0;flex:0 0 auto}
+#pagePager button:hover:not(:disabled){background:var(--panel-2,#EDEDEE)}
+#pagePager button:disabled{opacity:.28;cursor:default}
+#pagePager .pp-n{font:700 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.03em;color:var(--ink,#222);min-width:52px;text-align:center;padding:0 2px}
+#pagePager .pp-hint{font-size:10.5px;font-weight:600;color:var(--muted,#8A8F98);
+  padding:0 8px 0 4px;border-left:1px solid var(--line,#E2E2E6);margin-left:4px;white-space:nowrap}
+@media(max-width:860px){#pagePager .pp-hint{display:none}}
+</style>
+<script id="split-save-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   페이지 나누기 — 미리보기가 곧 저장 결과
+   ✂ 를 누르면 그 블럭 "위"에서 잘리고, 미리보기에는 한 번에 한 장만 보인다.
+   화면에 보이는 게 저장되는 것과 완전히 같으므로 별도의 분할 저장 경로가 없다.
+   저장·복사는 기존 파이프라인을 그대로 쓰고, 파일 이름에만 장 번호를 붙인다.
+   ===================================================================== */
+
+const T=(m,o)=>{ try{ if(typeof window.toast==='function') window.toast(m,o); }catch(_){} };
+
+/* ---------- 상태 ---------- */
+state.pageNum=Object.assign({on:false,align:'left',size:12,format:'slash'},state.pageNum||{});
+if(!state.colors.pageNum) state.colors.pageNum='#8A8F98';
+let curPage=1;
+
+/* ---------- 페이지 계산 ---------- */
+/* splitBefore = 이 블럭부터 새 장이 시작된다 */
+function pageOfIndex(){
+  const ms=state.messages||[];
+  const out=[]; let p=1;
+  ms.forEach((m,i)=>{ if(i>0&&m&&m.splitBefore) p++; out.push(p); });
+  return out;
+}
+function pageCount(){
+  const ms=state.messages||[];
+  if(!ms.length) return 1;
+  return 1+ms.reduce((n,m,i)=>n+((i>0&&m&&m.splitBefore)?1:0),0);
+}
+function clampPage(){
+  const t=pageCount();
+  if(curPage>t) curPage=t;
+  if(curPage<1) curPage=1;
+  return t;
+}
+function pageLabel(k,total){
+  const p=state.pageNum||{};
+  switch(p.format){
+    case 'plain': return String(k);
+    case 'dash':  return '- '+k+' -';
+    case 'pad':   return String(k).padStart(2,'0');
+    default:      return k+'/'+total;
+  }
+}
+
+/* ---------- 설정 UI ---------- */
+window.setPageNum=function(field,val){
+  const p=state.pageNum;
+  if(field==='on') p.on=!!val;
+  else if(field==='size'){ p.size=parseInt(val)||12; const v=document.getElementById('pageNumSizeV'); if(v) v.textContent=p.size+'px'; }
+  else if(field==='align') p.align=val;
+  else if(field==='format') p.format=val;
+  syncPageNumControls();
+  renderPreview();
+};
+function syncPageNumControls(){
+  const p=state.pageNum;
+  const on=document.getElementById('pageNumOn'); if(on) on.checked=!!p.on;
+  const sz=document.getElementById('pageNumSize'); if(sz) sz.value=p.size;
+  const szv=document.getElementById('pageNumSizeV'); if(szv) szv.textContent=(p.size||12)+'px';
+  const aSeg=document.getElementById('pageNumAlignSeg');
+  if(aSeg){ const order=['left','center','right'];
+    [...aSeg.children].forEach((b,i)=>b.classList.toggle('on',order[i]===p.align)); }
+  const fSeg=document.getElementById('pageNumFmtSeg');
+  if(fSeg){ const order=['slash','dash','pad','plain'];
+    [...fSeg.children].forEach((b,i)=>b.classList.toggle('on',order[i]===p.format)); }
+}
+const _sync=window.syncControlsFromState;
+if(typeof _sync==='function'){
+  window.syncControlsFromState=function(){ const r=_sync.apply(this,arguments); try{syncPageNumControls();}catch(_){} return r; };
+}
+try{ if(typeof enhanceRange==='function') enhanceRange('pageNumSize','pageNumSizeV',{min:9,max:18,step:1,nudge:1}); }catch(_){}
+
+/* ---------- 서명 줄: 서명 + 페이지 번호를 한 줄에 ---------- */
+const _creditHTML=window.creditHTML;
+window.creditHTML=function(){
+  const c=state.credit, p=state.pageNum||{};
+  if(!p.on) return _creditHTML.apply(this,arguments);   /* 꺼져 있으면 예전 마크업 그대로 */
+
+  const parts=[];
+  if(c.on){
+    if(c.character&&c.character.trim()) parts.push(esc(c.character.trim()));
+    if(c.maker&&c.maker.trim()) parts.push(esc(c.maker.trim()));
+  }
+  const sep='<span style="opacity:.5"> '+(c.sep==='bar'?'|':'\u00B7')+' </span>';
+  const zones={left:'',center:'',right:''};
+  const put=(where,html)=>{ const k=(where in zones)?where:'right'; zones[k]+=(zones[k]?' ':'')+html; };
+  if(parts.length){
+    put(c.align,'<span class="credit-sig" style="font-size:'+c.size+'px;color:'+state.colors.credit+'">'
+      +parts.join(sep)+'</span>');
+  }
+  const total=clampPage();
+  put(p.align,'<span class="page-num" data-page-num style="font-size:'+(p.size||12)+'px;color:'
+    +(state.colors.pageNum||'#8A8F98')+'">'+esc(pageLabel(curPage,total))+'</span>');
+
+  const gap=(c.gap!=null?c.gap:16);
+  return '<div class="credit credit-row" style="margin-top:'+gap+'px;letter-spacing:.02em;opacity:.95">'
+    +'<span class="cz cz-l">'+zones.left+'</span>'
+    +'<span class="cz cz-c">'+zones.center+'</span>'
+    +'<span class="cz cz-r">'+zones.right+'</span></div>';
+};
+
+/* ---------- ✂ 버튼 ---------- */
+const _ctrlHTML=window.ctrlHTML;
+window.ctrlHTML=function(id){
+  const html=_ctrlHTML.apply(this,arguments);
+  const ms=state.messages||[];
+  const i=ms.findIndex(m=>m&&m.id===id);
+  if(i<=0) return html;                       /* 첫 블럭 위에서는 자를 수 없다 */
+  const on=!!ms[i].splitBefore;
+  const btn='<button type="button" class="split-btn'+(on?' on':'')
+    +'" title="'+(on?'앞 장과 합치기':'여기서부터 새 장')+'" onclick="toggleSplitAt(\''+id+'\')">\u2702</button>';
+  /* 수정(✎)·삭제(×)는 오른쪽 끝에 붙여 두므로 그 앞에 끼워 넣는다 */
+  const anchor=html.indexOf('<button type="button" class="edit-btn"');
+  const at=(anchor>=0)?anchor:html.lastIndexOf('<button');
+  return at<0?html:(html.slice(0,at)+btn+html.slice(at));
+};
+window.toggleSplitAt=function(id){
+  const ms=state.messages||[];
+  const i=ms.findIndex(m=>m&&m.id===id);
+  if(i<0) return;
+  if(i===0){ T('첫 블럭 위에서는 자를 수 없어요'); return; }
+  const adding=!ms[i].splitBefore;
+  try{ if(typeof window.pushUndo==='function') window.pushUndo(adding?'페이지 나누기':'페이지 합치기'); }catch(_){}
+  ms[i].splitBefore=adding;
+  /* 방금 건드린 블럭이 있는 장으로 따라간다 — 결과가 바로 보이도록 */
+  curPage=pageOfIndex()[i]||1;
+  renderPreview();
+  const total=pageCount();
+  const undo=(typeof window.undoLast==='function')?window.undoLast:null;
+  T(adding?('여기서부터 '+curPage+'장이 시작돼요 \u2014 총 '+total+'장')
+          :('앞 장과 합쳤어요 \u2014 총 '+total+'장'),
+    undo?{action:'실행 취소',onAction:undo}:undefined);
+};
+
+/* ---------- 현재 장만 보여주기 ---------- */
+function rowMsgId(row){
+  const h=row.querySelector('.drag-handle[data-mid]');
+  if(h) return h.dataset.mid||'';
+  const d=row.querySelector('[data-id]');
+  return d?(d.getAttribute('data-id')||''):'';
+}
+let applying=false;
+function applyPageView(){
+  const chat=document.getElementById('chat'); if(!chat) return;
+  const total=clampPage();
+  updateSplitHelp(total);
+
+  const ms=state.messages||[];
+  const pages=pageOfIndex();
+  const idPage={};
+  ms.forEach((m,i)=>{ if(m) idPage[m.id]=pages[i]; });
+
+  const rows=[...chat.querySelectorAll(':scope > .pmsg')];
+  let last=null;
+  rows.forEach(row=>{
+    const id=rowMsgId(row);
+    const p=idPage[id]||1;
+    const show=(total<2)||(p===curPage);
+    row.style.display=show?'':'none';
+    if(show) last=row;
+  });
+  /* 장의 마지막 줄에 남은 아래 여백과 인용 막대 연장은 지운다 */
+  rows.forEach(row=>{
+    if(row.__pgMB!==undefined&&row.__pgMB!==null) row.style.marginBottom=row.__pgMB;
+    const b=row.querySelector(':scope > .row-quote-bar');
+    if(b&&row.__pgBar!==undefined&&row.__pgBar!==null) b.style.bottom=row.__pgBar;
+  });
+  if(last&&total>1){
+    last.__pgMB=last.style.marginBottom;
+    last.style.marginBottom='0px';
+    const bar=last.querySelector(':scope > .row-quote-bar');
+    if(bar){ last.__pgBar=bar.style.bottom; bar.style.bottom='0px'; }
+  }
+  updatePager(total);
+}
+function updateSplitHelp(total){
+  const el=document.getElementById('splitCountHelp'); if(!el) return;
+  el.innerHTML=(total<2)
+    ? '블럭의 <b>\u2702</b> 버튼을 누르면 그 블럭 <b>위에서</b> 잘려 새 장이 시작돼요.'
+    : '현재 <b>'+total+'장</b>이에요. 미리보기 아래 <b>\u2039 \u203A</b> 로 장을 넘기면서 한 장씩 저장하면 돼요.';
+}
+
+/* ---------- 페이지 이동 바 ---------- */
+function ensurePager(){
+  let el=document.getElementById('pagePager');
+  if(el) return el;
+  const host=document.querySelector('.preview-pane');
+  if(!host) return null;
+  el=document.createElement('div');
+  el.id='pagePager';
+  el.innerHTML='<div class="pp-box">'
+    +'<button type="button" data-pp="first" title="첫 장">\u00AB</button>'
+    +'<button type="button" data-pp="prev" title="이전 장">\u2039</button>'
+    +'<span class="pp-n"></span>'
+    +'<button type="button" data-pp="next" title="다음 장">\u203A</button>'
+    +'<button type="button" data-pp="last" title="마지막 장">\u00BB</button>'
+    +'<span class="pp-hint">이 화면 그대로 저장돼요</span>'
+    +'</div>';
+  host.appendChild(el);
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('[data-pp]'); if(!b||b.disabled) return;
+    const total=pageCount();
+    if(b.dataset.pp==='first') curPage=1;
+    else if(b.dataset.pp==='prev') curPage=Math.max(1,curPage-1);
+    else if(b.dataset.pp==='next') curPage=Math.min(total,curPage+1);
+    else curPage=total;
+    gotoPage(curPage);
+  });
+  placePager();
+  try{
+    window.addEventListener('resize',placePager,{passive:true});
+    if(window.visualViewport) window.visualViewport.addEventListener('resize',placePager,{passive:true});
+  }catch(_){}
+  return el;
+}
+/* 모바일 하단 독에 가리지 않도록 독 높이만큼 띄운다 */
+function placePager(){
+  const el=document.getElementById('pagePager'); if(!el) return;
+  let off=14;
+  try{
+    const dock=document.getElementById('mDock');
+    if(dock){
+      const cs=getComputedStyle(dock);
+      if(cs.display!=='none'&&cs.visibility!=='hidden'){
+        const h=dock.getBoundingClientRect().height;
+        if(h>0) off=Math.round(h)+12;
+      }
+    }
+  }catch(_){}
+  el.style.setProperty('--pager-bottom',off+'px');
+}
+function updatePager(total){
+  const el=ensurePager(); if(!el) return;
+  el.classList.toggle('show',total>1);
+  if(total<2) return;
+  placePager();
+  const n=el.querySelector('.pp-n');
+  if(n) n.textContent=curPage+' / '+total;
+  el.querySelectorAll('[data-pp]').forEach(b=>{
+    const k=b.dataset.pp;
+    b.disabled=(k==='first'||k==='prev')?(curPage<=1):(curPage>=total);
+  });
+}
+window.gotoPage=function(n){
+  const total=pageCount();
+  curPage=Math.max(1,Math.min(total,parseInt(n)||1));
+  /* 서명 줄의 번호도 현재 장으로 바꿔야 하므로 통째로 다시 그린다 */
+  renderPreview();
+  try{ if(typeof fitPreview==='function') fitPreview(); }catch(_){}
+};
+/* 다른 스크립트에서 "이 블럭이 몇 장에 있나"를 물어볼 수 있게 열어 둔다 */
+window.__pageOfMsgId=function(id){
+  const ms=state.messages||[];
+  const i=ms.findIndex(m=>m&&m.id===id);
+  if(i<0) return curPage;
+  return pageOfIndex()[i]||1;
+};
+
+/* ---------- 렌더 훅 ---------- */
+const _renderPreview=window.renderPreview;
+window.renderPreview=function(){
+  const r=_renderPreview.apply(this,arguments);
+  if(!applying){
+    applying=true;
+    try{ applyPageView(); }catch(_){}
+    try{ if(typeof applyCanvas==='function') applyCanvas(); }catch(_){}
+    /* 보이는 장만 남아 캔버스 높이가 달라지므로 미리보기 배율을 다시 맞춘다 */
+    try{ if(typeof fitPreview==='function') fitPreview(); }catch(_){}
+    applying=false;
+  }
+  return r;
+};
+
+/* 이전 버전에서 쓰던 "이 블럭 아래에서 자르기"(splitAfter)를 새 방식으로 옮긴다 */
+function migrateOldSplits(){
+  const ms=state.messages||[];
+  let moved=0;
+  ms.forEach((m,i)=>{
+    if(!m||!m.splitAfter) return;
+    delete m.splitAfter;
+    const nx=ms[i+1];
+    if(nx){ nx.splitBefore=true; moved++; }
+  });
+  return moved;
+}
+
+/* ---------- 저장 파일 이름에 장 번호 붙이기 ---------- */
+function wrapSaver(name){
+  const prev=window[name];
+  if(typeof prev!=='function') return;
+  window[name]=function(){
+    const total=pageCount();
+    if(total<2) return prev.apply(this,arguments);
+    const orig=state.export.filename;
+    state.export.filename=(orig||'chat')+'_'+curPage;
+    const done=()=>{ state.export.filename=orig; };
+    let out;
+    try{ out=prev.apply(this,arguments); }
+    catch(e){ done(); throw e; }
+    if(out&&typeof out.then==='function'){ out.then(done,done); } else { done(); }
+    return out;
+  };
+}
+wrapSaver('saveImage');
+
+/* ---------- 초기 반영 ---------- */
+try{ syncPageNumControls(); }catch(_){}
+try{ migrateOldSplits(); }catch(_){}
+try{ renderPreview(); }catch(_){}
+/* 자동저장된 세션이 늦게 복원되는 경우까지 한 번 더 훑는다 */
+document.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>{ try{ if(migrateOldSplits()){ renderPreview(); } }catch(_){} },600);
+});
+
+})();
+</script>
+
+
+<style id="format-tools-styles">
+.pmsg .ctrl button.merge-btn{font-size:12px;line-height:1}
+#btnStripFmt{white-space:nowrap}
+</style>
+<script id="format-tools-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   1) 모든 서식 삭제 — 글자는 남기고 서식 기호만 전부 걷어낸다
+   2) 아래 블럭과 합치기 — ✂ 옆(블럭 컨트롤 줄)에 배치
+   둘 다 기존 실행 취소(pushUndo/undoLast)에 그대로 얹는다.
+   ===================================================================== */
+
+const T=(m,o)=>{ try{ if(typeof window.toast==='function') window.toast(m,o); }catch(_){} };
+const undoRef=()=>(typeof window.undoLast==='function')?window.undoLast:null;
+const withUndo=(msg)=>{ const u=undoRef(); T(msg,u?{action:'실행 취소',onAction:u}:undefined); };
+
+/* ---------------------------------------------------------------
+   서식 기호 제거
+   fmtText 가 해석하는 마크업과 정확히 같은 목록을 되돌린다.
+   --------------------------------------------------------------- */
+const FMT_RULES=[
+  [/\[##\]([\s\S]*?)\[\/##\]/g,'$1'],                       /* 큰 제목 */
+  [/\[#\]([\s\S]*?)\[\/#\]/g,'$1'],                         /* 제목 */
+  [/\[#[0-9A-Fa-f]{6}\]([\s\S]*?)\[\/\]/g,'$1'],            /* 부분 글자색 */
+  [/==(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)==/g,'$1'],         /* 형광펜 */
+  [/%%(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)%%/g,'$1'],         /* 인용구 */
+  [/\*\*([^*]+)\*\*/g,'$1'],                                /* 굵게 */
+  [/(?<!\*)\*([^*]+)\*(?!\*)/g,'$1'],                       /* 기울임 */
+  [/~~([^~]+)~~/g,'$1'],                                    /* 취소선 */
+  [/\+\+([^+]+)\+\+/g,'$1']                                 /* 밑줄 */
+];
+function stripFormatting(text){
+  if(typeof text!=='string'||!text) return text;
+  let out=text;
+  /* 서식이 겹쳐 있을 수 있으므로 더 이상 바뀌지 않을 때까지 훑는다 */
+  for(let pass=0;pass<6;pass++){
+    const before=out;
+    FMT_RULES.forEach(([re,to])=>{ out=out.replace(re,to); });
+    if(out===before) break;
+  }
+  return out;
+}
+function countFormatted(){
+  return (state.messages||[]).reduce((n,m)=>{
+    if(!m||typeof m.content!=='string') return n;
+    return n+(stripFormatting(m.content)!==m.content?1:0);
+  },0);
+}
+
+window.stripAllFormatting=function(){
+  const ms=state.messages||[];
+  if(!ms.length){ T('아직 블럭이 없어요'); return; }
+  const n=countFormatted();
+  if(!n){ T('지울 서식이 없어요'); return; }
+  const okGo=window.confirm(
+    '블럭 '+n+'개에서 서식을 모두 지울까요?\n\n'
+    +'굵게 · 기울임 · 밑줄 · 취소선 · 형광펜 · 인용구 · 글자색 · 제목 크기가 사라지고\n'
+    +'글자만 남아요. 되돌리기(Ctrl+Z)로 복구할 수 있어요.');
+  if(!okGo) return;
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('모든 서식 삭제'); }catch(_){}
+  ms.forEach(m=>{ if(m&&typeof m.content==='string') m.content=stripFormatting(m.content); });
+  renderPreview();
+  withUndo('블럭 '+n+'개의 서식을 지웠어요');
+};
+
+/* ---------------------------------------------------------------
+   아래 블럭과 합치기
+   --------------------------------------------------------------- */
+const TYPE_NAME={divider:'가름선',image:'사진'};
+function canMerge(a,b){
+  if(!a||!b) return '아래에 합칠 블럭이 없어요';
+  if(TYPE_NAME[a.type]) return TYPE_NAME[a.type]+'은 합칠 수 없어요';
+  if(TYPE_NAME[b.type]) return '아래 '+TYPE_NAME[b.type]+' 블럭과는 합칠 수 없어요';
+  return '';
+}
+window.mergeDown=function(id){
+  const ms=state.messages||[];
+  const i=ms.findIndex(m=>m&&m.id===id);
+  if(i<0) return;
+  const cur=ms[i], nx=ms[i+1];
+  const why=canMerge(cur,nx);
+  if(why){ T(why); return; }
+
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('블럭 합치기'); }catch(_){}
+  const head=String(cur.content||'').replace(/\s+$/,'');
+  const tail=String(nx.content||'').replace(/^\s+/,'');
+  cur.content=head&&tail?(head+'\n'+tail):(head||tail);
+
+  /* 합쳐지는 블럭이 새 장의 시작이었다면 그 페이지 나눔은 사라진다 */
+  const brokePage=!!nx.splitBefore;
+  const crossSender=(cur.type==='chat'&&nx.type==='chat'&&cur.senderId!==nx.senderId);
+  ms.splice(i+1,1);
+
+  renderPreview();
+  try{
+    if(typeof window.gotoPage==='function'&&typeof window.__pageOfMsgId==='function')
+      window.gotoPage(window.__pageOfMsgId(cur.id));
+  }catch(_){}
+
+  let msg='아래 블럭과 합쳤어요';
+  if(crossSender) msg+=' \u2014 말한 사람은 위 블럭 기준이에요';
+  else if(brokePage) msg+=' \u2014 페이지 나눔도 함께 풀렸어요';
+  withUndo(msg);
+};
+
+/* ---------- 블럭 컨트롤 줄에 합치기 버튼 추가 (✂ 바로 앞) ---------- */
+const _ctrlHTML=window.ctrlHTML;
+window.ctrlHTML=function(id){
+  const html=_ctrlHTML.apply(this,arguments);
+  const ms=state.messages||[];
+  const i=ms.findIndex(m=>m&&m.id===id);
+  if(i<0||i>=ms.length-1) return html;          /* 마지막 블럭은 합칠 대상이 없다 */
+  if(canMerge(ms[i],ms[i+1])) return html;      /* 가름선·사진은 버튼 자체를 숨김 */
+  const btn='<button type="button" class="merge-btn" title="아래 블럭과 합치기"'
+    +' onclick="mergeDown(\''+id+'\')">\u2913</button>';
+  /* ✂ 가 있으면 그 앞, 없으면 수정(✎) 앞 — 수정·삭제는 항상 오른쪽 끝 */
+  let pos=html.indexOf('<button type="button" class="split-btn');
+  if(pos<0) pos=html.indexOf('<button type="button" class="edit-btn"');
+  if(pos<0) pos=html.lastIndexOf('<button');
+  return pos<0?html:(html.slice(0,pos)+btn+html.slice(pos));
+};
+
+/* ---------- '모든 서식 삭제' 버튼 심기 ---------- */
+function addStripButton(){
+  if(document.getElementById('btnStripFmt')) return;
+  const host=document.querySelector('.preview-actions');
+  if(!host) return;
+  const b=document.createElement('button');
+  b.id='btnStripFmt'; b.type='button'; b.className='btn';
+  b.textContent='\u232B 모든 서식 삭제';
+  b.title='모든 블럭에서 굵게·형광펜·인용구·글자색 같은 서식을 지우고 글자만 남겨요';
+  b.onclick=()=>window.stripAllFormatting();
+  const bulk=host.querySelector('[onclick*="toggleBulkDeleteMode"]');
+  if(bulk) host.insertBefore(b,bulk); else host.appendChild(b);
+}
+function addMobileStripButton(){
+  const qa=document.getElementById('mQuickActions');
+  if(!qa||qa.querySelector('[data-strip-fmt]')) return;
+  const b=document.createElement('button');
+  b.type='button'; b.className='btn sm'; b.textContent='\u232B 모든 서식 삭제';
+  b.setAttribute('data-strip-fmt','1');
+  b.onclick=()=>{
+    try{ if(typeof closeSheet==='function') closeSheet(); }catch(_){}
+    setTimeout(()=>window.stripAllFormatting(),60);
+  };
+  qa.appendChild(b);
+}
+function mountButtons(){ try{ addStripButton(); addMobileStripButton(); }catch(_){} }
+mountButtons();
+document.addEventListener('DOMContentLoaded',mountButtons);
+try{
+  new MutationObserver(mountButtons).observe(document.body,{childList:true,subtree:true});
+}catch(_){}
+
+try{ renderPreview(); }catch(_){}
+
+})();
+</script>
+
 </body>
+
+
+
+
 </html>
