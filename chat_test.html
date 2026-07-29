@@ -10587,16 +10587,21 @@ window.fmtText=function(raw,edit){
 .credit.credit-row>.cz-c{text-align:center;white-space:nowrap}
 .credit.credit-row>.cz-r{text-align:right}
 
-/* ===== 페이지 이동 바 — 미리보기 아래에 항상 떠 있는다 =====
-   stage 안에 두면 확대했을 때 캔버스와 함께 스크롤돼 사라지므로,
-   스크롤 영역 바깥(preview-pane)에 띄워 배율과 무관하게 자리를 고정한다. */
+/* ===== 페이지 이동 바 — 화면 기준으로 떠 있는다 =====
+   스크롤 영역(preview-pane / stage) 안에 두면 모바일에서 함께 밀려버리므로
+   body 에 붙여 화면 좌표로 고정하고, 가로 위치만 미리보기 영역을 따라간다. */
 .preview-pane{position:relative}
-#pagePager{display:none;position:absolute;left:0;right:0;bottom:var(--pager-bottom,14px);
-  justify-content:center;z-index:24;pointer-events:none;user-select:none}
+#pagePager{display:none;position:fixed;left:0;width:100%;bottom:var(--pager-bottom,14px);
+  justify-content:center;z-index:70;pointer-events:none;user-select:none}
 #pagePager.show{display:flex}
+#pagePager.pager-off{display:none!important}
 #pagePager .pp-box{pointer-events:auto;display:flex;align-items:center;gap:4px;
   background:var(--panel,#fff);border:1px solid var(--line,#E2E2E6);border-radius:999px;
-  padding:5px 6px;box-shadow:0 6px 20px rgba(0,0,0,.14);max-width:calc(100% - 24px)}
+  padding:5px 6px;box-shadow:0 6px 20px rgba(0,0,0,.14);max-width:calc(100% - 24px);
+  transition:opacity .18s ease}
+/* 미리보기를 만지는 동안에는 흐려져서 화면을 가리지 않는다 */
+#pagePager.dim .pp-box{opacity:.24}
+#pagePager .pp-box:hover,#pagePager .pp-box:active{opacity:1}
 #pagePager button{border:0;background:transparent;color:var(--ink,#222);cursor:pointer;
   width:30px;height:30px;border-radius:50%;font-size:15px;line-height:1;display:flex;
   align-items:center;justify-content:center;padding:0;flex:0 0 auto}
@@ -10607,6 +10612,13 @@ window.fmtText=function(raw,edit){
 #pagePager .pp-hint{font-size:10.5px;font-weight:600;color:var(--muted,#8A8F98);
   padding:0 8px 0 4px;border-left:1px solid var(--line,#E2E2E6);margin-left:4px;white-space:nowrap}
 @media(max-width:860px){#pagePager .pp-hint{display:none}}
+/* 모바일: 손가락에 맞게 키우되 폭은 줄이고, 뒤가 비쳐 보이게 */
+body.mobile-ui #pagePager .pp-box{gap:2px;padding:4px 5px;
+  background:color-mix(in srgb,var(--panel,#fff) 88%,transparent);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 6px 22px rgba(0,0,0,.2)}
+body.mobile-ui #pagePager button{width:34px;height:34px;font-size:16px}
+body.mobile-ui #pagePager .pp-n{min-width:44px;font-size:12px}
 </style>
 <script id="split-save-script">
 (function(){
@@ -10802,8 +10814,7 @@ function updateSplitHelp(total){
 function ensurePager(){
   let el=document.getElementById('pagePager');
   if(el) return el;
-  const host=document.querySelector('.preview-pane');
-  if(!host) return null;
+  if(!document.body) return null;
   el=document.createElement('div');
   el.id='pagePager';
   el.innerHTML='<div class="pp-box">'
@@ -10814,7 +10825,8 @@ function ensurePager(){
     +'<button type="button" data-pp="last" title="마지막 장">\u00BB</button>'
     +'<span class="pp-hint">이 화면 그대로 저장돼요</span>'
     +'</div>';
-  host.appendChild(el);
+  /* 화면 좌표로 고정하려면 변형(transform)이 걸린 조상 밖에 있어야 한다 */
+  document.body.appendChild(el);
   el.addEventListener('click',e=>{
     const b=e.target.closest('[data-pp]'); if(!b||b.disabled) return;
     const total=pageCount();
@@ -10824,14 +10836,39 @@ function ensurePager(){
     else curPage=total;
     gotoPage(curPage);
   });
+  bindPagerTracking(el);
   placePager();
-  try{
-    window.addEventListener('resize',placePager,{passive:true});
-    if(window.visualViewport) window.visualViewport.addEventListener('resize',placePager,{passive:true});
-  }catch(_){}
   return el;
 }
-/* 모바일 하단 독에 가리지 않도록 독 높이만큼 띄운다 */
+
+/* 미리보기 영역을 따라다니게 하고, 만지는 동안에는 흐려지게 한다 */
+let dimTimer=null;
+function bindPagerTracking(el){
+  const relayout=()=>placePager();
+  try{
+    window.addEventListener('resize',relayout,{passive:true});
+    window.addEventListener('scroll',relayout,{passive:true,capture:true});
+    window.addEventListener('orientationchange',()=>setTimeout(relayout,180),{passive:true});
+    if(window.visualViewport){
+      window.visualViewport.addEventListener('resize',relayout,{passive:true});
+      window.visualViewport.addEventListener('scroll',relayout,{passive:true});
+    }
+  }catch(_){}
+  const nudge=e=>{
+    if(el.contains(e.target)) return;      /* 이동 바 자체를 만질 때는 흐리게 하지 않는다 */
+    el.classList.add('dim');
+    clearTimeout(dimTimer);
+    dimTimer=setTimeout(()=>el.classList.remove('dim'),900);
+  };
+  try{
+    document.addEventListener('touchstart',nudge,{passive:true});
+    document.addEventListener('touchmove',nudge,{passive:true});
+    document.addEventListener('wheel',nudge,{passive:true});
+    document.addEventListener('scroll',nudge,{passive:true,capture:true});
+  }catch(_){}
+}
+
+/* 하단 독을 피하고, 미리보기가 화면에 없으면 같이 숨는다 */
 function placePager(){
   const el=document.getElementById('pagePager'); if(!el) return;
   let off=14;
@@ -10846,6 +10883,20 @@ function placePager(){
     }
   }catch(_){}
   el.style.setProperty('--pager-bottom',off+'px');
+
+  const pane=document.querySelector('.preview-pane');
+  let visible=true;
+  if(pane){
+    const r=pane.getBoundingClientRect();
+    const onScreen=r.width>1&&r.height>1&&r.bottom>0&&r.top<(window.innerHeight||0);
+    visible=onScreen&&pane.offsetParent!==null;
+    if(onScreen){
+      el.style.left=Math.round(r.left)+'px';
+      el.style.width=Math.round(r.width)+'px';
+    }
+  }
+  /* 미리보기가 안 보이는 화면(설정 패널 등)에서는 떠 있지 않게 한다 */
+  el.classList.toggle('pager-off',!visible);
 }
 function updatePager(total){
   const el=ensurePager(); if(!el) return;
