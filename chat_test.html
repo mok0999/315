@@ -10577,6 +10577,16 @@ window.fmtText=function(raw,edit){
 /* ===== 페이지 나누기 ===== */
 .pmsg .ctrl button.split-btn.on{background:#D14343;border-color:#D14343;color:#fff}
 
+/* ===== 서명 + 페이지 번호 한 줄 =====
+   좌 · 가운데 · 우 세 칸으로 나눠 서명과 번호가 각자 다른 정렬을 가질 수 있게 한다.
+   가운데 칸은 내용 크기(auto)라 양옆 칸이 항상 같은 폭이 되고, 그래서 정확히 가운데에 놓인다. */
+.credit.credit-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:baseline;gap:10px;width:100%}
+.credit.credit-row>.cz{min-width:0}
+.credit.credit-row>.cz-l{text-align:left}
+.credit.credit-row>.cz-c{text-align:center;white-space:nowrap}
+.credit.credit-row>.cz-r{text-align:right}
+
 /* ===== 페이지 이동 바 — 미리보기 아래에 항상 떠 있는다 =====
    stage 안에 두면 확대했을 때 캔버스와 함께 스크롤돼 사라지므로,
    스크롤 영역 바깥(preview-pane)에 띄워 배율과 무관하게 자리를 고정한다. */
