@@ -16,6 +16,15 @@
 <link id="pretendardDynamic" rel="preload" as="style" crossorigin="anonymous"
   href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css"
   onload="this.onload=null;this.rel='stylesheet'"/>
+<style id="font-fallback-faces">
+/* 프리젠테이션(Freesentation) 예비 소스 — 눈누 배포본.
+   위 폰트 아카이브 CSS가 먼저 붙으면 나중에 실린 쪽이 이겨서 그쪽이 쓰이고,
+   그게 실패해도 미리보기 글꼴이 깨지지 않도록 남겨 둔다. */
+@font-face{font-family:'Freesentation';font-weight:400;font-style:normal;font-display:swap;
+  src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2404@1.0/Freesentation-4Regular.woff2') format('woff2');}
+@font-face{font-family:'Freesentation';font-weight:700;font-style:normal;font-display:swap;
+  src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2404@1.0/Freesentation-7Bold.woff2') format('woff2');}
+</style>
 <style>
 :root{
   --bg:#F5F5F6;
@@ -1451,10 +1460,18 @@ html, body, #canvas, #chat, #canvas * {
 <option value="'Noto Sans KR',sans-serif">본고딕 (Noto)</option>
 <option value="'Nanum Myeongjo',serif">나눔명조</option>
 <option value="'Gowun Dodum',sans-serif">고운돋움</option>
+<option value="'Freesentation',sans-serif">프리젠테이션</option>
+<option value="'Paperlogy',sans-serif">페이퍼로지</option>
 <option value="'Mona12',sans-serif">Mona12 (픽셀 · 12px 권장)</option>
 <option value="-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif">시스템 기본</option>
 </select>
 <div class="field-help">중국어·일본어 문자는 자동 감지해 Noto Sans SC / JP로 보완하고, 이미지 저장에도 함께 포함해요.</div>
+<div class="field-help" id="fontLoadState" style="margin-top:6px"></div>
+</div>
+<div class="field">
+<label class="lb">한자·가나 크기 보정</label>
+<div class="rangewrap"><input id="lyCjkScale" max="120" min="80" oninput="setCjkScale(this.value)" step="1" type="range" value="100"/><span class="val" id="lyCjkScaleV">100%</span></div>
+<div class="field-help">대체 글꼴(Noto Sans SC / JP)로 그려지는 한자·가나만 키우거나 줄여요. 한글·영문은 그대로예요.</div>
 </div>
 <div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">글자 크기</label>
@@ -1779,7 +1796,7 @@ const state = {
   layout:{
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
-    gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, nameSize:12, widthScale:100, letterSpacing:0,
+    gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, nameSize:12, widthScale:100, letterSpacing:0, cjkScale:100,
     textShadowOn:false, textShadowBubblesOff:false, textShadowStrength:4, bubbleShadowOn:false, bubbleShadowStrength:4,
     bubbleOpacity:100, bubbleTextOpacity:100,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
@@ -2738,7 +2755,7 @@ let themes=[];
 let themeStorageOK=true;
 
 function defaultLayout(){
-  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,
+  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,cjkScale:100,
     radius:14,fs:16,lh:1.55,para:0,nameSize:12,widthScale:100,letterSpacing:0,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,bubbleShadowOn:false,bubbleShadowStrength:4,tailOn:true,tailSize:10,tailY:0,tailX:0,
     linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerWidth:100,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
@@ -4332,6 +4349,8 @@ const __RUNTIME_FONT_CONFIG={
   'Noto Sans KR':{css:'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap',weights:[400,700]},
   'Nanum Myeongjo':{css:'https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap',weights:[400,700]},
   'Gowun Dodum':{css:'https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap',weights:[400]},
+  'Freesentation':{css:'https://cdn.jsdelivr.net/gh/fonts-archive/Freesentation/Freesentation.css',weights:[400,700]},
+  'Paperlogy':{css:'https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css',weights:[400,700]},
   'Mona12':{css:'https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css',weights:[400,700]},
   'Pretendard':{css:'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css',weights:[400,500,600,700,800]}
 };
@@ -5858,25 +5877,81 @@ else setTimeout(__idleLoadRenderer,1200);
     applyColorFormat(root,state.colors.partial);
     cleanupEmptyFormats(root);
   };
-  /* 서식 지우기 — 선택 영역이 있으면 그 부분만, 없으면 입력창 전체 */
+  /* 서식 지우기 — 반드시 "선택한 부분만".
+     겹치는 서식 요소를 통째로 벗기면 굵은 문장의 일부만 골라도 문장 전체가 풀린다.
+     그래서 선택 구간을 임시 span 으로 감싼 뒤, 그 span 을 감싸고 있는 서식 요소들을
+     앞/뒤로 쪼개면서 바깥으로 꺼내고, 마지막에 span 안쪽 서식만 벗긴다. */
+  function __clearLiftOut(node){
+    const parent=node.parentNode; if(!parent) return;
+    const grand=parent.parentNode; if(!grand) return;
+    const before=parent.cloneNode(false), after=parent.cloneNode(false);
+    while(parent.firstChild&&parent.firstChild!==node) before.appendChild(parent.firstChild);
+    parent.removeChild(node);
+    while(parent.firstChild) after.appendChild(parent.firstChild);
+    if(before.childNodes.length) grand.insertBefore(before,parent);
+    grand.insertBefore(node,parent);
+    if(after.childNodes.length) grand.insertBefore(after,parent);
+    grand.removeChild(parent);
+  }
+  function __clearUnwrap(el){
+    const p=el.parentNode; if(!p) return;
+    while(el.firstChild) p.insertBefore(el.firstChild,el);
+    p.removeChild(el);
+  }
   window.clearFmt=function(){
     const root=editorRoot();if(!root)return;
-    const all=[...root.querySelectorAll(FORMAT_QUERY)];
     const found=selectionInside(root);
-    const ranged=!!(found&&found.range&&!found.range.collapsed);
-    let targets=all;
-    if(ranged){
-      targets=all.filter(el=>{try{return found.range.intersectsNode(el);}catch(_){return false;}});
-    }
-    if(!targets.length){
-      if(typeof window.toast==='function') window.toast('지울 서식이 없어요');
+    if(!found||!found.range||found.range.collapsed){
+      if(typeof window.toast==='function') window.toast('지울 부분을 먼저 선택해 주세요');
       root.focus(); return;
     }
-    targets.sort((a,b)=>nodeDepth(b)-nodeDepth(a));
-    transformKeepingSelection(root,()=>targets.forEach(unwrapElement));
+    const range=found.range;
+    const inside=[...root.querySelectorAll(FORMAT_QUERY)].some(el=>{
+      try{return range.intersectsNode(el);}catch(_){return false;}
+    });
+    if(!inside){
+      if(typeof window.toast==='function') window.toast('선택한 부분에는 지울 서식이 없어요');
+      root.focus(); return;
+    }
+
+    /* 1) 선택 구간을 임시 span 으로 표시 */
+    const tmp=document.createElement('span');
+    tmp.setAttribute('data-clear-tmp','1');
+    tmp.appendChild(range.extractContents());
+    range.insertNode(tmp);
+
+    /* 2) 임시 span 을 감싼 서식 요소를 쪼개며 바깥으로 꺼낸다 */
+    let guard=0;
+    while(guard++<40){
+      const p=tmp.parentNode;
+      if(!p||p===root||!root.contains(p)) break;
+      let isFmt=false;
+      try{ isFmt=p.nodeType===1&&p.matches(FORMAT_QUERY); }catch(_){ isFmt=false; }
+      if(!isFmt) break;
+      __clearLiftOut(tmp);
+    }
+
+    /* 3) 선택 구간 안쪽에 남은 서식도 벗긴다 */
+    for(let pass=0;pass<12;pass++){
+      const hits=[...tmp.querySelectorAll(FORMAT_QUERY)];
+      if(!hits.length) break;
+      hits.sort((a,b)=>nodeDepth(b)-nodeDepth(a));
+      hits.forEach(__clearUnwrap);
+    }
+
+    /* 4) 임시 span 을 걷어내고 그 구간을 다시 선택해 둔다 */
+    const kids=[...tmp.childNodes];
+    __clearUnwrap(tmp);
+    try{
+      if(kids.length){
+        const sel=window.getSelection(), r=document.createRange();
+        r.setStartBefore(kids[0]); r.setEndAfter(kids[kids.length-1]);
+        sel.removeAllRanges(); sel.addRange(r);
+      }
+    }catch(_){}
+    try{ root.normalize(); }catch(_){}
     cleanupEmptyFormats(root);
     root.focus();
-    if(!ranged&&typeof window.toast==='function') window.toast('입력창의 서식을 모두 지웠어요');
   };
   window.wrapTextHeading=function(level){
     const root=editorRoot();if(!root)return;
@@ -11202,6 +11277,112 @@ try{
 }catch(_){}
 
 try{ renderPreview(); }catch(_){}
+
+})();
+</script>
+
+<style id="cjk-scale-styles">
+/* 대체 글꼴로 그려지는 한자·가나만 크기를 보정한다.
+   한글·영문은 선택한 글꼴 그대로 두고, 이 span 만 배율을 곱한다. */
+#chat .cjk-auto{font-size:calc(1em * var(--cjk-scale,1))}
+#fontLoadState.font-ok{color:#2E7D46}
+#fontLoadState.font-fail{color:#D14343}
+</style>
+<script id="cjk-scale-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   1) 한자·가나 크기 보정
+      선택한 한글 글꼴과 Noto Sans SC/JP 는 글자가 차지하는 비율이 서로 달라서
+      같은 px 로 그려도 크기가 어긋나 보인다. 대체된 부분에만 배율을 곱해 맞춘다.
+   2) 글꼴 불러오기 상태 표시
+      웹폰트가 실제로 도착했는지 document.fonts 로 확인해 알려 준다.
+   ===================================================================== */
+
+if(state.layout.cjkScale==null) state.layout.cjkScale=100;
+
+function applyCjkScale(){
+  const chat=document.getElementById('chat'); if(!chat) return;
+  const v=Number(state.layout.cjkScale);
+  chat.style.setProperty('--cjk-scale',String((Number.isFinite(v)?v:100)/100));
+}
+window.setCjkScale=function(val){
+  const v=Math.max(60,Math.min(160,parseFloat(val)||100));
+  state.layout.cjkScale=v;
+  const out=document.getElementById('lyCjkScaleV');
+  if(out) out.textContent=Math.round(v)+'%';
+  applyCjkScale();
+  renderPreview();
+};
+function syncCjkControls(){
+  const v=Number(state.layout.cjkScale);
+  const el=document.getElementById('lyCjkScale');
+  if(el) el.value=Number.isFinite(v)?v:100;
+  const out=document.getElementById('lyCjkScaleV');
+  if(out) out.textContent=Math.round(Number.isFinite(v)?v:100)+'%';
+  applyCjkScale();
+}
+try{ if(typeof enhanceRange==='function') enhanceRange('lyCjkScale','lyCjkScaleV',{min:80,max:120,step:1,nudge:1,suffix:'%'}); }catch(_){}
+
+/* ---------- 글꼴이 실제로 도착했는지 확인 ---------- */
+const FONT_LABEL={
+  'Freesentation':'프리젠테이션','Paperlogy':'페이퍼로지','Noto Sans KR':'본고딕',
+  'Nanum Myeongjo':'나눔명조','Gowun Dodum':'고운돋움','Mona12':'Mona12','Pretendard':'프리텐다드'
+};
+async function reportFontState(){
+  const el=document.getElementById('fontLoadState'); if(!el) return;
+  let family=null;
+  try{ family=(typeof __selectedWebFont==='function')?__selectedWebFont():null; }catch(_){}
+  el.classList.remove('font-ok','font-fail');
+  if(!family){ el.textContent=''; return; }
+  const label=FONT_LABEL[family]||family;
+  el.textContent=label+' 불러오는 중…';
+  const spec='16px "'+family+'"';
+  try{ await document.fonts.load(spec,'가나다 ABC'); }catch(_){}
+  let ok=false;
+  try{ ok=document.fonts.check(spec,'가나다 ABC'); }catch(_){ ok=false; }
+  if(ok){
+    el.classList.add('font-ok');
+    el.textContent='✓ '+label+' 불러왔어요 — 미리보기와 저장 모두 이 글꼴로 나와요.';
+  }else{
+    el.classList.add('font-fail');
+    el.textContent='✕ '+label+'을(를) 불러오지 못했어요. 지금은 기본 글꼴로 보이는 중이에요.';
+  }
+}
+const _setFont=window.setFont;
+if(typeof _setFont==='function'){
+  window.setFont=function(){
+    const r=_setFont.apply(this,arguments);
+    setTimeout(reportFontState,60);
+    return r;
+  };
+}
+
+/* ---------- 훅 ---------- */
+const _sync=window.syncControlsFromState;
+if(typeof _sync==='function'){
+  window.syncControlsFromState=function(){
+    const r=_sync.apply(this,arguments);
+    try{ syncCjkControls(); }catch(_){}
+    setTimeout(reportFontState,60);
+    return r;
+  };
+}
+const _renderPreview=window.renderPreview;
+window.renderPreview=function(){
+  const r=_renderPreview.apply(this,arguments);
+  try{ applyCjkScale(); }catch(_){}
+  return r;
+};
+
+try{ syncCjkControls(); }catch(_){}
+try{ renderPreview(); }catch(_){}
+document.addEventListener('DOMContentLoaded',()=>{
+  try{ syncCjkControls(); }catch(_){}
+  setTimeout(reportFontState,300);
+});
+setTimeout(reportFontState,900);
 
 })();
 </script>
