@@ -10708,10 +10708,15 @@ window.ctrlHTML=function(id){
   const html=_ctrlHTML.apply(this,arguments);
   const ms=state.messages||[];
   const i=ms.findIndex(m=>m&&m.id===id);
-  if(i<=0) return html;                       /* 첫 블럭 위에서는 자를 수 없다 */
-  const on=!!ms[i].splitBefore;
-  const btn='<button type="button" class="split-btn'+(on?' on':'')
-    +'" title="'+(on?'앞 장과 합치기':'여기서부터 새 장')+'" onclick="toggleSplitAt(\''+id+'\')">\u2702</button>';
+  if(i<0) return html;
+  /* 첫 블럭은 위에서 자를 게 없다. 그래도 버튼을 없애 버리면 자리가 밀려
+     "가위가 사라졌다"처럼 보이므로, 흐리게 둔 채 자리만 지킨다. */
+  const first=(i===0);
+  const on=!first&&!!ms[i].splitBefore;
+  const btn=first
+    ? '<button type="button" class="split-btn" disabled title="첫 블럭 위에서는 자를 수 없어요">\u2702</button>'
+    : '<button type="button" class="split-btn'+(on?' on':'')
+      +'" title="'+(on?'앞 장과 합치기':'여기서부터 새 장')+'" onclick="toggleSplitAt(\''+id+'\')">\u2702</button>';
   /* 수정(✎)·삭제(×)는 오른쪽 끝에 붙여 두므로 그 앞에 끼워 넣는다 */
   const anchor=html.indexOf('<button type="button" class="edit-btn"');
   const at=(anchor>=0)?anchor:html.lastIndexOf('<button');
@@ -10921,6 +10926,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <style id="format-tools-styles">
 .pmsg .ctrl button.merge-btn{font-size:12px;line-height:1}
+.pmsg .ctrl button.merge-btn:disabled,.pmsg .ctrl button.split-btn:disabled{
+  opacity:.26;cursor:default;pointer-events:none}
 #btnStripFmt{white-space:nowrap}
 </style>
 <script id="format-tools-script">
@@ -11032,10 +11039,13 @@ window.ctrlHTML=function(id){
   const html=_ctrlHTML.apply(this,arguments);
   const ms=state.messages||[];
   const i=ms.findIndex(m=>m&&m.id===id);
-  if(i<0||i>=ms.length-1) return html;          /* 마지막 블럭은 합칠 대상이 없다 */
-  if(canMerge(ms[i],ms[i+1])) return html;      /* 가름선·사진은 버튼 자체를 숨김 */
-  const btn='<button type="button" class="merge-btn" title="아래 블럭과 합치기"'
-    +' onclick="mergeDown(\''+id+'\')">\u2913</button>';
+  if(i<0) return html;
+  /* 합칠 수 없는 상황에도 버튼 자리는 지켜서 툴바 배치가 흔들리지 않게 한다 */
+  const why=canMerge(ms[i],ms[i+1]);
+  const btn=why
+    ? '<button type="button" class="merge-btn" disabled title="'+why+'">\u2913</button>'
+    : '<button type="button" class="merge-btn" title="아래 블럭과 합치기"'
+      +' onclick="mergeDown(\''+id+'\')">\u2913</button>';
   /* ✂ 가 있으면 그 앞, 없으면 수정(✎) 앞 — 수정·삭제는 항상 오른쪽 끝 */
   let pos=html.indexOf('<button type="button" class="split-btn');
   if(pos<0) pos=html.indexOf('<button type="button" class="edit-btn"');
