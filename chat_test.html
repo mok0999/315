@@ -1300,8 +1300,13 @@ html, body, #canvas, #chat, #canvas * {
 </div>
 </div>
 <div class="field" id="senderField">
+<div class="text-format-row">
+<div class="tfr-col sender-col">
 <label class="lb">발신자</label>
 <select id="senderSel"><option value="">— 멤버를 먼저 추가하세요 —</option></select>
+</div>
+<span class="fmt-div tfr-div" id="senderHeadingDiv"></span>
+</div>
 </div>
 <div class="field" id="alignField" style="display:none">
 <div class="text-format-row">
@@ -1314,8 +1319,8 @@ html, body, #canvas, #chat, #canvas * {
 <button title="오른쪽 정렬" onclick="setAlign('right')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="6" y1="6" x2="15" y2="6"/><line x1="3" y1="10" x2="15" y2="10"/></svg></button>
 </div>
 </div>
-<span class="fmt-div tfr-div"></span>
-<div class="tfr-col">
+<span class="fmt-div tfr-div" id="alignHeadingDiv"></span>
+<div class="tfr-col" id="textHeadingCol">
 <label class="lb">글씨 크기</label>
 <div class="seg" id="textHeadingSeg" aria-label="부분 글자 크기">
 <button type="button" title="선택한 글자를 큰 제목으로" onclick="wrapTextHeading(1)">#</button>
@@ -1450,7 +1455,51 @@ html, body, #canvas, #chat, #canvas * {
 <label class="lb">전체 글자색</label>
 <div class="colorrow" data-color="nText"></div>
 </div>
-</div></div></div><div class="flat-tool-section" id="backgroundImageSection"><div class="flat-tool-title"><strong>배경 이미지</strong></div><div class="flat-tool-body"><div class="field"><label class="lb">이미지 불러오기</label><div class="bg-image-load-row"><label class="btn sm bg-upload-btn">↑ 파일<input accept="image/*" hidden="" id="bgImgFile" onchange="onBackgroundImageFile(event)" type="file"/></label><input id="bgImgUrl" onchange="loadBackgroundImageUrl()" onkeydown="if(event.key==='Enter'){event.preventDefault();loadBackgroundImageUrl();}" placeholder="이미지 URL · 붙여넣고 Enter" type="text"/><button class="btn sm danger-ghost" onclick="clearBackgroundImage()" type="button">지우기</button></div><div class="bg-image-preview" id="bgImgPreviewWrap" style="display:none"><img alt="배경 이미지 미리보기" id="bgImgPreview"/><span>배경 이미지 적용 중</span></div></div><div class="colorgrid bg-image-controls"><div class="field"><label class="lb">이미지 크기</label><div class="rangewrap"><input id="bgImgSize" max="600" min="40" oninput="setBackgroundImageValue('size',this.value)" step="1" type="range" value="100"/><span class="val" id="bgImgSizeV">100%</span></div></div><div class="field"><label class="lb">회전</label><div class="rangewrap"><input id="bgImgRotation" max="360" min="0" oninput="setBackgroundImageValue('rotation',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgRotationV">0°</span></div></div><div class="field"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bgImgX" max="100" min="0" oninput="setBackgroundImageValue('x',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgXV">50%</span></div></div><div class="field"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bgImgY" max="100" min="0" oninput="setBackgroundImageValue('y',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgYV">50%</span></div></div><div class="field"><label class="lb">블러 농도</label><div class="rangewrap"><input id="bgImgBlur" max="30" min="0" oninput="setBackgroundImageValue('blur',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgBlurV">0px</span></div></div><div class="field bg-overlay-field" style="grid-column:1/-1;margin-bottom:0"><label class="lb">오버레이</label><div class="overlay-row"><div class="colorrow overlay-colorrow" data-color="bgOverlay"></div><div class="rangewrap overlay-opacity"><input id="bgOverlayOpacity" max="100" min="0" oninput="setBackgroundImageValue('overlayOpacity',this.value)" step="1" type="range" value="0"/><span class="val" id="bgOverlayOpacityV">0%</span></div></div></div></div></div></div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>텍스트·간격</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
+</div></div></div><div class="flat-tool-section" id="accGradient">
+<div class="flat-tool-title"><strong>배경 그라데이션</strong></div>
+<div class="flat-tool-body">
+<div class="field" style="margin-bottom:0">
+<div class="toggle">
+<div class="t-lb">그라데이션 사용<span>배경 색상 대신 그라데이션을 깔아요</span></div>
+<label class="sw"><input id="gradOn" onchange="setGradient('on',this.checked)" type="checkbox"/><span class="track"></span></label>
+</div>
+</div>
+<div class="grad-panel" id="gradPanel"><div class="gp-inner">
+<div class="grad-preview" id="gradPreview" aria-hidden="true"></div>
+<div class="colorgrid">
+<div class="field" style="margin:0"><label class="lb">시작 색</label><div class="colorrow" data-color="gradFrom"></div></div>
+<div class="field" style="margin:0"><label class="lb">끝 색</label><div class="colorrow" data-color="gradTo"></div></div>
+</div>
+<div class="field" style="margin-top:14px;margin-bottom:0">
+<div class="toggle">
+<div class="t-lb">가운데 색 추가<span>세 가지 색으로 이어요</span></div>
+<label class="sw"><input id="gradViaOn" onchange="setGradient('useVia',this.checked)" type="checkbox"/><span class="track"></span></label>
+</div>
+</div>
+<div class="field grad-via-field" id="gradViaField" style="margin-top:12px"><label class="lb">가운데 색</label><div class="colorrow" data-color="gradVia"></div></div>
+<div class="field" style="margin-top:14px;margin-bottom:10px">
+<label class="lb">방향</label>
+<div class="grad-dirs" id="gradDirs">
+<button data-ang="315" onclick="setGradient('angle',315)" title="왼쪽 위 → 오른쪽 아래" type="button">↖</button>
+<button data-ang="0" onclick="setGradient('angle',0)" title="아래 → 위" type="button">↑</button>
+<button data-ang="45" onclick="setGradient('angle',45)" title="왼쪽 아래 → 오른쪽 위" type="button">↗</button>
+<button data-ang="270" onclick="setGradient('angle',270)" title="오른쪽 → 왼쪽" type="button">←</button>
+<button class="gd-mid" disabled type="button">·</button>
+<button data-ang="90" onclick="setGradient('angle',90)" title="왼쪽 → 오른쪽" type="button">→</button>
+<button data-ang="225" onclick="setGradient('angle',225)" title="오른쪽 위 → 왼쪽 아래" type="button">↙</button>
+<button data-ang="180" onclick="setGradient('angle',180)" title="위 → 아래" type="button">↓</button>
+<button data-ang="135" onclick="setGradient('angle',135)" title="오른쪽 아래 → 왼쪽 위" type="button">↘</button>
+</div>
+</div>
+<div class="colorgrid">
+<div class="field" style="margin:0"><label class="lb">각도 미세 조정</label>
+<div class="rangewrap"><input id="gradAngle" max="360" min="0" oninput="setGradient('angle',this.value)" step="1" type="range" value="180"/><span class="val" id="gradAngleV">180°</span></div></div>
+<div class="field" style="margin:0"><label class="lb">경계 위치</label>
+<div class="rangewrap"><input id="gradMid" max="90" min="10" oninput="setGradient('mid',this.value)" step="1" type="range" value="50"/><span class="val" id="gradMidV">50%</span></div></div>
+</div>
+<div class="field-help" style="margin-top:10px">투명 배경을 켜면 그라데이션은 적용되지 않아요. 배경 이미지가 있으면 이미지가 그 위에 덮여요.</div>
+</div></div>
+</div></div><div class="flat-tool-section" id="backgroundImageSection"><div class="flat-tool-title"><strong>배경 이미지</strong></div><div class="flat-tool-body"><div class="field"><label class="lb">이미지 불러오기</label><div class="bg-image-load-row"><label class="btn sm bg-upload-btn">↑ 파일<input accept="image/*" hidden="" id="bgImgFile" onchange="onBackgroundImageFile(event)" type="file"/></label><input id="bgImgUrl" onchange="loadBackgroundImageUrl()" onkeydown="if(event.key==='Enter'){event.preventDefault();loadBackgroundImageUrl();}" placeholder="이미지 URL · 붙여넣고 Enter" type="text"/><button class="btn sm danger-ghost" onclick="clearBackgroundImage()" type="button">지우기</button></div><div class="bg-image-preview" id="bgImgPreviewWrap" style="display:none"><img alt="배경 이미지 미리보기" id="bgImgPreview"/><span>배경 이미지 적용 중</span></div></div><div class="colorgrid bg-image-controls"><div class="field"><label class="lb">이미지 크기</label><div class="rangewrap"><input id="bgImgSize" max="600" min="40" oninput="setBackgroundImageValue('size',this.value)" step="1" type="range" value="100"/><span class="val" id="bgImgSizeV">100%</span></div></div><div class="field"><label class="lb">회전</label><div class="rangewrap"><input id="bgImgRotation" max="360" min="0" oninput="setBackgroundImageValue('rotation',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgRotationV">0°</span></div></div><div class="field"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bgImgX" max="100" min="0" oninput="setBackgroundImageValue('x',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgXV">50%</span></div></div><div class="field"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bgImgY" max="100" min="0" oninput="setBackgroundImageValue('y',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgYV">50%</span></div></div><div class="field"><label class="lb">블러 농도</label><div class="rangewrap"><input id="bgImgBlur" max="30" min="0" oninput="setBackgroundImageValue('blur',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgBlurV">0px</span></div></div><div class="field bg-overlay-field" style="grid-column:1/-1;margin-bottom:0"><label class="lb">오버레이</label><div class="overlay-row"><div class="colorrow overlay-colorrow" data-color="bgOverlay"></div><div class="rangewrap overlay-opacity"><input id="bgOverlayOpacity" max="100" min="0" oninput="setBackgroundImageValue('overlayOpacity',this.value)" step="1" type="range" value="0"/><span class="val" id="bgOverlayOpacityV">0%</span></div></div></div></div></div></div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>텍스트·간격</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
 <div class="flat-tool-title"><strong>글꼴 · 텍스트</strong></div>
 <div class="flat-tool-body">
 <div class="field">
@@ -1476,6 +1525,8 @@ html, body, #canvas, #chat, #canvas * {
 <div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">글자 크기</label>
 <div class="rangewrap"><input id="lyFs" max="22" min="11" oninput="setLayout('fs',this.value)" type="range" value="16"/><span class="val" id="lyFsV">16px</span></div></div>
+<div class="field" style="margin-bottom:14px"><label class="lb">말풍선 글자 크기</label>
+<div class="rangewrap"><input id="lyBubbleFs" max="22" min="11" oninput="setLayout('bubbleFs',this.value)" type="range" value="16"/><span class="val" id="lyBubbleFsV">16px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">행간</label>
 <div class="rangewrap"><input id="lyLh" max="2.2" min="1.1" oninput="setLayout('lh',this.value)" step="0.05" type="range" value="1.55"/><span class="val" id="lyLhV">1.55</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">자간</label>
@@ -1483,9 +1534,9 @@ html, body, #canvas, #chat, #canvas * {
 <div class="field" style="margin-bottom:14px"><label class="lb">장평</label>
 <div class="rangewrap"><input id="lyWidthScale" max="130" min="70" oninput="setLayout('widthScale',this.value)" step="1" type="range" value="100"/><span class="val" id="lyWidthScaleV">100%</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">문단 간격</label>
-<div class="rangewrap"><input id="lyBlockGap" max="60" min="0" oninput="setLayout('blockGap',this.value)" type="range" value="16"/><span class="val" id="lyBlockGapV">16px</span></div><div class="field-help">글 블럭과 다음 글 블럭 사이에만 적용돼요.</div></div>
+<div class="rangewrap"><input id="lyBlockGap" max="60" min="0" oninput="setLayout('blockGap',this.value)" type="range" value="16"/><span class="val" id="lyBlockGapV">16px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">말풍선 간격</label>
-<div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div><div class="field-help">서로 다른 캐릭터의 말풍선 사이에만 적용돼요.</div></div>
+<div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">채팅 ↔ 글 간격</label>
 <div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="25"/><span class="val" id="lyTextGapV">25px</span></div></div>
 </div>
@@ -1500,8 +1551,8 @@ html, body, #canvas, #chat, #canvas * {
                 </div>
 </div>
 <div class="shadow-control-group" style="margin-top:14px">
-<div class="field" style="margin-bottom:9px"><div class="toggle"><div class="t-lb">그림자<span>모든 텍스트에 그림자를 적용해요</span></div><label class="sw"><input id="textShadowOn" onchange="setTextShadow('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><label class="mini-check" style="margin:9px 0 0 2px"><input id="textShadowBubblesOff" onchange="setTextShadow('bubblesOff',this.checked)" type="checkbox"/><span>말풍선 그림자 삭제 — 체크하면 글 블럭 텍스트에만 그림자를 적용해요</span></label></div>
-<div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="textShadow"></div></div><div class="field" style="margin:0"><label class="lb">그림자 세기</label><div class="rangewrap"><input id="textShadowStrength" max="20" min="0" oninput="setTextShadow('strength',this.value)" type="range" value="4"/><span class="val" id="textShadowStrengthV">4px</span></div></div></div>
+<div class="field" style="margin-bottom:9px"><div class="toggle"><div class="t-lb">그림자<span>켜면 세부 설정이 열려요</span></div><label class="sw"><input id="textShadowOn" onchange="setTextShadow('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><label class="mini-check" style="margin:9px 0 0 2px"><input id="textShadowBubblesOff" onchange="setTextShadow('bubblesOff',this.checked)" type="checkbox"/><span>말풍선 그림자 삭제 — 체크하면 글 블럭 텍스트에만 그림자를 적용해요</span></label></div>
+<div class="acc-panel" id="textShadowPanel"><div class="acc-inner"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="textShadow"></div></div><div class="field" style="margin:0"><label class="lb">번짐</label><div class="rangewrap"><input id="textShadowStrength" max="20" min="0" oninput="setTextShadow('strength',this.value)" type="range" value="4"/><span class="val" id="textShadowStrengthV">4px</span></div></div></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">가로 위치</label><div class="rangewrap"><input id="textShadowX" max="12" min="-12" oninput="setShadowExtra('text','x',this.value)" step="1" type="range" value="0"/><span class="val" id="textShadowXV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">세로 위치</label><div class="rangewrap"><input id="textShadowY" max="12" min="-12" oninput="setShadowExtra('text','y',this.value)" step="1" type="range" value="1"/><span class="val" id="textShadowYV">1px</span></div></div><div class="field" style="margin:0;grid-column:1/-1"><label class="lb">진하기</label><div class="rangewrap"><input id="textShadowOpacity" max="100" min="0" oninput="setShadowExtra('text','opacity',this.value)" step="1" type="range" value="100"/><span class="val" id="textShadowOpacityV">100%</span></div></div></div></div></div>
 </div>
 </div>
 </div></div></section><section class="tool-panel" id="panel-layout"><div class="tool-panel-head"><div><strong>여백</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accMargin">
@@ -1542,7 +1593,7 @@ html, body, #canvas, #chat, #canvas * {
 <label class="mini-check" style="margin:0" title="대사 앞 이름｜ 이름표만 지워요 ([ ]가 있어도 함께) · ( ) 해석은 그대로 남아요"><input id="stripNameTagOn" onchange="state.stripSpeakerName=this.checked; renderPreview()" type="checkbox"/><span>대사 앞 이름 삭제</span></label>
 <label class="mini-check" style="margin:0" title="체크하면 말풍선 위 이름 줄도 함께 숨겨요"><input id="hideNames" onchange="state.hideNames=this.checked; renderPreview()" type="checkbox"/><span>말풍선 이름 삭제</span></label>
 </div>
-<div class="shadow-control-group bubble-shadow-controls" style="margin-top:12px"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">그림자 세기</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div></div>
+<div class="acc-panel" id="bubbleShadowPanel"><div class="acc-inner"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">번짐</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bubbleShadowX" max="12" min="-12" oninput="setShadowExtra('bubble','x',this.value)" step="1" type="range" value="0"/><span class="val" id="bubbleShadowXV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bubbleShadowY" max="12" min="-12" oninput="setShadowExtra('bubble','y',this.value)" step="1" type="range" value="3"/><span class="val" id="bubbleShadowYV">3px</span></div></div><div class="field" style="margin:0;grid-column:1/-1"><label class="lb">진하기</label><div class="rangewrap"><input id="bubbleShadowOpacity" max="100" min="0" oninput="setShadowExtra('bubble','opacity',this.value)" step="1" type="range" value="100"/><span class="val" id="bubbleShadowOpacityV">100%</span></div></div></div></div></div>
 </div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양</strong></div><div class="flat-tool-body"><div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
@@ -1775,6 +1826,7 @@ const state = {
   previewZoom:1,
   backgroundImage:{src:'',size:100,rotation:0,x:50,y:50,blur:0,overlayOpacity:0},
   credit:{ on:false, maker:'', character:'', align:'right', size:12, gap:16, sep:'dot' },
+  gradient:{ on:false, angle:180, mid:50, useVia:false },
   pageNum:{ on:false, align:'left', size:12, format:'slash' },
   colors:{
     bg:'#EDEDEE',
@@ -1790,14 +1842,18 @@ const state = {
     credit:'#8A8F98',
     pageNum:'#8A8F98',
     bgOverlay:'#000000',
+    gradFrom:'#EDEDEE',
+    gradVia:'#DCE3F0',
+    gradTo:'#C9D6EE',
     textShadow:'#000000',
     bubbleShadow:'#000000'
   },
   layout:{
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
-    gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, nameSize:12, widthScale:100, letterSpacing:0, cjkScale:100,
-    textShadowOn:false, textShadowBubblesOff:false, textShadowStrength:4, bubbleShadowOn:false, bubbleShadowStrength:4,
+    gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, bubbleFs:null, nameSize:12, widthScale:100, letterSpacing:0, cjkScale:100,
+    textShadowOn:false, textShadowBubblesOff:false, textShadowStrength:4, textShadowX:0, textShadowY:1, textShadowOpacity:100,
+    bubbleShadowOn:false, bubbleShadowStrength:4, bubbleShadowX:0, bubbleShadowY:3, bubbleShadowOpacity:100,
     bubbleOpacity:100, bubbleTextOpacity:100,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
     textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
@@ -2421,7 +2477,7 @@ function bubbleStyle(bg,color,tailCorner){
   /* Radius 22+ also retracts the outward tip slightly toward the bubble. */
   const tailInwardDelta=Math.max(0,r-22);
   return `background:${bg};--bubble-bg:${bg};--bubble-radius:${r}px;--bubble-tail-radius-base:${tailRadiusBase}px;--bubble-tail-radius-delta:${tailRadiusDelta}px;--bubble-tail-inward-delta:${tailInwardDelta}px;color:${color};padding:${L.bpy}px ${L.bpx}px;`
-    +`border-radius:${r}px;font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
+    +`border-radius:${r}px;font-size:${(Number(L.bubbleFs)||L.fs)}px;line-height:${L.lh};${wbStyle()}`;
 }
 function typographyStyle(align='left'){
   const L=state.layout;
@@ -2756,7 +2812,7 @@ let themeStorageOK=true;
 
 function defaultLayout(){
   return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,cjkScale:100,
-    radius:14,fs:16,lh:1.55,para:0,nameSize:12,widthScale:100,letterSpacing:0,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,bubbleShadowOn:false,bubbleShadowStrength:4,tailOn:true,tailSize:10,tailY:0,tailX:0,
+    radius:14,fs:16,lh:1.55,para:0,bubbleFs:null,nameSize:12,widthScale:100,letterSpacing:0,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,textShadowX:0,textShadowY:1,textShadowOpacity:100,bubbleShadowOn:false,bubbleShadowStrength:4,bubbleShadowX:0,bubbleShadowY:3,bubbleShadowOpacity:100,tailOn:true,tailSize:10,tailY:0,tailX:0,
     linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerWidth:100,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
@@ -3752,7 +3808,7 @@ function logRow(m,mem,gap,continued=false){
   const mine=(m.senderId===state.meId);
   const showIdentity=!mine||!!state.showMyIdentity;
   const hasAvatarColumn=!!state.showProfile&&showIdentity;
-  const plain=`color:${state.colors.nText};font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
+  const plain=`color:${state.colors.nText};font-size:${(Number(L.bubbleFs)||L.fs)}px;line-height:${L.lh};${wbStyle()}`;
   const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
   const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
   const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>`:'';
@@ -4167,7 +4223,6 @@ wrapFmt=function(mark){
 };
 wrapColor=function(){wrapRichSelection('span','color:'+state.colors.partial);};
 function wrapTextHeading(level){
-  if(state.composerType!=='text') return;
   const lv=Number(level)===1?1:2;
   const cls=lv===1?'text-heading text-heading-1':'text-heading text-heading-2';
   wrapRichSelection('span','',cls,{heading:String(lv)});
@@ -5838,7 +5893,6 @@ else setTimeout(__idleLoadRenderer,1200);
     wrapCurrentSelection(root,type,{color});
   }
   function applyHeadingFormat(root,level){
-    if(root.id==='msgContent'&&state.composerType!=='text') return;
     level=Number(level)===1?1:2;
     const found=ensureEditorSelection(root),range=found.sel.getRangeAt(0);
     const active=commonFormat(range,root,'heading');
@@ -6576,7 +6630,7 @@ function hideToast(){const el=document.getElementById('upToast'); if(el) el.clas
 
 /* ---------- 프로젝트 스냅샷 (직렬화) ---------- */
 const SNAP_KEYS=['mode','shape','showProfile','hideNames','showMyIdentity','meId','parenOn','autoQuoteBubble','stripSpeakerName','stripQuoteMarks','members','messages',
-  'export','transparentBg','backgroundImage','credit','pageNum','colors','layout'];
+  'export','transparentBg','backgroundImage','credit','pageNum','gradient','colors','layout'];
 function projectSnapshot(){
   const o={};
   SNAP_KEYS.forEach(k=>{ o[k]=state[k]; });
@@ -6588,7 +6642,7 @@ function applyProject(d){
   if(Array.isArray(d.messages)) state.messages=d.messages;
   ['mode','shape','meId'].forEach(k=>{ if(typeof d[k]==='string') state[k]=d[k]; });
   ['showProfile','hideNames','showMyIdentity','parenOn','transparentBg','autoQuoteBubble','stripSpeakerName','stripQuoteMarks'].forEach(k=>{ if(typeof d[k]==='boolean') state[k]=d[k]; });
-  ['export','backgroundImage','credit','pageNum','colors','layout'].forEach(k=>{
+  ['export','backgroundImage','credit','pageNum','gradient','colors','layout'].forEach(k=>{
     if(d[k]&&typeof d[k]==='object') Object.assign(state[k],JSON.parse(JSON.stringify(d[k])));
   });
   try{ setMode(state.mode); }catch(_){}
@@ -8823,7 +8877,7 @@ window.saveImage=function(){
 .shadow-control-row .colorrow{min-width:0}
 #chat.text-shadow-on{--text-shadow-strength:4px;--text-shadow-color:#000}
 #chat.text-shadow-on .t-inner,#chat.text-shadow-on .n-bubble,#chat.text-shadow-on .n-plain,#chat.text-shadow-on .m-bubble,#chat.text-shadow-on .n-name,#chat.text-shadow-on .m-name,#chat.text-shadow-on .credit,#chat.text-shadow-on .divider-pill{
-  text-shadow:0 1px var(--text-shadow-strength) var(--text-shadow-color)
+  text-shadow:var(--text-shadow-x,0px) var(--text-shadow-y,1px) var(--text-shadow-strength) var(--text-shadow-color)
 }
 /* '말풍선 그림자 삭제' — 그림자를 글 블럭 텍스트(.t-inner)에만 남긴다 */
 #chat.text-shadow-on.text-shadow-bubbles-off .n-bubble,#chat.text-shadow-on.text-shadow-bubbles-off .n-plain,#chat.text-shadow-on.text-shadow-bubbles-off .m-bubble,#chat.text-shadow-on.text-shadow-bubbles-off .n-name,#chat.text-shadow-on.text-shadow-bubbles-off .m-name,#chat.text-shadow-on.text-shadow-bubbles-off .credit,#chat.text-shadow-on.text-shadow-bubbles-off .divider-pill{
@@ -8834,11 +8888,11 @@ window.saveImage=function(){
    요소 전체 drop-shadow 방식으로 통일. 불투명 말풍선에선 글자가 실루엣 안쪽이라
    글자 그림자가 생기지 않는다.) */
 #chat.bubble-shadow-on .n-msg > .av,#chat.bubble-shadow-on .m-msg > .av{
-  box-shadow:0 3px calc(var(--bubble-shadow-strength) * 1.4) var(--bubble-shadow-color)
+  box-shadow:var(--bubble-shadow-x,0px) var(--bubble-shadow-y,3px) calc(var(--bubble-shadow-strength) * 1.4) var(--bubble-shadow-color)
 }
 #chat.bubble-shadow-on:not(.bubble-translucent) .n-bubble,
 #chat.bubble-shadow-on:not(.bubble-translucent) .m-bubble{
-  filter:drop-shadow(0 3px calc(var(--bubble-shadow-strength) * 1.2) var(--bubble-shadow-color))
+  filter:drop-shadow(var(--bubble-shadow-x,0px) var(--bubble-shadow-y,3px) calc(var(--bubble-shadow-strength) * 1.2) var(--bubble-shadow-color))
 }
 #chat.bulk-delete-mode .ctrl{display:none!important}
 #chat.bulk-delete-mode .pmsg{cursor:pointer;transition:outline-color .12s,background-color .12s}
@@ -8913,7 +8967,7 @@ window.saveImage=function(){
 #chat.bubble-translucent.bubble-shadow-on .n-bubble,
 #chat.bubble-translucent.bubble-shadow-on .m-bubble{box-shadow:none!important;filter:none!important}
 #chat.bubble-translucent.bubble-shadow-on .bubble-bg{
-  filter:drop-shadow(0 3px calc(var(--bubble-shadow-strength) * 1.2) var(--bubble-shadow-color))
+  filter:drop-shadow(var(--bubble-shadow-x,0px) var(--bubble-shadow-y,3px) calc(var(--bubble-shadow-strength) * 1.2) var(--bubble-shadow-color))
 }
 /* 말풍선 글씨 투명도 — 배경 투명도와 완전히 별개로 글자만 */
 #chat .n-bubble > .glyph-scale,
@@ -11383,6 +11437,370 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(reportFontState,300);
 });
 setTimeout(reportFontState,900);
+
+})();
+</script>
+
+<style id="grad-styles">
+/* ===== 배경 그라데이션 설정 — 토글에 따라 접히는 아코디언 ===== */
+#gradPanel{display:grid;grid-template-rows:0fr;opacity:0;margin-top:0;
+  transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1),opacity .22s ease,margin-top .3s ease}
+#gradPanel>.gp-inner{overflow:hidden;min-height:0}
+#gradPanel.open{grid-template-rows:1fr;opacity:1;margin-top:14px}
+#gradPanel:not(.open) .gp-inner *{pointer-events:none}
+
+.grad-preview{height:46px;border-radius:10px;border:1px solid var(--line,#E2E2E6);
+  margin-bottom:14px;box-shadow:inset 0 1px 3px rgba(0,0,0,.06)}
+
+.grad-dirs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;max-width:172px}
+.grad-dirs button{height:32px;border:1px solid var(--line,#E2E2E6);background:var(--panel,#fff);
+  border-radius:8px;font-size:14px;line-height:1;color:var(--ink,#222);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0}
+.grad-dirs button:hover:not(:disabled):not(.on){background:var(--panel-2,#EDEDEE)}
+.grad-dirs button.on{background:var(--ink,#222);border-color:var(--ink,#222);color:#fff}
+.grad-dirs button.gd-mid{opacity:.3;cursor:default;background:transparent;border-style:dashed}
+
+#gradViaField{display:none}
+#gradViaField.show{display:block}
+</style>
+<script id="grad-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   배경 그라데이션
+   배경은 #canvas 에 깔리고 (#chat 은 항상 투명) 배경 이미지 레이어는 그 위에 얹힌다.
+   그래서 캔버스 background 만 그라데이션으로 바꿔 주면 저장 이미지까지 그대로 따라온다.
+   ===================================================================== */
+
+state.gradient=Object.assign({on:false,angle:180,mid:50,useVia:false},state.gradient||{});
+if(!state.colors.gradFrom) state.colors.gradFrom='#EDEDEE';
+if(!state.colors.gradVia)  state.colors.gradVia='#DCE3F0';
+if(!state.colors.gradTo)   state.colors.gradTo='#C9D6EE';
+
+const DIRS=[0,45,90,135,180,225,270,315];
+
+function gradientCSS(){
+  const g=state.gradient, c=state.colors;
+  const ang=((Number(g.angle)||0)%360+360)%360;
+  const midRaw=Number(g.mid); const mid=Math.max(5,Math.min(95,Number.isFinite(midRaw)?midRaw:50));
+  if(g.useVia){
+    /* 가운데 색은 경계 위치에 두고, 양 끝은 그 바깥으로 균등하게 벌린다 */
+    const a=Math.max(0,mid-Math.round(mid/2));
+    const b=Math.min(100,mid+Math.round((100-mid)/2));
+    return 'linear-gradient('+ang+'deg,'+c.gradFrom+' '+a+'%,'+c.gradVia+' '+mid+'%,'+c.gradTo+' '+b+'%)';
+  }
+  return 'linear-gradient('+ang+'deg,'+c.gradFrom+' '+Math.max(0,mid-35)+'%,'+c.gradTo+' '+Math.min(100,mid+35)+'%)';
+}
+function gradientActive(){ return !!(state.gradient&&state.gradient.on)&&!state.transparentBg; }
+
+function applyBgGradient(){
+  const canvas=document.getElementById('canvas'); if(!canvas) return;
+  const chat=document.getElementById('chat');
+  if(gradientActive()){
+    canvas.style.background=gradientCSS();
+    if(chat) chat.style.background='transparent';
+  }
+  const pv=document.getElementById('gradPreview');
+  if(pv) pv.style.background=gradientCSS();
+}
+
+/* ---------- 설정 ---------- */
+window.setGradient=function(field,val){
+  const g=state.gradient;
+  if(field==='on') g.on=!!val;
+  else if(field==='useVia') g.useVia=!!val;
+  else if(field==='angle') g.angle=((parseFloat(val)||0)%360+360)%360;
+  else if(field==='mid'){
+    const n=parseFloat(val);
+    g.mid=Math.max(10,Math.min(90,Number.isFinite(n)?n:50));   /* 0 이 || 로 먹히지 않도록 */
+  }
+  syncGradientControls();
+  renderPreview();
+};
+function syncGradientControls(){
+  const g=state.gradient;
+  const on=document.getElementById('gradOn'); if(on) on.checked=!!g.on;
+  const panel=document.getElementById('gradPanel'); if(panel) panel.classList.toggle('open',!!g.on);
+  const via=document.getElementById('gradViaOn'); if(via) via.checked=!!g.useVia;
+  const viaField=document.getElementById('gradViaField'); if(viaField) viaField.classList.toggle('show',!!g.useVia);
+  const ang=document.getElementById('gradAngle'); if(ang) ang.value=g.angle;
+  const angV=document.getElementById('gradAngleV'); if(angV) angV.textContent=Math.round(g.angle)+'°';
+  const mid=document.getElementById('gradMid'); if(mid) mid.value=g.mid;
+  const midV=document.getElementById('gradMidV'); if(midV) midV.textContent=Math.round(g.mid)+'%';
+  const dirs=document.getElementById('gradDirs');
+  if(dirs) dirs.querySelectorAll('[data-ang]').forEach(b=>{
+    b.classList.toggle('on',Math.round(g.angle)===Number(b.dataset.ang));
+  });
+  applyBgGradient();
+}
+try{ if(typeof enhanceRange==='function'){
+  enhanceRange('gradAngle','gradAngleV',{min:0,max:360,step:1,nudge:5,suffix:'°'});
+  enhanceRange('gradMid','gradMidV',{min:10,max:90,step:1,nudge:1,suffix:'%'});
+} }catch(_){}
+
+/* ---------- 그리기 경로에 얹기 ---------- */
+function hook(name){
+  const prev=window[name];
+  if(typeof prev!=='function') return;
+  window[name]=function(){
+    const r=prev.apply(this,arguments);
+    try{ applyBgGradient(); }catch(_){}
+    return r;
+  };
+}
+hook('applyCanvas');
+hook('applyBackgroundLayers');
+hook('renderPreview');
+
+const _sync=window.syncControlsFromState;
+if(typeof _sync==='function'){
+  window.syncControlsFromState=function(){
+    const r=_sync.apply(this,arguments);
+    try{ syncGradientControls(); }catch(_){}
+    return r;
+  };
+}
+/* 색 스와치를 만졌을 때도 미리보기 띠가 같이 갱신되도록 */
+const _after=window.afterColor;
+if(typeof _after==='function'){
+  window.afterColor=function(key){
+    const r=_after.apply(this,arguments);
+    if(key==='gradFrom'||key==='gradVia'||key==='gradTo'){ try{ applyBgGradient(); }catch(_){} }
+    return r;
+  };
+}
+
+try{ syncGradientControls(); }catch(_){}
+try{ renderPreview(); }catch(_){}
+document.addEventListener('DOMContentLoaded',()=>{ try{ syncGradientControls(); }catch(_){} });
+
+})();
+</script>
+
+<style id="shadow-acc-styles">
+/* ===== 토글로 열리는 설정 패널 (그라데이션과 동일한 방식) ===== */
+.acc-panel{display:grid;grid-template-rows:0fr;opacity:0;margin-top:0;
+  transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1),opacity .22s ease,margin-top .3s ease}
+.acc-panel>.acc-inner{overflow:hidden;min-height:0}
+.acc-panel.open{grid-template-rows:1fr;opacity:1;margin-top:12px}
+.acc-panel:not(.open) .acc-inner *{pointer-events:none}
+</style>
+<script id="shadow-acc-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   그림자 — 토글을 켜면 설정이 열리고, 위치·번짐·진하기를 따로 조절한다.
+   기존 CSS 는 오프셋이 0/1px, 0/3px 로 고정돼 있어서 변수로 바꾸고
+   기본값을 예전 값 그대로 둬, 기존에 저장해 둔 결과물은 변하지 않는다.
+   ===================================================================== */
+
+const L=state.layout;
+const D={textShadowX:0,textShadowY:1,textShadowOpacity:100,
+         bubbleShadowX:0,bubbleShadowY:3,bubbleShadowOpacity:100};
+Object.keys(D).forEach(k=>{ if(L[k]==null) L[k]=D[k]; });
+
+function hexToRgba(hex,pct){
+  const h=String(hex||'#000000').replace('#','');
+  const full=h.length===3?h.split('').map(c=>c+c).join(''):h;
+  const n=parseInt(full,16);
+  if(!/^[0-9a-fA-F]{6}$/.test(full)||!Number.isFinite(n)) return hex||'#000000';
+  const a=Math.max(0,Math.min(100,Number(pct)==null?100:Number(pct)))/100;
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+(Math.round(a*1000)/1000)+')';
+}
+function num(v,d){ const n=Number(v); return Number.isFinite(n)?n:d; }
+
+function applyShadowExtras(){
+  const chat=document.getElementById('chat'); if(!chat) return;
+  chat.style.setProperty('--text-shadow-x',num(L.textShadowX,0)+'px');
+  chat.style.setProperty('--text-shadow-y',num(L.textShadowY,1)+'px');
+  chat.style.setProperty('--text-shadow-color',hexToRgba(state.colors.textShadow||'#000000',num(L.textShadowOpacity,100)));
+  chat.style.setProperty('--bubble-shadow-x',num(L.bubbleShadowX,0)+'px');
+  chat.style.setProperty('--bubble-shadow-y',num(L.bubbleShadowY,3)+'px');
+  chat.style.setProperty('--bubble-shadow-color',hexToRgba(state.colors.bubbleShadow||'#000000',num(L.bubbleShadowOpacity,100)));
+}
+
+window.setShadowExtra=function(which,field,value){
+  const key=(which==='text'?'textShadow':'bubbleShadow')
+    +(field==='x'?'X':field==='y'?'Y':'Opacity');
+  const n=parseFloat(value);
+  const v=Number.isFinite(n)?n:(D[key]||0);
+  L[key]=(field==='opacity')?Math.max(0,Math.min(100,v)):Math.max(-12,Math.min(12,v));
+  const out=document.getElementById(key+'V');
+  if(out) out.textContent=Math.round(L[key])+(field==='opacity'?'%':'px');
+  applyShadowExtras();
+};
+
+function syncShadowControls(){
+  const t=document.getElementById('textShadowPanel');
+  if(t) t.classList.toggle('open',!!L.textShadowOn);
+  const b=document.getElementById('bubbleShadowPanel');
+  if(b) b.classList.toggle('open',!!L.bubbleShadowOn);
+  [['textShadowX','px'],['textShadowY','px'],['textShadowOpacity','%'],
+   ['bubbleShadowX','px'],['bubbleShadowY','px'],['bubbleShadowOpacity','%']].forEach(([k,suf])=>{
+    const el=document.getElementById(k); if(el) el.value=num(L[k],D[k]);
+    const out=document.getElementById(k+'V'); if(out) out.textContent=Math.round(num(L[k],D[k]))+suf;
+  });
+  applyShadowExtras();
+}
+
+try{ if(typeof enhanceRange==='function'){
+  enhanceRange('textShadowX','textShadowXV',{min:-12,max:12,step:1,nudge:1,suffix:'px'});
+  enhanceRange('textShadowY','textShadowYV',{min:-12,max:12,step:1,nudge:1,suffix:'px'});
+  enhanceRange('textShadowOpacity','textShadowOpacityV',{min:0,max:100,step:1,nudge:5,suffix:'%'});
+  enhanceRange('bubbleShadowX','bubbleShadowXV',{min:-12,max:12,step:1,nudge:1,suffix:'px'});
+  enhanceRange('bubbleShadowY','bubbleShadowYV',{min:-12,max:12,step:1,nudge:1,suffix:'px'});
+  enhanceRange('bubbleShadowOpacity','bubbleShadowOpacityV',{min:0,max:100,step:1,nudge:5,suffix:'%'});
+} }catch(_){}
+
+/* ---------- 기존 함수에 얹기 ---------- */
+function wrap(name,after){
+  const prev=window[name];
+  if(typeof prev!=='function') return;
+  window[name]=function(){ const r=prev.apply(this,arguments); try{ after.apply(null,arguments); }catch(_){} return r; };
+}
+/* applyRequestedVisuals 가 색을 불투명 hex 로 되돌리므로 그 뒤에 다시 덮는다 */
+wrap('applyRequestedVisuals',applyShadowExtras);
+wrap('setTextShadow',()=>syncShadowControls());
+wrap('setBubbleShadow',()=>syncShadowControls());
+wrap('syncControlsFromState',()=>syncShadowControls());
+wrap('renderPreview',applyShadowExtras);
+const _after=window.afterColor;
+if(typeof _after==='function'){
+  window.afterColor=function(key){
+    const r=_after.apply(this,arguments);
+    if(key==='textShadow'||key==='bubbleShadow'){ try{ applyShadowExtras(); }catch(_){} }
+    return r;
+  };
+}
+
+try{ syncShadowControls(); }catch(_){}
+document.addEventListener('DOMContentLoaded',()=>{ try{ syncShadowControls(); }catch(_){} });
+
+})();
+</script>
+
+<script id="bubble-fs-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   말풍선 글자 크기
+   bubbleFs 가 null 이면 "글자 크기 따라가기". 슬라이더를 글자 크기와 같은 값에
+   맞추면 다시 null 로 돌아가, 이후 글자 크기를 바꾸면 말풍선도 같이 움직인다.
+   ===================================================================== */
+
+if(state.layout.bubbleFs===undefined) state.layout.bubbleFs=null;
+
+function effBubbleFs(){
+  const L=state.layout;
+  const b=Number(L.bubbleFs);
+  return Number.isFinite(b)&&b>0?b:(Number(L.fs)||16);
+}
+function syncBubbleFs(){
+  const px=effBubbleFs();
+  const el=document.getElementById('lyBubbleFs'); if(el) el.value=px;
+  const out=document.getElementById('lyBubbleFsV');
+  if(out) out.textContent=Math.round(px)+'px'+((state.layout.bubbleFs==null)?' · 연동':'');
+}
+window.__effBubbleFs=effBubbleFs;
+
+const _setLayout=window.setLayout;
+if(typeof _setLayout==='function'){
+  window.setLayout=function(key,val){
+    if(key==='bubbleFs'){
+      const n=parseFloat(val);
+      const L=state.layout;
+      /* 글자 크기와 같은 값이면 연동 상태로 되돌린다 */
+      L.bubbleFs=(Number.isFinite(n)&&n!==Number(L.fs))?n:null;
+      syncBubbleFs();
+      renderPreview();
+      return;
+    }
+    const r=_setLayout.apply(this,arguments);
+    if(key==='fs'){ try{ syncBubbleFs(); }catch(_){} }
+    return r;
+  };
+}
+try{ if(typeof enhanceRange==='function') enhanceRange('lyBubbleFs','lyBubbleFsV',{min:11,max:22,step:1,nudge:1,suffix:'px'}); }catch(_){}
+
+const _sync=window.syncControlsFromState;
+if(typeof _sync==='function'){
+  window.syncControlsFromState=function(){
+    const r=_sync.apply(this,arguments);
+    try{ syncBubbleFs(); }catch(_){}
+    return r;
+  };
+}
+
+try{ syncBubbleFs(); }catch(_){}
+document.addEventListener('DOMContentLoaded',()=>{ try{ syncBubbleFs(); }catch(_){} });
+
+})();
+</script>
+
+<style id="heading-in-chat-styles">
+/* ===== 말풍선 모드에서도 '글씨 크기(# ##)'를 같은 자리에 =====
+   발신자 칸을 글 모드의 '정렬 | 글씨 크기' 줄과 같은 구조로 만들고,
+   글씨 크기 컬럼만 모드에 따라 옮겨 붙인다(요소를 복제하지 않아 스타일이 그대로 유지됨). */
+#senderField .text-format-row{display:flex;align-items:flex-end;gap:6px;
+  width:100%;min-width:0;max-width:100%;flex-wrap:nowrap}
+#senderField .tfr-col.sender-col{flex:1 1 auto;min-width:0}
+#senderField .tfr-col.sender-col select{width:100%;min-width:0;max-width:100%}
+#senderField #textHeadingCol{flex:0 0 auto}
+/* 글씨 크기가 붙어 있지 않을 때는 가름선도 숨긴다 */
+#senderHeadingDiv{display:none}
+#senderField.has-heading #senderHeadingDiv{display:block}
+</style>
+<script id="heading-in-chat-script">
+(function(){
+'use strict';
+
+/* 글씨 크기(# ##) 컬럼을 종류에 따라 알맞은 줄로 이동시킨다.
+   - 글 모드   : 글 정렬 옆 (원래 자리)
+   - 말풍선 모드: 발신자 옆
+   같은 DOM 요소를 옮기는 방식이라 #textHeadingSeg 에 걸린 기존 스타일이
+   데스크톱·모바일 모두 그대로 살아 있다. */
+function placeHeadingCol(type){
+  const col=document.getElementById('textHeadingCol');
+  if(!col) return;
+  const senderField=document.getElementById('senderField');
+  const chatSlot=senderField?senderField.querySelector('.text-format-row'):null;
+  const textSlot=document.querySelector('#alignField .text-format-row');
+  const alignDiv=document.getElementById('alignHeadingDiv');
+
+  if(type==='chat'&&chatSlot){
+    if(col.parentElement!==chatSlot) chatSlot.appendChild(col);
+    if(senderField) senderField.classList.add('has-heading');
+    if(alignDiv) alignDiv.style.display='none';
+  }else if(textSlot){
+    if(col.parentElement!==textSlot) textSlot.appendChild(col);
+    if(senderField) senderField.classList.remove('has-heading');
+    if(alignDiv) alignDiv.style.display='';
+  }
+}
+window.__placeHeadingCol=placeHeadingCol;
+
+const _setMsgType=window.setMsgType;
+if(typeof _setMsgType==='function'){
+  window.setMsgType=function(t){
+    const r=_setMsgType.apply(this,arguments);
+    try{ placeHeadingCol(t); }catch(_){}
+    return r;
+  };
+}
+
+function initial(){
+  try{ placeHeadingCol(state.composerType||'chat'); }catch(_){}
+}
+initial();
+document.addEventListener('DOMContentLoaded',initial);
+/* 모바일 독으로 작성창이 옮겨질 때도 자리를 다시 잡아 준다 */
+try{
+  new MutationObserver(()=>{ try{ placeHeadingCol(state.composerType||'chat'); }catch(_){} })
+    .observe(document.body,{childList:true,subtree:true});
+}catch(_){}
 
 })();
 </script>
