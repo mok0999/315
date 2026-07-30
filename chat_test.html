@@ -11800,7 +11800,8 @@ try{
    #canvas 에는 이미 overflow:hidden 이 걸려 있어 캔버스 밖으로 나간 부분은
    미리보기에서도, 저장 결과에서도 똑같이 잘린다(캔버스가 커지지 않는다). */
 #stickerLayer{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
-#stickerLayer .sticker{position:absolute;pointer-events:auto;cursor:move;touch-action:none;line-height:0}
+#stickerLayer .sticker{position:absolute;pointer-events:auto;cursor:move;touch-action:none;
+  line-height:0;transform-origin:50% 50%}
 #stickerLayer .sticker img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
 #stickerLayer .sticker.sel{outline:2px solid var(--accent);outline-offset:2px}
 #stickerLayer .st-handles{position:absolute;inset:0;pointer-events:none}
@@ -11808,9 +11809,17 @@ try{
   border:2px solid #fff;border-radius:50%;background:#D14343;color:#fff;font-size:13px;line-height:1;
   cursor:pointer;pointer-events:auto;display:flex;align-items:center;justify-content:center;
   box-shadow:0 2px 6px rgba(0,0,0,.25)}
+#stickerLayer .st-rot{position:absolute;top:-11px;left:-11px;width:22px;height:22px;padding:0;
+  border:2px solid #fff;border-radius:50%;background:#4C7DF0;color:#fff;font-size:12px;line-height:1;
+  cursor:grab;pointer-events:auto;touch-action:none;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.25)}
+#stickerLayer .st-rot:active{cursor:grabbing}
 #stickerLayer .st-rz{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;
   border:2px solid #fff;border-radius:50%;background:var(--accent);cursor:nwse-resize;
   pointer-events:auto;touch-action:none;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+#stickerLayer .st-angle{position:absolute;z-index:9;padding:3px 8px;border-radius:999px;
+  background:rgba(28,28,30,.86);color:#fff;font-size:11px;font-weight:700;white-space:nowrap;
+  pointer-events:none;transform:translate(-50%,-100%)}
 /* 사진 칸의 스티커 모드 안내줄 */
 #stickerPanel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%}
 #stickerPanel .sp-txt{font-size:11px;color:var(--muted);line-height:1.5;flex:1 1 auto;min-width:0}
@@ -11826,8 +11835,15 @@ try{
 
 /* =====================================================================
    스티커 삽입 — '스티커 모드'가 켜져 있으면 고른 사진이 블럭으로 들어가지
-   않고 캔버스 위에 바로 붙는다. 끌어서 이동, 눌러서 크기 조절·삭제.
+   않고 캔버스 위에 바로 붙는다. 끌어서 이동, 눌러서 크기 조절·회전·삭제.
    좌표는 캔버스 좌표계(px)로 저장하므로 미리보기 배율과 무관하다.
+
+   회전은 CSS transform 으로 두지 않고 이미지에 직접 구워 넣는다(bake).
+   iOS 저장 경로는 이미지를 직접 캔버스에 그리면서 회전을 무시하기 때문에,
+   transform 으로만 두면 아이폰에서 저장할 때 회전이 사라진다.
+   - s.src     : 원본 (회전 0도 상태, 항상 보존)
+   - s.srcRot  : s.rot 을 구워 넣은 비트맵 (저장 파일에는 넣지 않고 필요할 때 다시 굽는다)
+   - s.w0      : 회전 전 기준 폭 / s.w : 지금 화면에 그려지는 폭(회전 후 외곽 상자)
    ===================================================================== */
 
 const T=(m,o)=>{ try{ if(typeof window.toast==='function') window.toast(m,o); }catch(_){} };
@@ -11837,9 +11853,27 @@ let stickerMode=false;
 let selId='';
 
 const canvasEl=()=>document.getElementById('canvas');
+const RAD=Math.PI/180;
 function curPage(){ try{ return (typeof window.__currentPage==='function')?window.__currentPage():1; }catch(_){ return 1; } }
 function pageTotal(){ try{ return (typeof window.__pageCount==='function')?window.__pageCount():1; }catch(_){ return 1; } }
 function find(id){ return (state.stickers||[]).find(s=>s&&s.id===id)||null; }
+function norm(d){ d=Number(d)||0; d%=360; return d<0?d+360:d; }
+
+/* 예전 버전(회전 없음)에서 만든 스티커도 그대로 살려 쓴다 */
+function migrate(s){
+  if(!s) return s;
+  if(typeof s.rot!=='number') s.rot=0;
+  if(typeof s.w0!=='number'||!(s.w0>0)) s.w0=Number(s.w)||60;
+  if(typeof s.w!=='number'||!(s.w>0)) s.w=s.w0;
+  return s;
+}
+
+/* srcRot 은 자동저장 JSON 에 넣지 않는다 (원본이 있으면 언제든 다시 구울 수 있다) */
+function setHidden(o,k,v){
+  try{ Object.defineProperty(o,k,{value:v,writable:true,enumerable:false,configurable:true}); }
+  catch(_){ o[k]=v; }
+}
+function displaySrc(s){ return (s.rot&&s.srcRot)?s.srcRot:s.src; }
 
 /* 미리보기 배율(zoom 또는 transform)을 실측해서 화면 이동량을 캔버스 px로 환산 */
 function scaleOf(){
@@ -11857,6 +11891,87 @@ function layerEl(){
   return L;
 }
 
+/* ---------- 원본 이미지 크기 ---------- */
+const imgCache=new Map();
+function loadImg(src){
+  if(imgCache.has(src)) return imgCache.get(src);
+  const p=new Promise((res,rej)=>{
+    const im=new Image();
+    im.onload=()=>res(im);
+    im.onerror=()=>rej(new Error('sticker image decode failed'));
+    im.src=src;
+  });
+  imgCache.set(src,p);
+  return p;
+}
+function ensureNatural(s){
+  if(s.nw>0&&s.nh>0) return loadImg(s.src).catch(()=>null);
+  return loadImg(s.src).then(im=>{
+    s.nw=im.naturalWidth||1; s.nh=im.naturalHeight||1;
+    return im;
+  }).catch(()=>null);
+}
+
+/* ---------- 회전 굽기 ---------- */
+function roundRectPath(ctx,x,y,w,h,r){
+  r=Math.max(0,Math.min(r,w/2,h/2));
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); if(r) ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); if(r) ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); if(r) ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); if(r) ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+/* 회전 후 외곽 상자 크기 (화면 px) */
+function boxOf(s){
+  const w0=Math.max(1,Number(s.w0)||1);
+  const ar=(s.nw>0&&s.nh>0)?(s.nh/s.nw):1;
+  const h0=w0*ar;
+  const th=norm(s.rot)*RAD;
+  const c=Math.abs(Math.cos(th)), si=Math.abs(Math.sin(th));
+  return {w:w0*c+h0*si, h:w0*si+h0*c};
+}
+const baking=new Set();
+function bakeRotation(s){
+  return ensureNatural(s).then(im=>{
+    if(!im) return false;
+    const rot=norm(s.rot);
+    if(!rot){ setHidden(s,'srcRot',''); return true; }
+    const th=rot*RAD;
+    const c=Math.abs(Math.cos(th)), si=Math.abs(Math.sin(th));
+    const nw=s.nw, nh=s.nh;
+    const cap=3200;
+    const k=Math.min(1,cap/Math.max(nw*c+nh*si,nw*si+nh*c));
+    const dw=nw*k, dh=nh*k;
+    const W=Math.max(1,Math.round(dw*c+dh*si)), H=Math.max(1,Math.round(dw*si+dh*c));
+    let cv,ctx;
+    try{
+      cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+      ctx=cv.getContext('2d');
+    }catch(_){ return false; }
+    if(!ctx) return false;
+    ctx.translate(W/2,H/2);
+    ctx.rotate(th);
+    if(s.round!==false){
+      /* 화면에서 보이던 10px 라운드를 원본 픽셀 기준으로 환산해 똑같이 잘라 준다 */
+      const base=Math.max(1,Number(s.w0)||dw);
+      roundRectPath(ctx,-dw/2,-dh/2,dw,dh,10*(dw/base));
+      ctx.clip();
+    }
+    try{ ctx.drawImage(im,-dw/2,-dh/2,dw,dh); }catch(_){ return false; }
+    try{ setHidden(s,'srcRot',cv.toDataURL('image/png')); }catch(_){ return false; }
+    return true;
+  }).catch(()=>false);
+}
+/* 저장본에서 복원됐거나 아직 안 구워진 스티커를 뒤늦게 굽는다 */
+function bakeIfNeeded(s){
+  if(!s||!s.rot||s.srcRot||baking.has(s.id)) return;
+  baking.add(s.id);
+  bakeRotation(s).then(()=>{ baking.delete(s.id); renderStickers(); })
+    .catch(()=>{ baking.delete(s.id); });
+}
+
 /* ---------- 저장(자동저장 훅은 renderPreview 에 걸려 있다) ---------- */
 function commit(){ try{ renderPreview(); }catch(_){ renderStickers(); } }
 
@@ -11864,11 +11979,15 @@ function commit(){ try{ renderPreview(); }catch(_){ renderStickers(); } }
 function renderStickers(){
   const L=layerEl(); if(!L) return;
   const total=pageTotal(), page=curPage();
-  const list=(state.stickers||[]).filter(s=>s&&s.src&&((total<2)||((s.page||1)===page)));
+  const list=(state.stickers||[]).map(migrate).filter(s=>s&&s.src&&((total<2)||((s.page||1)===page)));
   const keep=new Set(list.map(s=>s.id));
-  [...L.children].forEach(el=>{ if(!keep.has(el.dataset.sid)) el.remove(); });
+  [...L.children].forEach(el=>{
+    if(el.classList.contains('st-angle')) return;
+    if(!keep.has(el.dataset.sid)) el.remove();
+  });
 
   list.forEach(s=>{
+    bakeIfNeeded(s);
     let el=L.querySelector('.sticker[data-sid="'+s.id+'"]');
     if(!el){
       el=document.createElement('div');
@@ -11881,8 +12000,11 @@ function renderStickers(){
       bindDrag(el);
     }
     const img=el.querySelector('img');
-    if(img&&img.getAttribute('src')!==s.src) img.src=s.src;
-    if(img) img.style.borderRadius=(s.round===false?'0':'10px');
+    const src=displaySrc(s);
+    if(img&&img.getAttribute('src')!==src) img.src=src;
+    /* 회전본에는 라운드가 이미 그려져 있으므로 CSS 라운드는 0 도일 때만 */
+    if(img) img.style.borderRadius=(s.round!==false&&!s.rot)?'10px':'0';
+    el.style.transform='none';
     el.style.left=Math.round(s.x)+'px';
     el.style.top=Math.round(s.y)+'px';
     el.style.width=Math.round(s.w)+'px';
@@ -11895,12 +12017,14 @@ function renderStickers(){
         /* 클래스에 ctrl 을 함께 넣어 두면 저장·내보내기 시 기존 정리 루틴이
            블럭 버튼과 똑같이 손잡이를 걷어내 준다(결과물에 절대 찍히지 않는다) */
         h.className='st-handles ctrl';
-        h.innerHTML='<button type="button" class="st-del" title="스티커 삭제">\u00D7</button>'
+        h.innerHTML='<button type="button" class="st-rot" title="드래그로 회전 \u00B7 두 번 누르면 0도로">\u21BB</button>'
+          +'<button type="button" class="st-del" title="스티커 삭제">\u00D7</button>'
           +'<span class="st-rz" title="드래그로 크기 조절"></span>';
         el.appendChild(h);
         const del=h.querySelector('.st-del');
         if(del) del.addEventListener('click',ev=>{ ev.preventDefault(); ev.stopPropagation(); removeSticker(s.id); });
         bindResize(h.querySelector('.st-rz'),s.id);
+        bindRotate(h.querySelector('.st-rot'),s.id);
       }
     }else if(h){ h.remove(); }
   });
@@ -11912,7 +12036,7 @@ function bindDrag(el){
   el.addEventListener('click',e=>{ e.stopPropagation(); });
   el.addEventListener('touchstart',e=>{ if(e.touches&&e.touches.length===1) e.stopPropagation(); },{passive:true});
   el.addEventListener('pointerdown',e=>{
-    if(e.target.closest('.st-del')||e.target.closest('.st-rz')) return;
+    if(e.target.closest('.st-del')||e.target.closest('.st-rz')||e.target.closest('.st-rot')) return;
     if(e.pointerType==='mouse'&&e.button!==0) return;
     e.preventDefault(); e.stopPropagation();
     const s=find(el.dataset.sid); if(!s) return;
@@ -11952,15 +12076,17 @@ function bindResize(h,sid){
     const s=find(sid); if(!s) return;
     const el=h.closest('.sticker');
     const sc=scaleOf();
-    const w0=s.w, x0=e.clientX, y0=e.clientY;
+    const W0=s.w, B0=s.w0, x0=e.clientX, y0=e.clientY;
     let moved=false;
     try{ h.setPointerCapture(e.pointerId); }catch(_){}
     const move=ev=>{
       const dx=(ev.clientX-x0)/sc, dy=(ev.clientY-y0)/sc;
       const d=(Math.abs(dx)>=Math.abs(dy))?dx:dy;
       moved=true;
-      s.w=Math.max(24,Math.min(6000,w0+d));
-      if(el) el.style.width=Math.round(s.w)+'px';
+      const w=Math.max(24,Math.min(6000,W0+d));
+      s.w=w;
+      s.w0=B0*(w/W0);            /* 회전 기준 폭도 같은 비율로 따라간다 */
+      if(el) el.style.width=Math.round(w)+'px';
     };
     const up=()=>{
       h.removeEventListener('pointermove',move);
@@ -11974,26 +12100,105 @@ function bindResize(h,sid){
   });
 }
 
+/* ---------- 회전 ---------- */
+function angleBadge(show,s,deg){
+  const L=layerEl(); if(!L) return;
+  let b=L.querySelector(':scope > .st-angle');
+  if(!show){ if(b) b.remove(); return; }
+  if(!b){
+    b=document.createElement('div');
+    b.className='st-angle ctrl';
+    L.appendChild(b);
+  }
+  b.textContent=Math.round(norm(deg))+'\u00B0';
+  b.style.left=Math.round(s.x+s.w/2)+'px';
+  b.style.top=Math.round(s.y-8)+'px';
+}
+function applyRotation(s,deg){
+  const before=boxOf(s);
+  const cx=s.x+before.w/2, cy=s.y+before.h/2;
+  s.rot=norm(deg);
+  return bakeRotation(s).then(()=>{
+    const after=boxOf(s);
+    s.w=after.w;
+    s.x=cx-after.w/2;
+    s.y=cy-after.h/2;
+    commit();
+  });
+}
+function bindRotate(h,sid){
+  if(!h) return;
+  h.addEventListener('click',e=>{ e.stopPropagation(); });
+  h.addEventListener('touchstart',e=>{ e.stopPropagation(); },{passive:true});
+  h.addEventListener('dblclick',e=>{
+    e.preventDefault(); e.stopPropagation();
+    const s=find(sid); if(!s||!s.rot) return;
+    applyRotation(s,0); T('회전을 0도로 되돌렸어요');
+  });
+  h.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'&&e.button!==0) return;
+    e.preventDefault(); e.stopPropagation();
+    const s=find(sid); if(!s) return;
+    const el=h.closest('.sticker'); if(!el) return;
+    const r=el.getBoundingClientRect();
+    /* 회전 중심은 요소 한가운데 — 회전해도 바운딩 박스 중심은 그대로다 */
+    const cx=r.left+r.width/2, cy=r.top+r.height/2;
+    const baked=norm(s.rot);
+    let live=baked, moved=false;
+    try{ h.setPointerCapture(e.pointerId); }catch(_){}
+    const move=ev=>{
+      const dx=ev.clientX-cx, dy=ev.clientY-cy;
+      if(!moved&&Math.hypot(dx,dy)<6) return;
+      moved=true;
+      let deg=Math.atan2(dy,dx)*180/Math.PI+90;   /* 손잡이가 왼쪽 위라 90도 보정 */
+      deg=norm(deg);
+      if(ev.shiftKey) deg=norm(Math.round(deg/15)*15);
+      else{
+        const near=Math.round(deg/90)*90;         /* 0/90/180/270 근처는 살짝 붙여 준다 */
+        if(Math.abs(deg-near)<=3) deg=norm(near);
+      }
+      live=deg;
+      /* 구워진 비트맵은 이미 baked 만큼 돌아가 있으므로 차이만큼만 미리 돌려 보여준다 */
+      el.style.transform='rotate('+(live-baked)+'deg)';
+      angleBadge(true,s,live);
+    };
+    const up=()=>{
+      h.removeEventListener('pointermove',move);
+      h.removeEventListener('pointerup',up);
+      h.removeEventListener('pointercancel',up);
+      angleBadge(false);
+      if(!moved){ el.style.transform='none'; return; }
+      applyRotation(s,live);
+    };
+    h.addEventListener('pointermove',move);
+    h.addEventListener('pointerup',up);
+    h.addEventListener('pointercancel',up);
+  });
+}
+
 /* ---------- 추가 / 삭제 ---------- */
 function addSticker(src){
-  const c=canvasEl();
-  const cw=(c&&c.offsetWidth)||440;
-  const ch=(c&&c.offsetHeight)||620;
-  const w=Math.max(60,Math.round(cw*0.35));
-  const n=(state.stickers||[]).length;
-  const s={
-    id:'st'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
-    src:src,
-    x:Math.round((cw-w)/2)+(n%5)*16,
-    y:Math.round(ch*0.28)+(n%5)*16,
-    w:w,
-    round:(typeof draftImgRound==='undefined')?true:!!draftImgRound,
-    page:curPage()
-  };
-  state.stickers.push(s);
-  selId=s.id;
-  commit();
-  T('스티커를 붙였어요 \u2014 끌어서 옮기고, 눌러서 크기 조절\u00B7삭제할 수 있어요');
+  loadImg(src).then(im=>{
+    const c=canvasEl();
+    const cw=(c&&c.offsetWidth)||440;
+    const ch=(c&&c.offsetHeight)||620;
+    const w=Math.max(60,Math.round(cw*0.35));
+    const n=(state.stickers||[]).length;
+    const s={
+      id:'st'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+      src:src,
+      x:Math.round((cw-w)/2)+(n%5)*16,
+      y:Math.round(ch*0.28)+(n%5)*16,
+      w:w, w0:w, rot:0,
+      nw:im.naturalWidth||1, nh:im.naturalHeight||1,
+      round:(typeof draftImgRound==='undefined')?true:!!draftImgRound,
+      page:curPage()
+    };
+    state.stickers.push(s);
+    selId=s.id;
+    commit();
+    T('스티커를 붙였어요 \u2014 끌어서 옮기고, 눌러서 크기\u00B7회전\u00B7삭제할 수 있어요');
+  }).catch(()=>{ T('이미지를 불러오지 못했어요'); });
 }
 function removeSticker(id){
   const i=(state.stickers||[]).findIndex(s=>s&&s.id===id);
@@ -12027,7 +12232,7 @@ function syncPanel(){
   if(t){
     const n=(state.stickers||[]).length;
     t.textContent=n
-      ? ('붙인 스티커 '+n+'개 \u00B7 끌어서 이동, 눌러서 크기 조절\u00B7삭제')
+      ? ('붙인 스티커 '+n+'개 \u00B7 끌어서 이동, 눌러서 크기\u00B7회전\u00B7삭제')
       : '\u201C\uFF0B 이미지 선택\u201D 으로 고른 사진이 캔버스에 바로 붙어요';
   }
 }
@@ -12073,11 +12278,17 @@ document.addEventListener('pointerdown',e=>{
 },true);
 document.addEventListener('keydown',e=>{
   if(!selId) return;
-  if(e.key==='Escape'){ selId=''; renderStickers(); }
-  else if((e.key==='Delete'||e.key==='Backspace')){
-    const t=e.target, tag=(t&&t.tagName||'').toLowerCase();
-    if(tag==='input'||tag==='textarea'||tag==='select'||(t&&t.isContentEditable)) return;
-    e.preventDefault(); removeSticker(selId);
+  const t=e.target, tag=(t&&t.tagName||'').toLowerCase();
+  const typing=(tag==='input'||tag==='textarea'||tag==='select'||(t&&t.isContentEditable));
+  if(e.key==='Escape'){ selId=''; renderStickers(); return; }
+  if(typing) return;
+  if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); removeSticker(selId); return; }
+  /* 방향키로 1도씩(Shift 15도) 미세 회전 */
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+    const s=find(selId); if(!s) return;
+    e.preventDefault();
+    const step=(e.shiftKey?15:1)*(e.key==='ArrowRight'?1:-1);
+    applyRotation(s,norm(s.rot+step));
   }
 },true);
 
@@ -12100,6 +12311,12 @@ window.renderPreview=function(){
 });
 
 /* ---------- 초기화 ---------- */
+window.__stickers={
+  list:()=>state.stickers,
+  select:id=>{ selId=id; renderStickers(); },
+  rotate:(id,deg)=>{ const s=find(id); return s?applyRotation(s,deg):Promise.resolve(); },
+  render:()=>renderStickers()
+};
 try{ renderStickers(); }catch(_){}
 document.addEventListener('DOMContentLoaded',()=>{ setTimeout(()=>{ try{ renderStickers(); }catch(_){} },400); });
 
