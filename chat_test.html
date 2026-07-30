@@ -1357,9 +1357,8 @@ html, body, #canvas, #chat, #canvas * {
 </div>
 <div class="msg-img-editor" id="msgImgEditor" hidden="">
 <input accept="image/*" hidden="" id="msgImgFile" onchange="onMsgImg(event)" type="file"/>
-<div class="msg-img-editor-head" id="msgImgEditorHead"><span id="msgImgEditorTitle">사진</span><div class="msg-img-head-right"><label class="msg-img-round-toggle" title="이미지 모서리 둥글게"><input type="checkbox" id="msgImgRound" checked="" onchange="toggleImgRound(this.checked)"/><span class="msg-img-round-switch"></span>라운드</label><button type="button" class="msg-img-pick" id="msgImgPickBtn" onclick="pickMsgImg()">＋ 이미지 선택</button></div></div>
+<div class="msg-img-editor-head" id="msgImgEditorHead"><span id="msgImgEditorTitle">사진</span><div class="msg-img-head-right"><label class="msg-img-round-toggle" title="이미지 모서리 둥글게"><input type="checkbox" id="msgImgRound" checked="" onchange="toggleImgRound(this.checked)"/><span class="msg-img-round-switch"></span>라운드</label><label class="msg-img-round-toggle msg-img-sticker-toggle" title="이미지를 캔버스 아무 곳에나 스티커처럼 붙여요"><input type="checkbox" id="stickerMode" onchange="setStickerMode(this.checked)"/><span class="msg-img-round-switch"></span>스티커 모드</label><button type="button" class="msg-img-pick" id="msgImgPickBtn" onclick="pickMsgImg()">＋ 이미지 선택</button></div></div>
 <div class="msg-img-empty" id="msgImgEmpty">
-<span class="msg-img-hint">채팅 사이에 사진을 끼워넣어요 · 위 “＋ 이미지 선택”을 눌러 파일을 골라주세요</span>
 </div>
 <div class="msg-img-body" id="msgImgBody" hidden="">
 <div class="msg-img-thumb"><img id="msgImgPrev"/><button class="x" type="button" title="이미지 제거" onclick="clearMsgImg()">×</button></div>
@@ -1718,7 +1717,6 @@ html, body, #canvas, #chat, #canvas * {
 <button type="button" class="zoom-label" id="previewZoomLabel" onclick="resetPreviewZoom()" title="화면 맞춤으로 돌아가기">맞춤</button>
 <button type="button" onclick="changePreviewZoom(1)" title="미리보기 확대">＋</button>
 </div>
-<span class="preview-zoom-help">버튼 또는 Ctrl/⌘+스크롤로 캔버스만 확대·축소해요. 저장 크기와 저장 배율에는 영향이 없어요.</span>
 </div>
 </div>
 <div class="preview-actions">
@@ -6630,7 +6628,7 @@ function hideToast(){const el=document.getElementById('upToast'); if(el) el.clas
 
 /* ---------- 프로젝트 스냅샷 (직렬화) ---------- */
 const SNAP_KEYS=['mode','shape','showProfile','hideNames','showMyIdentity','meId','parenOn','autoQuoteBubble','stripSpeakerName','stripQuoteMarks','members','messages',
-  'export','transparentBg','backgroundImage','credit','pageNum','gradient','colors','layout'];
+  'export','transparentBg','backgroundImage','credit','pageNum','gradient','colors','layout','stickers'];
 function projectSnapshot(){
   const o={};
   SNAP_KEYS.forEach(k=>{ o[k]=state[k]; });
@@ -6640,6 +6638,7 @@ function applyProject(d){
   if(!d||typeof d!=='object') return;
   if(Array.isArray(d.members)) state.members=d.members;
   if(Array.isArray(d.messages)) state.messages=d.messages;
+  if(Array.isArray(d.stickers)) state.stickers=d.stickers;
   ['mode','shape','meId'].forEach(k=>{ if(typeof d[k]==='string') state[k]=d[k]; });
   ['showProfile','hideNames','showMyIdentity','parenOn','transparentBg','autoQuoteBubble','stripSpeakerName','stripQuoteMarks'].forEach(k=>{ if(typeof d[k]==='boolean') state[k]=d[k]; });
   ['export','backgroundImage','credit','pageNum','gradient','colors','layout'].forEach(k=>{
@@ -9112,11 +9111,20 @@ function updateBulkButtons(){
   const main=document.getElementById('bulkDeleteBtn'), cancel=document.getElementById('bulkDeleteCancelBtn');
   if(main){
     main.classList.toggle('bulk-active',bulkMode);
-    main.textContent=bulkMode?(selectedIds.size?'선택한 '+selectedIds.size+'개 삭제':'삭제할 로그 선택'):'☑ 여러 개 삭제';
+    main.textContent=bulkMode?(selectedIds.size?'선택한 '+selectedIds.size+'개 삭제':'바꿀 로그를 눌러요'):'☑ 여러 개 선택';
   }
+  try{ document.body.classList.toggle('bulk-select-on',bulkMode); }catch(_){}
+  try{ if(typeof window.__onBulkSelectionChange==='function') window.__onBulkSelectionChange(bulkMode,[...selectedIds]); }catch(_){}
   if(cancel) cancel.style.display=bulkMode?'':'none';
 }
 function exitBulkMode(){ bulkMode=false; selectedIds.clear(); decorateBulkRows(); }
+/* 뒤에 붙는 스크립트(서식·정렬 일괄 적용)에서 선택 상태를 쓸 수 있게 열어 둔다 */
+window.__bulkSelection={
+  active:()=>bulkMode,
+  ids:()=>[...selectedIds],
+  refresh:()=>decorateBulkRows(),
+  exit:()=>exitBulkMode()
+};
 window.cancelBulkDeleteMode=exitBulkMode;
 window.toggleBulkDeleteMode=function(){
   if(!bulkMode){ bulkMode=true; selectedIds.clear(); decorateBulkRows(); return; }
@@ -9903,57 +9911,38 @@ wrapRow('msgrRow','m-msg','abs');
      늘어난 padding-left 안쪽에서만 움직이므로 막대보다 왼쪽으로 갈 수 없다. */
 
 /* ================================================================
-   5) 글 정렬 — 블럭별이 아니라 모든 글 블럭 공통
+   5) 글 정렬 — 블럭마다 따로
+   (여러 개 선택 모드에서 고른 블럭에만 일괄 적용)
    ================================================================ */
-if(state.layout.textAlign==null){
-  const firstText=(state.messages||[]).find(m=>m&&m.type==='text'&&m.align);
-  state.layout.textAlign=(firstText&&firstText.align)||state.draftAlign||'left';
-}
 const ALIGNS=['justify','left','center','right'];
-let alignSilent=false;
 function syncAlignSeg(){
   const seg=document.getElementById('alignSeg'); if(!seg) return;
-  const a=state.layout.textAlign||'left';
+  const a=state.draftAlign||'left';
   [...seg.children].forEach((b,i)=>b.classList.toggle('on',ALIGNS[i]===a));
 }
+window.__syncAlignSeg=syncAlignSeg;
 window.setAlign=function(a){
-  if(alignSilent){ syncAlignSeg(); return; }
   a=ALIGNS.indexOf(a)>=0?a:'left';
+  /* '여러 개 선택'으로 고른 블럭이 있으면 그 블럭에만 적용 */
+  if(typeof window.__bulkApplyAlign==='function'&&window.__bulkApplyAlign(a)){ return; }
   state.draftAlign=a;
-  state.layout.textAlign=a;
-  (state.messages||[]).forEach(m=>{ if(m&&m.type==='text') m.align=a; });
   syncAlignSeg();
-  try{ renderPreview(); }catch(_){}
+  /* 지금 수정 중인 글 블럭이 있으면 그 블럭만 바로 반영 */
+  try{
+    if(typeof composerEditId!=='undefined'&&composerEditId){
+      const m=(state.messages||[]).find(x=>x&&x.id===composerEditId);
+      if(m&&m.type==='text'&&m.align!==a){ m.align=a; renderPreview(); }
+    }
+  }catch(_){}
 };
-const _textRow=window.textRow;
-if(typeof _textRow==='function'){
-  window.textRow=function(t,gap){
-    return _textRow.call(this,Object.assign({},t,{align:state.layout.textAlign||'left'}),gap);
-  };
-}
-const _begin=window.beginComposerEdit;
-if(typeof _begin==='function'){
-  window.beginComposerEdit=function(){
-    alignSilent=true;
-    try{ return _begin.apply(this,arguments); }
-    finally{ alignSilent=false; state.draftAlign=state.layout.textAlign||'left'; syncAlignSeg(); }
-  };
-}
 const _sync=window.syncControlsFromState;
 if(typeof _sync==='function'){
   window.syncControlsFromState=function(){
     const r=_sync.apply(this,arguments);
-    if(state.layout.textAlign==null) state.layout.textAlign=state.draftAlign||'left';
-    state.draftAlign=state.layout.textAlign;
     syncAlignSeg();
     return r;
   };
 }
-(function relabelAlign(){
-  const seg=document.getElementById('alignSeg'); if(!seg) return;
-  const lb=seg.parentElement&&seg.parentElement.querySelector('.lb');
-  if(lb) lb.textContent='글 정렬 (모든 글 블럭 공통)';
-})();
 syncAlignSeg();
 
 /* ================================================================
@@ -9985,7 +9974,7 @@ window.addMessage=function(){
     if(!editing&&blankOnly(raw)){
       const t=state.composerType;
       if(t==='text'){
-        state.messages.push({id:uid(),type:'text',content:raw,align:state.layout.textAlign||'left'});
+        state.messages.push({id:uid(),type:'text',content:raw,align:state.draftAlign||'left'});
         msgContent.value=''; renderPreview(); return;
       }
       if(t==='chat'){
@@ -10009,7 +9998,7 @@ window.commitComposerEdit=function(){
       const target=((base==='text'||base==='chat')&&(state.composerType==='text'||state.composerType==='chat'))
         ? state.composerType : base;
       if(target==='text'){
-        m.type='text'; m.content=raw; m.align=state.layout.textAlign||'left';
+        m.type='text'; m.content=raw; m.align=state.draftAlign||'left';
         delete m.senderId; endComposerEdit(); renderPreview(); return;
       }
       if(target==='chat'){
@@ -11801,6 +11790,562 @@ try{
   new MutationObserver(()=>{ try{ placeHeadingCol(state.composerType||'chat'); }catch(_){} })
     .observe(document.body,{childList:true,subtree:true});
 }catch(_){}
+
+})();
+</script>
+
+<style id="sticker-layer-styles">
+/* ===== 스티커 삽입 =====
+   #canvas 안에 절대 위치 레이어를 하나 깔고 그 위에 스티커를 얹는다.
+   #canvas 에는 이미 overflow:hidden 이 걸려 있어 캔버스 밖으로 나간 부분은
+   미리보기에서도, 저장 결과에서도 똑같이 잘린다(캔버스가 커지지 않는다). */
+#stickerLayer{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
+#stickerLayer .sticker{position:absolute;pointer-events:auto;cursor:move;touch-action:none;line-height:0}
+#stickerLayer .sticker img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+#stickerLayer .sticker.sel{outline:2px solid var(--accent);outline-offset:2px}
+#stickerLayer .st-handles{position:absolute;inset:0;pointer-events:none}
+#stickerLayer .st-del{position:absolute;top:-11px;right:-11px;width:22px;height:22px;padding:0;
+  border:2px solid #fff;border-radius:50%;background:#D14343;color:#fff;font-size:13px;line-height:1;
+  cursor:pointer;pointer-events:auto;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.25)}
+#stickerLayer .st-rz{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;
+  border:2px solid #fff;border-radius:50%;background:var(--accent);cursor:nwse-resize;
+  pointer-events:auto;touch-action:none;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+/* 사진 칸의 스티커 모드 안내줄 */
+#stickerPanel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%}
+#stickerPanel .sp-txt{font-size:11px;color:var(--muted);line-height:1.5;flex:1 1 auto;min-width:0}
+#stickerPanel .sp-clear{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 9px;
+  font-size:10.5px;font-weight:700;color:var(--muted);cursor:pointer;flex:0 0 auto}
+#stickerPanel .sp-clear:hover{color:#D14343;border-color:#D14343}
+.msg-img-editor.sticker-on .msg-img-body{display:none!important}
+.msg-img-sticker-toggle input:checked + .msg-img-round-switch{background:#D14343}
+</style>
+<script id="sticker-layer-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   스티커 삽입 — '스티커 모드'가 켜져 있으면 고른 사진이 블럭으로 들어가지
+   않고 캔버스 위에 바로 붙는다. 끌어서 이동, 눌러서 크기 조절·삭제.
+   좌표는 캔버스 좌표계(px)로 저장하므로 미리보기 배율과 무관하다.
+   ===================================================================== */
+
+const T=(m,o)=>{ try{ if(typeof window.toast==='function') window.toast(m,o); }catch(_){} };
+
+if(!Array.isArray(state.stickers)) state.stickers=[];
+let stickerMode=false;
+let selId='';
+
+const canvasEl=()=>document.getElementById('canvas');
+function curPage(){ try{ return (typeof window.__currentPage==='function')?window.__currentPage():1; }catch(_){ return 1; } }
+function pageTotal(){ try{ return (typeof window.__pageCount==='function')?window.__pageCount():1; }catch(_){ return 1; } }
+function find(id){ return (state.stickers||[]).find(s=>s&&s.id===id)||null; }
+
+/* 미리보기 배율(zoom 또는 transform)을 실측해서 화면 이동량을 캔버스 px로 환산 */
+function scaleOf(){
+  const c=canvasEl(); if(!c) return 1;
+  const w=c.offsetWidth||0; if(!w) return 1;
+  const r=c.getBoundingClientRect();
+  const s=r.width/w;
+  return (isFinite(s)&&s>0.01)?s:1;
+}
+function layerEl(){
+  const c=canvasEl(); if(!c) return null;
+  let L=document.getElementById('stickerLayer');
+  if(!L){ L=document.createElement('div'); L.id='stickerLayer'; L.setAttribute('aria-hidden','true'); }
+  if(L.parentElement!==c||c.lastElementChild!==L) c.appendChild(L);
+  return L;
+}
+
+/* ---------- 저장(자동저장 훅은 renderPreview 에 걸려 있다) ---------- */
+function commit(){ try{ renderPreview(); }catch(_){ renderStickers(); } }
+
+/* ---------- 그리기 ---------- */
+function renderStickers(){
+  const L=layerEl(); if(!L) return;
+  const total=pageTotal(), page=curPage();
+  const list=(state.stickers||[]).filter(s=>s&&s.src&&((total<2)||((s.page||1)===page)));
+  const keep=new Set(list.map(s=>s.id));
+  [...L.children].forEach(el=>{ if(!keep.has(el.dataset.sid)) el.remove(); });
+
+  list.forEach(s=>{
+    let el=L.querySelector('.sticker[data-sid="'+s.id+'"]');
+    if(!el){
+      el=document.createElement('div');
+      el.className='sticker';
+      el.dataset.sid=s.id;
+      const img=document.createElement('img');
+      img.alt='';
+      el.appendChild(img);
+      L.appendChild(el);
+      bindDrag(el);
+    }
+    const img=el.querySelector('img');
+    if(img&&img.getAttribute('src')!==s.src) img.src=s.src;
+    if(img) img.style.borderRadius=(s.round===false?'0':'10px');
+    el.style.left=Math.round(s.x)+'px';
+    el.style.top=Math.round(s.y)+'px';
+    el.style.width=Math.round(s.w)+'px';
+    el.classList.toggle('sel',s.id===selId);
+
+    let h=el.querySelector(':scope > .st-handles');
+    if(s.id===selId){
+      if(!h){
+        h=document.createElement('div');
+        /* 클래스에 ctrl 을 함께 넣어 두면 저장·내보내기 시 기존 정리 루틴이
+           블럭 버튼과 똑같이 손잡이를 걷어내 준다(결과물에 절대 찍히지 않는다) */
+        h.className='st-handles ctrl';
+        h.innerHTML='<button type="button" class="st-del" title="스티커 삭제">\u00D7</button>'
+          +'<span class="st-rz" title="드래그로 크기 조절"></span>';
+        el.appendChild(h);
+        const del=h.querySelector('.st-del');
+        if(del) del.addEventListener('click',ev=>{ ev.preventDefault(); ev.stopPropagation(); removeSticker(s.id); });
+        bindResize(h.querySelector('.st-rz'),s.id);
+      }
+    }else if(h){ h.remove(); }
+  });
+  syncPanel();
+}
+
+/* ---------- 이동 ---------- */
+function bindDrag(el){
+  el.addEventListener('click',e=>{ e.stopPropagation(); });
+  el.addEventListener('touchstart',e=>{ if(e.touches&&e.touches.length===1) e.stopPropagation(); },{passive:true});
+  el.addEventListener('pointerdown',e=>{
+    if(e.target.closest('.st-del')||e.target.closest('.st-rz')) return;
+    if(e.pointerType==='mouse'&&e.button!==0) return;
+    e.preventDefault(); e.stopPropagation();
+    const s=find(el.dataset.sid); if(!s) return;
+    if(selId!==s.id){ selId=s.id; renderStickers(); }
+    const sc=scaleOf();
+    const x0=e.clientX, y0=e.clientY, sx=s.x, sy=s.y;
+    let moved=false;
+    try{ el.setPointerCapture(e.pointerId); }catch(_){}
+    const move=ev=>{
+      const dxRaw=ev.clientX-x0, dyRaw=ev.clientY-y0;
+      if(!moved&&Math.hypot(dxRaw,dyRaw)<3) return;
+      moved=true;
+      s.x=sx+dxRaw/sc; s.y=sy+dyRaw/sc;
+      el.style.left=Math.round(s.x)+'px';
+      el.style.top=Math.round(s.y)+'px';
+    };
+    const up=()=>{
+      el.removeEventListener('pointermove',move);
+      el.removeEventListener('pointerup',up);
+      el.removeEventListener('pointercancel',up);
+      if(moved) commit();
+    };
+    el.addEventListener('pointermove',move);
+    el.addEventListener('pointerup',up);
+    el.addEventListener('pointercancel',up);
+  });
+}
+
+/* ---------- 크기 조절 ---------- */
+function bindResize(h,sid){
+  if(!h) return;
+  h.addEventListener('click',e=>{ e.stopPropagation(); });
+  h.addEventListener('touchstart',e=>{ e.stopPropagation(); },{passive:true});
+  h.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'&&e.button!==0) return;
+    e.preventDefault(); e.stopPropagation();
+    const s=find(sid); if(!s) return;
+    const el=h.closest('.sticker');
+    const sc=scaleOf();
+    const w0=s.w, x0=e.clientX, y0=e.clientY;
+    let moved=false;
+    try{ h.setPointerCapture(e.pointerId); }catch(_){}
+    const move=ev=>{
+      const dx=(ev.clientX-x0)/sc, dy=(ev.clientY-y0)/sc;
+      const d=(Math.abs(dx)>=Math.abs(dy))?dx:dy;
+      moved=true;
+      s.w=Math.max(24,Math.min(6000,w0+d));
+      if(el) el.style.width=Math.round(s.w)+'px';
+    };
+    const up=()=>{
+      h.removeEventListener('pointermove',move);
+      h.removeEventListener('pointerup',up);
+      h.removeEventListener('pointercancel',up);
+      if(moved) commit();
+    };
+    h.addEventListener('pointermove',move);
+    h.addEventListener('pointerup',up);
+    h.addEventListener('pointercancel',up);
+  });
+}
+
+/* ---------- 추가 / 삭제 ---------- */
+function addSticker(src){
+  const c=canvasEl();
+  const cw=(c&&c.offsetWidth)||440;
+  const ch=(c&&c.offsetHeight)||620;
+  const w=Math.max(60,Math.round(cw*0.35));
+  const n=(state.stickers||[]).length;
+  const s={
+    id:'st'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    src:src,
+    x:Math.round((cw-w)/2)+(n%5)*16,
+    y:Math.round(ch*0.28)+(n%5)*16,
+    w:w,
+    round:(typeof draftImgRound==='undefined')?true:!!draftImgRound,
+    page:curPage()
+  };
+  state.stickers.push(s);
+  selId=s.id;
+  commit();
+  T('스티커를 붙였어요 \u2014 끌어서 옮기고, 눌러서 크기 조절\u00B7삭제할 수 있어요');
+}
+function removeSticker(id){
+  const i=(state.stickers||[]).findIndex(s=>s&&s.id===id);
+  if(i<0) return;
+  state.stickers.splice(i,1);
+  if(selId===id) selId='';
+  commit();
+  T('스티커를 지웠어요');
+}
+
+/* ---------- 사진 칸의 스티커 안내줄 ---------- */
+function syncPanel(){
+  const host=document.getElementById('msgImgEmpty');
+  let p=document.getElementById('stickerPanel');
+  if(!stickerMode){ if(p) p.remove(); return; }
+  if(!host) return;
+  if(!p){
+    p=document.createElement('div');
+    p.id='stickerPanel';
+    p.innerHTML='<span class="sp-txt"></span><button type="button" class="sp-clear">스티커 전체 삭제</button>';
+    const btn=p.querySelector('.sp-clear');
+    if(btn) btn.addEventListener('click',()=>{
+      const n=(state.stickers||[]).length;
+      if(!n){ T('붙인 스티커가 없어요'); return; }
+      if(!window.confirm('붙인 스티커 '+n+'개를 모두 지울까요?')) return;
+      state.stickers=[]; selId=''; commit(); T('스티커를 모두 지웠어요');
+    });
+  }
+  if(p.parentElement!==host) host.appendChild(p);
+  const t=p.querySelector('.sp-txt');
+  if(t){
+    const n=(state.stickers||[]).length;
+    t.textContent=n
+      ? ('붙인 스티커 '+n+'개 \u00B7 끌어서 이동, 눌러서 크기 조절\u00B7삭제')
+      : '\u201C\uFF0B 이미지 선택\u201D 으로 고른 사진이 캔버스에 바로 붙어요';
+  }
+}
+
+/* ---------- 모드 토글 ---------- */
+window.setStickerMode=function(on){
+  stickerMode=!!on;
+  const ed=document.getElementById('msgImgEditor');
+  if(ed) ed.classList.toggle('sticker-on',stickerMode);
+  if(!stickerMode){ selId=''; renderStickers(); }
+  syncPanel();
+  if(stickerMode) T('스티커 모드 \u2014 고른 사진이 채팅에 끼워지지 않고 캔버스에 붙어요');
+};
+
+/* ---------- 이미지 선택 결과 가로채기 ---------- */
+const _setDraft=window.setDraftMsgImage;
+window.setDraftMsgImage=function(src){
+  if(stickerMode&&src){
+    addSticker(src);
+    const f=document.getElementById('msgImgFile'); if(f) f.value='';
+    return;
+  }
+  return _setDraft?_setDraft.apply(this,arguments):undefined;
+};
+
+/* 스티커 모드에서 '메시지 추가'를 눌러도 사진 블럭을 요구하지 않게 */
+const _addMessage=window.addMessage;
+window.addMessage=function(){
+  try{
+    if(stickerMode&&state.composerType==='image'&&!draftMsgImg){
+      T('스티커 모드예요 \u2014 \u201C\uFF0B 이미지 선택\u201D 으로 캔버스에 바로 붙여요');
+      return;
+    }
+  }catch(_){}
+  return _addMessage?_addMessage.apply(this,arguments):undefined;
+};
+
+/* ---------- 바깥을 누르면 선택 해제 ---------- */
+document.addEventListener('pointerdown',e=>{
+  if(!selId) return;
+  if(e.target&&e.target.closest&&e.target.closest('#stickerLayer')) return;
+  selId=''; renderStickers();
+},true);
+document.addEventListener('keydown',e=>{
+  if(!selId) return;
+  if(e.key==='Escape'){ selId=''; renderStickers(); }
+  else if((e.key==='Delete'||e.key==='Backspace')){
+    const t=e.target, tag=(t&&t.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea'||tag==='select'||(t&&t.isContentEditable)) return;
+    e.preventDefault(); removeSticker(selId);
+  }
+},true);
+
+/* ---------- 렌더 훅 ---------- */
+const _render=window.renderPreview;
+window.renderPreview=function(){
+  const r=_render.apply(this,arguments);
+  try{ renderStickers(); }catch(_){}
+  return r;
+};
+
+/* ---------- 저장 전에는 선택 표시(핸들)를 지운다 ---------- */
+['saveImage','copyImage','exportHTML'].forEach(name=>{
+  const orig=window[name];
+  if(typeof orig!=='function') return;
+  window[name]=function(){
+    if(selId){ selId=''; try{ renderStickers(); }catch(_){} }
+    return orig.apply(this,arguments);
+  };
+});
+
+/* ---------- 초기화 ---------- */
+try{ renderStickers(); }catch(_){}
+document.addEventListener('DOMContentLoaded',()=>{ setTimeout(()=>{ try{ renderStickers(); }catch(_){} },400); });
+
+})();
+</script>
+
+<style id="bulk-format-styles">
+/* ===== 여러 개 선택 — 고른 블럭에만 서식·정렬 일괄 적용 ===== */
+#bulkFmtHint{display:flex;align-items:center;gap:7px;margin:0 0 10px;padding:8px 10px;border-radius:9px;
+  background:var(--accent-soft,#F1F1F2);border:1px solid var(--accent);color:var(--ink);
+  font-size:11px;font-weight:700;line-height:1.45}
+#bulkFmtHint b{color:var(--accent)}
+</style>
+<script id="bulk-format-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   '여러 개 선택'으로 고른 블럭에만 서식·정렬을 일괄 적용한다.
+   마크업 문자열을 정규식으로 직접 건드리면 겹친 서식이 깨지므로,
+   fmtText(내용,true) 로 DOM 을 만들고 → 해당 서식만 벗기거나 씌운 뒤 →
+   htmlToMarkup() 으로 되돌린다. (작성창이 쓰는 왕복 경로와 동일)
+   ===================================================================== */
+
+const T=(m,o)=>{ try{ if(typeof window.toast==='function') window.toast(m,o); }catch(_){} };
+const undoRef=()=>(typeof window.undoLast==='function')?window.undoLast:null;
+const withUndo=(msg)=>{ const u=undoRef(); T(msg,u?{action:'실행 취소',onAction:u}:undefined); };
+const sel=()=>window.__bulkSelection;
+
+/* ---------- 서식 종류 정의 ---------- */
+const KIND={
+  bold:{name:'굵게',sel:'b,strong',make:()=>document.createElement('b')},
+  italic:{name:'기울임',sel:'i,em',make:()=>document.createElement('i')},
+  strike:{name:'취소선',sel:'s,strike,del',make:()=>document.createElement('s')},
+  underline:{name:'밑줄',sel:'u',make:()=>document.createElement('u')},
+  highlight:{name:'형광펜',sel:'mark',make:()=>{
+    const e=document.createElement('mark');
+    e.style.background=(state.colors&&state.colors.highlight)||'#E4E4E6';
+    return e;
+  }},
+  quote:{name:'인용구',sel:'.quote-fmt',make:()=>{
+    const e=document.createElement('span');
+    e.className='quote-fmt';
+    e.style.borderLeft='3.5px solid '+((state.colors&&state.colors.quote)||'#8A8F98');
+    return e;
+  }},
+  color:{name:'글자 색',sel:'span',
+    filter:el=>el.tagName==='SPAN'&&!el.classList.contains('quote-fmt')
+      &&!el.classList.contains('text-heading')&&!!(el.style&&el.style.color),
+    make:()=>{
+      const e=document.createElement('span');
+      e.style.color=(state.colors&&state.colors.partial)||'#D14343';
+      return e;
+    }},
+  h1:{name:'큰 제목',sel:'.text-heading',make:()=>{
+    const e=document.createElement('span');
+    e.className='text-heading text-heading-1';
+    e.setAttribute('data-heading','1');
+    return e;
+  }},
+  h2:{name:'작은 제목',sel:'.text-heading',make:()=>{
+    const e=document.createElement('span');
+    e.className='text-heading text-heading-2';
+    e.setAttribute('data-heading','2');
+    return e;
+  }}
+};
+
+function matchesKind(el,k){
+  const K=KIND[k]; if(!K||!el||el.nodeType!==1) return false;
+  try{ if(!el.matches(K.sel)) return false; }catch(_){ return false; }
+  if(K.filter&&!K.filter(el)) return false;
+  if(k==='h1') return el.getAttribute('data-heading')==='1'||el.classList.contains('text-heading-1');
+  if(k==='h2') return el.getAttribute('data-heading')==='2'||el.classList.contains('text-heading-2');
+  return true;
+}
+function unwrap(el){
+  const p=el.parentNode; if(!p) return;
+  while(el.firstChild) p.insertBefore(el.firstChild,el);
+  p.removeChild(el);
+}
+function toBox(content){
+  const box=document.createElement('div');
+  box.innerHTML=fmtText(String(content==null?'':content),true);
+  return box;
+}
+function stripKind(box,k){
+  for(let pass=0;pass<8;pass++){
+    const hits=[...box.querySelectorAll('*')].filter(el=>matchesKind(el,k));
+    if(!hits.length) break;
+    hits.forEach(unwrap);
+  }
+}
+function isWholeWrapped(content,k){
+  const box=toBox(content);
+  const kids=[...box.childNodes].filter(n=>!(n.nodeType===3&&!String(n.nodeValue||'').trim()));
+  if(kids.length!==1) return false;
+  return matchesKind(kids[0],k);
+}
+function applyKind(content,k,on){
+  const box=toBox(content);
+  stripKind(box,k);
+  if(k==='h1') stripKind(box,'h2');
+  if(k==='h2') stripKind(box,'h1');
+  if(on&&box.childNodes.length){
+    const w=KIND[k].make();
+    while(box.firstChild) w.appendChild(box.firstChild);
+    box.appendChild(w);
+  }
+  let mk;
+  try{ mk=htmlToMarkup(box); }catch(_){ return content; }
+  if(typeof mk!=='string') return content;
+  return mk.replace(/\n{3,}/g,'\n\n');
+}
+
+/* ---------- 서식 전부 지우기 (fmtText 가 읽는 목록과 동일) ---------- */
+const STRIP_RULES=[
+  [/\[##\]([\s\S]*?)\[\/##\]/g,'$1'],
+  [/\[#\]([\s\S]*?)\[\/#\]/g,'$1'],
+  [/\[#[0-9A-Fa-f]{6}\]([\s\S]*?)\[\/\]/g,'$1'],
+  [/==(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)==/g,'$1'],
+  [/%%(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)%%/g,'$1'],
+  [/\*\*([^*]+)\*\*/g,'$1'],
+  [/(?<!\*)\*([^*]+)\*(?!\*)/g,'$1'],
+  [/~~([^~]+)~~/g,'$1'],
+  [/\+\+([^+]+)\+\+/g,'$1']
+];
+function stripAll(text){
+  if(typeof text!=='string'||!text) return text;
+  let out=text;
+  for(let pass=0;pass<6;pass++){
+    const before=out;
+    STRIP_RULES.forEach(([re,to])=>{ out=out.replace(re,to); });
+    if(out===before) break;
+  }
+  return out;
+}
+
+/* ---------- 대상 고르기 ---------- */
+function pickTargets(ids){
+  const set=new Set(ids);
+  return (state.messages||[]).filter(m=>m&&set.has(m.id)&&typeof m.content==='string'
+    &&(!m.type||m.type==='chat'||m.type==='text'));
+}
+
+/* ---------- 일괄 적용 ----------
+   반환값 true = 선택 모드가 처리했으니 작성창은 건드리지 않는다 */
+function bulkFormat(k){
+  const S=sel();
+  if(!S||!S.active()) return false;
+  const ids=S.ids();
+  if(!ids.length){ T('먼저 미리보기에서 바꿀 블럭을 눌러 선택해 주세요'); return true; }
+  const ms=pickTargets(ids);
+  if(!ms.length){ T('글\u00B7말풍선 블럭만 서식을 바꿀 수 있어요'); return true; }
+  const on=!ms.every(m=>isWholeWrapped(m.content,k));
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('서식 일괄 변경'); }catch(_){}
+  ms.forEach(m=>{ m.content=applyKind(m.content,k,on); });
+  try{ renderPreview(); }catch(_){}
+  try{ S.refresh(); }catch(_){}
+  withUndo(ms.length+'개 블럭에 '+KIND[k].name+'을(를) '+(on?'적용했어요':'해제했어요'));
+  return true;
+}
+function bulkClear(){
+  const S=sel();
+  if(!S||!S.active()) return false;
+  const ids=S.ids();
+  if(!ids.length){ T('먼저 미리보기에서 서식을 지울 블럭을 눌러 선택해 주세요'); return true; }
+  const ms=pickTargets(ids);
+  if(!ms.length){ T('글\u00B7말풍선 블럭만 서식을 지울 수 있어요'); return true; }
+  const hit=ms.filter(m=>stripAll(m.content)!==m.content);
+  if(!hit.length){ T('선택한 블럭에는 지울 서식이 없어요'); return true; }
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('서식 일괄 삭제'); }catch(_){}
+  hit.forEach(m=>{ m.content=stripAll(m.content); });
+  try{ renderPreview(); }catch(_){}
+  try{ S.refresh(); }catch(_){}
+  withUndo(hit.length+'개 블럭의 서식을 지웠어요');
+  return true;
+}
+
+/* ---------- 정렬 일괄 적용 (setAlign 에서 호출) ---------- */
+window.__bulkApplyAlign=function(a){
+  const S=sel();
+  if(!S||!S.active()) return false;
+  state.draftAlign=a;
+  try{ if(typeof window.__syncAlignSeg==='function') window.__syncAlignSeg(); }catch(_){}
+  const ids=S.ids();
+  if(!ids.length){ T('먼저 미리보기에서 정렬을 바꿀 블럭을 눌러 선택해 주세요'); return true; }
+  const set=new Set(ids);
+  const ms=(state.messages||[]).filter(m=>m&&set.has(m.id)&&m.type==='text');
+  if(!ms.length){ T('정렬은 글 블럭에만 적용돼요'); return true; }
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('정렬 일괄 변경'); }catch(_){}
+  ms.forEach(m=>{ m.align=a; });
+  try{ renderPreview(); }catch(_){}
+  try{ S.refresh(); }catch(_){}
+  withUndo(ms.length+'개 글 블럭의 정렬을 바꿨어요');
+  return true;
+};
+
+/* ---------- 작성창 서식 버튼 가로채기 ---------- */
+const MARK_KIND={'**':'bold','*':'italic','~~':'strike','++':'underline','==':'highlight','%%':'quote'};
+const _wrapFmt=window.wrapFmt;
+window.wrapFmt=function(mark){
+  const k=MARK_KIND[mark];
+  if(k&&bulkFormat(k)) return;
+  return _wrapFmt?_wrapFmt.apply(this,arguments):undefined;
+};
+const _wrapColor=window.wrapColor;
+window.wrapColor=function(){
+  if(bulkFormat('color')) return;
+  return _wrapColor?_wrapColor.apply(this,arguments):undefined;
+};
+const _wrapTextHeading=window.wrapTextHeading;
+window.wrapTextHeading=function(level){
+  if(bulkFormat(Number(level)===1?'h1':'h2')) return;
+  return _wrapTextHeading?_wrapTextHeading.apply(this,arguments):undefined;
+};
+const _clearFmt=window.clearFmt;
+window.clearFmt=function(){
+  if(bulkClear()) return;
+  return _clearFmt?_clearFmt.apply(this,arguments):undefined;
+};
+
+/* 블럭 하나를 수정하러 들어가면 선택 모드는 자동으로 빠져나온다
+   (선택 상태로 작성창을 열어 정렬이 엉뚱하게 일괄 적용되는 것을 막는다) */
+const _begin=window.beginComposerEdit;
+if(typeof _begin==='function'){
+  window.beginComposerEdit=function(){
+    const S=sel();
+    if(S&&S.active()){ try{ S.exit(); }catch(_){} }
+    return _begin.apply(this,arguments);
+  };
+}
+
+/* ---------- 선택 모드 안내줄 ---------- */
+window.__onBulkSelectionChange=function(active,ids){
+  const host=document.querySelector('.composer-card .bd');
+  let el=document.getElementById('bulkFmtHint');
+  if(!active){ if(el) el.remove(); return; }
+  if(!host) return;
+  if(!el){ el=document.createElement('div'); el.id='bulkFmtHint'; }
+  if(el.parentElement!==host||host.firstChild!==el) host.insertBefore(el,host.firstChild);
+  const n=(ids||[]).length;
+  el.innerHTML=n
+    ? ('\u2611 <b>'+n+'개</b> 선택됨 \u2014 아래 서식\u00B7정렬 버튼을 누르면 이 블럭들만 한 번에 바뀌어요')
+    : '\u2611 여러 개 선택 \u2014 미리보기에서 바꿀 블럭을 눌러 고른 뒤, 아래 서식\u00B7정렬 버튼을 눌러요';
+};
 
 })();
 </script>
