@@ -9817,7 +9817,12 @@ const ALIGNS=['justify','left','center','right'];
 let alignSilent=false;
 function syncAlignSeg(){
   const seg=document.getElementById('alignSeg'); if(!seg) return;
-  const a=state.layout.textAlign||'left';
+  let a=state.layout.textAlign||'left';
+  /* 문단 편집으로 몇 개만 고른 상태에서는 그 선택에 쓸 값을 보여 준다 */
+  try{
+    const S=window.__bulkSelection;
+    if(S&&S.active()) a=state.draftAlign||a;
+  }catch(_){}
   [...seg.children].forEach((b,i)=>b.classList.toggle('on',ALIGNS[i]===a));
 }
 window.__syncAlignSeg=syncAlignSeg;
@@ -9826,14 +9831,18 @@ window.setAlign=function(a){
   a=ALIGNS.indexOf(a)>=0?a:'left';
   state.draftAlign=a;
   state.layout.textAlign=a;
-  (state.messages||[]).forEach(m=>{ if(m&&m.type==='text') m.align=a; });
+  /* 전체 정렬은 블럭별로 따로 맞춰 둔 것까지 모두 되돌린다 */
+  (state.messages||[]).forEach(m=>{ if(m&&m.type==='text'){ m.align=a; delete m.alignLocked; } });
   syncAlignSeg();
   try{ renderPreview(); }catch(_){}
 };
 const _textRow=window.textRow;
 if(typeof _textRow==='function'){
   window.textRow=function(t,gap){
-    return _textRow.call(this,Object.assign({},t,{align:state.layout.textAlign||'left'}),gap);
+    /* 문단 편집으로 그 블럭만 따로 정렬했으면(alignLocked) 그 값을 지킨다.
+       그렇지 않은 블럭만 전체 정렬을 따라간다. */
+    const a=(t&&t.alignLocked&&t.align)?t.align:(state.layout.textAlign||'left');
+    return _textRow.call(this,Object.assign({},t,{align:a}),gap);
   };
 }
 const _begin=window.beginComposerEdit;
@@ -12778,6 +12787,22 @@ window.toggleAllParagraphs=function(){
   if(!allSelected) ids.forEach(id=>paragraphSelectedIds.add(id));
   decorateParagraphRows();
 };
+/* 말풍선만 / 글만 골라 잡기 — 이미 그 묶음이 다 잡혀 있으면 해제로 동작한다 */
+window.selectParagraphsByType=function(type){
+  const want=(type==='chat')
+    ? (m=>m.type==='chat')
+    : (m=>m.type==='text'||!m.type);
+  const ids=state.messages.filter(m=>m&&want(m)).map(m=>m.id);
+  if(!ids.length){
+    try{ if(typeof window.toast==='function') window.toast(type==='chat'?'말풍선 블럭이 없어요':'글 블럭이 없어요'); }catch(_){}
+    return;
+  }
+  const already=ids.every(id=>paragraphSelectedIds.has(id))
+    &&paragraphSelectedIds.size===ids.length;
+  paragraphSelectedIds.clear();
+  if(!already) ids.forEach(id=>paragraphSelectedIds.add(id));
+  decorateParagraphRows();
+};
 window.clearParagraphSelection=function(){
   paragraphSelectedIds.clear();
   decorateParagraphRows();
@@ -12820,6 +12845,8 @@ function buildParagraphSelectUI(){
     bar.innerHTML=
       '<span class="selection-summary" id="paragraphSelectionSummary">문단을 클릭하거나 누른 채 드래그하세요</span>'+
       '<button type="button" onclick="toggleAllParagraphs()">전체 선택</button>'+
+      '<button type="button" onclick="selectParagraphsByType(\'chat\')" title="말풍선 블럭만 골라 잡기">💬 말풍선만</button>'+
+      '<button type="button" onclick="selectParagraphsByType(\'text\')" title="글 블럭만 골라 잡기">📝 글만</button>'+
       '<button type="button" id="paragraphApplyText" onclick="applySelectedParagraphType(\'text\')">📝 글로</button>'+
       '<select id="paragraphBulkSender" aria-label="말풍선 캐릭터"></select>'+
       '<button type="button" class="primary" id="paragraphApplyChat" onclick="applySelectedParagraphType(\'chat\')">💬 말풍선으로</button>'+
@@ -14125,7 +14152,8 @@ window.__bulkApplyAlign=function(a){
   const ms=(state.messages||[]).filter(m=>m&&set.has(m.id)&&m.type==='text');
   if(!ms.length){ T('정렬은 글 블럭에만 적용돼요'); return true; }
   try{ if(typeof window.pushUndo==='function') window.pushUndo('정렬 일괄 변경'); }catch(_){}
-  ms.forEach(m=>{ m.align=a; });
+  /* alignLocked = '전체 정렬'이 덮어쓰지 못하게 잠근 표시 */
+  ms.forEach(m=>{ m.align=a; m.alignLocked=true; });
   try{ renderPreview(); }catch(_){}
   try{ S.refresh(); }catch(_){}
   withUndo(ms.length+'개 글 블럭의 정렬을 바꿨어요');
