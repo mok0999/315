@@ -16,6 +16,15 @@
 <link id="pretendardDynamic" rel="preload" as="style" crossorigin="anonymous"
   href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css"
   onload="this.onload=null;this.rel='stylesheet'"/>
+<style id="font-fallback-faces">
+/* 프리젠테이션(Freesentation) 예비 소스 — 눈누 배포본.
+   위 폰트 아카이브 CSS가 먼저 붙으면 나중에 실린 쪽이 이겨서 그쪽이 쓰이고,
+   그게 실패해도 미리보기 글꼴이 깨지지 않도록 남겨 둔다. */
+@font-face{font-family:'Freesentation';font-weight:400;font-style:normal;font-display:swap;
+  src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2404@1.0/Freesentation-4Regular.woff2') format('woff2');}
+@font-face{font-family:'Freesentation';font-weight:700;font-style:normal;font-display:swap;
+  src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2404@1.0/Freesentation-7Bold.woff2') format('woff2');}
+</style>
 <style>
 :root{
   --bg:#F5F5F6;
@@ -315,6 +324,12 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .n-msg.circle .av{border-radius:50%}.n-msg.rounded .av{border-radius:12px}
 /* Consecutive messages keep the avatar column without drawing the avatar again. */
 .n-msg .av-continuation-spacer{flex:0 0 40px;width:40px;height:0;pointer-events:none}
+/* 로그 모드에서 이름을 숨기면 전체 문단이 아니라 첫 줄의 중심을
+   프로필 사진 중심에 맞춰요. 프로필 아래 남는 높이는 행 높이에서 빼서
+   이어지는 같은 캐릭터 로그가 설정된 간격 그대로 붙습니다. */
+.n-msg.log-row.log-name-hidden:not(.continuation){align-items:flex-start}
+.n-msg.log-row.log-name-hidden:not(.continuation)>.n-body{padding-top:var(--log-first-line-offset,0px)}
+.n-msg.log-row.log-name-hidden:not(.continuation)>.av{margin-bottom:var(--log-avatar-overhang,0px)}
 .n-body{flex:1;min-width:0}
 .n-name{font-size:12px;font-weight:700;margin-bottom:5px;line-height:1.25}
 .n-bubble{display:inline-block;vertical-align:top;max-width:100%;word-break:break-word}
@@ -1285,8 +1300,13 @@ html, body, #canvas, #chat, #canvas * {
 </div>
 </div>
 <div class="field" id="senderField">
+<div class="text-format-row">
+<div class="tfr-col sender-col">
 <label class="lb">발신자</label>
 <select id="senderSel"><option value="">— 멤버를 먼저 추가하세요 —</option></select>
+</div>
+<span class="fmt-div tfr-div" id="senderHeadingDiv"></span>
+</div>
 </div>
 <div class="field" id="alignField" style="display:none">
 <div class="text-format-row">
@@ -1299,8 +1319,8 @@ html, body, #canvas, #chat, #canvas * {
 <button title="오른쪽 정렬" onclick="setAlign('right')"><svg viewBox="0 0 16 12"><line x1="1" y1="2" x2="15" y2="2"/><line x1="6" y1="6" x2="15" y2="6"/><line x1="3" y1="10" x2="15" y2="10"/></svg></button>
 </div>
 </div>
-<span class="fmt-div tfr-div"></span>
-<div class="tfr-col">
+<span class="fmt-div tfr-div" id="alignHeadingDiv"></span>
+<div class="tfr-col" id="textHeadingCol">
 <label class="lb">글씨 크기</label>
 <div class="seg" id="textHeadingSeg" aria-label="부분 글자 크기">
 <button type="button" title="선택한 글자를 큰 제목으로" onclick="wrapTextHeading(1)">#</button>
@@ -1325,6 +1345,7 @@ html, body, #canvas, #chat, #canvas * {
 <input hidden="" id="parenOn" onchange="setParen(this.checked)" type="checkbox"/>
 <span class="fmt-grp" data-lb="글자 색"><span class="fmt-pair"><button class="cbtn" id="colorBtn" onclick="wrapColor()" title="선택한 글자 색 바꾸기">A</button>
 <span class="swatch fmt-swatch" style="background:#D14343" title="글자 색 선택"><input id="partialColor" class="color-proxy" oninput="setPartialColor(this.value)" type="text" value="#D14343" readonly inputmode="none" aria-label="글자 색 선택"/></span></span></span>
+<span class="fmt-grp fmt-grp-clear" data-lb="지우기"><button class="clearfmt" id="clearFmtBtn" onclick="clearFmt()" title="선택한 부분의 서식 지우기 — 선택 없이 누르면 입력창 전체" aria-label="서식 지우기"><svg aria-hidden="true" viewBox="0 0 18 18" width="15" height="15" fill="none"><path d="M3.5 5h11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M7.2 5V3.8c0-.5.4-.9.9-.9h1.8c.5 0 .9.4.9.9V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5.2 5l.7 8.6c0 .8.7 1.4 1.5 1.4h3.2c.8 0 1.5-.6 1.5-1.4L12.8 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span>
 </div>
 <div aria-multiline="true" class="rich-composer" contenteditable="true" data-placeholder="내용을 입력하세요" id="msgContent" role="textbox" spellcheck="false"></div>
 </div>
@@ -1336,9 +1357,8 @@ html, body, #canvas, #chat, #canvas * {
 </div>
 <div class="msg-img-editor" id="msgImgEditor" hidden="">
 <input accept="image/*" hidden="" id="msgImgFile" onchange="onMsgImg(event)" type="file"/>
-<div class="msg-img-editor-head" id="msgImgEditorHead"><span id="msgImgEditorTitle">사진</span><div class="msg-img-head-right"><label class="msg-img-round-toggle" title="이미지 모서리 둥글게"><input type="checkbox" id="msgImgRound" checked="" onchange="toggleImgRound(this.checked)"/><span class="msg-img-round-switch"></span>라운드</label><button type="button" class="msg-img-pick" id="msgImgPickBtn" onclick="pickMsgImg()">＋ 이미지 선택</button></div></div>
+<div class="msg-img-editor-head" id="msgImgEditorHead"><span id="msgImgEditorTitle">사진</span><div class="msg-img-head-right"><label class="msg-img-round-toggle" title="이미지 모서리 둥글게"><input type="checkbox" id="msgImgRound" checked="" onchange="toggleImgRound(this.checked)"/><span class="msg-img-round-switch"></span>라운드</label><label class="msg-img-round-toggle msg-img-sticker-toggle" title="이미지를 캔버스 아무 곳에나 스티커처럼 붙여요"><input type="checkbox" id="stickerMode" onchange="setStickerMode(this.checked)"/><span class="msg-img-round-switch"></span>스티커 모드</label><button type="button" class="msg-img-pick" id="msgImgPickBtn" onclick="pickMsgImg()">＋ 이미지 선택</button></div></div>
 <div class="msg-img-empty" id="msgImgEmpty">
-<span class="msg-img-hint">채팅 사이에 사진을 끼워넣어요 · 위 “＋ 이미지 선택”을 눌러 파일을 골라주세요</span>
 </div>
 <div class="msg-img-body" id="msgImgBody" hidden="">
 <div class="msg-img-thumb"><img id="msgImgPrev"/><button class="x" type="button" title="이미지 제거" onclick="clearMsgImg()">×</button></div>
@@ -1434,7 +1454,51 @@ html, body, #canvas, #chat, #canvas * {
 <label class="lb">전체 글자색</label>
 <div class="colorrow" data-color="nText"></div>
 </div>
-</div></div></div><div class="flat-tool-section" id="backgroundImageSection"><div class="flat-tool-title"><strong>배경 이미지</strong></div><div class="flat-tool-body"><div class="field"><label class="lb">이미지 불러오기</label><div class="bg-image-load-row"><label class="btn sm bg-upload-btn">↑ 파일<input accept="image/*" hidden="" id="bgImgFile" onchange="onBackgroundImageFile(event)" type="file"/></label><input id="bgImgUrl" onchange="loadBackgroundImageUrl()" onkeydown="if(event.key==='Enter'){event.preventDefault();loadBackgroundImageUrl();}" placeholder="이미지 URL · 붙여넣고 Enter" type="text"/><button class="btn sm danger-ghost" onclick="clearBackgroundImage()" type="button">지우기</button></div><div class="bg-image-preview" id="bgImgPreviewWrap" style="display:none"><img alt="배경 이미지 미리보기" id="bgImgPreview"/><span>배경 이미지 적용 중</span></div></div><div class="colorgrid bg-image-controls"><div class="field"><label class="lb">이미지 크기</label><div class="rangewrap"><input id="bgImgSize" max="600" min="40" oninput="setBackgroundImageValue('size',this.value)" step="1" type="range" value="100"/><span class="val" id="bgImgSizeV">100%</span></div></div><div class="field"><label class="lb">회전</label><div class="rangewrap"><input id="bgImgRotation" max="360" min="0" oninput="setBackgroundImageValue('rotation',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgRotationV">0°</span></div></div><div class="field"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bgImgX" max="100" min="0" oninput="setBackgroundImageValue('x',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgXV">50%</span></div></div><div class="field"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bgImgY" max="100" min="0" oninput="setBackgroundImageValue('y',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgYV">50%</span></div></div><div class="field"><label class="lb">블러 농도</label><div class="rangewrap"><input id="bgImgBlur" max="30" min="0" oninput="setBackgroundImageValue('blur',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgBlurV">0px</span></div></div><div class="field bg-overlay-field" style="grid-column:1/-1;margin-bottom:0"><label class="lb">오버레이</label><div class="overlay-row"><div class="colorrow overlay-colorrow" data-color="bgOverlay"></div><div class="rangewrap overlay-opacity"><input id="bgOverlayOpacity" max="100" min="0" oninput="setBackgroundImageValue('overlayOpacity',this.value)" step="1" type="range" value="0"/><span class="val" id="bgOverlayOpacityV">0%</span></div></div></div></div></div></div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>텍스트·간격</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
+</div></div></div><div class="flat-tool-section" id="accGradient">
+<div class="flat-tool-title"><strong>배경 그라데이션</strong></div>
+<div class="flat-tool-body">
+<div class="field" style="margin-bottom:0">
+<div class="toggle">
+<div class="t-lb">그라데이션 사용<span>배경 색상 대신 그라데이션을 깔아요</span></div>
+<label class="sw"><input id="gradOn" onchange="setGradient('on',this.checked)" type="checkbox"/><span class="track"></span></label>
+</div>
+</div>
+<div class="grad-panel" id="gradPanel"><div class="gp-inner">
+<div class="grad-preview" id="gradPreview" aria-hidden="true"></div>
+<div class="colorgrid">
+<div class="field" style="margin:0"><label class="lb">시작 색</label><div class="colorrow" data-color="gradFrom"></div></div>
+<div class="field" style="margin:0"><label class="lb">끝 색</label><div class="colorrow" data-color="gradTo"></div></div>
+</div>
+<div class="field" style="margin-top:14px;margin-bottom:0">
+<div class="toggle">
+<div class="t-lb">가운데 색 추가<span>세 가지 색으로 이어요</span></div>
+<label class="sw"><input id="gradViaOn" onchange="setGradient('useVia',this.checked)" type="checkbox"/><span class="track"></span></label>
+</div>
+</div>
+<div class="field grad-via-field" id="gradViaField" style="margin-top:12px"><label class="lb">가운데 색</label><div class="colorrow" data-color="gradVia"></div></div>
+<div class="field" style="margin-top:14px;margin-bottom:10px">
+<label class="lb">방향</label>
+<div class="grad-dirs" id="gradDirs">
+<button data-ang="315" onclick="setGradient('angle',315)" title="왼쪽 위 → 오른쪽 아래" type="button">↖</button>
+<button data-ang="0" onclick="setGradient('angle',0)" title="아래 → 위" type="button">↑</button>
+<button data-ang="45" onclick="setGradient('angle',45)" title="왼쪽 아래 → 오른쪽 위" type="button">↗</button>
+<button data-ang="270" onclick="setGradient('angle',270)" title="오른쪽 → 왼쪽" type="button">←</button>
+<button class="gd-mid" disabled type="button">·</button>
+<button data-ang="90" onclick="setGradient('angle',90)" title="왼쪽 → 오른쪽" type="button">→</button>
+<button data-ang="225" onclick="setGradient('angle',225)" title="오른쪽 위 → 왼쪽 아래" type="button">↙</button>
+<button data-ang="180" onclick="setGradient('angle',180)" title="위 → 아래" type="button">↓</button>
+<button data-ang="135" onclick="setGradient('angle',135)" title="오른쪽 아래 → 왼쪽 위" type="button">↘</button>
+</div>
+</div>
+<div class="colorgrid">
+<div class="field" style="margin:0"><label class="lb">각도 미세 조정</label>
+<div class="rangewrap"><input id="gradAngle" max="360" min="0" oninput="setGradient('angle',this.value)" step="1" type="range" value="180"/><span class="val" id="gradAngleV">180°</span></div></div>
+<div class="field" style="margin:0"><label class="lb">경계 위치</label>
+<div class="rangewrap"><input id="gradMid" max="90" min="10" oninput="setGradient('mid',this.value)" step="1" type="range" value="50"/><span class="val" id="gradMidV">50%</span></div></div>
+</div>
+<div class="field-help" style="margin-top:10px">투명 배경을 켜면 그라데이션은 적용되지 않아요. 배경 이미지가 있으면 이미지가 그 위에 덮여요.</div>
+</div></div>
+</div></div><div class="flat-tool-section" id="backgroundImageSection"><div class="flat-tool-title"><strong>배경 이미지</strong></div><div class="flat-tool-body"><div class="field"><label class="lb">이미지 불러오기</label><div class="bg-image-load-row"><label class="btn sm bg-upload-btn">↑ 파일<input accept="image/*" hidden="" id="bgImgFile" onchange="onBackgroundImageFile(event)" type="file"/></label><input id="bgImgUrl" onchange="loadBackgroundImageUrl()" onkeydown="if(event.key==='Enter'){event.preventDefault();loadBackgroundImageUrl();}" placeholder="이미지 URL · 붙여넣고 Enter" type="text"/><button class="btn sm danger-ghost" onclick="clearBackgroundImage()" type="button">지우기</button></div><div class="bg-image-preview" id="bgImgPreviewWrap" style="display:none"><img alt="배경 이미지 미리보기" id="bgImgPreview"/><span>배경 이미지 적용 중</span></div></div><div class="colorgrid bg-image-controls"><div class="field"><label class="lb">이미지 크기</label><div class="rangewrap"><input id="bgImgSize" max="600" min="40" oninput="setBackgroundImageValue('size',this.value)" step="1" type="range" value="100"/><span class="val" id="bgImgSizeV">100%</span></div></div><div class="field"><label class="lb">회전</label><div class="rangewrap"><input id="bgImgRotation" max="360" min="0" oninput="setBackgroundImageValue('rotation',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgRotationV">0°</span></div></div><div class="field"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bgImgX" max="100" min="0" oninput="setBackgroundImageValue('x',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgXV">50%</span></div></div><div class="field"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bgImgY" max="100" min="0" oninput="setBackgroundImageValue('y',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgYV">50%</span></div></div><div class="field"><label class="lb">블러 농도</label><div class="rangewrap"><input id="bgImgBlur" max="30" min="0" oninput="setBackgroundImageValue('blur',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgBlurV">0px</span></div></div><div class="field bg-overlay-field" style="grid-column:1/-1;margin-bottom:0"><label class="lb">오버레이</label><div class="overlay-row"><div class="colorrow overlay-colorrow" data-color="bgOverlay"></div><div class="rangewrap overlay-opacity"><input id="bgOverlayOpacity" max="100" min="0" oninput="setBackgroundImageValue('overlayOpacity',this.value)" step="1" type="range" value="0"/><span class="val" id="bgOverlayOpacityV">0%</span></div></div></div></div></div></div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>텍스트·간격</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
 <div class="flat-tool-title"><strong>글꼴 · 텍스트</strong></div>
 <div class="flat-tool-body">
 <div class="field">
@@ -1444,14 +1508,24 @@ html, body, #canvas, #chat, #canvas * {
 <option value="'Noto Sans KR',sans-serif">본고딕 (Noto)</option>
 <option value="'Nanum Myeongjo',serif">나눔명조</option>
 <option value="'Gowun Dodum',sans-serif">고운돋움</option>
+<option value="'Freesentation',sans-serif">프리젠테이션</option>
+<option value="'Paperlogy',sans-serif">페이퍼로지</option>
 <option value="'Mona12',sans-serif">Mona12 (픽셀 · 12px 권장)</option>
 <option value="-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif">시스템 기본</option>
 </select>
 <div class="field-help">중국어·일본어 문자는 자동 감지해 Noto Sans SC / JP로 보완하고, 이미지 저장에도 함께 포함해요.</div>
+<div class="field-help" id="fontLoadState" style="margin-top:6px"></div>
+</div>
+<div class="field">
+<label class="lb">한자·가나 크기 보정</label>
+<div class="rangewrap"><input id="lyCjkScale" max="120" min="80" oninput="setCjkScale(this.value)" step="1" type="range" value="100"/><span class="val" id="lyCjkScaleV">100%</span></div>
+<div class="field-help">대체 글꼴(Noto Sans SC / JP)로 그려지는 한자·가나만 키우거나 줄여요. 한글·영문은 그대로예요.</div>
 </div>
 <div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">글자 크기</label>
 <div class="rangewrap"><input id="lyFs" max="22" min="11" oninput="setLayout('fs',this.value)" type="range" value="16"/><span class="val" id="lyFsV">16px</span></div></div>
+<div class="field" style="margin-bottom:14px"><label class="lb">말풍선 글자 크기</label>
+<div class="rangewrap"><input id="lyBubbleFs" max="22" min="11" oninput="setLayout('bubbleFs',this.value)" type="range" value="16"/><span class="val" id="lyBubbleFsV">16px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">행간</label>
 <div class="rangewrap"><input id="lyLh" max="2.2" min="1.1" oninput="setLayout('lh',this.value)" step="0.05" type="range" value="1.55"/><span class="val" id="lyLhV">1.55</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">자간</label>
@@ -1459,9 +1533,9 @@ html, body, #canvas, #chat, #canvas * {
 <div class="field" style="margin-bottom:14px"><label class="lb">장평</label>
 <div class="rangewrap"><input id="lyWidthScale" max="130" min="70" oninput="setLayout('widthScale',this.value)" step="1" type="range" value="100"/><span class="val" id="lyWidthScaleV">100%</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">문단 간격</label>
-<div class="rangewrap"><input id="lyBlockGap" max="60" min="0" oninput="setLayout('blockGap',this.value)" type="range" value="16"/><span class="val" id="lyBlockGapV">16px</span></div><div class="field-help">글 블럭과 다음 글 블럭 사이에만 적용돼요.</div></div>
+<div class="rangewrap"><input id="lyBlockGap" max="60" min="0" oninput="setLayout('blockGap',this.value)" type="range" value="16"/><span class="val" id="lyBlockGapV">16px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">말풍선 간격</label>
-<div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div><div class="field-help">서로 다른 캐릭터의 말풍선 사이에만 적용돼요.</div></div>
+<div class="rangewrap"><input id="lyGap" max="40" min="0" oninput="setLayout('gap',this.value)" type="range" value="12"/><span class="val" id="lyGapV">12px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">채팅 ↔ 글 간격</label>
 <div class="rangewrap"><input id="lyTextGap" max="40" min="0" oninput="setLayout('textGap',this.value)" type="range" value="25"/><span class="val" id="lyTextGapV">25px</span></div></div>
 </div>
@@ -1476,8 +1550,8 @@ html, body, #canvas, #chat, #canvas * {
                 </div>
 </div>
 <div class="shadow-control-group" style="margin-top:14px">
-<div class="field" style="margin-bottom:9px"><div class="toggle"><div class="t-lb">그림자<span>모든 텍스트에 그림자를 적용해요</span></div><label class="sw"><input id="textShadowOn" onchange="setTextShadow('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><label class="mini-check" style="margin:9px 0 0 2px"><input id="textShadowBubblesOff" onchange="setTextShadow('bubblesOff',this.checked)" type="checkbox"/><span>말풍선 그림자 삭제 — 체크하면 글 블럭 텍스트에만 그림자를 적용해요</span></label></div>
-<div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="textShadow"></div></div><div class="field" style="margin:0"><label class="lb">그림자 세기</label><div class="rangewrap"><input id="textShadowStrength" max="20" min="0" oninput="setTextShadow('strength',this.value)" type="range" value="4"/><span class="val" id="textShadowStrengthV">4px</span></div></div></div>
+<div class="field" style="margin-bottom:9px"><div class="toggle"><div class="t-lb">그림자<span>켜면 세부 설정이 열려요</span></div><label class="sw"><input id="textShadowOn" onchange="setTextShadow('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><label class="mini-check" style="margin:9px 0 0 2px"><input id="textShadowBubblesOff" onchange="setTextShadow('bubblesOff',this.checked)" type="checkbox"/><span>말풍선 그림자 삭제 — 체크하면 글 블럭 텍스트에만 그림자를 적용해요</span></label></div>
+<div class="acc-panel" id="textShadowPanel"><div class="acc-inner"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="textShadow"></div></div><div class="field" style="margin:0"><label class="lb">번짐</label><div class="rangewrap"><input id="textShadowStrength" max="20" min="0" oninput="setTextShadow('strength',this.value)" type="range" value="4"/><span class="val" id="textShadowStrengthV">4px</span></div></div></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">가로 위치</label><div class="rangewrap"><input id="textShadowX" max="12" min="-12" oninput="setShadowExtra('text','x',this.value)" step="1" type="range" value="0"/><span class="val" id="textShadowXV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">세로 위치</label><div class="rangewrap"><input id="textShadowY" max="12" min="-12" oninput="setShadowExtra('text','y',this.value)" step="1" type="range" value="1"/><span class="val" id="textShadowYV">1px</span></div></div><div class="field" style="margin:0;grid-column:1/-1"><label class="lb">진하기</label><div class="rangewrap"><input id="textShadowOpacity" max="100" min="0" oninput="setShadowExtra('text','opacity',this.value)" step="1" type="range" value="100"/><span class="val" id="textShadowOpacityV">100%</span></div></div></div></div></div>
 </div>
 </div>
 </div></div></section><section class="tool-panel" id="panel-layout"><div class="tool-panel-head"><div><strong>여백</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accMargin">
@@ -1507,8 +1581,8 @@ html, body, #canvas, #chat, #canvas * {
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
 </div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
-<div class="toggle compact" title='큰따옴표("")가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">"" 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
-<div class="toggle compact" title="말풍선 안에서만 큰따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">"" 기호 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
+<div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
+<div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요"><div class="t-lb">프로필 사진</div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="‘내 계정’으로 지정한 캐릭터의 프로필과 이름을 모든 모드에서 켜고 꺼요"><div class="t-lb">내 프로필·이름</div><label class="sw"><input id="showMyIdentity" onchange="state.showMyIdentity=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="SNS 메시지처럼 둥글게 이어지는 꼬리를 표시해요"><div class="t-lb">말풍선 꼬리</div><label class="sw"><input checked="" id="bubbleTailOn" onchange="setBubbleTail(this.checked)" type="checkbox"/><span class="track"></span></label></div>
@@ -1518,7 +1592,7 @@ html, body, #canvas, #chat, #canvas * {
 <label class="mini-check" style="margin:0" title="대사 앞 이름｜ 이름표만 지워요 ([ ]가 있어도 함께) · ( ) 해석은 그대로 남아요"><input id="stripNameTagOn" onchange="state.stripSpeakerName=this.checked; renderPreview()" type="checkbox"/><span>대사 앞 이름 삭제</span></label>
 <label class="mini-check" style="margin:0" title="체크하면 말풍선 위 이름 줄도 함께 숨겨요"><input id="hideNames" onchange="state.hideNames=this.checked; renderPreview()" type="checkbox"/><span>말풍선 이름 삭제</span></label>
 </div>
-<div class="shadow-control-group bubble-shadow-controls" style="margin-top:12px"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">그림자 세기</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div></div>
+<div class="acc-panel" id="bubbleShadowPanel"><div class="acc-inner"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">번짐</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bubbleShadowX" max="12" min="-12" oninput="setShadowExtra('bubble','x',this.value)" step="1" type="range" value="0"/><span class="val" id="bubbleShadowXV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bubbleShadowY" max="12" min="-12" oninput="setShadowExtra('bubble','y',this.value)" step="1" type="range" value="3"/><span class="val" id="bubbleShadowYV">3px</span></div></div><div class="field" style="margin:0;grid-column:1/-1"><label class="lb">진하기</label><div class="rangewrap"><input id="bubbleShadowOpacity" max="100" min="0" oninput="setShadowExtra('bubble','opacity',this.value)" step="1" type="range" value="100"/><span class="val" id="bubbleShadowOpacityV">100%</span></div></div></div></div></div>
 </div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양</strong></div><div class="flat-tool-body"><div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
@@ -1598,7 +1672,42 @@ html, body, #canvas, #chat, #canvas * {
 </div></div>
 </div>
 </div>
-</div></div></section></div></div></section></aside><main class="preview-pane">
+</div>
+<div class="flat-tool-section" id="accSplit">
+<div class="flat-tool-title"><strong>✂️ 페이지 나누기</strong></div>
+<div class="flat-tool-body">
+<div class="field">
+<div class="field-help" id="splitCountHelp">블럭에 마우스를 올리면 나오는 <b>✂</b> 버튼으로 분할 지점을 표시해요.</div>
+</div>
+<div class="field">
+<div class="toggle">
+<div class="t-lb">페이지 번호<span>서명과 같은 줄에 이미지로 새겨져요</span></div>
+<label class="sw"><input id="pageNumOn" onchange="setPageNum('on',this.checked)" type="checkbox"/><span class="track"></span></label>
+</div>
+</div>
+<div class="field" style="margin-top:14px;margin-bottom:14px">
+<label class="lb">위치 (정렬)</label>
+<div class="seg" id="pageNumAlignSeg">
+<button class="on" onclick="setPageNum('align','left')" type="button">좌</button>
+<button onclick="setPageNum('align','center')" type="button">가운데</button>
+<button onclick="setPageNum('align','right')" type="button">우</button>
+</div>
+</div>
+<div class="colorgrid">
+<div class="field" style="margin:0"><label class="lb">글자 크기</label>
+<div class="rangewrap"><input id="pageNumSize" max="18" min="9" oninput="setPageNum('size',this.value)" type="range" value="12"/><span class="val" id="pageNumSizeV">12px</span></div></div>
+<div class="field" style="margin:0"><label class="lb">색상</label>
+<div class="colorrow" data-color="pageNum"></div></div>
+<div class="field" style="grid-column:1/-1;margin:0"><label class="lb">번호 형식</label>
+<div class="seg" id="pageNumFmtSeg">
+<button class="on" onclick="setPageNum('format','slash')" type="button">1/3</button>
+<button onclick="setPageNum('format','dash')" type="button">- 1 -</button>
+<button onclick="setPageNum('format','pad')" type="button">01</button>
+<button onclick="setPageNum('format','plain')" type="button">1</button>
+</div></div>
+</div>
+</div>
+</div></section></div></div></section></aside><main class="preview-pane">
 <div class="preview-toolbar">
 <div class="preview-heading">
 <strong>미리보기</strong>
@@ -1608,7 +1717,6 @@ html, body, #canvas, #chat, #canvas * {
 <button type="button" class="zoom-label" id="previewZoomLabel" onclick="resetPreviewZoom()" title="화면 맞춤으로 돌아가기">맞춤</button>
 <button type="button" onclick="changePreviewZoom(1)" title="미리보기 확대">＋</button>
 </div>
-<span class="preview-zoom-help">버튼 또는 Ctrl/⌘+스크롤로 캔버스만 확대·축소해요. 저장 크기와 저장 배율에는 영향이 없어요.</span>
 </div>
 </div>
 <div class="preview-actions">
@@ -1648,7 +1756,7 @@ html, body, #canvas, #chat, #canvas * {
 <div class="overlay" id="clearModal">
 <div class="modal">
 <div class="mhd">채팅을 전부 지울까요?</div>
-<div class="mbd">멤버와 메시지가 모두 삭제돼요. 지운 내용은 되돌릴 수 없어요.</div>
+<div class="mbd">메시지가 모두 삭제돼요. 등록한 멤버는 그대로 남아요.</div>
 <div class="mft">
 <button class="btn" onclick="closeClear()">취소</button>
 <button class="btn danger-strong" onclick="doClear()">전부 지우기</button>
@@ -1716,6 +1824,8 @@ const state = {
   previewZoom:1,
   backgroundImage:{src:'',size:100,rotation:0,x:50,y:50,blur:0,overlayOpacity:0},
   credit:{ on:false, maker:'', character:'', align:'right', size:12, gap:16, sep:'dot' },
+  gradient:{ on:false, angle:180, mid:50, useVia:false },
+  pageNum:{ on:false, align:'left', size:12, format:'slash' },
   colors:{
     bg:'#EDEDEE',
     nBubble:'#FFFFFF', nText:'#424448',
@@ -1728,15 +1838,20 @@ const state = {
     partial:'#D14343',
     paren:'#8A8F98',
     credit:'#8A8F98',
+    pageNum:'#8A8F98',
     bgOverlay:'#000000',
+    gradFrom:'#EDEDEE',
+    gradVia:'#DCE3F0',
+    gradTo:'#C9D6EE',
     textShadow:'#000000',
     bubbleShadow:'#000000'
   },
   layout:{
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
-    gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, nameSize:12, widthScale:100, letterSpacing:0,
-    textShadowOn:false, textShadowBubblesOff:false, textShadowStrength:4, bubbleShadowOn:false, bubbleShadowStrength:4,
+    gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, bubbleFs:null, nameSize:12, widthScale:100, letterSpacing:0, cjkScale:100,
+    textShadowOn:false, textShadowBubblesOff:false, textShadowStrength:4, textShadowX:0, textShadowY:1, textShadowOpacity:100,
+    bubbleShadowOn:false, bubbleShadowStrength:4, bubbleShadowX:0, bubbleShadowY:3, bubbleShadowOpacity:100,
     bubbleOpacity:100, bubbleTextOpacity:100,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
     textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
@@ -2360,7 +2475,7 @@ function bubbleStyle(bg,color,tailCorner){
   /* Radius 22+ also retracts the outward tip slightly toward the bubble. */
   const tailInwardDelta=Math.max(0,r-22);
   return `background:${bg};--bubble-bg:${bg};--bubble-radius:${r}px;--bubble-tail-radius-base:${tailRadiusBase}px;--bubble-tail-radius-delta:${tailRadiusDelta}px;--bubble-tail-inward-delta:${tailInwardDelta}px;color:${color};padding:${L.bpy}px ${L.bpx}px;`
-    +`border-radius:${r}px;font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
+    +`border-radius:${r}px;font-size:${(Number(L.bubbleFs)||L.fs)}px;line-height:${L.lh};${wbStyle()}`;
 }
 function typographyStyle(align='left'){
   const L=state.layout;
@@ -2694,8 +2809,8 @@ let themes=[];
 let themeStorageOK=true;
 
 function defaultLayout(){
-  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,
-    radius:14,fs:16,lh:1.55,para:0,nameSize:12,widthScale:100,letterSpacing:0,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,bubbleShadowOn:false,bubbleShadowStrength:4,tailOn:true,tailSize:10,tailY:0,tailX:0,
+  return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,cjkScale:100,
+    radius:14,fs:16,lh:1.55,para:0,bubbleFs:null,nameSize:12,widthScale:100,letterSpacing:0,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,textShadowX:0,textShadowY:1,textShadowOpacity:100,bubbleShadowOn:false,bubbleShadowStrength:4,bubbleShadowX:0,bubbleShadowY:3,bubbleShadowOpacity:100,tailOn:true,tailSize:10,tailY:0,tailX:0,
     linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerWidth:100,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
@@ -3448,7 +3563,7 @@ function bubbleViewMsg(m){
   //    이후 프로필 이름을 바꿔도 첫 번째 캐릭터로 되돌아가지 않는다.
   //    아직 일치하는 멤버가 없어 첫 멤버로 임시 표시 중일 때는 고정하지 않고 계속 인식하므로,
   //    나중에 해당 멤버를 추가하면 그때 자동으로 연결·고정된다.
-  if(state.autoQuoteBubble&&baseType==='text'&&!m.noAutoQuote&&/["“”]/.test(content)&&state.members.length){
+  if(state.autoQuoteBubble&&baseType==='text'&&!m.noAutoQuote&&/["“”「」]/.test(content)&&state.members.length){
     let mem=null;
     if(m.autoSenderId){
       mem=state.members.find(x=>x.id===m.autoSenderId)||null;
@@ -3464,8 +3579,8 @@ function bubbleViewMsg(m){
   // 2) [이름｜] 이름표 삭제 — 괄호 해석 부분은 유지
   if(state.stripSpeakerName&&pre){ content=pre.rest; changed=true; }
   // 3) "" 기호 삭제 — 말풍선(자동 변환 포함)에서만
-  if(state.stripQuoteMarks&&effType==='chat'&&/["“”]/.test(content)){
-    content=content.replace(/["“”]/g,''); changed=true;
+  if(state.stripQuoteMarks&&effType==='chat'&&/["“”「」]/.test(content)){
+    content=content.replace(/["“”「」]/g,''); changed=true;
   }
   if(!changed) return m;
   const c=Object.assign({},m,{type:effType,content:content});
@@ -3588,14 +3703,15 @@ function renderPreview(){
     // A run continues only when the immediately preceding item is another chat
     // message from the same sender. Text, dividers, images, or another sender break it.
     const isChat=x=>x&&(!x.type||x.type==='chat');
-    const continued=isChat(m)&&isChat(prev)&&m.senderId===prev.senderId;
-    const nextContinued=isChat(m)&&isChat(next)&&m.senderId===next.senderId;
+    /* 페이지가 나뉘는 자리에서는 연속 묶음도 끊는다.
+       새 장의 첫 말풍선은 그 장의 맨 위이므로 프로필 사진과 이름이 다시 나와야 한다. */
+    const continued=isChat(m)&&isChat(prev)&&m.senderId===prev.senderId&&!m.splitBefore;
+    const nextContinued=isChat(m)&&isChat(next)&&m.senderId===next.senderId&&!(next&&next.splitBefore);
     // Spacing inside a consecutive same-sender run stays fixed. The message-gap control
     // moves the whole run relative to surrounding items instead of stretching its bubbles.
-    /* 같은 캐릭터가 연속으로 이어지는 하위 말풍선 간격은 6px로 고정한다.
-       로그 모드도 현재는 6px — 아래 숫자만 바꾸면 로그 모드만 따로 조절된다.
-       (기본·메신저 모드는 항상 6px.) */
-    const continuationGap=(state.mode==='log')?6:6;
+    /* 같은 캐릭터가 연속으로 이어지는 하위 말풍선 간격을 모드별로 고정한다.
+       로그 모드는 3px, 기본·메신저 모드는 기존과 동일하게 6px. */
+    const continuationGap=(state.mode==='log')?3:6;
     // Spacing to the next item is governed by whichever element "owns" that seam, so the
     // bubble panel's spacing controls only affect bubble(+글) spacing — never 가름선/사진.
     // priority: 가름선 > 사진 > 글 > 말풍선
@@ -3690,11 +3806,11 @@ function logRow(m,mem,gap,continued=false){
   const mine=(m.senderId===state.meId);
   const showIdentity=!mine||!!state.showMyIdentity;
   const hasAvatarColumn=!!state.showProfile&&showIdentity;
-  const plain=`color:${state.colors.nText};font-size:${L.fs}px;line-height:${L.lh};${wbStyle()}`;
+  const plain=`color:${state.colors.nText};font-size:${(Number(L.bubbleFs)||L.fs)}px;line-height:${L.lh};${wbStyle()}`;
   const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
   const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
   const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>`:'';
-  return `<div class="pmsg n-msg ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
+  return `<div class="pmsg n-msg log-row ${state.hideNames?'log-name-hidden':''} ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
     ${avatar||avatarSpacer}
     <div class="n-body">
@@ -4105,7 +4221,6 @@ wrapFmt=function(mark){
 };
 wrapColor=function(){wrapRichSelection('span','color:'+state.colors.partial);};
 function wrapTextHeading(level){
-  if(state.composerType!=='text') return;
   const lv=Number(level)===1?1:2;
   const cls=lv===1?'text-heading text-heading-1':'text-heading text-heading-2';
   wrapRichSelection('span','',cls,{heading:String(lv)});
@@ -4287,6 +4402,8 @@ const __RUNTIME_FONT_CONFIG={
   'Noto Sans KR':{css:'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap',weights:[400,700]},
   'Nanum Myeongjo':{css:'https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap',weights:[400,700]},
   'Gowun Dodum':{css:'https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap',weights:[400]},
+  'Freesentation':{css:'https://cdn.jsdelivr.net/gh/fonts-archive/Freesentation/Freesentation.css',weights:[400,700]},
+  'Paperlogy':{css:'https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css',weights:[400,700]},
   'Mona12':{css:'https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css',weights:[400,700]},
   'Pretendard':{css:'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css',weights:[400,500,600,700,800]}
 };
@@ -5774,7 +5891,6 @@ else setTimeout(__idleLoadRenderer,1200);
     wrapCurrentSelection(root,type,{color});
   }
   function applyHeadingFormat(root,level){
-    if(root.id==='msgContent'&&state.composerType!=='text') return;
     level=Number(level)===1?1:2;
     const found=ensureEditorSelection(root),range=found.sel.getRangeAt(0);
     const active=commonFormat(range,root,'heading');
@@ -5812,6 +5928,82 @@ else setTimeout(__idleLoadRenderer,1200);
     const root=editorRoot();if(!root)return;
     applyColorFormat(root,state.colors.partial);
     cleanupEmptyFormats(root);
+  };
+  /* 서식 지우기 — 반드시 "선택한 부분만".
+     겹치는 서식 요소를 통째로 벗기면 굵은 문장의 일부만 골라도 문장 전체가 풀린다.
+     그래서 선택 구간을 임시 span 으로 감싼 뒤, 그 span 을 감싸고 있는 서식 요소들을
+     앞/뒤로 쪼개면서 바깥으로 꺼내고, 마지막에 span 안쪽 서식만 벗긴다. */
+  function __clearLiftOut(node){
+    const parent=node.parentNode; if(!parent) return;
+    const grand=parent.parentNode; if(!grand) return;
+    const before=parent.cloneNode(false), after=parent.cloneNode(false);
+    while(parent.firstChild&&parent.firstChild!==node) before.appendChild(parent.firstChild);
+    parent.removeChild(node);
+    while(parent.firstChild) after.appendChild(parent.firstChild);
+    if(before.childNodes.length) grand.insertBefore(before,parent);
+    grand.insertBefore(node,parent);
+    if(after.childNodes.length) grand.insertBefore(after,parent);
+    grand.removeChild(parent);
+  }
+  function __clearUnwrap(el){
+    const p=el.parentNode; if(!p) return;
+    while(el.firstChild) p.insertBefore(el.firstChild,el);
+    p.removeChild(el);
+  }
+  window.clearFmt=function(){
+    const root=editorRoot();if(!root)return;
+    const found=selectionInside(root);
+    if(!found||!found.range||found.range.collapsed){
+      if(typeof window.toast==='function') window.toast('지울 부분을 먼저 선택해 주세요');
+      root.focus(); return;
+    }
+    const range=found.range;
+    const inside=[...root.querySelectorAll(FORMAT_QUERY)].some(el=>{
+      try{return range.intersectsNode(el);}catch(_){return false;}
+    });
+    if(!inside){
+      if(typeof window.toast==='function') window.toast('선택한 부분에는 지울 서식이 없어요');
+      root.focus(); return;
+    }
+
+    /* 1) 선택 구간을 임시 span 으로 표시 */
+    const tmp=document.createElement('span');
+    tmp.setAttribute('data-clear-tmp','1');
+    tmp.appendChild(range.extractContents());
+    range.insertNode(tmp);
+
+    /* 2) 임시 span 을 감싼 서식 요소를 쪼개며 바깥으로 꺼낸다 */
+    let guard=0;
+    while(guard++<40){
+      const p=tmp.parentNode;
+      if(!p||p===root||!root.contains(p)) break;
+      let isFmt=false;
+      try{ isFmt=p.nodeType===1&&p.matches(FORMAT_QUERY); }catch(_){ isFmt=false; }
+      if(!isFmt) break;
+      __clearLiftOut(tmp);
+    }
+
+    /* 3) 선택 구간 안쪽에 남은 서식도 벗긴다 */
+    for(let pass=0;pass<12;pass++){
+      const hits=[...tmp.querySelectorAll(FORMAT_QUERY)];
+      if(!hits.length) break;
+      hits.sort((a,b)=>nodeDepth(b)-nodeDepth(a));
+      hits.forEach(__clearUnwrap);
+    }
+
+    /* 4) 임시 span 을 걷어내고 그 구간을 다시 선택해 둔다 */
+    const kids=[...tmp.childNodes];
+    __clearUnwrap(tmp);
+    try{
+      if(kids.length){
+        const sel=window.getSelection(), r=document.createRange();
+        r.setStartBefore(kids[0]); r.setEndAfter(kids[kids.length-1]);
+        sel.removeAllRanges(); sel.addRange(r);
+      }
+    }catch(_){}
+    try{ root.normalize(); }catch(_){}
+    cleanupEmptyFormats(root);
+    root.focus();
   };
   window.wrapTextHeading=function(level){
     const root=editorRoot();if(!root)return;
@@ -6153,8 +6345,10 @@ else setTimeout(__idleLoadRenderer,1200);
     const touch=isTouchWebKit()||((navigator.maxTouchPoints||0)>0&&innerWidth<=900);
     const maxSide=touch?8192:32767;
     const maxPixels=touch?12000000:64000000;
-    scale=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
-    return Math.max(.0001,scale*.985);
+    const limited=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
+    /* 한도에 걸렸을 때만 1.5% 여유를 둔다. 걸리지 않았으면 요청한 배율 그대로 저장한다. */
+    if(limited>=scale) return Math.max(.0001,scale);
+    return Math.max(.0001,limited*.985);
   }
 
   function canvasToPngBlob(canvas){
@@ -6327,7 +6521,7 @@ else setTimeout(__idleLoadRenderer,1200);
       const result=await captureExactPreview('미리보기 그대로 저장 중...');
       if(result&&result.blob){
         downloadPngBlob(result.blob,safeFilename(state.export.filename)+'.png');
-        if(result.scale+0.02<result.requestedScale&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
+        if(result.scale<result.requestedScale*0.97&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
       }
     }catch(err){
       console.error('exact preview image export failed',err);
@@ -6434,7 +6628,7 @@ function hideToast(){const el=document.getElementById('upToast'); if(el) el.clas
 
 /* ---------- 프로젝트 스냅샷 (직렬화) ---------- */
 const SNAP_KEYS=['mode','shape','showProfile','hideNames','showMyIdentity','meId','parenOn','autoQuoteBubble','stripSpeakerName','stripQuoteMarks','members','messages',
-  'export','transparentBg','backgroundImage','credit','colors','layout'];
+  'export','transparentBg','backgroundImage','credit','pageNum','gradient','colors','layout','stickers'];
 function projectSnapshot(){
   const o={};
   SNAP_KEYS.forEach(k=>{ o[k]=state[k]; });
@@ -6444,9 +6638,10 @@ function applyProject(d){
   if(!d||typeof d!=='object') return;
   if(Array.isArray(d.members)) state.members=d.members;
   if(Array.isArray(d.messages)) state.messages=d.messages;
+  if(Array.isArray(d.stickers)) state.stickers=d.stickers;
   ['mode','shape','meId'].forEach(k=>{ if(typeof d[k]==='string') state[k]=d[k]; });
   ['showProfile','hideNames','showMyIdentity','parenOn','transparentBg','autoQuoteBubble','stripSpeakerName','stripQuoteMarks'].forEach(k=>{ if(typeof d[k]==='boolean') state[k]=d[k]; });
-  ['export','backgroundImage','credit','colors','layout'].forEach(k=>{
+  ['export','backgroundImage','credit','pageNum','gradient','colors','layout'].forEach(k=>{
     if(d[k]&&typeof d[k]==='object') Object.assign(state[k],JSON.parse(JSON.stringify(d[k])));
   });
   try{ setMode(state.mode); }catch(_){}
@@ -6560,6 +6755,10 @@ function undoLast(){
   toast('“'+u.label+'” 실행을 취소했어요');
 }
 
+/* 뒤에 붙는 스크립트에서도 토스트·실행 취소를 그대로 쓸 수 있게 내보낸다 */
+window.toast=toast; window.hideToast=hideToast;
+window.pushUndo=pushUndo; window.undoLast=undoLast;
+
 /* 기존 삭제 함수들을 감싸서 실행 취소 지원 */
 const __delMsg0=window.delMsg;
 window.delMsg=function(id){
@@ -6597,7 +6796,7 @@ window.ctrlHTML=function(id){
     +'<button type="button" title="위로" onclick="moveMsg(\''+id+'\',-1)">▲</button>'
     +'<button type="button" title="아래로" onclick="moveMsg(\''+id+'\',1)">▼</button>'
     +'<button type="button" title="복제" onclick="dupMsg(\''+id+'\')">⧉</button>'
-    +'<button type="button" title="수정" onclick="editMsgPrompt(\''+id+'\')">✎</button>'
+    +'<button type="button" class="edit-btn" title="수정" onclick="editMsgPrompt(\''+id+'\')">✎</button>'
     +'<button type="button" class="del" title="삭제" onclick="delMsg(\''+id+'\')">×</button>'
     +'</div>';
 };
@@ -8141,8 +8340,10 @@ stage.addEventListener('touchend',e=>{
     const mobile=isMobileEngine();
     const maxSide=mobile?8192:32767;
     const maxPixels=mobile?12000000:64000000;
-    scale=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
-    return Math.max(.0001,scale*.985);
+    const limited=Math.min(scale,maxSide/Math.max(1,width),maxSide/Math.max(1,height),Math.sqrt(maxPixels/Math.max(1,width*height)));
+    /* 한도에 걸렸을 때만 1.5% 여유를 둔다. 걸리지 않았으면 요청한 배율 그대로 저장한다. */
+    if(limited>=scale) return Math.max(.0001,scale);
+    return Math.max(.0001,limited*.985);
   }
 
   function canvasBlob(canvas){
@@ -8445,7 +8646,7 @@ stage.addEventListener('touchend',e=>{
       const result=await capture('미리보기 그대로 저장 중...');
       if(result&&result.blob){
         downloadBlob(result.blob,safeFilename(state.export.filename)+'.png');
-        if(result.scale+0.02<result.requestedScale&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
+        if(result.scale<result.requestedScale*0.97&&typeof toast==='function') toast('긴 이미지를 저장할 수 있도록 해상도를 자동 조정했어요');
       }
     }catch(err){
       console.error('exact preview scaled raster export failed',err);
@@ -8675,7 +8876,7 @@ window.saveImage=function(){
 .shadow-control-row .colorrow{min-width:0}
 #chat.text-shadow-on{--text-shadow-strength:4px;--text-shadow-color:#000}
 #chat.text-shadow-on .t-inner,#chat.text-shadow-on .n-bubble,#chat.text-shadow-on .n-plain,#chat.text-shadow-on .m-bubble,#chat.text-shadow-on .n-name,#chat.text-shadow-on .m-name,#chat.text-shadow-on .credit,#chat.text-shadow-on .divider-pill{
-  text-shadow:0 1px var(--text-shadow-strength) var(--text-shadow-color)
+  text-shadow:var(--text-shadow-x,0px) var(--text-shadow-y,1px) var(--text-shadow-strength) var(--text-shadow-color)
 }
 /* '말풍선 그림자 삭제' — 그림자를 글 블럭 텍스트(.t-inner)에만 남긴다 */
 #chat.text-shadow-on.text-shadow-bubbles-off .n-bubble,#chat.text-shadow-on.text-shadow-bubbles-off .n-plain,#chat.text-shadow-on.text-shadow-bubbles-off .m-bubble,#chat.text-shadow-on.text-shadow-bubbles-off .n-name,#chat.text-shadow-on.text-shadow-bubbles-off .m-name,#chat.text-shadow-on.text-shadow-bubbles-off .credit,#chat.text-shadow-on.text-shadow-bubbles-off .divider-pill{
@@ -8686,11 +8887,11 @@ window.saveImage=function(){
    요소 전체 drop-shadow 방식으로 통일. 불투명 말풍선에선 글자가 실루엣 안쪽이라
    글자 그림자가 생기지 않는다.) */
 #chat.bubble-shadow-on .n-msg > .av,#chat.bubble-shadow-on .m-msg > .av{
-  box-shadow:0 3px calc(var(--bubble-shadow-strength) * 1.4) var(--bubble-shadow-color)
+  box-shadow:var(--bubble-shadow-x,0px) var(--bubble-shadow-y,3px) calc(var(--bubble-shadow-strength) * 1.4) var(--bubble-shadow-color)
 }
 #chat.bubble-shadow-on:not(.bubble-translucent) .n-bubble,
 #chat.bubble-shadow-on:not(.bubble-translucent) .m-bubble{
-  filter:drop-shadow(0 3px calc(var(--bubble-shadow-strength) * 1.2) var(--bubble-shadow-color))
+  filter:drop-shadow(var(--bubble-shadow-x,0px) var(--bubble-shadow-y,3px) calc(var(--bubble-shadow-strength) * 1.2) var(--bubble-shadow-color))
 }
 #chat.bulk-delete-mode .ctrl{display:none!important}
 #chat.bulk-delete-mode .pmsg{cursor:pointer;transition:outline-color .12s,background-color .12s}
@@ -8765,7 +8966,7 @@ window.saveImage=function(){
 #chat.bubble-translucent.bubble-shadow-on .n-bubble,
 #chat.bubble-translucent.bubble-shadow-on .m-bubble{box-shadow:none!important;filter:none!important}
 #chat.bubble-translucent.bubble-shadow-on .bubble-bg{
-  filter:drop-shadow(0 3px calc(var(--bubble-shadow-strength) * 1.2) var(--bubble-shadow-color))
+  filter:drop-shadow(var(--bubble-shadow-x,0px) var(--bubble-shadow-y,3px) calc(var(--bubble-shadow-strength) * 1.2) var(--bubble-shadow-color))
 }
 /* 말풍선 글씨 투명도 — 배경 투명도와 완전히 별개로 글자만 */
 #chat .n-bubble > .glyph-scale,
@@ -8866,7 +9067,7 @@ window.commitComposerEdit=function(){
     m.type='text'; m.content=content; m.align=state.draftAlign||'left';
     delete m.senderId; delete m.image; delete m.imgSize; delete m.imgMargin; delete m.round;
     /* "" 자동 말풍선이 켜져 있어도, 글로 저장한 블럭은 다시 말풍선으로 바뀌지 않도록 고정 */
-    if(state.autoQuoteBubble&&/["“”]/.test(content)) m.noAutoQuote=true;
+    if(state.autoQuoteBubble&&/["“”「」]/.test(content)) m.noAutoQuote=true;
     else delete m.noAutoQuote;
     delete m.autoSenderId;
   }else{
@@ -8910,11 +9111,20 @@ function updateBulkButtons(){
   const main=document.getElementById('bulkDeleteBtn'), cancel=document.getElementById('bulkDeleteCancelBtn');
   if(main){
     main.classList.toggle('bulk-active',bulkMode);
-    main.textContent=bulkMode?(selectedIds.size?'선택한 '+selectedIds.size+'개 삭제':'삭제할 로그 선택'):'☑ 여러 개 삭제';
+    main.textContent=bulkMode?(selectedIds.size?'선택한 '+selectedIds.size+'개 삭제':'바꿀 로그를 눌러요'):'☑ 여러 개 선택';
   }
+  try{ document.body.classList.toggle('bulk-select-on',bulkMode); }catch(_){}
+  try{ if(typeof window.__onBulkSelectionChange==='function') window.__onBulkSelectionChange(bulkMode,[...selectedIds]); }catch(_){}
   if(cancel) cancel.style.display=bulkMode?'':'none';
 }
 function exitBulkMode(){ bulkMode=false; selectedIds.clear(); decorateBulkRows(); }
+/* 뒤에 붙는 스크립트(서식·정렬 일괄 적용)에서 선택 상태를 쓸 수 있게 열어 둔다 */
+window.__bulkSelection={
+  active:()=>bulkMode,
+  ids:()=>[...selectedIds],
+  refresh:()=>decorateBulkRows(),
+  exit:()=>exitBulkMode()
+};
 window.cancelBulkDeleteMode=exitBulkMode;
 window.toggleBulkDeleteMode=function(){
   if(!bulkMode){ bulkMode=true; selectedIds.clear(); decorateBulkRows(); return; }
@@ -9554,5 +9764,2812 @@ if(typeof previousFit==='function'){
 queue();
 })();
 </script>
+<style id="feature-pack-v4-styles">
+/* =====================================================================
+   추가 기능 팩 v3 (전부 추가형 — 기존 규칙은 덮어쓰지 않음)
+   1) 찾기·바꾸기(정규식)   2) 공백만 있어도 블럭 추가
+   3) 말풍선 인용구를 프로필 앞으로   4) 글자 색 우선   5) 글 정렬 통일
+   ===================================================================== */
+
+/* ---- 3) 말풍선 인용구 막대 ----
+   막대를 flex 아이템으로 끼우면 행의 flex 줄 폭이 23.5px 늘어나는데,
+   .n-body 의 max-width:calc(100% - 52px) 는 프로필(40)+gap(12)만 계산한 값이라
+   가운데·오른쪽 정렬에서 그만큼 줄이 넘쳐 여백 밖으로 밀려났다.
+   → 막대를 흐름에서 빼서(absolute) 행 padding-left 로만 자리를 만든다.
+     그러면 flex 줄 폭은 예전 그대로라 어떤 정렬에서도 절대 넘치지 않는다.
+   두께는 글 블럭 인용구(.quote-fmt)와 똑같이 border-left 3.5px 로 그린다. */
+.n-msg.has-row-quote>.row-quote-bar{
+  position:absolute;top:0;bottom:0;width:3.5px;box-sizing:border-box;background:none}
+/* 메신저 모드(.m-msg)는 flex가 아니라 절대배치 아바타 구조 */
+.m-msg.has-row-quote{padding-left:70.5px}
+.m-msg.has-row-quote.no-av,.m-msg.has-row-quote.mine{padding-left:20.5px}
+.m-msg.has-row-quote.mine.own-avatar-column{padding-left:20.5px;padding-right:50px}
+.m-msg.has-row-quote>.av{left:20.5px}
+.m-msg.has-row-quote.mine.own-avatar-column>.av{left:auto;right:0}
+.m-msg.has-row-quote>.row-quote-bar{position:absolute;left:0;top:0;bottom:0;width:3.5px;background:none}
+
+/* ---- 1) 찾기·바꾸기 패널 ---- */
+#accFindReplace .fr-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#accFindReplace input[type="text"]{width:100%}
+#accFindReplace .fr-opts{display:flex;flex-wrap:wrap;gap:10px 14px;margin:9px 0 4px}
+#accFindReplace .fr-opts label{display:inline-flex;align-items:center;gap:5px;
+  font-size:11.5px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none}
+#accFindReplace .fr-opts input{accent-color:var(--accent);width:14px;height:14px;margin:0;cursor:pointer}
+#accFindReplace .fr-btns{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+#accFindReplace .fr-btns .btn{flex:1 1 0;min-width:88px}
+#accFindReplace .fr-result{margin-top:8px;font-size:11.5px;font-weight:600;color:var(--muted);min-height:15px}
+#accFindReplace .fr-result.bad{color:var(--danger,#D14343)}
+@media (max-width:520px){#accFindReplace .fr-row{grid-template-columns:1fr}}
+</style>
+<script id="feature-pack-v4-script">
+(function(){
+'use strict';
+
+function toastMsg(msg){
+  let el=document.getElementById('upToast');
+  if(!el){ el=document.createElement('div'); el.id='upToast'; document.body.appendChild(el); }
+  el.innerHTML=''; const sp=document.createElement('span'); sp.textContent=msg; el.appendChild(sp);
+  el.classList.add('show');
+  clearTimeout(el.__fpT); el.__fpT=setTimeout(()=>el.classList.remove('show'),3200);
+}
+/* 글자는 하나도 없고 공백(스페이스·탭·전각공백 등)만 있는 내용인가 */
+function blankOnly(s){ s=String(s==null?'':s); return s.length>0 && !/[^\s\u200B]/.test(s); }
+
+/* ================================================================
+   4) 글자 색을 다른 서식보다 우선 — fmtText 재정의
+   기존 순서: … → 글자 색 → 괄호 자동 색  (괄호 색이 나중이라 안쪽을 덮어썼다)
+   새 순서  : 글자 색을 자리표시자로 빼둔 뒤 괄호 색을 칠하고 마지막에 되돌린다.
+   + 2) 공백만 있는 내용은 스페이스를 &nbsp;로 바꿔 빈 줄 높이를 살린다.
+   ================================================================ */
+window.fmtText=function(raw,edit){
+  raw=String(raw==null?'':raw);
+  if(blankOnly(raw)) raw=raw.replace(/ /g,'\u00A0');
+  let t=esc(raw);
+  t=t.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+  t=t.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<i>$1</i>');
+  t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
+  t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
+  t=t.replace(/==(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)==/g,(w,hhex,body)=>
+    `<mark style="background:${hhex?('#'+hhex.toUpperCase()):state.colors.highlight};color:inherit;padding:0 2px;border-radius:0">${body}</mark>`);
+  t=t.replace(/%%(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)%%/g,(w,qhex,body)=>
+    `<span class="quote-fmt" style="border-left:3.5px solid ${qhex?('#'+qhex.toUpperCase()):(state.colors.quote||'#8A8F98')}">${body}</span>`);
+  /* 직접 지정한 글자 색 → 자리표시자로 보호 */
+  const slots=[];
+  t=t.replace(/\[#([0-9A-Fa-f]{6})\]([\s\S]*?)\[\/\]/g,(w,hex,body)=>{
+    slots.push('<span data-hard-color="1" style="color:#'+hex.toUpperCase()+'">'+body+'</span>');
+    return '\u0001'+(slots.length-1)+'\u0001';
+  });
+  t=t.replace(/\[##\]([\s\S]*?)\[\/##\]/g,'<span class="text-heading text-heading-2" data-heading="2">$1</span>');
+  t=t.replace(/\[#\]([\s\S]*?)\[\/#\]/g,'<span class="text-heading text-heading-1" data-heading="1">$1</span>');
+  if(!edit&&state.parenOn){
+    t=t.replace(/(（[^（）]*）|\([^()]*\))/g,`<span style="color:${state.colors.paren}">$1</span>`);
+  }
+  t=t.replace(/\u0001(\d+)\u0001/g,(w,i)=>slots[Number(i)]||'');
+  t=t.replace(/\n/g,'<br>');
+  return t;
+};
+
+/* ================================================================
+   3) 말풍선 인용구 → 행 전체를 감싸는 인용 막대
+   ================================================================ */
+const QUOTE_ANY=/%%(?:\[#([0-9A-Fa-f]{6})\])?[\s\S]+?%%/;
+const QUOTE_ALL=/%%(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)%%/g;
+function rowQuote(content){
+  if(typeof content!=='string'||content.indexOf('%%')<0) return null;
+  const m=QUOTE_ANY.exec(content);
+  if(!m) return null;
+  return {
+    color:m[1]?('#'+m[1].toUpperCase()):(state.colors.quote||'#8A8F98'),
+    stripped:content.replace(QUOTE_ALL,'$1')
+  };
+}
+const BAR_W=3.5, BAR_GAP=17, BAR_TOTAL=BAR_W+BAR_GAP;   /* 3.5 + 17 = 20.5 */
+function barHTML(color,left){
+  /* 글 블럭 인용구(.quote-fmt)와 동일하게 border-left 로 그려 두께를 완전히 맞춘다 */
+  return '<span class="row-quote-bar" aria-hidden="true" style="position:absolute;left:'+left+'px;'
+    +'top:0;bottom:0;width:'+BAR_W+'px;box-sizing:border-box;border-left:'+BAR_W+'px solid '+color+'"></span>';
+}
+function injectBar(html,rowClass,color,mode){
+  const key='class="pmsg '+rowClass+' ';
+  const at=html.indexOf(key);
+  if(at<0) return html;
+  html=html.slice(0,at)+'class="pmsg '+rowClass+' has-row-quote '+html.slice(at+key.length);
+  /* 막대가 놓일 자리 = 현재 '말풍선 여백'(padding-left) 선. 여백을 줄이면 같이 따라온다. */
+  let left=0;
+  if(mode==='flex'){
+    left=Number(state.layout.textPadL)||0;
+    /* 인라인 style 뒤쪽에 padding-left 를 덧붙이면 같은 선언 블럭 안에서 나중 것이 이긴다 */
+    const si=html.indexOf('style="');
+    if(si>=0){
+      const end=html.indexOf('"',si+7);
+      if(end>si){
+        const sep=(html[end-1]===';'||html[end-1]==='"')?'':';';
+        html=html.slice(0,end)+sep+'padding-left:'+(left+BAR_TOTAL)+'px;'+html.slice(end);
+      }
+    }
+  }
+  const gt=html.indexOf('>');
+  if(gt<0) return html;
+  return html.slice(0,gt+1)+barHTML(color,left)+html.slice(gt+1);
+}
+function wrapRow(fnName,rowClass,mode){
+  const orig=window[fnName];
+  if(typeof orig!=='function') return;
+  window[fnName]=function(m,mem,gap,continued){
+    const q=(m&&typeof m.content==='string')?rowQuote(m.content):null;
+    const src=q?Object.assign({},m,{content:q.stripped}):m;
+    const out=orig.call(this,src,mem,gap,continued);
+    return q?injectBar(out,rowClass,q.color,mode):out;
+  };
+}
+wrapRow('normalRow','n-msg','flex');
+wrapRow('logRow','n-msg','flex');
+wrapRow('msgrRow','m-msg','abs');
+
+/* 막대가 흐름 밖(absolute)에 있으므로 flex 줄 폭은 인용구가 없을 때와 완전히 동일하다.
+   → 가운데·오른쪽 정렬의 넘침이 구조적으로 사라지고, 프로필 반쪽 기준 가운데 보정도
+     늘어난 padding-left 안쪽에서만 움직이므로 막대보다 왼쪽으로 갈 수 없다. */
+
+/* ================================================================
+   5) 글 정렬 — 블럭마다 따로
+   (여러 개 선택 모드에서 고른 블럭에만 일괄 적용)
+   ================================================================ */
+const ALIGNS=['justify','left','center','right'];
+function syncAlignSeg(){
+  const seg=document.getElementById('alignSeg'); if(!seg) return;
+  const a=state.draftAlign||'left';
+  [...seg.children].forEach((b,i)=>b.classList.toggle('on',ALIGNS[i]===a));
+}
+window.__syncAlignSeg=syncAlignSeg;
+window.setAlign=function(a){
+  a=ALIGNS.indexOf(a)>=0?a:'left';
+  /* '여러 개 선택'으로 고른 블럭이 있으면 그 블럭에만 적용 */
+  if(typeof window.__bulkApplyAlign==='function'&&window.__bulkApplyAlign(a)){ return; }
+  state.draftAlign=a;
+  syncAlignSeg();
+  /* 지금 수정 중인 글 블럭이 있으면 그 블럭만 바로 반영 */
+  try{
+    if(typeof composerEditId!=='undefined'&&composerEditId){
+      const m=(state.messages||[]).find(x=>x&&x.id===composerEditId);
+      if(m&&m.type==='text'&&m.align!==a){ m.align=a; renderPreview(); }
+    }
+  }catch(_){}
+};
+const _sync=window.syncControlsFromState;
+if(typeof _sync==='function'){
+  window.syncControlsFromState=function(){
+    const r=_sync.apply(this,arguments);
+    syncAlignSeg();
+    return r;
+  };
+}
+syncAlignSeg();
+
+/* ================================================================
+   2) 공백만 입력해도 그대로 블럭으로 추가
+   ================================================================ */
+/* 작성창 value 게터가 줄 끝 공백을 잘라내서 " " 한 칸이 ""가 돼 버린다.
+   공백만 있는 입력일 때만 자르지 않고 그대로 돌려준다. (그 외 동작은 동일) */
+(function keepBlankValue(){
+  const ed=document.getElementById('msgContent');
+  if(!ed||typeof htmlToMarkup!=='function') return;
+  try{
+    Object.defineProperty(ed,'value',{
+      configurable:true,
+      get(){
+        const raw=htmlToMarkup(ed).replace(/\n{3,}/g,'\n\n');
+        if(blankOnly(raw)) return raw;
+        return raw.replace(/[ \t]+$/gm,'');
+      },
+      set(v){ ed.innerHTML=v?fmtText(String(v),true):''; }
+    });
+  }catch(_){}
+})();
+/* 메시지 추가: 공백만 있어도 통과 */
+const _addMessage=window.addMessage;
+window.addMessage=function(){
+  try{
+    const editing=(typeof composerEditId!=='undefined')&&composerEditId;
+    const raw=msgContent.value;
+    if(!editing&&blankOnly(raw)){
+      const t=state.composerType;
+      if(t==='text'){
+        state.messages.push({id:uid(),type:'text',content:raw,align:state.draftAlign||'left'});
+        msgContent.value=''; renderPreview(); return;
+      }
+      if(t==='chat'){
+        const sid=senderSel.value;
+        if(!sid){ alert('발신자를 먼저 선택해 주세요. (멤버 추가가 필요해요)'); return; }
+        state.messages.push({id:uid(),type:'chat',senderId:sid,content:raw});
+        msgContent.value=''; renderPreview(); return;
+      }
+    }
+  }catch(_){}
+  return _addMessage.apply(this,arguments);
+};
+/* 수정 완료: 공백만 있어도 통과 */
+const _commit=window.commitComposerEdit;
+window.commitComposerEdit=function(){
+  try{
+    const m=state.messages.find(x=>x.id===composerEditId);
+    const raw=msgContent.value;
+    if(m&&blankOnly(raw)){
+      const base=m.type||'chat';
+      const target=((base==='text'||base==='chat')&&(state.composerType==='text'||state.composerType==='chat'))
+        ? state.composerType : base;
+      if(target==='text'){
+        m.type='text'; m.content=raw; m.align=state.draftAlign||'left';
+        delete m.senderId; endComposerEdit(); renderPreview(); return;
+      }
+      if(target==='chat'){
+        const sid=senderSel.value;
+        if(!sid){ alert('발신자를 선택해 주세요.'); return; }
+        m.type='chat'; m.senderId=sid; m.content=raw;
+        delete m.align; endComposerEdit(); renderPreview(); return;
+      }
+    }
+  }catch(_){}
+  return _commit.apply(this,arguments);
+};
+/* 말풍선·로그 행은 content.trim() 으로 비었는지 보기 때문에 공백만 있으면 사라진다.
+   보이지 않는 폭 없는 문자를 앞에 덧대 '내용 있음'으로 인식시킨다. */
+['normalRow','logRow','msgrRow'].forEach(fn=>{
+  const orig=window[fn];
+  if(typeof orig!=='function') return;
+  window[fn]=function(m,mem,gap,continued){
+    if(m&&blankOnly(m.content)) m=Object.assign({},m,{content:'\u200B'+m.content});
+    return orig.call(this,m,mem,gap,continued);
+  };
+});
+
+/* ================================================================
+   1) 찾기·바꾸기 (정규식) — '텍스트·간격' 패널
+   서식 기호(**, ==[#hex], %%, [#hex]…[/] 등)는 건드리지 않고
+   실제 글자 부분에만 적용한다.
+   ================================================================ */
+const MARK_TOKEN=/(\*\*|~~|\+\+|==\[#[0-9A-Fa-f]{6}\]|==|%%\[#[0-9A-Fa-f]{6}\]|%%|\[#[0-9A-Fa-f]{6}\]|\[\/\]|\[##\]|\[\/##\]|\[#\]|\[\/#\]|\*)/g;
+let frUndo=null;
+
+function frExpand(tpl,match,groups){
+  return String(tpl).replace(/\$(\d{1,2}|&|\$)/g,(w,g)=>{
+    if(g==='$') return '$';
+    if(g==='&') return match;
+    const i=parseInt(g,10);
+    return groups[i-1]!=null?groups[i-1]:'';
+  });
+}
+function frRegex(find,useRe,caseSens){
+  const flags='g'+(caseSens?'':'i');
+  return useRe ? new RegExp(find,flags)
+               : new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),flags);
+}
+function frReplaceContent(content,re,rep,useRe,counter){
+  const parts=String(content).split(MARK_TOKEN);
+  for(let i=0;i<parts.length;i+=2){
+    const seg=parts[i];
+    if(!seg) continue;
+    re.lastIndex=0;
+    parts[i]=seg.replace(re,function(match){
+      counter.n++;
+      if(!useRe) return rep;
+      let rest=[].slice.call(arguments,1);
+      if(rest.length&&typeof rest[rest.length-1]==='object') rest.pop();
+      rest=rest.slice(0,-2);
+      return frExpand(rep,match,rest);
+    });
+  }
+  return parts.join('');
+}
+function frTargets(){
+  const on=id=>{ const e=document.getElementById(id); return !e||e.checked; };
+  return {chat:on('frInChat'),text:on('frInText'),divider:on('frInDivider')};
+}
+function frSay(msg,bad){
+  const el=document.getElementById('frResult'); if(!el) return;
+  el.textContent=msg||'';
+  el.classList.toggle('bad',!!bad);
+}
+function frRun(doReplace){
+  const findEl=document.getElementById('frFind');
+  const repEl=document.getElementById('frReplace');
+  if(!findEl) return;
+  const find=findEl.value;
+  if(!find){ frSay('찾을 내용을 입력해 주세요.',true); return; }
+  const useRe=!!(document.getElementById('frRegex')||{}).checked;
+  const caseSens=!!(document.getElementById('frCase')||{}).checked;
+  let re;
+  try{ re=frRegex(find,useRe,caseSens); }
+  catch(err){ frSay('정규식이 올바르지 않아요 — '+err.message,true); return; }
+  const rep=repEl?repEl.value:'';
+  const tg=frTargets();
+  const counter={n:0};
+  const before=[];
+  let blocks=0;
+  (state.messages||[]).forEach(m=>{
+    if(!m||typeof m.content!=='string') return;
+    const type=m.type||'chat';
+    if(type==='chat'&&!tg.chat) return;
+    if(type==='text'&&!tg.text) return;
+    if(type==='divider'&&!tg.divider) return;
+    if(type==='image') return;
+    const hit={n:0};
+    const next=frReplaceContent(m.content,re,rep,useRe,hit);
+    if(!hit.n) return;
+    counter.n+=hit.n; blocks++;
+    if(doReplace&&next!==m.content){ before.push({id:m.id,content:m.content}); m.content=next; }
+  });
+  if(!counter.n){ frSay('일치하는 내용이 없어요.'); return; }
+  if(!doReplace){ frSay('🔎 '+counter.n+'곳 발견 (블럭 '+blocks+'개)'); return; }
+  frUndo=before;
+  const btn=document.getElementById('frUndoBtn'); if(btn) btn.disabled=!before.length;
+  try{ renderPreview(); }catch(_){}
+  frSay('✓ '+counter.n+'곳을 바꿨어요 (블럭 '+blocks+'개)');
+  toastMsg('✓ '+counter.n+'곳을 바꿨어요');
+}
+window.frFindOnly=function(){ frRun(false); };
+window.frReplaceAll=function(){ frRun(true); };
+window.frUndoReplace=function(){
+  if(!frUndo||!frUndo.length){ frSay('되돌릴 내용이 없어요.'); return; }
+  frUndo.forEach(o=>{
+    const m=(state.messages||[]).find(x=>x.id===o.id);
+    if(m) m.content=o.content;
+  });
+  frUndo=null;
+  const btn=document.getElementById('frUndoBtn'); if(btn) btn.disabled=true;
+  try{ renderPreview(); }catch(_){}
+  frSay('↩ 바꾸기 전으로 되돌렸어요.');
+  toastMsg('↩ 되돌렸어요');
+};
+(function insertFindReplaceUI(){
+  const body=document.querySelector('#panel-font .tool-panel-body');
+  if(!body||document.getElementById('accFindReplace')) return;
+  const sec=document.createElement('div');
+  sec.className='flat-tool-section';
+  sec.id='accFindReplace';
+  sec.innerHTML=
+    '<div class="flat-tool-title"><strong>🔎 찾기 · 바꾸기</strong></div>'
+   +'<div class="flat-tool-body">'
+   +'<div class="fr-row">'
+   +'<div class="field" style="margin:0"><label class="lb">찾을 내용</label>'
+   +'<input id="frFind" type="text" placeholder="예) 세르게이"></div>'
+   +'<div class="field" style="margin:0"><label class="lb">바꿀 내용</label>'
+   +'<input id="frReplace" type="text" placeholder="비우면 삭제"></div>'
+   +'</div>'
+   +'<div class="fr-opts">'
+   +'<label><input type="checkbox" id="frRegex">정규식 사용</label>'
+   +'<label><input type="checkbox" id="frCase">대소문자 구분</label>'
+   +'<label><input type="checkbox" id="frInChat" checked>말풍선</label>'
+   +'<label><input type="checkbox" id="frInText" checked>글</label>'
+   +'<label><input type="checkbox" id="frInDivider" checked>가름선</label>'
+   +'</div>'
+   +'<div class="fr-btns">'
+   +'<button class="btn sm" type="button" onclick="frFindOnly()">🔎 몇 개인지 보기</button>'
+   +'<button class="btn sm primary" type="button" onclick="frReplaceAll()">모두 바꾸기</button>'
+   +'<button class="btn sm" type="button" id="frUndoBtn" onclick="frUndoReplace()" disabled>↩ 되돌리기</button>'
+   +'</div>'
+   +'<div class="fr-result" id="frResult"></div>'
+   +'<div class="field-help" style="margin-top:8px">프로젝트 안의 모든 블럭에 한 번에 적용돼요. '
+   +'굵게·형광펜·색 같은 서식 기호는 건드리지 않고 글자만 바꿔요. '
+   +'정규식을 켜면 <code>(.+?)</code> 같은 패턴과 <code>$1</code> 치환을 쓸 수 있어요.</div>'
+   +'</div>';
+  body.appendChild(sec);
+  ['frFind','frReplace'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){ e.preventDefault(); frRun(false); }
+    });
+  });
+})();
+
+
+/* 같은 발신자의 연속 인용 말풍선은 행 사이 여백까지 막대를 늘려
+   하나의 끊김 없는 인용선처럼 보이게 한다. 인용이 없거나 발신자가 바뀌면 연결하지 않는다. */
+function stitchConsecutiveRowQuotes(){
+  const chatEl=document.getElementById('chat');
+  if(!chatEl) return;
+  const rows=Array.from(chatEl.children);
+  rows.forEach((row,index)=>{
+    if(!row.classList||!row.classList.contains('pmsg')) return;
+    const bar=row.querySelector(':scope > .row-quote-bar');
+    if(!bar) return;
+    bar.style.bottom='0px';
+    const next=rows[index+1];
+    if(!next||!next.classList||!next.classList.contains('has-row-quote')||!next.classList.contains('continuation')) return;
+    const gap=parseFloat(row.style.marginBottom||getComputedStyle(row).marginBottom)||0;
+    if(gap>0) bar.style.bottom=(-gap)+'px';
+  });
+}
+const _renderPreviewWithQuoteStitch=window.renderPreview;
+if(typeof _renderPreviewWithQuoteStitch==='function'){
+  window.renderPreview=function(){
+    const result=_renderPreviewWithQuoteStitch.apply(this,arguments);
+    stitchConsecutiveRowQuotes();
+    return result;
+  };
+}
+stitchConsecutiveRowQuotes();
+
+})();
+</script>
+
+
+<script id="log-hidden-name-avatar-center-fix">
+(function(){
+  'use strict';
+
+  /* 이름이 없는 로그는 문단 전체 높이가 아니라 첫 줄의 line-height를 기준으로
+     프로필 사진 가운데에 맞춰요. 첫 줄 아래의 나머지 줄은 자연스럽게 아래로
+     이어지고, 프로필만 남아서 생기는 아래쪽 빈 높이는 행에서 제외합니다. */
+  function alignHiddenLogFirstRows(){
+    const chat=document.getElementById('chat');
+    if(!chat) return;
+    chat.querySelectorAll('.n-msg.log-row.log-name-hidden:not(.continuation):not(.no-av)').forEach(row=>{
+      const avatar=row.querySelector(':scope > .av');
+      const body=row.querySelector(':scope > .n-body');
+      const plain=body&&body.querySelector(':scope > .n-plain');
+      if(!avatar||!body||!plain) return;
+
+      /* 이전 렌더 보정을 제거한 뒤 현재 폰트·줄 간격으로 다시 계산해요. */
+      row.style.removeProperty('align-items');
+      row.style.removeProperty('--log-first-line-offset');
+      row.style.removeProperty('--log-avatar-overhang');
+      body.style.removeProperty('padding-top');
+      avatar.style.removeProperty('margin-bottom');
+
+      const avatarHeight=avatar.getBoundingClientRect().height;
+      const plainStyle=getComputedStyle(plain);
+      let firstLineHeight=parseFloat(plainStyle.lineHeight);
+      if(!Number.isFinite(firstLineHeight)){
+        firstLineHeight=parseFloat(plainStyle.fontSize)||0;
+      }
+      if(!avatarHeight||!firstLineHeight) return;
+
+      /* 첫 줄 line box의 중심 = 프로필 사진의 중심 */
+      const firstLineOffset=Math.max(0,(avatarHeight-firstLineHeight)/2);
+      row.style.setProperty('--log-first-line-offset',firstLineOffset.toFixed(2)+'px');
+
+      /* padding이 반영된 실제 본문 높이를 잰 뒤, 프로필 아래쪽의 남는 부분만
+         음수 margin으로 접어 다음 연속 로그가 정해진 간격에 맞게 올라오게 해요. */
+      const bodyHeight=body.getBoundingClientRect().height;
+      const lowerAvatarRemainder=Math.max(0,avatarHeight-bodyHeight);
+      row.style.setProperty('--log-avatar-overhang',(-lowerAvatarRemainder).toFixed(2)+'px');
+    });
+  }
+  window.alignHiddenLogFirstRows=alignHiddenLogFirstRows;
+
+  const previousRenderPreview=window.renderPreview;
+  if(typeof previousRenderPreview==='function'){
+    window.renderPreview=function(){
+      const result=previousRenderPreview.apply(this,arguments);
+      alignHiddenLogFirstRows();
+      requestAnimationFrame(alignHiddenLogFirstRows);
+      return result;
+    };
+  }
+
+  window.addEventListener('resize',alignHiddenLogFirstRows,{passive:true});
+  if(document.fonts&&document.fonts.ready){
+    document.fonts.ready.then(alignHiddenLogFirstRows).catch(()=>{});
+  }
+  alignHiddenLogFirstRows();
+})();
+</script>
+
+<script id="quote-first-autobubble-fix">
+/* =====================================================================
+   인용구 우선 패치 (추가형 — 기존 동작은 그대로)
+   말풍선/글에 인용구(%%…%%)나 굵게·형광펜 같은 서식이 걸리면
+   내용 앞뒤에 마크업 문자가 끼어들어
+     · "" 자동 말풍선   · [이름｜] 이름표 삭제   · "" 기호 삭제
+   가 문장을 못 알아보고 실패했다.
+   → 서식 마크업을 '투명하게' 건너뛴 순수 텍스트로 먼저 판정하고,
+     잘라낼 글자만 원본에서 정확히 제거한다. 인용구 마크업은 100% 보존.
+   → 이름표만 지워서 빈 껍데기가 된 서식(**이공팔｜** → ****)은 같이 걷어낸다.
+   ===================================================================== */
+(function(){
+'use strict';
+
+/* 서식 마크업 토큰 (긴 것부터 — [#RRGGBB] 가 [#] 보다 먼저 와야 한다) */
+const FMT_TOKEN=/%%\[#[0-9A-Fa-f]{6}\]|==\[#[0-9A-Fa-f]{6}\]|\[#[0-9A-Fa-f]{6}\]|\[\/##\]|\[##\]|\[\/#\]|\[#\]|\[\/\]|%%|==|\*\*|~~|\+\+|\*/g;
+const NAME_RE=/^\s*\[?([^\[\]｜|]{1,40})[｜|]\s*([\s\S]*)$/;
+const QUOTE_CH=/["“”「」]/;
+
+/* 원본을 [마크업 토큰 / 글자] 조각으로 쪼개고, 마크업을 뺀 순수 텍스트도 만든다 */
+function parseParts(s){
+  const parts=[]; let plain='', last=0, m;
+  FMT_TOKEN.lastIndex=0;
+  const pushText=(a,b)=>{ for(let i=a;i<b;i++){ parts.push({m:false,s:s[i],pi:plain.length}); plain+=s[i]; } };
+  while((m=FMT_TOKEN.exec(s))){
+    pushText(last,m.index);
+    parts.push({m:true,s:m[0]});
+    last=m.index+m[0].length;
+    if(!m[0].length) FMT_TOKEN.lastIndex++;
+  }
+  pushText(last,s.length);
+  return {parts:parts,plain:plain};
+}
+function kindOf(t){
+  if(t.slice(0,2)==='%%') return 'q';
+  if(t.slice(0,2)==='==') return 'h';
+  if(t==='**') return 'b';
+  if(t==='*')  return 'i';
+  if(t==='~~') return 's';
+  if(t==='++') return 'u';
+  if(t==='[/]') return '/c';
+  if(t==='[/#]') return '/h1';
+  if(t==='[/##]') return '/h2';
+  if(t==='[#]') return 'h1';
+  if(t==='[##]') return 'h2';
+  return 'c';
+}
+/* 여는 토큰 a 와 닫는 토큰 b 가 한 쌍인가 */
+function canPair(a,b){
+  const ka=kindOf(a), kb=kindOf(b);
+  if(ka==='c'&&kb==='/c') return true;
+  if(ka==='h1'&&kb==='/h1') return true;
+  if(ka==='h2'&&kb==='/h2') return true;
+  if(ka!==kb) return false;
+  if(ka==='q') return b==='%%';
+  if(ka==='h') return b==='==';
+  return ka==='b'||ka==='i'||ka==='s'||ka==='u';
+}
+/* 순수 텍스트 기준 구간을 원본에서 제거.
+   글자가 지워져 속이 텅 빈 서식 쌍만 함께 지운다.
+   (원래부터 붙어 있던 ==가====나== 같은 경계는 절대 건드리지 않는다) */
+function cutRanges(content,ranges){
+  const pp=parseParts(content), parts=pp.parts;
+  const del=Object.create(null);
+  for(let r=0;r<ranges.length;r++){ for(let i=ranges[r][0];i<ranges[r][1];i++) del[i]=1; }
+  for(let i=0;i<parts.length;i++){ if(!parts[i].m&&del[parts[i].pi]) parts[i].dead=true; }
+  let loop=true;
+  while(loop){
+    loop=false;
+    for(let i=0;i<parts.length;i++){
+      const a=parts[i];
+      if(a.dead||!a.m) continue;
+      let k=i+1, gone=0, j=-1, ok=true;
+      while(k<parts.length){
+        const p=parts[k];
+        if(p.m){ if(p.dead){ k++; continue; } j=k; break; }
+        if(p.dead){ gone++; k++; continue; }
+        ok=false; break;
+      }
+      if(ok&&j>=0&&gone>0&&canPair(a.s,parts[j].s)){ a.dead=true; parts[j].dead=true; loop=true; }
+    }
+  }
+  let out='';
+  for(let i=0;i<parts.length;i++){ if(!parts[i].dead) out+=parts[i].s; }
+  return out;
+}
+/* [이름｜…] 앞머리 인식 — 순수 텍스트 기준 */
+function namePrefixInfo(plain){
+  const m=NAME_RE.exec(plain||'');
+  if(!m) return null;
+  const rest=m[2];
+  const prefixLen=plain.length-rest.length;
+  const trimmed=rest.replace(/\s+$/,'');
+  const ranges=[[0,prefixLen]];
+  if(trimmed.endsWith(']')) ranges.push([prefixLen+trimmed.length-1, plain.length]);
+  return {name:m[1].trim(), ranges:ranges};
+}
+function memberByName(name){
+  if(typeof matchMemberByName==='function') return matchMemberByName(name);
+  if(!name||!state.members.length) return null;
+  const n=name.trim(); if(!n) return null;
+  return state.members.find(x=>(x.name||'').trim()===n)
+      || state.members.find(x=>{const xn=(x.name||'').trim(); return xn&&(xn.includes(n)||n.includes(xn));})
+      || null;
+}
+
+window.bubbleViewMsg=function(m){
+  if(!m||typeof m.content!=='string') return m;
+  const baseType=m.type||'chat';
+  if(baseType!=='chat'&&baseType!=='text') return m;
+  let effType=baseType, senderId=m.senderId, content=m.content, changed=false;
+
+  const pp=parseParts(content);         /* ← 인용구 등 서식을 벗겨낸 판정용 텍스트 */
+  const pre=namePrefixInfo(pp.plain);
+
+  /* 1) "" 자동 말풍선 — 큰따옴표·이름 판정을 순수 텍스트로 (기존 고정 로직 그대로) */
+  if(state.autoQuoteBubble&&baseType==='text'&&!m.noAutoQuote&&QUOTE_CH.test(pp.plain)&&state.members.length){
+    let mem=null;
+    if(m.autoSenderId){
+      mem=state.members.find(x=>x.id===m.autoSenderId)||null;
+      if(!mem) delete m.autoSenderId;
+    }
+    if(!mem){
+      const matched=pre&&memberByName(pre.name);
+      if(matched){ mem=matched; m.autoSenderId=mem.id; }
+      else mem=state.members[0];
+    }
+    effType='chat'; senderId=mem.id; changed=true;
+  }
+  /* 2) [이름｜] 이름표 삭제 — 인용구 마크업은 남기고 이름표 글자만 제거 */
+  if(state.stripSpeakerName&&pre){ content=cutRanges(content,pre.ranges); changed=true; }
+  /* 3) "" 기호 삭제 — 말풍선(자동 변환 포함)에서만 */
+  if(state.stripQuoteMarks&&effType==='chat'&&/["“”「」]/.test(content)){
+    content=content.replace(/["“”「」]/g,''); changed=true;
+  }
+  if(!changed) return m;
+  const c=Object.assign({},m,{type:effType,content:content});
+  if(effType==='chat') c.senderId=senderId;
+  return c;
+};
+
+if(typeof renderPreview==='function'){ try{ renderPreview(); }catch(_){} }
+})();
+</script>
+
+<script id="clear-keeps-members-fix">
+/* =====================================================================
+   '전부 지우기' 는 메시지만 지우고 멤버는 남긴다 (추가형)
+   - 기존 doClear 를 그대로 실행한 뒤 멤버 목록과 '나' 지정만 되돌린다
+   - 실행 취소(undo)는 원래대로 동작
+   ===================================================================== */
+(function(){
+'use strict';
+const prevDoClear=window.doClear;
+if(typeof prevDoClear!=='function') return;
+window.doClear=function(){
+  const keepMembers=(state.members||[]).slice();
+  const keepMe=state.meId||'';
+  const r=prevDoClear.apply(this,arguments);
+  state.members=keepMembers;
+  state.meId=keepMembers.some(x=>x&&x.id===keepMe)?keepMe:'';
+  try{ renderMembers(); }catch(_){}
+  try{ renderSenders(); }catch(_){}
+  try{ renderMeSelect(); }catch(_){}
+  try{ renderPreview(); }catch(_){}
+  try{
+    toast(keepMembers.length?('메시지를 전부 지웠어요 · 멤버 '+keepMembers.length+'명은 그대로예요'):'전부 지웠어요',
+      {action:'실행 취소',onAction:undoLast,duration:8000});
+  }catch(_){}
+  return r;
+};
+})();
+</script>
+
+<style id="paren-live-editor-styles">
+/* 작성창·수정창에서만 쓰이는 괄호 자동 색 표시용 껍데기.
+   inline style 이 아니라 CSS 변수를 쓰므로 저장 마크업에는 전혀 남지 않는다. */
+.paren-auto{color:var(--paren-auto-color,inherit)}
+</style>
+<script id="paren-live-editor">
+/* =====================================================================
+   괄호 ( ) 자동 색을 작성창·수정창에서도 실시간으로 보여준다 (추가형)
+   - 굵게·형광펜처럼 입력창 안에서 바로 색이 보이므로
+     글자 색을 덮어씌울 때 어디가 자동 색인지 구분하기 쉽다
+   - 표시 전용: htmlToMarkup 이 이 span 을 그냥 통과시키므로
+     저장 내용(마크업)에는 아무 것도 추가되지 않는다
+   - 괄호 인식은 '입력창 전체 글자'를 기준으로 하므로, 안쪽 일부에 굵게나
+     다른 글자 색이 걸려 조각이 나뉘어도 괄호 한 덩어리로 본다.
+     직접 색을 입힌 조각만 건너뛰어 그 부분은 지정한 색이 이긴다.
+   ===================================================================== */
+(function(){
+'use strict';
+const PAREN_RE=/（[^（）]*）|\([^()]*\)/g;
+let composing=false, busy=false;
+
+function parenColor(){ return (state&&state.colors&&state.colors.paren)||'#8A8F98'; }
+
+/* 이미 직접 지정한 글자 색 안쪽인가 (mark 의 color:inherit 은 제외) */
+function hardColored(node,root){
+  let el=node&&node.parentNode;
+  while(el&&el!==root&&el.nodeType===1){
+    const st=(el.getAttribute&&el.getAttribute('style'))||'';
+    const m=/(?:^|;)\s*color\s*:\s*([^;]+)/.exec(st);
+    if(m){
+      const v=m[1].trim().toLowerCase();
+      if(v&&v!=='inherit'&&v!=='currentcolor'&&v!=='unset'&&v!=='initial') return true;
+    }
+    if(el.tagName==='FONT'&&el.getAttribute('color')) return true;
+    el=el.parentNode;
+  }
+  return false;
+}
+function textNodes(root){
+  const out=[], w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+  let n; while((n=w.nextNode())) out.push(n);
+  return out;
+}
+/* 껍데기(.paren-auto)를 '없는 셈' 친 구조 지문.
+   껍데기를 붙이거나 떼어도 값이 변하지 않으므로 무한 반복이 생기지 않는다. */
+function sig(root){
+  let s=(state.parenOn?'1':'0')+'|'+parenColor()+'|';
+  (function walk(n){
+    for(let c=n.firstChild;c;c=c.nextSibling){
+      if(c.nodeType===3){ s+=c.nodeValue; continue; }
+      if(c.nodeType!==1) continue;
+      if(c.classList&&c.classList.contains('paren-auto')){ walk(c); continue; }
+      s+='\u0002'+c.tagName+':'+((c.getAttribute&&c.getAttribute('style'))||'')+'\u0002';
+      walk(c);
+      s+='\u0003';
+    }
+  })(root);
+  return s;
+}
+
+function undecorate(root){
+  const list=root.querySelectorAll('span.paren-auto');
+  for(let i=0;i<list.length;i++){
+    const sp=list[i], p=sp.parentNode; if(!p) continue;
+    while(sp.firstChild) p.insertBefore(sp.firstChild,sp);
+    p.removeChild(sp);
+  }
+  try{ root.normalize(); }catch(_){}
+}
+function paint(root){
+  if(!state.parenOn) return;
+  /* 입력창 전체를 한 줄로 이어붙여 괄호 구간을 먼저 찾는다 —
+     굵게·글자 색 때문에 조각이 나뉘어도 괄호가 끊기지 않는다 */
+  const nodes=textNodes(root);
+  const info=[]; let full='';
+  for(let i=0;i<nodes.length;i++){
+    const v=nodes[i].nodeValue;
+    info.push({n:nodes[i],a:full.length,b:full.length+v.length});
+    full+=v;
+  }
+  PAREN_RE.lastIndex=0;
+  const ranges=[]; let m;
+  while((m=PAREN_RE.exec(full))) ranges.push([m.index,m.index+m[0].length]);
+  if(!ranges.length) return;
+  for(let i=0;i<info.length;i++){
+    const it=info[i], t=it.n;
+    if(hardColored(t,root)) continue;          /* 직접 지정한 색이 이긴다 */
+    const segs=[];
+    for(let k=0;k<ranges.length;k++){
+      const a=Math.max(ranges[k][0],it.a), b=Math.min(ranges[k][1],it.b);
+      if(b>a) segs.push([a-it.a,b-it.a]);
+    }
+    if(!segs.length) continue;
+    const s=t.nodeValue;
+    const frag=document.createDocumentFragment();
+    let last=0;
+    for(let k=0;k<segs.length;k++){
+      if(segs[k][0]>last) frag.appendChild(document.createTextNode(s.slice(last,segs[k][0])));
+      const sp=document.createElement('span');
+      sp.className='paren-auto';
+      sp.textContent=s.slice(segs[k][0],segs[k][1]);
+      frag.appendChild(sp);
+      last=segs[k][1];
+    }
+    if(last<s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+    if(t.parentNode) t.parentNode.replaceChild(frag,t);
+  }
+}
+
+/* 커서 위치를 '글자 수'로 기억했다가 되돌린다 */
+function caretOffset(root){
+  const sel=window.getSelection();
+  if(!sel||!sel.rangeCount) return null;
+  const r=sel.getRangeAt(0);
+  if(!root.contains(r.startContainer)) return null;
+  const pre=document.createRange();
+  pre.selectNodeContents(root);
+  try{ pre.setEnd(r.startContainer,r.startOffset); }catch(_){ return null; }
+  return pre.toString().length;
+}
+function setCaret(root,off){
+  if(off==null) return;
+  const list=textNodes(root);
+  let acc=0,target=null,to=0;
+  for(let i=0;i<list.length;i++){
+    const len=list[i].nodeValue.length;
+    if(acc+len>=off){ target=list[i]; to=off-acc; break; }
+    acc+=len;
+  }
+  const sel=window.getSelection(), r=document.createRange();
+  if(target) r.setStart(target,Math.max(0,Math.min(to,target.nodeValue.length)));
+  else { r.selectNodeContents(root); r.collapse(false); }
+  r.collapse(true);
+  try{ sel.removeAllRanges(); sel.addRange(r); }catch(_){}
+}
+
+function decorate(root){
+  if(!root||composing||busy) return;
+  document.documentElement.style.setProperty('--paren-auto-color',parenColor());
+  const now=sig(root);
+  if(root.__parenSig===now) return;
+  const focused=document.activeElement===root||root.contains(document.activeElement);
+  const off=focused?caretOffset(root):null;
+  busy=true;
+  try{
+    undecorate(root);
+    paint(root);
+    if(focused) setCaret(root,off);
+    root.__parenSig=sig(root);
+  }finally{
+    setTimeout(()=>{busy=false;},0);
+  }
+}
+function schedule(root){
+  if(!root) return;
+  clearTimeout(root.__parenT);
+  root.__parenT=setTimeout(()=>decorate(root),180);
+}
+
+/* 입력·서식 적용·붙여넣기 전부를 한 번에 잡는다 */
+function watch(root){
+  if(!root||root.__parenWatched) return;
+  root.__parenWatched=1;
+  root.addEventListener('compositionstart',()=>{composing=true;});
+  root.addEventListener('compositionend',()=>{composing=false;schedule(root);});
+  try{
+    /* 우리가 만든 변화도 일단 예약만 해 둔다 — 구조 지문이 같으면 어차피 아무 일도 안 한다.
+       (여기서 걸러내면 로드 직후 들어온 진짜 변경까지 놓친다) */
+    new MutationObserver(()=>{ schedule(root); })
+      .observe(root,{childList:true,subtree:true,characterData:true});
+  }catch(_){}
+  decorate(root);
+}
+
+const composer=document.getElementById('msgContent');
+if(composer) watch(composer);
+
+/* 미리보기 안에서 바로 고칠 때(더블클릭 수정)도 똑같이 */
+const prevEnterEdit=window.enterEdit;
+if(typeof prevEnterEdit==='function'){
+  window.enterEdit=function(el){
+    const r=prevEnterEdit.apply(this,arguments);
+    try{ if(el&&el.getAttribute&&el.getAttribute('contenteditable')==='true') watch(el); }catch(_){}
+    return r;
+  };
+}
+/* 괄호 색 On/Off · 색 변경 시 작성창도 즉시 반영 (setParen 이 renderPreview 를 부른다) */
+const prevRenderPreview=window.renderPreview;
+if(typeof prevRenderPreview==='function'){
+  window.renderPreview=function(){
+    const r=prevRenderPreview.apply(this,arguments);
+    try{ if(composer) decorate(composer); }catch(_){}
+    return r;
+  };
+}
+})();
+</script>
+
+<script id="paren-fragment-color">
+/* =====================================================================
+   괄호 자동 색을 '조각 단위'로 칠한다 (미리보기·저장본 · 추가형)
+   기존 방식: 괄호 한 덩어리를 span 으로 통째로 감쌌다.
+     → 괄호 여는 쪽만 직접 색을 입히면 태그가 서로 엇갈려(=깨져)
+       나머지 글자가 자동 색을 잃어버렸다.
+   새 방식: 괄호 구간을 먼저 찾은 뒤, 태그 경계마다 끊어 조각별로 칠한다.
+     → 태그가 절대 엇갈리지 않고, 직접 지정한 색 구간은 건너뛰므로
+       그 부분은 지정한 색이 그대로 이긴다.
+     → 작성창(실시간 표시)과 미리보기가 완전히 같은 결과가 된다.
+   ===================================================================== */
+(function(){
+'use strict';
+const PAREN_RE=/（[^（）]*）|\([^()]*\)/g;
+const VOID_TAG=/^<(br|img|hr|input|wbr|source|col)\b/i;
+function blankOnly(s){ s=String(s==null?'':s); return s.length>0 && !/[^\s\u200B]/.test(s); }
+
+/* html 안의 태그는 건드리지 않고, 글자만 괄호 구간인지 판정해서 조각별로 칠한다 */
+function applyParenColor(html,color){
+  if(!html||html.indexOf('(')<0&&html.indexOf('（')<0) return html;
+  const parts=[]; const stack=[]; let hard=0, i=0;
+  while(i<html.length){
+    if(html[i]==='<'){
+      const j=html.indexOf('>',i);
+      if(j<0){ for(;i<html.length;i++) parts.push({t:0,s:html[i],h:hard>0}); break; }
+      const tag=html.slice(i,j+1);
+      parts.push({t:1,s:tag});
+      if(tag.charAt(1)==='/'){ const top=stack.pop(); if(top) hard-=top; }
+      else if(!VOID_TAG.test(tag)&&tag.charAt(tag.length-2)!=='/'){
+        const h=/data-hard-color/.test(tag)?1:0; stack.push(h); hard+=h;
+      }
+      i=j+1; continue;
+    }
+    parts.push({t:0,s:html[i],h:hard>0});
+    i++;
+  }
+  /* 태그를 뺀 글자만 이어붙여 괄호 구간을 찾는다 */
+  let text=''; const idx=[];
+  for(let k=0;k<parts.length;k++){ if(!parts[k].t){ idx.push(k); text+=parts[k].s; } }
+  const inP=new Array(parts.length).fill(false);
+  PAREN_RE.lastIndex=0; let m, found=false;
+  while((m=PAREN_RE.exec(text))){
+    found=true;
+    for(let q=m.index;q<m.index+m[0].length;q++) inP[idx[q]]=true;
+  }
+  if(!found) return html;
+  /* 태그 경계마다 끊어 조각별로 감싼다 — 태그가 엇갈릴 일이 없다 */
+  const OPEN='<span style="color:'+color+'">';
+  let out='', open=false;
+  for(let k=0;k<parts.length;k++){
+    const p=parts[k];
+    if(p.t){ if(open){ out+='</span>'; open=false; } out+=p.s; continue; }
+    const want=inP[k]&&!p.h;
+    if(want&&!open){ out+=OPEN; open=true; }
+    else if(!want&&open){ out+='</span>'; open=false; }
+    out+=p.s;
+  }
+  if(open) out+='</span>';
+  return out;
+}
+window.applyParenColor=applyParenColor;
+
+window.fmtText=function(raw,edit){
+  raw=String(raw==null?'':raw);
+  if(blankOnly(raw)) raw=raw.replace(/ /g,'\u00A0');
+  let t=esc(raw);
+  t=t.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+  t=t.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<i>$1</i>');
+  t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
+  t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
+  t=t.replace(/==(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)==/g,(w,hhex,body)=>
+    '<mark style="background:'+(hhex?('#'+hhex.toUpperCase()):state.colors.highlight)+';color:inherit;padding:0 2px;border-radius:0">'+body+'</mark>');
+  t=t.replace(/%%(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)%%/g,(w,qhex,body)=>
+    '<span class="quote-fmt" style="border-left:3.5px solid '+(qhex?('#'+qhex.toUpperCase()):(state.colors.quote||'#8A8F98'))+'">'+body+'</span>');
+  /* 직접 지정한 글자 색은 자리표시자 없이 그대로 둔다 —
+     아래 applyParenColor 가 data-hard-color 안쪽을 알아서 건너뛴다 */
+  t=t.replace(/\[#([0-9A-Fa-f]{6})\]([\s\S]*?)\[\/\]/g,(w,hex,body)=>
+    '<span data-hard-color="1" style="color:#'+hex.toUpperCase()+'">'+body+'</span>');
+  t=t.replace(/\[##\]([\s\S]*?)\[\/##\]/g,'<span class="text-heading text-heading-2" data-heading="2">$1</span>');
+  t=t.replace(/\[#\]([\s\S]*?)\[\/#\]/g,'<span class="text-heading text-heading-1" data-heading="1">$1</span>');
+  if(!edit&&state.parenOn) t=applyParenColor(t,state.colors.paren);
+  t=t.replace(/\n/g,'<br>');
+  return t;
+};
+})();
+</script>
+
+<style id="split-save-styles">
+/* ===== 페이지 나누기 ===== */
+.pmsg .ctrl button.split-btn.on{background:#D14343;border-color:#D14343;color:#fff}
+
+/* ===== 서명 + 페이지 번호 한 줄 =====
+   좌 · 가운데 · 우 세 칸으로 나눠 서명과 번호가 각자 다른 정렬을 가질 수 있게 한다.
+   가운데 칸은 내용 크기(auto)라 양옆 칸이 항상 같은 폭이 되고, 그래서 정확히 가운데에 놓인다. */
+.credit.credit-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:baseline;gap:10px;width:100%}
+.credit.credit-row>.cz{min-width:0}
+.credit.credit-row>.cz-l{text-align:left}
+.credit.credit-row>.cz-c{text-align:center;white-space:nowrap}
+.credit.credit-row>.cz-r{text-align:right}
+
+/* ===== 페이지 이동 바 — 화면 기준으로 떠 있는다 =====
+   스크롤 영역(preview-pane / stage) 안에 두면 모바일에서 함께 밀려버리므로
+   body 에 붙여 화면 좌표로 고정하고, 가로 위치만 미리보기 영역을 따라간다. */
+.preview-pane{position:relative}
+#pagePager{display:none;position:fixed;left:0;width:100%;bottom:var(--pager-bottom,14px);
+  justify-content:center;z-index:70;pointer-events:none;user-select:none}
+#pagePager.show{display:flex}
+#pagePager.pager-off{display:none!important}
+#pagePager .pp-box{pointer-events:auto;display:flex;align-items:center;gap:4px;
+  background:var(--panel,#fff);border:1px solid var(--line,#E2E2E6);border-radius:999px;
+  padding:5px 6px;box-shadow:0 6px 20px rgba(0,0,0,.14);max-width:calc(100% - 24px);
+  transition:opacity .18s ease}
+/* 미리보기를 만지는 동안에는 흐려져서 화면을 가리지 않는다 */
+#pagePager.dim .pp-box{opacity:.24}
+#pagePager .pp-box:hover,#pagePager .pp-box:active{opacity:1}
+#pagePager button{border:0;background:transparent;color:var(--ink,#222);cursor:pointer;
+  width:30px;height:30px;border-radius:50%;font-size:15px;line-height:1;display:flex;
+  align-items:center;justify-content:center;padding:0;flex:0 0 auto}
+#pagePager button:hover:not(:disabled){background:var(--panel-2,#EDEDEE)}
+#pagePager button:disabled{opacity:.28;cursor:default}
+#pagePager .pp-n{font:700 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.03em;color:var(--ink,#222);min-width:52px;text-align:center;padding:0 2px}
+#pagePager .pp-hint{font-size:10.5px;font-weight:600;color:var(--muted,#8A8F98);
+  padding:0 8px 0 4px;border-left:1px solid var(--line,#E2E2E6);margin-left:4px;white-space:nowrap}
+@media(max-width:860px){#pagePager .pp-hint{display:none}}
+/* 모바일: 손가락에 맞게 키우되 폭은 줄이고, 뒤가 비쳐 보이게 */
+body.mobile-ui #pagePager .pp-box{gap:2px;padding:4px 5px;
+  background:color-mix(in srgb,var(--panel,#fff) 88%,transparent);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:0 6px 22px rgba(0,0,0,.2)}
+body.mobile-ui #pagePager button{width:34px;height:34px;font-size:16px}
+body.mobile-ui #pagePager .pp-n{min-width:44px;font-size:12px}
+</style>
+<script id="split-save-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   페이지 나누기 — 미리보기가 곧 저장 결과
+   ✂ 를 누르면 그 블럭 "위"에서 잘리고, 미리보기에는 한 번에 한 장만 보인다.
+   화면에 보이는 게 저장되는 것과 완전히 같으므로 별도의 분할 저장 경로가 없다.
+   저장·복사는 기존 파이프라인을 그대로 쓰고, 파일 이름에만 장 번호를 붙인다.
+   ===================================================================== */
+
+const T=(m,o)=>{ try{ if(typeof window.toast==='function') window.toast(m,o); }catch(_){} };
+
+/* ---------- 상태 ---------- */
+state.pageNum=Object.assign({on:false,align:'left',size:12,format:'slash'},state.pageNum||{});
+if(!state.colors.pageNum) state.colors.pageNum='#8A8F98';
+let curPage=1;
+
+/* ---------- 페이지 계산 ---------- */
+/* splitBefore = 이 블럭부터 새 장이 시작된다 */
+function pageOfIndex(){
+  const ms=state.messages||[];
+  const out=[]; let p=1;
+  ms.forEach((m,i)=>{ if(i>0&&m&&m.splitBefore) p++; out.push(p); });
+  return out;
+}
+function pageCount(){
+  const ms=state.messages||[];
+  if(!ms.length) return 1;
+  return 1+ms.reduce((n,m,i)=>n+((i>0&&m&&m.splitBefore)?1:0),0);
+}
+function clampPage(){
+  const t=pageCount();
+  if(curPage>t) curPage=t;
+  if(curPage<1) curPage=1;
+  return t;
+}
+function pageLabel(k,total){
+  const p=state.pageNum||{};
+  switch(p.format){
+    case 'plain': return String(k);
+    case 'dash':  return '- '+k+' -';
+    case 'pad':   return String(k).padStart(2,'0');
+    default:      return k+'/'+total;
+  }
+}
+
+/* ---------- 설정 UI ---------- */
+window.setPageNum=function(field,val){
+  const p=state.pageNum;
+  if(field==='on') p.on=!!val;
+  else if(field==='size'){ p.size=parseInt(val)||12; const v=document.getElementById('pageNumSizeV'); if(v) v.textContent=p.size+'px'; }
+  else if(field==='align') p.align=val;
+  else if(field==='format') p.format=val;
+  syncPageNumControls();
+  renderPreview();
+};
+function syncPageNumControls(){
+  const p=state.pageNum;
+  const on=document.getElementById('pageNumOn'); if(on) on.checked=!!p.on;
+  const sz=document.getElementById('pageNumSize'); if(sz) sz.value=p.size;
+  const szv=document.getElementById('pageNumSizeV'); if(szv) szv.textContent=(p.size||12)+'px';
+  const aSeg=document.getElementById('pageNumAlignSeg');
+  if(aSeg){ const order=['left','center','right'];
+    [...aSeg.children].forEach((b,i)=>b.classList.toggle('on',order[i]===p.align)); }
+  const fSeg=document.getElementById('pageNumFmtSeg');
+  if(fSeg){ const order=['slash','dash','pad','plain'];
+    [...fSeg.children].forEach((b,i)=>b.classList.toggle('on',order[i]===p.format)); }
+}
+const _sync=window.syncControlsFromState;
+if(typeof _sync==='function'){
+  window.syncControlsFromState=function(){ const r=_sync.apply(this,arguments); try{syncPageNumControls();}catch(_){} return r; };
+}
+try{ if(typeof enhanceRange==='function') enhanceRange('pageNumSize','pageNumSizeV',{min:9,max:18,step:1,nudge:1}); }catch(_){}
+
+/* ---------- 서명 줄: 서명 + 페이지 번호를 한 줄에 ---------- */
+const _creditHTML=window.creditHTML;
+window.creditHTML=function(){
+  const c=state.credit, p=state.pageNum||{};
+  if(!p.on) return _creditHTML.apply(this,arguments);   /* 꺼져 있으면 예전 마크업 그대로 */
+
+  const parts=[];
+  if(c.on){
+    if(c.character&&c.character.trim()) parts.push(esc(c.character.trim()));
+    if(c.maker&&c.maker.trim()) parts.push(esc(c.maker.trim()));
+  }
+  const sep='<span style="opacity:.5"> '+(c.sep==='bar'?'|':'\u00B7')+' </span>';
+  const zones={left:'',center:'',right:''};
+  const put=(where,html)=>{ const k=(where in zones)?where:'right'; zones[k]+=(zones[k]?' ':'')+html; };
+  if(parts.length){
+    put(c.align,'<span class="credit-sig" style="font-size:'+c.size+'px;color:'+state.colors.credit+'">'
+      +parts.join(sep)+'</span>');
+  }
+  const total=clampPage();
+  put(p.align,'<span class="page-num" data-page-num style="font-size:'+(p.size||12)+'px;color:'
+    +(state.colors.pageNum||'#8A8F98')+'">'+esc(pageLabel(curPage,total))+'</span>');
+
+  const gap=(c.gap!=null?c.gap:16);
+  return '<div class="credit credit-row" style="margin-top:'+gap+'px;letter-spacing:.02em;opacity:.95">'
+    +'<span class="cz cz-l">'+zones.left+'</span>'
+    +'<span class="cz cz-c">'+zones.center+'</span>'
+    +'<span class="cz cz-r">'+zones.right+'</span></div>';
+};
+
+/* ---------- ✂ 버튼 ---------- */
+const _ctrlHTML=window.ctrlHTML;
+window.ctrlHTML=function(id){
+  const html=_ctrlHTML.apply(this,arguments);
+  const ms=state.messages||[];
+  const i=ms.findIndex(m=>m&&m.id===id);
+  if(i<0) return html;
+  /* 첫 블럭은 위에서 자를 게 없다. 그래도 버튼을 없애 버리면 자리가 밀려
+     "가위가 사라졌다"처럼 보이므로, 흐리게 둔 채 자리만 지킨다. */
+  const first=(i===0);
+  const on=!first&&!!ms[i].splitBefore;
+  const btn=first
+    ? '<button type="button" class="split-btn" disabled title="첫 블럭 위에서는 자를 수 없어요">\u2702</button>'
+    : '<button type="button" class="split-btn'+(on?' on':'')
+      +'" title="'+(on?'앞 장과 합치기':'여기서부터 새 장')+'" onclick="toggleSplitAt(\''+id+'\')">\u2702</button>';
+  /* 수정(✎)·삭제(×)는 오른쪽 끝에 붙여 두므로 그 앞에 끼워 넣는다 */
+  const anchor=html.indexOf('<button type="button" class="edit-btn"');
+  const at=(anchor>=0)?anchor:html.lastIndexOf('<button');
+  return at<0?html:(html.slice(0,at)+btn+html.slice(at));
+};
+window.toggleSplitAt=function(id){
+  const ms=state.messages||[];
+  const i=ms.findIndex(m=>m&&m.id===id);
+  if(i<0) return;
+  if(i===0){ T('첫 블럭 위에서는 자를 수 없어요'); return; }
+  const adding=!ms[i].splitBefore;
+  try{ if(typeof window.pushUndo==='function') window.pushUndo(adding?'페이지 나누기':'페이지 합치기'); }catch(_){}
+  ms[i].splitBefore=adding;
+  /* 방금 건드린 블럭이 있는 장으로 따라간다 — 결과가 바로 보이도록 */
+  curPage=pageOfIndex()[i]||1;
+  renderPreview();
+  const total=pageCount();
+  const undo=(typeof window.undoLast==='function')?window.undoLast:null;
+  T(adding?('여기서부터 '+curPage+'장이 시작돼요 \u2014 총 '+total+'장')
+          :('앞 장과 합쳤어요 \u2014 총 '+total+'장'),
+    undo?{action:'실행 취소',onAction:undo}:undefined);
+};
+
+/* ---------- 현재 장만 보여주기 ---------- */
+function rowMsgId(row){
+  const h=row.querySelector('.drag-handle[data-mid]');
+  if(h) return h.dataset.mid||'';
+  const d=row.querySelector('[data-id]');
+  return d?(d.getAttribute('data-id')||''):'';
+}
+let applying=false;
+function applyPageView(){
+  const chat=document.getElementById('chat'); if(!chat) return;
+  const total=clampPage();
+  updateSplitHelp(total);
+
+  const ms=state.messages||[];
+  const pages=pageOfIndex();
+  const idPage={};
+  ms.forEach((m,i)=>{ if(m) idPage[m.id]=pages[i]; });
+
+  const rows=[...chat.querySelectorAll(':scope > .pmsg')];
+  let last=null;
+  rows.forEach(row=>{
+    const id=rowMsgId(row);
+    const p=idPage[id]||1;
+    const show=(total<2)||(p===curPage);
+    row.style.display=show?'':'none';
+    if(show) last=row;
+  });
+  /* 장의 마지막 줄에 남은 아래 여백과 인용 막대 연장은 지운다 */
+  rows.forEach(row=>{
+    if(row.__pgMB!==undefined&&row.__pgMB!==null) row.style.marginBottom=row.__pgMB;
+    const b=row.querySelector(':scope > .row-quote-bar');
+    if(b&&row.__pgBar!==undefined&&row.__pgBar!==null) b.style.bottom=row.__pgBar;
+  });
+  if(last&&total>1){
+    last.__pgMB=last.style.marginBottom;
+    last.style.marginBottom='0px';
+    const bar=last.querySelector(':scope > .row-quote-bar');
+    if(bar){ last.__pgBar=bar.style.bottom; bar.style.bottom='0px'; }
+  }
+  updatePager(total);
+}
+function updateSplitHelp(total){
+  const el=document.getElementById('splitCountHelp'); if(!el) return;
+  el.innerHTML=(total<2)
+    ? '블럭의 <b>\u2702</b> 버튼을 누르면 그 블럭 <b>위에서</b> 잘려 새 장이 시작돼요.'
+    : '현재 <b>'+total+'장</b>이에요. 미리보기 아래 <b>\u2039 \u203A</b> 로 장을 넘기면서 한 장씩 저장하면 돼요.';
+}
+
+/* ---------- 페이지 이동 바 ---------- */
+function ensurePager(){
+  let el=document.getElementById('pagePager');
+  if(el) return el;
+  if(!document.body) return null;
+  el=document.createElement('div');
+  el.id='pagePager';
+  el.innerHTML='<div class="pp-box">'
+    +'<button type="button" data-pp="first" title="첫 장">\u00AB</button>'
+    +'<button type="button" data-pp="prev" title="이전 장">\u2039</button>'
+    +'<span class="pp-n"></span>'
+    +'<button type="button" data-pp="next" title="다음 장">\u203A</button>'
+    +'<button type="button" data-pp="last" title="마지막 장">\u00BB</button>'
+    +'<span class="pp-hint">이 화면 그대로 저장돼요</span>'
+    +'</div>';
+  /* 화면 좌표로 고정하려면 변형(transform)이 걸린 조상 밖에 있어야 한다 */
+  document.body.appendChild(el);
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('[data-pp]'); if(!b||b.disabled) return;
+    const total=pageCount();
+    if(b.dataset.pp==='first') curPage=1;
+    else if(b.dataset.pp==='prev') curPage=Math.max(1,curPage-1);
+    else if(b.dataset.pp==='next') curPage=Math.min(total,curPage+1);
+    else curPage=total;
+    gotoPage(curPage);
+  });
+  bindPagerTracking(el);
+  placePager();
+  return el;
+}
+
+/* 미리보기 영역을 따라다니게 하고, 만지는 동안에는 흐려지게 한다 */
+let dimTimer=null;
+function bindPagerTracking(el){
+  const relayout=()=>placePager();
+  try{
+    window.addEventListener('resize',relayout,{passive:true});
+    window.addEventListener('scroll',relayout,{passive:true,capture:true});
+    window.addEventListener('orientationchange',()=>setTimeout(relayout,180),{passive:true});
+    if(window.visualViewport){
+      window.visualViewport.addEventListener('resize',relayout,{passive:true});
+      window.visualViewport.addEventListener('scroll',relayout,{passive:true});
+    }
+  }catch(_){}
+  const nudge=e=>{
+    if(el.contains(e.target)) return;      /* 이동 바 자체를 만질 때는 흐리게 하지 않는다 */
+    el.classList.add('dim');
+    clearTimeout(dimTimer);
+    dimTimer=setTimeout(()=>el.classList.remove('dim'),900);
+  };
+  try{
+    document.addEventListener('touchstart',nudge,{passive:true});
+    document.addEventListener('touchmove',nudge,{passive:true});
+    document.addEventListener('wheel',nudge,{passive:true});
+    document.addEventListener('scroll',nudge,{passive:true,capture:true});
+  }catch(_){}
+}
+
+/* 하단 독을 피하고, 미리보기가 화면에 없으면 같이 숨는다 */
+function placePager(){
+  const el=document.getElementById('pagePager'); if(!el) return;
+  let off=14;
+  try{
+    const dock=document.getElementById('mDock');
+    if(dock){
+      const cs=getComputedStyle(dock);
+      if(cs.display!=='none'&&cs.visibility!=='hidden'){
+        const h=dock.getBoundingClientRect().height;
+        if(h>0) off=Math.round(h)+12;
+      }
+    }
+  }catch(_){}
+  el.style.setProperty('--pager-bottom',off+'px');
+
+  const pane=document.querySelector('.preview-pane');
+  let visible=true;
+  if(pane){
+    const r=pane.getBoundingClientRect();
+    const onScreen=r.width>1&&r.height>1&&r.bottom>0&&r.top<(window.innerHeight||0);
+    visible=onScreen&&pane.offsetParent!==null;
+    if(onScreen){
+      el.style.left=Math.round(r.left)+'px';
+      el.style.width=Math.round(r.width)+'px';
+    }
+  }
+  /* 미리보기가 안 보이는 화면(설정 패널 등)에서는 떠 있지 않게 한다 */
+  el.classList.toggle('pager-off',!visible);
+}
+function updatePager(total){
+  const el=ensurePager(); if(!el) return;
+  el.classList.toggle('show',total>1);
+  if(total<2) return;
+  placePager();
+  const n=el.querySelector('.pp-n');
+  if(n) n.textContent=curPage+' / '+total;
+  el.querySelectorAll('[data-pp]').forEach(b=>{
+    const k=b.dataset.pp;
+    b.disabled=(k==='first'||k==='prev')?(curPage<=1):(curPage>=total);
+  });
+}
+window.gotoPage=function(n){
+  const total=pageCount();
+  curPage=Math.max(1,Math.min(total,parseInt(n)||1));
+  /* 서명 줄의 번호도 현재 장으로 바꿔야 하므로 통째로 다시 그린다 */
+  renderPreview();
+  try{ if(typeof fitPreview==='function') fitPreview(); }catch(_){}
+};
+/* 다른 스크립트에서 "이 블럭이 몇 장에 있나"를 물어볼 수 있게 열어 둔다 */
+window.__pageOfMsgId=function(id){
+  const ms=state.messages||[];
+  const i=ms.findIndex(m=>m&&m.id===id);
+  if(i<0) return curPage;
+  return pageOfIndex()[i]||1;
+};
+window.__currentPage=function(){ return clampPage(),curPage; };
+window.__pageCount=function(){ return pageCount(); };
+/* 지금 보고 있는 장에 속한 블럭 id 목록 */
+window.__idsOnCurrentPage=function(){
+  const ms=state.messages||[];
+  const pages=pageOfIndex();
+  clampPage();
+  return ms.filter((m,i)=>m&&pages[i]===curPage).map(m=>m.id);
+};
+
+/* ---------- 렌더 훅 ---------- */
+const _renderPreview=window.renderPreview;
+window.renderPreview=function(){
+  const r=_renderPreview.apply(this,arguments);
+  if(!applying){
+    applying=true;
+    try{ applyPageView(); }catch(_){}
+    try{ if(typeof applyCanvas==='function') applyCanvas(); }catch(_){}
+    /* 보이는 장만 남아 캔버스 높이가 달라지므로 미리보기 배율을 다시 맞춘다 */
+    try{ if(typeof fitPreview==='function') fitPreview(); }catch(_){}
+    applying=false;
+  }
+  return r;
+};
+
+/* 이전 버전에서 쓰던 "이 블럭 아래에서 자르기"(splitAfter)를 새 방식으로 옮긴다 */
+function migrateOldSplits(){
+  const ms=state.messages||[];
+  let moved=0;
+  ms.forEach((m,i)=>{
+    if(!m||!m.splitAfter) return;
+    delete m.splitAfter;
+    const nx=ms[i+1];
+    if(nx){ nx.splitBefore=true; moved++; }
+  });
+  return moved;
+}
+
+/* ---------- 저장 파일 이름에 장 번호 붙이기 ---------- */
+function wrapSaver(name){
+  const prev=window[name];
+  if(typeof prev!=='function') return;
+  window[name]=function(){
+    const total=pageCount();
+    if(total<2) return prev.apply(this,arguments);
+    const orig=state.export.filename;
+    state.export.filename=(orig||'chat')+'_'+curPage;
+    const done=()=>{ state.export.filename=orig; };
+    let out;
+    try{ out=prev.apply(this,arguments); }
+    catch(e){ done(); throw e; }
+    if(out&&typeof out.then==='function'){ out.then(done,done); } else { done(); }
+    return out;
+  };
+}
+wrapSaver('saveImage');
+
+/* ---------- 초기 반영 ---------- */
+try{ syncPageNumControls(); }catch(_){}
+try{ migrateOldSplits(); }catch(_){}
+try{ renderPreview(); }catch(_){}
+/* 자동저장된 세션이 늦게 복원되는 경우까지 한 번 더 훑는다 */
+document.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>{ try{ if(migrateOldSplits()){ renderPreview(); } }catch(_){} },600);
+});
+
+})();
+</script>
+
+
+<style id="format-tools-styles">
+.pmsg .ctrl button.merge-btn{font-size:12px;line-height:1}
+.pmsg .ctrl button.merge-btn:disabled,.pmsg .ctrl button.split-btn:disabled{
+  opacity:.26;cursor:default;pointer-events:none}
+
+/* ===== 서식 지우기(휴지통) — 서식 줄 오른쪽 끝 =====
+   flex 경쟁에 끼지 않도록 고정 폭으로 두고, 서식 줄 자체는 줄바꿈을 막아
+   버튼이 하나 늘어도 지금의 1행 배치가 그대로 유지되게 한다. */
+.composer-card .fmt{flex-wrap:nowrap!important;row-gap:0!important;overflow:visible}
+.composer-card .fmt .fmt-grp{flex-shrink:1;min-width:0}
+.composer-card .fmt .fmt-grp>button{min-width:24px}
+.fmt-grp.fmt-grp-clear{flex:0 0 auto!important;min-width:0!important;margin-left:1px}
+.fmt-grp.fmt-grp-clear>button.clearfmt{display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 auto;width:28px;min-width:28px;padding:0}
+.mobile-ui.m-tools-open #mDock .composer-top-grid .fmt .fmt-grp.fmt-grp-clear{
+  flex:0 0 auto!important;min-width:0!important}
+.mobile-ui.m-tools-open #mDock .composer-top-grid .fmt .fmt-grp.fmt-grp-clear>button.clearfmt{
+  width:30px;min-width:30px}
+.fmt-grp.fmt-grp-clear>button.clearfmt:hover{color:#D14343}
+#btnDelPage{white-space:nowrap}
+</style>
+<script id="format-tools-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   1) 모든 서식 삭제 — 글자는 남기고 서식 기호만 전부 걷어낸다
+   2) 아래 블럭과 합치기 — ✂ 옆(블럭 컨트롤 줄)에 배치
+   둘 다 기존 실행 취소(pushUndo/undoLast)에 그대로 얹는다.
+   ===================================================================== */
+
+const T=(m,o)=>{ try{ if(typeof window.toast==='function') window.toast(m,o); }catch(_){} };
+const undoRef=()=>(typeof window.undoLast==='function')?window.undoLast:null;
+const withUndo=(msg)=>{ const u=undoRef(); T(msg,u?{action:'실행 취소',onAction:u}:undefined); };
+
+/* ---------------------------------------------------------------
+   서식 기호 제거
+   fmtText 가 해석하는 마크업과 정확히 같은 목록을 되돌린다.
+   --------------------------------------------------------------- */
+const FMT_RULES=[
+  [/\[##\]([\s\S]*?)\[\/##\]/g,'$1'],                       /* 큰 제목 */
+  [/\[#\]([\s\S]*?)\[\/#\]/g,'$1'],                         /* 제목 */
+  [/\[#[0-9A-Fa-f]{6}\]([\s\S]*?)\[\/\]/g,'$1'],            /* 부분 글자색 */
+  [/==(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)==/g,'$1'],         /* 형광펜 */
+  [/%%(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)%%/g,'$1'],         /* 인용구 */
+  [/\*\*([^*]+)\*\*/g,'$1'],                                /* 굵게 */
+  [/(?<!\*)\*([^*]+)\*(?!\*)/g,'$1'],                       /* 기울임 */
+  [/~~([^~]+)~~/g,'$1'],                                    /* 취소선 */
+  [/\+\+([^+]+)\+\+/g,'$1']                                 /* 밑줄 */
+];
+function stripFormatting(text){
+  if(typeof text!=='string'||!text) return text;
+  let out=text;
+  /* 서식이 겹쳐 있을 수 있으므로 더 이상 바뀌지 않을 때까지 훑는다 */
+  for(let pass=0;pass<6;pass++){
+    const before=out;
+    FMT_RULES.forEach(([re,to])=>{ out=out.replace(re,to); });
+    if(out===before) break;
+  }
+  return out;
+}
+function countFormatted(){
+  return (state.messages||[]).reduce((n,m)=>{
+    if(!m||typeof m.content!=='string') return n;
+    return n+(stripFormatting(m.content)!==m.content?1:0);
+  },0);
+}
+
+window.deleteCurrentPage=function(){
+  const ms=state.messages||[];
+  if(!ms.length){ T('아직 블럭이 없어요'); return; }
+  const total=(typeof window.__pageCount==='function')?window.__pageCount():1;
+  const page=(typeof window.__currentPage==='function')?window.__currentPage():1;
+  const ids=(typeof window.__idsOnCurrentPage==='function')?window.__idsOnCurrentPage():ms.map(m=>m.id);
+  if(!ids.length){ T('이 장에는 지울 블럭이 없어요'); return; }
+
+  const okGo=window.confirm(
+    (total>1?(page+'/'+total+'장'):'현재 화면')+'에 있는 블럭 '+ids.length+'개를 지울까요?\n\n'
+    +(total>1?'다른 장은 그대로 남아요. ':'남는 블럭이 없어요. ')
+    +'되돌리기(Ctrl+Z)로 복구할 수 있어요.');
+  if(!okGo) return;
+
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('페이지 삭제'); }catch(_){}
+  const gone=new Set(ids);
+  state.messages=ms.filter(m=>!(m&&gone.has(m.id)));
+  /* 지운 자리에서 새 장이 시작되고 있었다면 그 표시도 같이 정리한다 */
+  if(state.messages[0]) delete state.messages[0].splitBefore;
+  renderPreview();
+  try{ if(typeof window.gotoPage==='function') window.gotoPage(Math.min(page,(window.__pageCount?window.__pageCount():1))); }catch(_){}
+  withUndo(ids.length+'개 블럭을 지웠어요');
+};
+
+/* ---------------------------------------------------------------
+   아래 블럭과 합치기
+   --------------------------------------------------------------- */
+const TYPE_NAME={divider:'가름선',image:'사진'};
+function canMerge(a,b){
+  if(!a||!b) return '아래에 합칠 블럭이 없어요';
+  if(TYPE_NAME[a.type]) return TYPE_NAME[a.type]+'은 합칠 수 없어요';
+  if(TYPE_NAME[b.type]) return '아래 '+TYPE_NAME[b.type]+' 블럭과는 합칠 수 없어요';
+  return '';
+}
+window.mergeDown=function(id){
+  const ms=state.messages||[];
+  const i=ms.findIndex(m=>m&&m.id===id);
+  if(i<0) return;
+  const cur=ms[i], nx=ms[i+1];
+  const why=canMerge(cur,nx);
+  if(why){ T(why); return; }
+
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('블럭 합치기'); }catch(_){}
+  const head=String(cur.content||'').replace(/\s+$/,'');
+  const tail=String(nx.content||'').replace(/^\s+/,'');
+  cur.content=head&&tail?(head+'\n'+tail):(head||tail);
+
+  /* 합쳐지는 블럭이 새 장의 시작이었다면 그 페이지 나눔은 사라진다 */
+  const brokePage=!!nx.splitBefore;
+  const crossSender=(cur.type==='chat'&&nx.type==='chat'&&cur.senderId!==nx.senderId);
+  ms.splice(i+1,1);
+
+  renderPreview();
+  try{
+    if(typeof window.gotoPage==='function'&&typeof window.__pageOfMsgId==='function')
+      window.gotoPage(window.__pageOfMsgId(cur.id));
+  }catch(_){}
+
+  let msg='아래 블럭과 합쳤어요';
+  if(crossSender) msg+=' \u2014 말한 사람은 위 블럭 기준이에요';
+  else if(brokePage) msg+=' \u2014 페이지 나눔도 함께 풀렸어요';
+  withUndo(msg);
+};
+
+/* ---------- 블럭 컨트롤 줄에 합치기 버튼 추가 (✂ 바로 앞) ---------- */
+const _ctrlHTML=window.ctrlHTML;
+window.ctrlHTML=function(id){
+  const html=_ctrlHTML.apply(this,arguments);
+  const ms=state.messages||[];
+  const i=ms.findIndex(m=>m&&m.id===id);
+  if(i<0) return html;
+  /* 합칠 수 없는 상황에도 버튼 자리는 지켜서 툴바 배치가 흔들리지 않게 한다 */
+  const why=canMerge(ms[i],ms[i+1]);
+  const btn=why
+    ? '<button type="button" class="merge-btn" disabled title="'+why+'">\u2913</button>'
+    : '<button type="button" class="merge-btn" title="아래 블럭과 합치기"'
+      +' onclick="mergeDown(\''+id+'\')">\u2913</button>';
+  /* ✂ 가 있으면 그 앞, 없으면 수정(✎) 앞 — 수정·삭제는 항상 오른쪽 끝 */
+  let pos=html.indexOf('<button type="button" class="split-btn');
+  if(pos<0) pos=html.indexOf('<button type="button" class="edit-btn"');
+  if(pos<0) pos=html.lastIndexOf('<button');
+  return pos<0?html:(html.slice(0,pos)+btn+html.slice(pos));
+};
+
+/* ---------- '모든 서식 삭제' 버튼 심기 ---------- */
+function addStripButton(){
+  if(document.getElementById('btnDelPage')) return;
+  const host=document.querySelector('.preview-actions');
+  if(!host) return;
+  const b=document.createElement('button');
+  b.id='btnDelPage'; b.type='button'; b.className='btn';
+  b.textContent='\uD83D\uDDD1 이 페이지 삭제';
+  b.title='지금 미리보기에 보이는 장의 블럭을 모두 지워요';
+  b.onclick=()=>window.deleteCurrentPage();
+  const bulk=host.querySelector('[onclick*="toggleBulkDeleteMode"]');
+  if(bulk) host.insertBefore(b,bulk); else host.appendChild(b);
+}
+function addMobileStripButton(){
+  const qa=document.getElementById('mQuickActions');
+  if(!qa||qa.querySelector('[data-strip-fmt]')) return;
+  const b=document.createElement('button');
+  b.type='button'; b.className='btn sm'; b.textContent='\uD83D\uDDD1 이 페이지 삭제';
+  b.setAttribute('data-strip-fmt','1');
+  b.onclick=()=>{
+    try{ if(typeof closeSheet==='function') closeSheet(); }catch(_){}
+    setTimeout(()=>window.deleteCurrentPage(),60);
+  };
+  qa.appendChild(b);
+}
+function mountButtons(){ try{ addStripButton(); addMobileStripButton(); }catch(_){} }
+mountButtons();
+document.addEventListener('DOMContentLoaded',mountButtons);
+try{
+  new MutationObserver(mountButtons).observe(document.body,{childList:true,subtree:true});
+}catch(_){}
+
+try{ renderPreview(); }catch(_){}
+
+})();
+</script>
+
+<style id="cjk-scale-styles">
+/* 대체 글꼴로 그려지는 한자·가나만 크기를 보정한다.
+   한글·영문은 선택한 글꼴 그대로 두고, 이 span 만 배율을 곱한다. */
+#chat .cjk-auto{font-size:calc(1em * var(--cjk-scale,1))}
+#fontLoadState.font-ok{color:#2E7D46}
+#fontLoadState.font-fail{color:#D14343}
+</style>
+<script id="cjk-scale-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   1) 한자·가나 크기 보정
+      선택한 한글 글꼴과 Noto Sans SC/JP 는 글자가 차지하는 비율이 서로 달라서
+      같은 px 로 그려도 크기가 어긋나 보인다. 대체된 부분에만 배율을 곱해 맞춘다.
+   2) 글꼴 불러오기 상태 표시
+      웹폰트가 실제로 도착했는지 document.fonts 로 확인해 알려 준다.
+   ===================================================================== */
+
+if(state.layout.cjkScale==null) state.layout.cjkScale=100;
+
+function applyCjkScale(){
+  const chat=document.getElementById('chat'); if(!chat) return;
+  const v=Number(state.layout.cjkScale);
+  chat.style.setProperty('--cjk-scale',String((Number.isFinite(v)?v:100)/100));
+}
+window.setCjkScale=function(val){
+  const v=Math.max(60,Math.min(160,parseFloat(val)||100));
+  state.layout.cjkScale=v;
+  const out=document.getElementById('lyCjkScaleV');
+  if(out) out.textContent=Math.round(v)+'%';
+  applyCjkScale();
+  renderPreview();
+};
+function syncCjkControls(){
+  const v=Number(state.layout.cjkScale);
+  const el=document.getElementById('lyCjkScale');
+  if(el) el.value=Number.isFinite(v)?v:100;
+  const out=document.getElementById('lyCjkScaleV');
+  if(out) out.textContent=Math.round(Number.isFinite(v)?v:100)+'%';
+  applyCjkScale();
+}
+try{ if(typeof enhanceRange==='function') enhanceRange('lyCjkScale','lyCjkScaleV',{min:80,max:120,step:1,nudge:1,suffix:'%'}); }catch(_){}
+
+/* ---------- 글꼴이 실제로 도착했는지 확인 ---------- */
+const FONT_LABEL={
+  'Freesentation':'프리젠테이션','Paperlogy':'페이퍼로지','Noto Sans KR':'본고딕',
+  'Nanum Myeongjo':'나눔명조','Gowun Dodum':'고운돋움','Mona12':'Mona12','Pretendard':'프리텐다드'
+};
+async function reportFontState(){
+  const el=document.getElementById('fontLoadState'); if(!el) return;
+  let family=null;
+  try{ family=(typeof __selectedWebFont==='function')?__selectedWebFont():null; }catch(_){}
+  el.classList.remove('font-ok','font-fail');
+  if(!family){ el.textContent=''; return; }
+  const label=FONT_LABEL[family]||family;
+  el.textContent=label+' 불러오는 중…';
+  const spec='16px "'+family+'"';
+  try{ await document.fonts.load(spec,'가나다 ABC'); }catch(_){}
+  let ok=false;
+  try{ ok=document.fonts.check(spec,'가나다 ABC'); }catch(_){ ok=false; }
+  if(ok){
+    el.classList.add('font-ok');
+    el.textContent='✓ '+label+' 불러왔어요 — 미리보기와 저장 모두 이 글꼴로 나와요.';
+  }else{
+    el.classList.add('font-fail');
+    el.textContent='✕ '+label+'을(를) 불러오지 못했어요. 지금은 기본 글꼴로 보이는 중이에요.';
+  }
+}
+const _setFont=window.setFont;
+if(typeof _setFont==='function'){
+  window.setFont=function(){
+    const r=_setFont.apply(this,arguments);
+    setTimeout(reportFontState,60);
+    return r;
+  };
+}
+
+/* ---------- 훅 ---------- */
+const _sync=window.syncControlsFromState;
+if(typeof _sync==='function'){
+  window.syncControlsFromState=function(){
+    const r=_sync.apply(this,arguments);
+    try{ syncCjkControls(); }catch(_){}
+    setTimeout(reportFontState,60);
+    return r;
+  };
+}
+const _renderPreview=window.renderPreview;
+window.renderPreview=function(){
+  const r=_renderPreview.apply(this,arguments);
+  try{ applyCjkScale(); }catch(_){}
+  return r;
+};
+
+try{ syncCjkControls(); }catch(_){}
+try{ renderPreview(); }catch(_){}
+document.addEventListener('DOMContentLoaded',()=>{
+  try{ syncCjkControls(); }catch(_){}
+  setTimeout(reportFontState,300);
+});
+setTimeout(reportFontState,900);
+
+})();
+</script>
+
+<style id="grad-styles">
+/* ===== 배경 그라데이션 설정 — 토글에 따라 접히는 아코디언 ===== */
+#gradPanel{display:grid;grid-template-rows:0fr;opacity:0;margin-top:0;
+  transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1),opacity .22s ease,margin-top .3s ease}
+#gradPanel>.gp-inner{overflow:hidden;min-height:0}
+#gradPanel.open{grid-template-rows:1fr;opacity:1;margin-top:14px}
+#gradPanel:not(.open) .gp-inner *{pointer-events:none}
+
+.grad-preview{height:46px;border-radius:10px;border:1px solid var(--line,#E2E2E6);
+  margin-bottom:14px;box-shadow:inset 0 1px 3px rgba(0,0,0,.06)}
+
+.grad-dirs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;max-width:172px}
+.grad-dirs button{height:32px;border:1px solid var(--line,#E2E2E6);background:var(--panel,#fff);
+  border-radius:8px;font-size:14px;line-height:1;color:var(--ink,#222);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0}
+.grad-dirs button:hover:not(:disabled):not(.on){background:var(--panel-2,#EDEDEE)}
+.grad-dirs button.on{background:var(--ink,#222);border-color:var(--ink,#222);color:#fff}
+.grad-dirs button.gd-mid{opacity:.3;cursor:default;background:transparent;border-style:dashed}
+
+#gradViaField{display:none}
+#gradViaField.show{display:block}
+</style>
+<script id="grad-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   배경 그라데이션
+   배경은 #canvas 에 깔리고 (#chat 은 항상 투명) 배경 이미지 레이어는 그 위에 얹힌다.
+   그래서 캔버스 background 만 그라데이션으로 바꿔 주면 저장 이미지까지 그대로 따라온다.
+   ===================================================================== */
+
+state.gradient=Object.assign({on:false,angle:180,mid:50,useVia:false},state.gradient||{});
+if(!state.colors.gradFrom) state.colors.gradFrom='#EDEDEE';
+if(!state.colors.gradVia)  state.colors.gradVia='#DCE3F0';
+if(!state.colors.gradTo)   state.colors.gradTo='#C9D6EE';
+
+const DIRS=[0,45,90,135,180,225,270,315];
+
+function gradientCSS(){
+  const g=state.gradient, c=state.colors;
+  const ang=((Number(g.angle)||0)%360+360)%360;
+  const midRaw=Number(g.mid); const mid=Math.max(5,Math.min(95,Number.isFinite(midRaw)?midRaw:50));
+  if(g.useVia){
+    /* 가운데 색은 경계 위치에 두고, 양 끝은 그 바깥으로 균등하게 벌린다 */
+    const a=Math.max(0,mid-Math.round(mid/2));
+    const b=Math.min(100,mid+Math.round((100-mid)/2));
+    return 'linear-gradient('+ang+'deg,'+c.gradFrom+' '+a+'%,'+c.gradVia+' '+mid+'%,'+c.gradTo+' '+b+'%)';
+  }
+  return 'linear-gradient('+ang+'deg,'+c.gradFrom+' '+Math.max(0,mid-35)+'%,'+c.gradTo+' '+Math.min(100,mid+35)+'%)';
+}
+function gradientActive(){ return !!(state.gradient&&state.gradient.on)&&!state.transparentBg; }
+
+function applyBgGradient(){
+  const canvas=document.getElementById('canvas'); if(!canvas) return;
+  const chat=document.getElementById('chat');
+  if(gradientActive()){
+    canvas.style.background=gradientCSS();
+    if(chat) chat.style.background='transparent';
+  }
+  const pv=document.getElementById('gradPreview');
+  if(pv) pv.style.background=gradientCSS();
+}
+
+/* ---------- 설정 ---------- */
+window.setGradient=function(field,val){
+  const g=state.gradient;
+  if(field==='on') g.on=!!val;
+  else if(field==='useVia') g.useVia=!!val;
+  else if(field==='angle') g.angle=((parseFloat(val)||0)%360+360)%360;
+  else if(field==='mid'){
+    const n=parseFloat(val);
+    g.mid=Math.max(10,Math.min(90,Number.isFinite(n)?n:50));   /* 0 이 || 로 먹히지 않도록 */
+  }
+  syncGradientControls();
+  renderPreview();
+};
+function syncGradientControls(){
+  const g=state.gradient;
+  const on=document.getElementById('gradOn'); if(on) on.checked=!!g.on;
+  const panel=document.getElementById('gradPanel'); if(panel) panel.classList.toggle('open',!!g.on);
+  const via=document.getElementById('gradViaOn'); if(via) via.checked=!!g.useVia;
+  const viaField=document.getElementById('gradViaField'); if(viaField) viaField.classList.toggle('show',!!g.useVia);
+  const ang=document.getElementById('gradAngle'); if(ang) ang.value=g.angle;
+  const angV=document.getElementById('gradAngleV'); if(angV) angV.textContent=Math.round(g.angle)+'°';
+  const mid=document.getElementById('gradMid'); if(mid) mid.value=g.mid;
+  const midV=document.getElementById('gradMidV'); if(midV) midV.textContent=Math.round(g.mid)+'%';
+  const dirs=document.getElementById('gradDirs');
+  if(dirs) dirs.querySelectorAll('[data-ang]').forEach(b=>{
+    b.classList.toggle('on',Math.round(g.angle)===Number(b.dataset.ang));
+  });
+  applyBgGradient();
+}
+try{ if(typeof enhanceRange==='function'){
+  enhanceRange('gradAngle','gradAngleV',{min:0,max:360,step:1,nudge:5,suffix:'°'});
+  enhanceRange('gradMid','gradMidV',{min:10,max:90,step:1,nudge:1,suffix:'%'});
+} }catch(_){}
+
+/* ---------- 그리기 경로에 얹기 ---------- */
+function hook(name){
+  const prev=window[name];
+  if(typeof prev!=='function') return;
+  window[name]=function(){
+    const r=prev.apply(this,arguments);
+    try{ applyBgGradient(); }catch(_){}
+    return r;
+  };
+}
+hook('applyCanvas');
+hook('applyBackgroundLayers');
+hook('renderPreview');
+
+const _sync=window.syncControlsFromState;
+if(typeof _sync==='function'){
+  window.syncControlsFromState=function(){
+    const r=_sync.apply(this,arguments);
+    try{ syncGradientControls(); }catch(_){}
+    return r;
+  };
+}
+/* 색 스와치를 만졌을 때도 미리보기 띠가 같이 갱신되도록 */
+const _after=window.afterColor;
+if(typeof _after==='function'){
+  window.afterColor=function(key){
+    const r=_after.apply(this,arguments);
+    if(key==='gradFrom'||key==='gradVia'||key==='gradTo'){ try{ applyBgGradient(); }catch(_){} }
+    return r;
+  };
+}
+
+try{ syncGradientControls(); }catch(_){}
+try{ renderPreview(); }catch(_){}
+document.addEventListener('DOMContentLoaded',()=>{ try{ syncGradientControls(); }catch(_){} });
+
+})();
+</script>
+
+<style id="shadow-acc-styles">
+/* ===== 토글로 열리는 설정 패널 (그라데이션과 동일한 방식) ===== */
+.acc-panel{display:grid;grid-template-rows:0fr;opacity:0;margin-top:0;
+  transition:grid-template-rows .3s cubic-bezier(.4,0,.2,1),opacity .22s ease,margin-top .3s ease}
+.acc-panel>.acc-inner{overflow:hidden;min-height:0}
+.acc-panel.open{grid-template-rows:1fr;opacity:1;margin-top:12px}
+.acc-panel:not(.open) .acc-inner *{pointer-events:none}
+</style>
+<script id="shadow-acc-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   그림자 — 토글을 켜면 설정이 열리고, 위치·번짐·진하기를 따로 조절한다.
+   기존 CSS 는 오프셋이 0/1px, 0/3px 로 고정돼 있어서 변수로 바꾸고
+   기본값을 예전 값 그대로 둬, 기존에 저장해 둔 결과물은 변하지 않는다.
+   ===================================================================== */
+
+const L=state.layout;
+const D={textShadowX:0,textShadowY:1,textShadowOpacity:100,
+         bubbleShadowX:0,bubbleShadowY:3,bubbleShadowOpacity:100};
+Object.keys(D).forEach(k=>{ if(L[k]==null) L[k]=D[k]; });
+
+function hexToRgba(hex,pct){
+  const h=String(hex||'#000000').replace('#','');
+  const full=h.length===3?h.split('').map(c=>c+c).join(''):h;
+  const n=parseInt(full,16);
+  if(!/^[0-9a-fA-F]{6}$/.test(full)||!Number.isFinite(n)) return hex||'#000000';
+  const a=Math.max(0,Math.min(100,Number(pct)==null?100:Number(pct)))/100;
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+(Math.round(a*1000)/1000)+')';
+}
+function num(v,d){ const n=Number(v); return Number.isFinite(n)?n:d; }
+
+function applyShadowExtras(){
+  const chat=document.getElementById('chat'); if(!chat) return;
+  chat.style.setProperty('--text-shadow-x',num(L.textShadowX,0)+'px');
+  chat.style.setProperty('--text-shadow-y',num(L.textShadowY,1)+'px');
+  chat.style.setProperty('--text-shadow-color',hexToRgba(state.colors.textShadow||'#000000',num(L.textShadowOpacity,100)));
+  chat.style.setProperty('--bubble-shadow-x',num(L.bubbleShadowX,0)+'px');
+  chat.style.setProperty('--bubble-shadow-y',num(L.bubbleShadowY,3)+'px');
+  chat.style.setProperty('--bubble-shadow-color',hexToRgba(state.colors.bubbleShadow||'#000000',num(L.bubbleShadowOpacity,100)));
+}
+
+window.setShadowExtra=function(which,field,value){
+  const key=(which==='text'?'textShadow':'bubbleShadow')
+    +(field==='x'?'X':field==='y'?'Y':'Opacity');
+  const n=parseFloat(value);
+  const v=Number.isFinite(n)?n:(D[key]||0);
+  L[key]=(field==='opacity')?Math.max(0,Math.min(100,v)):Math.max(-12,Math.min(12,v));
+  const out=document.getElementById(key+'V');
+  if(out) out.textContent=Math.round(L[key])+(field==='opacity'?'%':'px');
+  applyShadowExtras();
+};
+
+function syncShadowControls(){
+  const t=document.getElementById('textShadowPanel');
+  if(t) t.classList.toggle('open',!!L.textShadowOn);
+  const b=document.getElementById('bubbleShadowPanel');
+  if(b) b.classList.toggle('open',!!L.bubbleShadowOn);
+  [['textShadowX','px'],['textShadowY','px'],['textShadowOpacity','%'],
+   ['bubbleShadowX','px'],['bubbleShadowY','px'],['bubbleShadowOpacity','%']].forEach(([k,suf])=>{
+    const el=document.getElementById(k); if(el) el.value=num(L[k],D[k]);
+    const out=document.getElementById(k+'V'); if(out) out.textContent=Math.round(num(L[k],D[k]))+suf;
+  });
+  applyShadowExtras();
+}
+
+try{ if(typeof enhanceRange==='function'){
+  enhanceRange('textShadowX','textShadowXV',{min:-12,max:12,step:1,nudge:1,suffix:'px'});
+  enhanceRange('textShadowY','textShadowYV',{min:-12,max:12,step:1,nudge:1,suffix:'px'});
+  enhanceRange('textShadowOpacity','textShadowOpacityV',{min:0,max:100,step:1,nudge:5,suffix:'%'});
+  enhanceRange('bubbleShadowX','bubbleShadowXV',{min:-12,max:12,step:1,nudge:1,suffix:'px'});
+  enhanceRange('bubbleShadowY','bubbleShadowYV',{min:-12,max:12,step:1,nudge:1,suffix:'px'});
+  enhanceRange('bubbleShadowOpacity','bubbleShadowOpacityV',{min:0,max:100,step:1,nudge:5,suffix:'%'});
+} }catch(_){}
+
+/* ---------- 기존 함수에 얹기 ---------- */
+function wrap(name,after){
+  const prev=window[name];
+  if(typeof prev!=='function') return;
+  window[name]=function(){ const r=prev.apply(this,arguments); try{ after.apply(null,arguments); }catch(_){} return r; };
+}
+/* applyRequestedVisuals 가 색을 불투명 hex 로 되돌리므로 그 뒤에 다시 덮는다 */
+wrap('applyRequestedVisuals',applyShadowExtras);
+wrap('setTextShadow',()=>syncShadowControls());
+wrap('setBubbleShadow',()=>syncShadowControls());
+wrap('syncControlsFromState',()=>syncShadowControls());
+wrap('renderPreview',applyShadowExtras);
+const _after=window.afterColor;
+if(typeof _after==='function'){
+  window.afterColor=function(key){
+    const r=_after.apply(this,arguments);
+    if(key==='textShadow'||key==='bubbleShadow'){ try{ applyShadowExtras(); }catch(_){} }
+    return r;
+  };
+}
+
+try{ syncShadowControls(); }catch(_){}
+document.addEventListener('DOMContentLoaded',()=>{ try{ syncShadowControls(); }catch(_){} });
+
+})();
+</script>
+
+<script id="bubble-fs-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   말풍선 글자 크기
+   bubbleFs 가 null 이면 "글자 크기 따라가기". 슬라이더를 글자 크기와 같은 값에
+   맞추면 다시 null 로 돌아가, 이후 글자 크기를 바꾸면 말풍선도 같이 움직인다.
+   ===================================================================== */
+
+if(state.layout.bubbleFs===undefined) state.layout.bubbleFs=null;
+
+function effBubbleFs(){
+  const L=state.layout;
+  const b=Number(L.bubbleFs);
+  return Number.isFinite(b)&&b>0?b:(Number(L.fs)||16);
+}
+function syncBubbleFs(){
+  const px=effBubbleFs();
+  const el=document.getElementById('lyBubbleFs'); if(el) el.value=px;
+  const out=document.getElementById('lyBubbleFsV');
+  if(out) out.textContent=Math.round(px)+'px'+((state.layout.bubbleFs==null)?' · 연동':'');
+}
+window.__effBubbleFs=effBubbleFs;
+
+const _setLayout=window.setLayout;
+if(typeof _setLayout==='function'){
+  window.setLayout=function(key,val){
+    if(key==='bubbleFs'){
+      const n=parseFloat(val);
+      const L=state.layout;
+      /* 글자 크기와 같은 값이면 연동 상태로 되돌린다 */
+      L.bubbleFs=(Number.isFinite(n)&&n!==Number(L.fs))?n:null;
+      syncBubbleFs();
+      renderPreview();
+      return;
+    }
+    const r=_setLayout.apply(this,arguments);
+    if(key==='fs'){ try{ syncBubbleFs(); }catch(_){} }
+    return r;
+  };
+}
+try{ if(typeof enhanceRange==='function') enhanceRange('lyBubbleFs','lyBubbleFsV',{min:11,max:22,step:1,nudge:1,suffix:'px'}); }catch(_){}
+
+const _sync=window.syncControlsFromState;
+if(typeof _sync==='function'){
+  window.syncControlsFromState=function(){
+    const r=_sync.apply(this,arguments);
+    try{ syncBubbleFs(); }catch(_){}
+    return r;
+  };
+}
+
+try{ syncBubbleFs(); }catch(_){}
+document.addEventListener('DOMContentLoaded',()=>{ try{ syncBubbleFs(); }catch(_){} });
+
+})();
+</script>
+
+<style id="heading-in-chat-styles">
+/* ===== 말풍선 모드에서도 '글씨 크기(# ##)'를 같은 자리에 =====
+   발신자 칸을 글 모드의 '정렬 | 글씨 크기' 줄과 같은 구조로 만들고,
+   글씨 크기 컬럼만 모드에 따라 옮겨 붙인다(요소를 복제하지 않아 스타일이 그대로 유지됨). */
+#senderField .text-format-row{display:flex;align-items:flex-end;gap:6px;
+  width:100%;min-width:0;max-width:100%;flex-wrap:nowrap}
+#senderField .tfr-col.sender-col{flex:1 1 auto;min-width:0}
+#senderField .tfr-col.sender-col select{width:100%;min-width:0;max-width:100%}
+#senderField #textHeadingCol{flex:0 0 auto}
+/* 글씨 크기가 붙어 있지 않을 때는 가름선도 숨긴다 */
+#senderHeadingDiv{display:none}
+#senderField.has-heading #senderHeadingDiv{display:block}
+</style>
+<script id="heading-in-chat-script">
+(function(){
+'use strict';
+
+/* 글씨 크기(# ##) 컬럼을 종류에 따라 알맞은 줄로 이동시킨다.
+   - 글 모드   : 글 정렬 옆 (원래 자리)
+   - 말풍선 모드: 발신자 옆
+   같은 DOM 요소를 옮기는 방식이라 #textHeadingSeg 에 걸린 기존 스타일이
+   데스크톱·모바일 모두 그대로 살아 있다. */
+function placeHeadingCol(type){
+  const col=document.getElementById('textHeadingCol');
+  if(!col) return;
+  const senderField=document.getElementById('senderField');
+  const chatSlot=senderField?senderField.querySelector('.text-format-row'):null;
+  const textSlot=document.querySelector('#alignField .text-format-row');
+  const alignDiv=document.getElementById('alignHeadingDiv');
+
+  if(type==='chat'&&chatSlot){
+    if(col.parentElement!==chatSlot) chatSlot.appendChild(col);
+    if(senderField) senderField.classList.add('has-heading');
+    if(alignDiv) alignDiv.style.display='none';
+  }else if(textSlot){
+    if(col.parentElement!==textSlot) textSlot.appendChild(col);
+    if(senderField) senderField.classList.remove('has-heading');
+    if(alignDiv) alignDiv.style.display='';
+  }
+}
+window.__placeHeadingCol=placeHeadingCol;
+
+const _setMsgType=window.setMsgType;
+if(typeof _setMsgType==='function'){
+  window.setMsgType=function(t){
+    const r=_setMsgType.apply(this,arguments);
+    try{ placeHeadingCol(t); }catch(_){}
+    return r;
+  };
+}
+
+function initial(){
+  try{ placeHeadingCol(state.composerType||'chat'); }catch(_){}
+}
+initial();
+document.addEventListener('DOMContentLoaded',initial);
+/* 모바일 독으로 작성창이 옮겨질 때도 자리를 다시 잡아 준다 */
+try{
+  new MutationObserver(()=>{ try{ placeHeadingCol(state.composerType||'chat'); }catch(_){} })
+    .observe(document.body,{childList:true,subtree:true});
+}catch(_){}
+
+})();
+</script>
+
+<style id="sticker-layer-styles">
+/* ===== 스티커 삽입 =====
+   #canvas 안에 절대 위치 레이어를 하나 깔고 그 위에 스티커를 얹는다.
+   #canvas 에는 이미 overflow:hidden 이 걸려 있어 캔버스 밖으로 나간 부분은
+   미리보기에서도, 저장 결과에서도 똑같이 잘린다(캔버스가 커지지 않는다). */
+#stickerLayer{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
+#stickerLayer .sticker{position:absolute;pointer-events:auto;cursor:move;touch-action:none;
+  line-height:0;transform-origin:50% 50%}
+#stickerLayer .sticker img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+#stickerLayer .sticker.sel{outline:2px solid var(--accent);outline-offset:2px}
+#stickerLayer .st-handles{position:absolute;inset:0;pointer-events:none}
+#stickerLayer .st-del{position:absolute;top:-11px;right:-11px;width:22px;height:22px;padding:0;
+  border:2px solid #fff;border-radius:50%;background:#D14343;color:#fff;font-size:13px;line-height:1;
+  cursor:pointer;pointer-events:auto;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.25)}
+#stickerLayer .st-rot{position:absolute;top:-11px;left:-11px;width:22px;height:22px;padding:0;
+  border:2px solid #fff;border-radius:50%;background:#4C7DF0;color:#fff;font-size:12px;line-height:1;
+  cursor:grab;pointer-events:auto;touch-action:none;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.25)}
+#stickerLayer .st-rot:active{cursor:grabbing}
+#stickerLayer .st-rz{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;
+  border:2px solid #fff;border-radius:50%;background:var(--accent);cursor:nwse-resize;
+  pointer-events:auto;touch-action:none;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+#stickerLayer .st-angle{position:absolute;z-index:9;padding:3px 8px;border-radius:999px;
+  background:rgba(28,28,30,.86);color:#fff;font-size:11px;font-weight:700;white-space:nowrap;
+  pointer-events:none;transform:translate(-50%,-100%)}
+/* 사진 칸의 스티커 모드 안내줄 */
+#stickerPanel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%}
+#stickerPanel .sp-txt{font-size:11px;color:var(--muted);line-height:1.5;flex:1 1 auto;min-width:0}
+#stickerPanel .sp-clear{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 9px;
+  font-size:10.5px;font-weight:700;color:var(--muted);cursor:pointer;flex:0 0 auto}
+#stickerPanel .sp-clear:hover{color:#D14343;border-color:#D14343}
+.msg-img-editor.sticker-on .msg-img-body{display:none!important}
+.msg-img-sticker-toggle input:checked + .msg-img-round-switch{background:#D14343}
+</style>
+<script id="sticker-layer-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   스티커 삽입 — '스티커 모드'가 켜져 있으면 고른 사진이 블럭으로 들어가지
+   않고 캔버스 위에 바로 붙는다. 끌어서 이동, 눌러서 크기 조절·회전·삭제.
+   좌표는 캔버스 좌표계(px)로 저장하므로 미리보기 배율과 무관하다.
+
+   회전은 CSS transform 으로 두지 않고 이미지에 직접 구워 넣는다(bake).
+   iOS 저장 경로는 이미지를 직접 캔버스에 그리면서 회전을 무시하기 때문에,
+   transform 으로만 두면 아이폰에서 저장할 때 회전이 사라진다.
+   - s.src     : 원본 (회전 0도 상태, 항상 보존)
+   - s.srcRot  : s.rot 을 구워 넣은 비트맵 (저장 파일에는 넣지 않고 필요할 때 다시 굽는다)
+   - s.w0      : 회전 전 기준 폭 / s.w : 지금 화면에 그려지는 폭(회전 후 외곽 상자)
+   ===================================================================== */
+
+const T=(m,o)=>{ try{ if(typeof window.toast==='function') window.toast(m,o); }catch(_){} };
+
+if(!Array.isArray(state.stickers)) state.stickers=[];
+let stickerMode=false;
+let selId='';
+
+const canvasEl=()=>document.getElementById('canvas');
+const RAD=Math.PI/180;
+function curPage(){ try{ return (typeof window.__currentPage==='function')?window.__currentPage():1; }catch(_){ return 1; } }
+function pageTotal(){ try{ return (typeof window.__pageCount==='function')?window.__pageCount():1; }catch(_){ return 1; } }
+function find(id){ return (state.stickers||[]).find(s=>s&&s.id===id)||null; }
+function norm(d){ d=Number(d)||0; d%=360; return d<0?d+360:d; }
+
+/* 예전 버전(회전 없음)에서 만든 스티커도 그대로 살려 쓴다 */
+function migrate(s){
+  if(!s) return s;
+  if(typeof s.rot!=='number') s.rot=0;
+  if(typeof s.w0!=='number'||!(s.w0>0)) s.w0=Number(s.w)||60;
+  if(typeof s.w!=='number'||!(s.w>0)) s.w=s.w0;
+  return s;
+}
+
+/* srcRot 은 자동저장 JSON 에 넣지 않는다 (원본이 있으면 언제든 다시 구울 수 있다) */
+function setHidden(o,k,v){
+  try{ Object.defineProperty(o,k,{value:v,writable:true,enumerable:false,configurable:true}); }
+  catch(_){ o[k]=v; }
+}
+function displaySrc(s){ return (s.rot&&s.srcRot)?s.srcRot:s.src; }
+
+/* 미리보기 배율(zoom 또는 transform)을 실측해서 화면 이동량을 캔버스 px로 환산 */
+function scaleOf(){
+  const c=canvasEl(); if(!c) return 1;
+  const w=c.offsetWidth||0; if(!w) return 1;
+  const r=c.getBoundingClientRect();
+  const s=r.width/w;
+  return (isFinite(s)&&s>0.01)?s:1;
+}
+function layerEl(){
+  const c=canvasEl(); if(!c) return null;
+  let L=document.getElementById('stickerLayer');
+  if(!L){ L=document.createElement('div'); L.id='stickerLayer'; L.setAttribute('aria-hidden','true'); }
+  if(L.parentElement!==c||c.lastElementChild!==L) c.appendChild(L);
+  return L;
+}
+
+/* ---------- 원본 이미지 크기 ---------- */
+const imgCache=new Map();
+function loadImg(src){
+  if(imgCache.has(src)) return imgCache.get(src);
+  const p=new Promise((res,rej)=>{
+    const im=new Image();
+    im.onload=()=>res(im);
+    im.onerror=()=>rej(new Error('sticker image decode failed'));
+    im.src=src;
+  });
+  imgCache.set(src,p);
+  return p;
+}
+function ensureNatural(s){
+  if(s.nw>0&&s.nh>0) return loadImg(s.src).catch(()=>null);
+  return loadImg(s.src).then(im=>{
+    s.nw=im.naturalWidth||1; s.nh=im.naturalHeight||1;
+    return im;
+  }).catch(()=>null);
+}
+
+/* ---------- 회전 굽기 ---------- */
+function roundRectPath(ctx,x,y,w,h,r){
+  r=Math.max(0,Math.min(r,w/2,h/2));
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); if(r) ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); if(r) ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); if(r) ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); if(r) ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+/* 회전 후 외곽 상자 크기 (화면 px) */
+function boxOf(s){
+  const w0=Math.max(1,Number(s.w0)||1);
+  const ar=(s.nw>0&&s.nh>0)?(s.nh/s.nw):1;
+  const h0=w0*ar;
+  const th=norm(s.rot)*RAD;
+  const c=Math.abs(Math.cos(th)), si=Math.abs(Math.sin(th));
+  return {w:w0*c+h0*si, h:w0*si+h0*c};
+}
+const baking=new Set();
+function bakeRotation(s){
+  return ensureNatural(s).then(im=>{
+    if(!im) return false;
+    const rot=norm(s.rot);
+    if(!rot){ setHidden(s,'srcRot',''); return true; }
+    const th=rot*RAD;
+    const c=Math.abs(Math.cos(th)), si=Math.abs(Math.sin(th));
+    const nw=s.nw, nh=s.nh;
+    const cap=3200;
+    const k=Math.min(1,cap/Math.max(nw*c+nh*si,nw*si+nh*c));
+    const dw=nw*k, dh=nh*k;
+    const W=Math.max(1,Math.round(dw*c+dh*si)), H=Math.max(1,Math.round(dw*si+dh*c));
+    let cv,ctx;
+    try{
+      cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+      ctx=cv.getContext('2d');
+    }catch(_){ return false; }
+    if(!ctx) return false;
+    ctx.translate(W/2,H/2);
+    ctx.rotate(th);
+    if(s.round!==false){
+      /* 화면에서 보이던 10px 라운드를 원본 픽셀 기준으로 환산해 똑같이 잘라 준다 */
+      const base=Math.max(1,Number(s.w0)||dw);
+      roundRectPath(ctx,-dw/2,-dh/2,dw,dh,10*(dw/base));
+      ctx.clip();
+    }
+    try{ ctx.drawImage(im,-dw/2,-dh/2,dw,dh); }catch(_){ return false; }
+    try{ setHidden(s,'srcRot',cv.toDataURL('image/png')); }catch(_){ return false; }
+    return true;
+  }).catch(()=>false);
+}
+/* 저장본에서 복원됐거나 아직 안 구워진 스티커를 뒤늦게 굽는다 */
+function bakeIfNeeded(s){
+  if(!s||!s.rot||s.srcRot||baking.has(s.id)) return;
+  baking.add(s.id);
+  bakeRotation(s).then(()=>{ baking.delete(s.id); renderStickers(); })
+    .catch(()=>{ baking.delete(s.id); });
+}
+
+/* ---------- 저장(자동저장 훅은 renderPreview 에 걸려 있다) ---------- */
+function commit(){ try{ renderPreview(); }catch(_){ renderStickers(); } }
+
+/* ---------- 그리기 ---------- */
+function renderStickers(){
+  const L=layerEl(); if(!L) return;
+  const total=pageTotal(), page=curPage();
+  const list=(state.stickers||[]).map(migrate).filter(s=>s&&s.src&&((total<2)||((s.page||1)===page)));
+  const keep=new Set(list.map(s=>s.id));
+  [...L.children].forEach(el=>{
+    if(el.classList.contains('st-angle')) return;
+    if(!keep.has(el.dataset.sid)) el.remove();
+  });
+
+  list.forEach(s=>{
+    bakeIfNeeded(s);
+    let el=L.querySelector('.sticker[data-sid="'+s.id+'"]');
+    if(!el){
+      el=document.createElement('div');
+      el.className='sticker';
+      el.dataset.sid=s.id;
+      const img=document.createElement('img');
+      img.alt='';
+      el.appendChild(img);
+      L.appendChild(el);
+      bindDrag(el);
+    }
+    const img=el.querySelector('img');
+    const src=displaySrc(s);
+    if(img&&img.getAttribute('src')!==src) img.src=src;
+    /* 회전본에는 라운드가 이미 그려져 있으므로 CSS 라운드는 0 도일 때만 */
+    if(img) img.style.borderRadius=(s.round!==false&&!s.rot)?'10px':'0';
+    el.style.transform='none';
+    el.style.left=Math.round(s.x)+'px';
+    el.style.top=Math.round(s.y)+'px';
+    el.style.width=Math.round(s.w)+'px';
+    el.classList.toggle('sel',s.id===selId);
+
+    let h=el.querySelector(':scope > .st-handles');
+    if(s.id===selId){
+      if(!h){
+        h=document.createElement('div');
+        /* 클래스에 ctrl 을 함께 넣어 두면 저장·내보내기 시 기존 정리 루틴이
+           블럭 버튼과 똑같이 손잡이를 걷어내 준다(결과물에 절대 찍히지 않는다) */
+        h.className='st-handles ctrl';
+        h.innerHTML='<button type="button" class="st-rot" title="드래그로 회전 \u00B7 두 번 누르면 0도로">\u21BB</button>'
+          +'<button type="button" class="st-del" title="스티커 삭제">\u00D7</button>'
+          +'<span class="st-rz" title="드래그로 크기 조절"></span>';
+        el.appendChild(h);
+        const del=h.querySelector('.st-del');
+        if(del) del.addEventListener('click',ev=>{ ev.preventDefault(); ev.stopPropagation(); removeSticker(s.id); });
+        bindResize(h.querySelector('.st-rz'),s.id);
+        bindRotate(h.querySelector('.st-rot'),s.id);
+      }
+    }else if(h){ h.remove(); }
+  });
+  syncPanel();
+}
+
+/* ---------- 이동 ---------- */
+function bindDrag(el){
+  el.addEventListener('click',e=>{ e.stopPropagation(); });
+  el.addEventListener('touchstart',e=>{ if(e.touches&&e.touches.length===1) e.stopPropagation(); },{passive:true});
+  el.addEventListener('pointerdown',e=>{
+    if(e.target.closest('.st-del')||e.target.closest('.st-rz')||e.target.closest('.st-rot')) return;
+    if(e.pointerType==='mouse'&&e.button!==0) return;
+    e.preventDefault(); e.stopPropagation();
+    const s=find(el.dataset.sid); if(!s) return;
+    if(selId!==s.id){ selId=s.id; renderStickers(); }
+    const sc=scaleOf();
+    const x0=e.clientX, y0=e.clientY, sx=s.x, sy=s.y;
+    let moved=false;
+    try{ el.setPointerCapture(e.pointerId); }catch(_){}
+    const move=ev=>{
+      const dxRaw=ev.clientX-x0, dyRaw=ev.clientY-y0;
+      if(!moved&&Math.hypot(dxRaw,dyRaw)<3) return;
+      moved=true;
+      s.x=sx+dxRaw/sc; s.y=sy+dyRaw/sc;
+      el.style.left=Math.round(s.x)+'px';
+      el.style.top=Math.round(s.y)+'px';
+    };
+    const up=()=>{
+      el.removeEventListener('pointermove',move);
+      el.removeEventListener('pointerup',up);
+      el.removeEventListener('pointercancel',up);
+      if(moved) commit();
+    };
+    el.addEventListener('pointermove',move);
+    el.addEventListener('pointerup',up);
+    el.addEventListener('pointercancel',up);
+  });
+}
+
+/* ---------- 크기 조절 ---------- */
+function bindResize(h,sid){
+  if(!h) return;
+  h.addEventListener('click',e=>{ e.stopPropagation(); });
+  h.addEventListener('touchstart',e=>{ e.stopPropagation(); },{passive:true});
+  h.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'&&e.button!==0) return;
+    e.preventDefault(); e.stopPropagation();
+    const s=find(sid); if(!s) return;
+    const el=h.closest('.sticker');
+    const sc=scaleOf();
+    const W0=s.w, B0=s.w0, x0=e.clientX, y0=e.clientY;
+    let moved=false;
+    try{ h.setPointerCapture(e.pointerId); }catch(_){}
+    const move=ev=>{
+      const dx=(ev.clientX-x0)/sc, dy=(ev.clientY-y0)/sc;
+      const d=(Math.abs(dx)>=Math.abs(dy))?dx:dy;
+      moved=true;
+      const w=Math.max(24,Math.min(6000,W0+d));
+      s.w=w;
+      s.w0=B0*(w/W0);            /* 회전 기준 폭도 같은 비율로 따라간다 */
+      if(el) el.style.width=Math.round(w)+'px';
+    };
+    const up=()=>{
+      h.removeEventListener('pointermove',move);
+      h.removeEventListener('pointerup',up);
+      h.removeEventListener('pointercancel',up);
+      if(moved) commit();
+    };
+    h.addEventListener('pointermove',move);
+    h.addEventListener('pointerup',up);
+    h.addEventListener('pointercancel',up);
+  });
+}
+
+/* ---------- 회전 ---------- */
+function angleBadge(show,s,deg){
+  const L=layerEl(); if(!L) return;
+  let b=L.querySelector(':scope > .st-angle');
+  if(!show){ if(b) b.remove(); return; }
+  if(!b){
+    b=document.createElement('div');
+    b.className='st-angle ctrl';
+    L.appendChild(b);
+  }
+  b.textContent=Math.round(norm(deg))+'\u00B0';
+  b.style.left=Math.round(s.x+s.w/2)+'px';
+  b.style.top=Math.round(s.y-8)+'px';
+}
+function applyRotation(s,deg){
+  const before=boxOf(s);
+  const cx=s.x+before.w/2, cy=s.y+before.h/2;
+  s.rot=norm(deg);
+  return bakeRotation(s).then(()=>{
+    const after=boxOf(s);
+    s.w=after.w;
+    s.x=cx-after.w/2;
+    s.y=cy-after.h/2;
+    commit();
+  });
+}
+function bindRotate(h,sid){
+  if(!h) return;
+  h.addEventListener('click',e=>{ e.stopPropagation(); });
+  h.addEventListener('touchstart',e=>{ e.stopPropagation(); },{passive:true});
+  h.addEventListener('dblclick',e=>{
+    e.preventDefault(); e.stopPropagation();
+    const s=find(sid); if(!s||!s.rot) return;
+    applyRotation(s,0); T('회전을 0도로 되돌렸어요');
+  });
+  h.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse'&&e.button!==0) return;
+    e.preventDefault(); e.stopPropagation();
+    const s=find(sid); if(!s) return;
+    const el=h.closest('.sticker'); if(!el) return;
+    const r=el.getBoundingClientRect();
+    /* 회전 중심은 요소 한가운데 — 회전해도 바운딩 박스 중심은 그대로다 */
+    const cx=r.left+r.width/2, cy=r.top+r.height/2;
+    const baked=norm(s.rot);
+    let live=baked, moved=false;
+    try{ h.setPointerCapture(e.pointerId); }catch(_){}
+    const move=ev=>{
+      const dx=ev.clientX-cx, dy=ev.clientY-cy;
+      if(!moved&&Math.hypot(dx,dy)<6) return;
+      moved=true;
+      let deg=Math.atan2(dy,dx)*180/Math.PI+90;   /* 손잡이가 왼쪽 위라 90도 보정 */
+      deg=norm(deg);
+      if(ev.shiftKey) deg=norm(Math.round(deg/15)*15);
+      else{
+        const near=Math.round(deg/90)*90;         /* 0/90/180/270 근처는 살짝 붙여 준다 */
+        if(Math.abs(deg-near)<=3) deg=norm(near);
+      }
+      live=deg;
+      /* 구워진 비트맵은 이미 baked 만큼 돌아가 있으므로 차이만큼만 미리 돌려 보여준다 */
+      el.style.transform='rotate('+(live-baked)+'deg)';
+      angleBadge(true,s,live);
+    };
+    const up=()=>{
+      h.removeEventListener('pointermove',move);
+      h.removeEventListener('pointerup',up);
+      h.removeEventListener('pointercancel',up);
+      angleBadge(false);
+      if(!moved){ el.style.transform='none'; return; }
+      applyRotation(s,live);
+    };
+    h.addEventListener('pointermove',move);
+    h.addEventListener('pointerup',up);
+    h.addEventListener('pointercancel',up);
+  });
+}
+
+/* ---------- 추가 / 삭제 ---------- */
+function addSticker(src){
+  loadImg(src).then(im=>{
+    const c=canvasEl();
+    const cw=(c&&c.offsetWidth)||440;
+    const ch=(c&&c.offsetHeight)||620;
+    const w=Math.max(60,Math.round(cw*0.35));
+    const n=(state.stickers||[]).length;
+    const s={
+      id:'st'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+      src:src,
+      x:Math.round((cw-w)/2)+(n%5)*16,
+      y:Math.round(ch*0.28)+(n%5)*16,
+      w:w, w0:w, rot:0,
+      nw:im.naturalWidth||1, nh:im.naturalHeight||1,
+      round:(typeof draftImgRound==='undefined')?true:!!draftImgRound,
+      page:curPage()
+    };
+    state.stickers.push(s);
+    selId=s.id;
+    commit();
+    T('스티커를 붙였어요 \u2014 끌어서 옮기고, 눌러서 크기\u00B7회전\u00B7삭제할 수 있어요');
+  }).catch(()=>{ T('이미지를 불러오지 못했어요'); });
+}
+function removeSticker(id){
+  const i=(state.stickers||[]).findIndex(s=>s&&s.id===id);
+  if(i<0) return;
+  state.stickers.splice(i,1);
+  if(selId===id) selId='';
+  commit();
+  T('스티커를 지웠어요');
+}
+
+/* ---------- 사진 칸의 스티커 안내줄 ---------- */
+function syncPanel(){
+  const host=document.getElementById('msgImgEmpty');
+  let p=document.getElementById('stickerPanel');
+  if(!stickerMode){ if(p) p.remove(); return; }
+  if(!host) return;
+  if(!p){
+    p=document.createElement('div');
+    p.id='stickerPanel';
+    p.innerHTML='<span class="sp-txt"></span><button type="button" class="sp-clear">스티커 전체 삭제</button>';
+    const btn=p.querySelector('.sp-clear');
+    if(btn) btn.addEventListener('click',()=>{
+      const n=(state.stickers||[]).length;
+      if(!n){ T('붙인 스티커가 없어요'); return; }
+      if(!window.confirm('붙인 스티커 '+n+'개를 모두 지울까요?')) return;
+      state.stickers=[]; selId=''; commit(); T('스티커를 모두 지웠어요');
+    });
+  }
+  if(p.parentElement!==host) host.appendChild(p);
+  const t=p.querySelector('.sp-txt');
+  if(t){
+    const n=(state.stickers||[]).length;
+    t.textContent=n
+      ? ('붙인 스티커 '+n+'개 \u00B7 끌어서 이동, 눌러서 크기\u00B7회전\u00B7삭제')
+      : '\u201C\uFF0B 이미지 선택\u201D 으로 고른 사진이 캔버스에 바로 붙어요';
+  }
+}
+
+/* ---------- 모드 토글 ---------- */
+window.setStickerMode=function(on){
+  stickerMode=!!on;
+  const ed=document.getElementById('msgImgEditor');
+  if(ed) ed.classList.toggle('sticker-on',stickerMode);
+  if(!stickerMode){ selId=''; renderStickers(); }
+  syncPanel();
+  if(stickerMode) T('스티커 모드 \u2014 고른 사진이 채팅에 끼워지지 않고 캔버스에 붙어요');
+};
+
+/* ---------- 이미지 선택 결과 가로채기 ---------- */
+const _setDraft=window.setDraftMsgImage;
+window.setDraftMsgImage=function(src){
+  if(stickerMode&&src){
+    addSticker(src);
+    const f=document.getElementById('msgImgFile'); if(f) f.value='';
+    return;
+  }
+  return _setDraft?_setDraft.apply(this,arguments):undefined;
+};
+
+/* 스티커 모드에서 '메시지 추가'를 눌러도 사진 블럭을 요구하지 않게 */
+const _addMessage=window.addMessage;
+window.addMessage=function(){
+  try{
+    if(stickerMode&&state.composerType==='image'&&!draftMsgImg){
+      T('스티커 모드예요 \u2014 \u201C\uFF0B 이미지 선택\u201D 으로 캔버스에 바로 붙여요');
+      return;
+    }
+  }catch(_){}
+  return _addMessage?_addMessage.apply(this,arguments):undefined;
+};
+
+/* ---------- 바깥을 누르면 선택 해제 ---------- */
+document.addEventListener('pointerdown',e=>{
+  if(!selId) return;
+  if(e.target&&e.target.closest&&e.target.closest('#stickerLayer')) return;
+  selId=''; renderStickers();
+},true);
+document.addEventListener('keydown',e=>{
+  if(!selId) return;
+  const t=e.target, tag=(t&&t.tagName||'').toLowerCase();
+  const typing=(tag==='input'||tag==='textarea'||tag==='select'||(t&&t.isContentEditable));
+  if(e.key==='Escape'){ selId=''; renderStickers(); return; }
+  if(typing) return;
+  if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); removeSticker(selId); return; }
+  /* 방향키로 1도씩(Shift 15도) 미세 회전 */
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+    const s=find(selId); if(!s) return;
+    e.preventDefault();
+    const step=(e.shiftKey?15:1)*(e.key==='ArrowRight'?1:-1);
+    applyRotation(s,norm(s.rot+step));
+  }
+},true);
+
+/* ---------- 렌더 훅 ---------- */
+const _render=window.renderPreview;
+window.renderPreview=function(){
+  const r=_render.apply(this,arguments);
+  try{ renderStickers(); }catch(_){}
+  return r;
+};
+
+/* ---------- 저장 전에는 선택 표시(핸들)를 지운다 ---------- */
+['saveImage','copyImage','exportHTML'].forEach(name=>{
+  const orig=window[name];
+  if(typeof orig!=='function') return;
+  window[name]=function(){
+    if(selId){ selId=''; try{ renderStickers(); }catch(_){} }
+    return orig.apply(this,arguments);
+  };
+});
+
+/* ---------- 초기화 ---------- */
+window.__stickers={
+  list:()=>state.stickers,
+  select:id=>{ selId=id; renderStickers(); },
+  rotate:(id,deg)=>{ const s=find(id); return s?applyRotation(s,deg):Promise.resolve(); },
+  render:()=>renderStickers()
+};
+try{ renderStickers(); }catch(_){}
+document.addEventListener('DOMContentLoaded',()=>{ setTimeout(()=>{ try{ renderStickers(); }catch(_){} },400); });
+
+})();
+</script>
+
+<style id="bulk-format-styles">
+/* ===== 여러 개 선택 — 고른 블럭에만 서식·정렬 일괄 적용 ===== */
+#bulkFmtHint{display:flex;align-items:center;gap:7px;margin:0 0 10px;padding:8px 10px;border-radius:9px;
+  background:var(--accent-soft,#F1F1F2);border:1px solid var(--accent);color:var(--ink);
+  font-size:11px;font-weight:700;line-height:1.45}
+#bulkFmtHint b{color:var(--accent)}
+</style>
+<script id="bulk-format-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   '여러 개 선택'으로 고른 블럭에만 서식·정렬을 일괄 적용한다.
+   마크업 문자열을 정규식으로 직접 건드리면 겹친 서식이 깨지므로,
+   fmtText(내용,true) 로 DOM 을 만들고 → 해당 서식만 벗기거나 씌운 뒤 →
+   htmlToMarkup() 으로 되돌린다. (작성창이 쓰는 왕복 경로와 동일)
+   ===================================================================== */
+
+const T=(m,o)=>{ try{ if(typeof window.toast==='function') window.toast(m,o); }catch(_){} };
+const undoRef=()=>(typeof window.undoLast==='function')?window.undoLast:null;
+const withUndo=(msg)=>{ const u=undoRef(); T(msg,u?{action:'실행 취소',onAction:u}:undefined); };
+const sel=()=>window.__bulkSelection;
+
+/* ---------- 서식 종류 정의 ---------- */
+const KIND={
+  bold:{name:'굵게',sel:'b,strong',make:()=>document.createElement('b')},
+  italic:{name:'기울임',sel:'i,em',make:()=>document.createElement('i')},
+  strike:{name:'취소선',sel:'s,strike,del',make:()=>document.createElement('s')},
+  underline:{name:'밑줄',sel:'u',make:()=>document.createElement('u')},
+  highlight:{name:'형광펜',sel:'mark',make:()=>{
+    const e=document.createElement('mark');
+    e.style.background=(state.colors&&state.colors.highlight)||'#E4E4E6';
+    return e;
+  }},
+  quote:{name:'인용구',sel:'.quote-fmt',make:()=>{
+    const e=document.createElement('span');
+    e.className='quote-fmt';
+    e.style.borderLeft='3.5px solid '+((state.colors&&state.colors.quote)||'#8A8F98');
+    return e;
+  }},
+  color:{name:'글자 색',sel:'span',
+    filter:el=>el.tagName==='SPAN'&&!el.classList.contains('quote-fmt')
+      &&!el.classList.contains('text-heading')&&!!(el.style&&el.style.color),
+    make:()=>{
+      const e=document.createElement('span');
+      e.style.color=(state.colors&&state.colors.partial)||'#D14343';
+      return e;
+    }},
+  h1:{name:'큰 제목',sel:'.text-heading',make:()=>{
+    const e=document.createElement('span');
+    e.className='text-heading text-heading-1';
+    e.setAttribute('data-heading','1');
+    return e;
+  }},
+  h2:{name:'작은 제목',sel:'.text-heading',make:()=>{
+    const e=document.createElement('span');
+    e.className='text-heading text-heading-2';
+    e.setAttribute('data-heading','2');
+    return e;
+  }}
+};
+
+function matchesKind(el,k){
+  const K=KIND[k]; if(!K||!el||el.nodeType!==1) return false;
+  try{ if(!el.matches(K.sel)) return false; }catch(_){ return false; }
+  if(K.filter&&!K.filter(el)) return false;
+  if(k==='h1') return el.getAttribute('data-heading')==='1'||el.classList.contains('text-heading-1');
+  if(k==='h2') return el.getAttribute('data-heading')==='2'||el.classList.contains('text-heading-2');
+  return true;
+}
+function unwrap(el){
+  const p=el.parentNode; if(!p) return;
+  while(el.firstChild) p.insertBefore(el.firstChild,el);
+  p.removeChild(el);
+}
+function toBox(content){
+  const box=document.createElement('div');
+  box.innerHTML=fmtText(String(content==null?'':content),true);
+  return box;
+}
+function stripKind(box,k){
+  for(let pass=0;pass<8;pass++){
+    const hits=[...box.querySelectorAll('*')].filter(el=>matchesKind(el,k));
+    if(!hits.length) break;
+    hits.forEach(unwrap);
+  }
+}
+function isWholeWrapped(content,k){
+  const box=toBox(content);
+  const kids=[...box.childNodes].filter(n=>!(n.nodeType===3&&!String(n.nodeValue||'').trim()));
+  if(kids.length!==1) return false;
+  return matchesKind(kids[0],k);
+}
+function applyKind(content,k,on){
+  const box=toBox(content);
+  stripKind(box,k);
+  if(k==='h1') stripKind(box,'h2');
+  if(k==='h2') stripKind(box,'h1');
+  if(on&&box.childNodes.length){
+    const w=KIND[k].make();
+    while(box.firstChild) w.appendChild(box.firstChild);
+    box.appendChild(w);
+  }
+  let mk;
+  try{ mk=htmlToMarkup(box); }catch(_){ return content; }
+  if(typeof mk!=='string') return content;
+  return mk.replace(/\n{3,}/g,'\n\n');
+}
+
+/* ---------- 서식 전부 지우기 (fmtText 가 읽는 목록과 동일) ---------- */
+const STRIP_RULES=[
+  [/\[##\]([\s\S]*?)\[\/##\]/g,'$1'],
+  [/\[#\]([\s\S]*?)\[\/#\]/g,'$1'],
+  [/\[#[0-9A-Fa-f]{6}\]([\s\S]*?)\[\/\]/g,'$1'],
+  [/==(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)==/g,'$1'],
+  [/%%(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)%%/g,'$1'],
+  [/\*\*([^*]+)\*\*/g,'$1'],
+  [/(?<!\*)\*([^*]+)\*(?!\*)/g,'$1'],
+  [/~~([^~]+)~~/g,'$1'],
+  [/\+\+([^+]+)\+\+/g,'$1']
+];
+function stripAll(text){
+  if(typeof text!=='string'||!text) return text;
+  let out=text;
+  for(let pass=0;pass<6;pass++){
+    const before=out;
+    STRIP_RULES.forEach(([re,to])=>{ out=out.replace(re,to); });
+    if(out===before) break;
+  }
+  return out;
+}
+
+/* ---------- 대상 고르기 ---------- */
+function pickTargets(ids){
+  const set=new Set(ids);
+  return (state.messages||[]).filter(m=>m&&set.has(m.id)&&typeof m.content==='string'
+    &&(!m.type||m.type==='chat'||m.type==='text'));
+}
+
+/* ---------- 일괄 적용 ----------
+   반환값 true = 선택 모드가 처리했으니 작성창은 건드리지 않는다 */
+function bulkFormat(k){
+  const S=sel();
+  if(!S||!S.active()) return false;
+  const ids=S.ids();
+  if(!ids.length){ T('먼저 미리보기에서 바꿀 블럭을 눌러 선택해 주세요'); return true; }
+  const ms=pickTargets(ids);
+  if(!ms.length){ T('글\u00B7말풍선 블럭만 서식을 바꿀 수 있어요'); return true; }
+  const on=!ms.every(m=>isWholeWrapped(m.content,k));
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('서식 일괄 변경'); }catch(_){}
+  ms.forEach(m=>{ m.content=applyKind(m.content,k,on); });
+  try{ renderPreview(); }catch(_){}
+  try{ S.refresh(); }catch(_){}
+  withUndo(ms.length+'개 블럭에 '+KIND[k].name+'을(를) '+(on?'적용했어요':'해제했어요'));
+  return true;
+}
+function bulkClear(){
+  const S=sel();
+  if(!S||!S.active()) return false;
+  const ids=S.ids();
+  if(!ids.length){ T('먼저 미리보기에서 서식을 지울 블럭을 눌러 선택해 주세요'); return true; }
+  const ms=pickTargets(ids);
+  if(!ms.length){ T('글\u00B7말풍선 블럭만 서식을 지울 수 있어요'); return true; }
+  const hit=ms.filter(m=>stripAll(m.content)!==m.content);
+  if(!hit.length){ T('선택한 블럭에는 지울 서식이 없어요'); return true; }
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('서식 일괄 삭제'); }catch(_){}
+  hit.forEach(m=>{ m.content=stripAll(m.content); });
+  try{ renderPreview(); }catch(_){}
+  try{ S.refresh(); }catch(_){}
+  withUndo(hit.length+'개 블럭의 서식을 지웠어요');
+  return true;
+}
+
+/* ---------- 정렬 일괄 적용 (setAlign 에서 호출) ---------- */
+window.__bulkApplyAlign=function(a){
+  const S=sel();
+  if(!S||!S.active()) return false;
+  state.draftAlign=a;
+  try{ if(typeof window.__syncAlignSeg==='function') window.__syncAlignSeg(); }catch(_){}
+  const ids=S.ids();
+  if(!ids.length){ T('먼저 미리보기에서 정렬을 바꿀 블럭을 눌러 선택해 주세요'); return true; }
+  const set=new Set(ids);
+  const ms=(state.messages||[]).filter(m=>m&&set.has(m.id)&&m.type==='text');
+  if(!ms.length){ T('정렬은 글 블럭에만 적용돼요'); return true; }
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('정렬 일괄 변경'); }catch(_){}
+  ms.forEach(m=>{ m.align=a; });
+  try{ renderPreview(); }catch(_){}
+  try{ S.refresh(); }catch(_){}
+  withUndo(ms.length+'개 글 블럭의 정렬을 바꿨어요');
+  return true;
+};
+
+/* ---------- 작성창 서식 버튼 가로채기 ---------- */
+const MARK_KIND={'**':'bold','*':'italic','~~':'strike','++':'underline','==':'highlight','%%':'quote'};
+const _wrapFmt=window.wrapFmt;
+window.wrapFmt=function(mark){
+  const k=MARK_KIND[mark];
+  if(k&&bulkFormat(k)) return;
+  return _wrapFmt?_wrapFmt.apply(this,arguments):undefined;
+};
+const _wrapColor=window.wrapColor;
+window.wrapColor=function(){
+  if(bulkFormat('color')) return;
+  return _wrapColor?_wrapColor.apply(this,arguments):undefined;
+};
+const _wrapTextHeading=window.wrapTextHeading;
+window.wrapTextHeading=function(level){
+  if(bulkFormat(Number(level)===1?'h1':'h2')) return;
+  return _wrapTextHeading?_wrapTextHeading.apply(this,arguments):undefined;
+};
+const _clearFmt=window.clearFmt;
+window.clearFmt=function(){
+  if(bulkClear()) return;
+  return _clearFmt?_clearFmt.apply(this,arguments):undefined;
+};
+
+/* 블럭 하나를 수정하러 들어가면 선택 모드는 자동으로 빠져나온다
+   (선택 상태로 작성창을 열어 정렬이 엉뚱하게 일괄 적용되는 것을 막는다) */
+const _begin=window.beginComposerEdit;
+if(typeof _begin==='function'){
+  window.beginComposerEdit=function(){
+    const S=sel();
+    if(S&&S.active()){ try{ S.exit(); }catch(_){} }
+    return _begin.apply(this,arguments);
+  };
+}
+
+/* ---------- 선택 모드 안내줄 ---------- */
+window.__onBulkSelectionChange=function(active,ids){
+  const host=document.querySelector('.composer-card .bd');
+  let el=document.getElementById('bulkFmtHint');
+  if(!active){ if(el) el.remove(); return; }
+  if(!host) return;
+  if(!el){ el=document.createElement('div'); el.id='bulkFmtHint'; }
+  if(el.parentElement!==host||host.firstChild!==el) host.insertBefore(el,host.firstChild);
+  const n=(ids||[]).length;
+  el.innerHTML=n
+    ? ('\u2611 <b>'+n+'개</b> 선택됨 \u2014 아래 서식\u00B7정렬 버튼을 누르면 이 블럭들만 한 번에 바뀌어요')
+    : '\u2611 여러 개 선택 \u2014 미리보기에서 바꿀 블럭을 눌러 고른 뒤, 아래 서식\u00B7정렬 버튼을 눌러요';
+};
+
+})();
+</script>
+
 </body>
+
+
+
+
 </html>
