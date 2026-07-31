@@ -4088,28 +4088,67 @@ setMarginSide=function(side,val){
   syncMarginInputs();renderPreview();
 };
 
-/* ===== 장평(가로 폭) — make bubbles actually reflow to the scaled text =====
-   scaleX() is visual-only, so measure each bubble's natural text width and
-   resize the bubble to hug the scaled result (no re-wrap: the inner width is
-   locked, only the bubble box shrinks/grows). */
+/* ===== 장평(가로 폭) — 배율에 맞춰 줄바꿈까지 다시 계산 =====
+   scaleX()는 '그리기'만 바꾸고 '배치'는 원래 글자 폭 그대로라, 아무 보정이
+   없으면 말풍선이 원래 크기로 남는다. 그래서 두 갈래로 나눠 계산한다.
+     · 한 줄로 끝나는 짧은 글 → 자연 폭(max-content)만큼만 잡아 말풍선이 글자를
+       딱 감싸게 한다. (줄바꿈 발생 안 함)
+     · 최대 폭까지 차는 긴 글 → 안쪽 흐름 폭을 (말풍선 최대 폭 ÷ 배율)로 잡는다.
+       글자를 95%로 줄이면 같은 자리에 글자가 약 5% 더 들어가므로, 그만큼 넓은
+       폭에서 줄바꿈을 다시 계산해 축소 후 말풍선을 꽉 채운다. 확대(>100%)일
+       때도 같은 식으로 최대 폭을 넘지 않게 줄바꿈이 다시 잡힌다.
+   ⚠ .glyph-scale의 max-width:100%가 살아 있으면, 좁아진 말풍선이 안쪽 폭을
+     다시 깎아 버려 엉뚱한 줄바꿈이 생긴다(장평을 줄였는데 줄이 늘어나던 원인).
+     폭을 고정할 때는 반드시 max-width를 함께 풀어 준다.
+   측정은 [쓰기→읽기] 두 덩어리로 묶어 말풍선 개수와 무관하게 리플로우 2번만
+   일어나게 한다. */
 function applyGlyphScale(){
   const scale=Math.max(.7,Math.min(1.3,(Number(state.layout.widthScale)||100)/100));
-  const bpx=Number(state.layout.bpx)||0;
-  const bubbles=document.querySelectorAll('#chat .n-bubble > .glyph-scale, #chat .m-bubble > .glyph-scale');
-  bubbles.forEach(g=>{
-    const bubble=g.parentElement;
-    // reset any prior sizing before measuring
-    g.style.width=''; g.style.display=''; g.style.transformOrigin='left top';
-    bubble.style.width='';
-    if(scale===1) return;
-    // skip when an image drives the bubble width (keeps image intact)
-    if(bubble.querySelector('.mimg')) return;
-    const natContent=g.offsetWidth;           // natural text width (bubble is shrink-to-fit)
-    if(!natContent) return;
+  const flows=[...document.querySelectorAll('#chat .n-bubble > .glyph-scale, #chat .m-bubble > .glyph-scale')];
+  if(!flows.length) return;
+
+  /* [쓰기] 지난 계산 결과 초기화 */
+  flows.forEach(g=>{
+    g.style.width=''; g.style.maxWidth=''; g.style.display='';
+    g.style.transformOrigin='left top';
+    g.parentElement.style.width='';
+  });
+  if(scale===1) return;
+
+  /* 사진이 폭을 정하는 말풍선은 건드리지 않는다 */
+  const items=flows.filter(g=>!g.parentElement.querySelector('.mimg'));
+  if(!items.length) return;
+
+  /* [쓰기] 말풍선을 허용 최대 폭까지 펼친다 (max-width:100% / 78% 규칙이 잘라 줌) */
+  items.forEach(g=>{ g.parentElement.style.width='100%'; });
+  /* [읽기] 최대 안쪽 폭 + 좌우 여백(패딩·테두리) 실측 */
+  const box=items.map(g=>{
+    const b=g.parentElement;
+    const cs=getComputedStyle(b);
+    const extra=(parseFloat(cs.paddingLeft)||0)+(parseFloat(cs.paddingRight)||0)
+               +(parseFloat(cs.borderLeftWidth)||0)+(parseFloat(cs.borderRightWidth)||0);
+    return {extra:extra,maxInner:Math.max(1,b.offsetWidth-extra)};
+  });
+
+  /* [쓰기] 줄바꿈이 전혀 없는 자연 폭을 재기 위한 준비 */
+  items.forEach(g=>{
+    g.parentElement.style.width='';
     g.style.display='inline-block';
-    g.style.width=natContent+'px';            // lock inner width -> no re-wrap
-    // border-box: total width = scaled content + horizontal padding on both sides
-    bubble.style.width=(Math.round(natContent*scale)+bpx*2)+'px';
+    g.style.maxWidth='none';
+    g.style.width='max-content';
+    if(!g.style.width) g.style.width='-webkit-max-content';
+  });
+  /* [읽기] 자연 폭 실측 */
+  const natural=items.map(g=>g.offsetWidth);
+
+  /* [쓰기] 최종 폭 적용 */
+  items.forEach((g,i)=>{
+    const extra=box[i].extra, maxInner=box[i].maxInner, nat=natural[i];
+    if(!nat){ g.style.width=''; g.style.maxWidth=''; g.style.display=''; return; }
+    const room=maxInner/scale;              // 배율만큼 더(또는 덜) 담을 수 있는 흐름 폭
+    const layoutW=Math.min(nat,room);
+    g.style.width=layoutW+'px';             // max-width는 none으로 유지 → 재줄바꿈 없음
+    g.parentElement.style.width=(Math.ceil(layoutW*scale)+extra)+'px';
   });
 }
 
@@ -7219,7 +7258,7 @@ function enterMobile(){
     let tools=document.getElementById('mToolsBtn');
     if(!tools){
       tools=document.createElement('button'); tools.type='button'; tools.id='mToolsBtn';
-      tools.title='작성 종류·서식 열기/닫기'; tools.textContent='서식';
+      tools.title='작성·도구 패널 열기/닫기'; tools.textContent='도구';
       tools.onclick=()=>document.body.classList.toggle('m-tools-open');
     }
     row.append(tools,tf,addBtn);
@@ -16777,22 +16816,30 @@ if(chat&&window.MutationObserver){
     margin-right:0!important;
   }
 
-  /* ---- 2) 도구 바 높이 제한 + 창 버튼 ---- */
+  /* ---- 2) 도구 바: 항상 반 칸까지만 · 최대화하면 70% ---- */
   body.mobile-ui #mDock{
     display:flex!important;
     flex-direction:column;
-  }
-  body.mobile-ui.m-tools-open #mDock{
     max-height:50dvh!important;
     overflow:hidden!important;
   }
-  body.mobile-ui.m-tools-open.m-dock-max #mDock{
-    max-height:calc(100dvh - 52px - env(safe-area-inset-top))!important;
+  body.mobile-ui.m-tools-open.m-dock-tools #mDock{
+    height:50dvh!important;
   }
-  body.mobile-ui.m-tools-open #mDock .composer-card{
-    flex:1 1 auto!important;
-    min-height:0!important;
+  body.mobile-ui.m-tools-open.m-dock-max #mDock{
+    height:70dvh!important;
+    max-height:70dvh!important;
+  }
+  body.mobile-ui #mDock .composer-card{
     max-height:none!important;
+    min-height:0!important;
+  }
+  body.mobile-ui #mChips{flex:none}
+  body.mobile-ui.m-tools-open:not(.m-dock-tools) #mDock .composer-card{
+    flex:1 1 auto!important;
+  }
+  body.mobile-ui.m-tools-open.m-dock-tools #mDock .composer-card{
+    flex:0 0 auto!important;
   }
   /* 반 칸을 넘는 내용은 도구 바 안에서만 스크롤 (스크롤 바 보이게) */
   body.mobile-ui #mDock .composer-card>.bd{
@@ -16805,18 +16852,39 @@ if(chat&&window.MutationObserver){
     background:var(--muted,#8A8A8F);border-radius:3px;
   }
 
+  /* ---- 도구 패널을 독 안으로 (바텀 시트는 사용하지 않음) ---- */
+  body.mobile-ui #mSheet{display:none!important}
+  #mToolsHost{display:none}
+  body.mobile-ui.m-tools-open.m-dock-tools #mToolsHost{
+    display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden;
+    margin-bottom:6px;padding:6px 7px 0;
+    border:1px solid var(--line);border-radius:12px;background:var(--panel-2,#F6F6F7);
+  }
+  body.mobile-ui.m-tools-open.m-dock-tools #mDock .composer-card>.bd{display:none!important}
+  body.mobile-ui.m-dock-tools #mDock #mComposeFormatToggle{display:none!important}
+
+  /* ---- 독 머리줄: [작성 | 도구] + 최대화 ---- */
   #mDockBar{display:none}
   body.mobile-ui.m-tools-open #mDockBar{
-    display:flex;flex:none;align-items:center;gap:4px;
+    display:flex;flex:none;align-items:center;gap:6px;
     padding:0 2px 5px;
   }
-  body.mobile-ui #mDockBar .mdock-title{
-    margin-right:auto;padding-left:4px;
-    font-size:11px;font-weight:700;color:var(--muted);letter-spacing:-.02em;
+  body.mobile-ui #mDockBar .mdock-seg{
+    display:flex;gap:2px;margin-right:auto;min-width:0;
   }
-  body.mobile-ui #mDockBar button{
-    flex:none;width:32px;height:26px;padding:0;
-    border:1px solid var(--line);border-radius:8px;background:var(--panel);
+  body.mobile-ui #mDockBar .mdock-seg button{
+    flex:none;height:28px;padding:0 12px;
+    border:1px solid var(--line);border-radius:9px;background:var(--panel);
+    color:var(--muted);font-size:12px;font-weight:700;line-height:1;
+    display:flex;align-items:center;gap:4px;
+    touch-action:manipulation;cursor:pointer;
+  }
+  body.mobile-ui #mDockBar .mdock-seg button.on{
+    background:var(--ink);border-color:var(--ink);color:#fff;
+  }
+  body.mobile-ui #mDockBar #mDockMax{
+    flex:none;width:32px;height:28px;padding:0;
+    border:1px solid var(--line);border-radius:9px;background:var(--panel);
     color:var(--ink);font-size:12px;line-height:1;font-weight:700;
     display:flex;align-items:center;justify-content:center;
     touch-action:manipulation;cursor:pointer;
@@ -16825,6 +16893,33 @@ if(chat&&window.MutationObserver){
   body.mobile-ui.m-dock-max #mDockMax{
     background:var(--ink);color:#fff;border-color:var(--ink);
   }
+
+  /* ---- 1) 멤버·설정 옆 '선택 삭제' 칩 숨김 (삭제 메뉴에 그대로 있음) ---- */
+  body.mobile-ui #mBulkChip,
+  body.mobile-ui #mBulkCancelChip{display:none!important}
+
+  /* ---- 2) 상단바: 로고 글자 빼고 한 줄로 · 아이콘과 모드 탭이 겹치지 않게 ---- */
+  body.mobile-ui .top{
+    display:flex!important;
+    align-items:center;
+    gap:6px;
+    min-height:44px;
+    padding:6px 8px!important;
+  }
+  body.mobile-ui .brand{display:none!important}
+  body.mobile-ui .top-right{
+    flex:0 1 auto;min-width:0;margin:0!important;
+    display:flex;align-items:center;justify-content:flex-start;
+  }
+  body.mobile-ui .modeswitch{flex:0 1 auto;min-width:0;overflow:hidden}
+  body.mobile-ui #mHdrBtns{
+    flex:0 0 auto;margin-left:auto!important;
+  }
+  /* ---- 3) 상단바 설정(⚙) 버튼 제거 — 아래 [도구]로 통합 ---- */
+  body.mobile-ui #mGearBtn{display:none!important}
+
+  /* ---- 4) 문단 선택은 떠 있는 창 없이, 아래 서식 바로 적용 ---- */
+  body.mobile-ui #paragraphSelectBar{display:none!important}
 
   /* ---- 3) 입력창: 내용이 늘면 3줄까지 커짐 ---- */
   body.mobile-ui #mInputRow{
@@ -16911,44 +17006,116 @@ if(chat&&window.MutationObserver){
   },{passive:false});
 })();
 
-/* ============ 2) 도구 바 창 버튼 (최대화 / 닫기) ============ */
+/* ============ 2) 하단 독: [작성 | 도구] 전환 · 최대화 ============
+   PC의 [✎ 작성 / ⚙ 도구] 탭과 같은 구조를 모바일 독 머리줄에 만든다.
+   도구 패널(#mSheetBody)은 바텀 시트에서 독 안으로 옮겨 오고, 시트 자체는
+   쓰지 않는다. #mSheetBody 엘리먼트를 통째로 옮기므로 enterMobile /
+   exitMobile 의 '#mSheetBody .settings-card' 선택자는 그대로 동작한다. */
 (function(){
-  function setMax(on){
-    document.body.classList.toggle('m-dock-max',!!on);
-    const b=document.getElementById('mDockMax');
-    if(!b) return;
-    b.textContent=on?'❐':'▭';
-    b.title=on?'반 칸으로 되돌리기':'최대로 키우기';
-    b.setAttribute('aria-label',b.title);
-    b.setAttribute('aria-pressed',String(!!on));
+  const TOOLS='m-dock-tools', OPEN='m-tools-open', MAX='m-dock-max';
+  let guard=false;
+
+  function ensureHost(dock){
+    let host=document.getElementById('mToolsHost');
+    if(!host){
+      host=document.createElement('div');
+      host.id='mToolsHost';
+    }
+    const body=document.getElementById('mSheetBody');
+    if(body&&body.parentElement!==host) host.appendChild(body);
+    const card=dock.querySelector('.composer-card');
+    if(card){ if(host.nextElementSibling!==card) dock.insertBefore(host,card); }
+    else if(host.parentElement!==dock) dock.appendChild(host);
+    return host;
   }
+
+  function syncBar(){
+    const c=document.getElementById('mDockTabCompose');
+    const t=document.getElementById('mDockTabTools');
+    const m=document.getElementById('mDockMax');
+    const tools=document.body.classList.contains(TOOLS);
+    const max=document.body.classList.contains(MAX);
+    if(c){ c.classList.toggle('on',!tools); c.setAttribute('aria-selected',String(!tools)); }
+    if(t){ t.classList.toggle('on',tools); t.setAttribute('aria-selected',String(tools)); }
+    if(m){
+      m.textContent=max?'❐':'▭';
+      m.title=max?'반 칸으로 되돌리기':'최대로 키우기 (화면 70%)';
+      m.setAttribute('aria-label',m.title);
+      m.setAttribute('aria-pressed',String(max));
+    }
+  }
+  function setMode(mode){
+    guard=true;
+    document.body.classList.add(OPEN);
+    document.body.classList.toggle(TOOLS,mode==='tools');
+    guard=false;
+    if(mode==='tools'&&!document.querySelector('.tool-panel.show')){
+      try{ switchToolPanel('style',true); }catch(_){}
+    }
+    syncBar();
+  }
+  function setMax(on){
+    guard=true;
+    document.body.classList.toggle(MAX,!!on);
+    guard=false;
+    syncBar();
+  }
+  function closeDock(){
+    guard=true;
+    document.body.classList.remove(OPEN,MAX);
+    guard=false;
+    syncBar();
+  }
+
   function build(){
     const dock=document.getElementById('mDock');
-    if(!dock||document.getElementById('mDockBar')) return;
-    const bar=document.createElement('div');
-    bar.id='mDockBar';
-    bar.innerHTML='<span class="mdock-title">작성 도구</span>'
-      +'<button type="button" id="mDockMax" title="최대로 키우기" aria-pressed="false">▭</button>'
-      +'<button type="button" id="mDockHide" title="도구 바 닫기" aria-label="도구 바 닫기">✕</button>';
-    dock.insertBefore(bar,dock.firstChild);
-    bar.querySelector('#mDockMax').addEventListener('click',()=>{
-      setMax(!document.body.classList.contains('m-dock-max'));
-    });
-    bar.querySelector('#mDockHide').addEventListener('click',()=>{
-      setMax(false);
-      document.body.classList.remove('m-tools-open');
-    });
-    setMax(false);
+    if(!dock) return;
+    ensureHost(dock);
+
+    let bar=document.getElementById('mDockBar');
+    if(!bar){
+      bar=document.createElement('div');
+      bar.id='mDockBar';
+      bar.innerHTML='<div class="mdock-seg" role="tablist" aria-label="아래 패널 전환">'
+        +'<button type="button" id="mDockTabCompose" role="tab" aria-selected="true">✎ 작성</button>'
+        +'<button type="button" id="mDockTabTools" role="tab" aria-selected="false">⚙ 도구</button>'
+        +'</div>'
+        +'<button type="button" id="mDockMax" aria-pressed="false" title="최대로 키우기 (화면 70%)">▭</button>';
+      bar.querySelector('#mDockTabCompose').addEventListener('click',()=>setMode('compose'));
+      bar.querySelector('#mDockTabTools').addEventListener('click',()=>setMode('tools'));
+      bar.querySelector('#mDockMax').addEventListener('click',()=>{
+        setMax(!document.body.classList.contains(MAX));
+      });
+    }
+    if(dock.firstChild!==bar) dock.insertBefore(bar,dock.firstChild);
+
+    /* 아래 [도구] 버튼: 열기 ↔ 완전히 내리기 */
+    const btn=document.getElementById('mToolsBtn');
+    if(btn&&btn.dataset.dockToggle!=='1'){
+      btn.dataset.dockToggle='1';
+      btn.textContent='도구';
+      btn.title='작성·도구 패널 열기/닫기';
+      btn.onclick=()=>{
+        if(document.body.classList.contains(OPEN)) closeDock();
+        else setMode(document.body.classList.contains(TOOLS)?'tools':'compose');
+      };
+    }
+    syncBar();
   }
-  /* 도구를 닫으면 최대화 상태도 함께 초기화 */
-  let guard=false;
+
+  /* openSheet()(＋ 멤버·설정 칩 등)는 독의 도구 모드로 넘긴다 */
   function watch(){
     if(guard) return;
     build();
-    if(!document.body.classList.contains('m-tools-open')
-       &&document.body.classList.contains('m-dock-max')){
-      guard=true; setMax(false); guard=false;
+    const cls=document.body.classList;
+    if(cls.contains('m-sheet-open')){
+      guard=true;
+      cls.remove('m-sheet-open','m-sheet-min');
+      guard=false;
+      setMode('tools');
+      return;
     }
+    if(!cls.contains(OPEN)&&cls.contains(MAX)) setMax(false);
   }
   if(window.MutationObserver){
     new MutationObserver(watch).observe(document.body,{attributes:true,attributeFilter:['class'],childList:true});
@@ -16956,6 +17123,69 @@ if(chat&&window.MutationObserver){
   window.addEventListener('resize',watch,{passive:true});
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',watch,{once:true});
   else watch();
+
+  /* 말풍선 ✎ 로 수정에 들어가면 도구가 아니라 작성 쪽을 보여 준다 */
+  const prevEdit=window.beginComposerEdit;
+  if(typeof prevEdit==='function'){
+    window.beginComposerEdit=function(){
+      const r=prevEdit.apply(this,arguments);
+      if(document.body.classList.contains('mobile-ui')) setMode('compose');
+      return r;
+    };
+  }
+})();
+
+/* ============ 3) 문단 선택: 떠 있는 창 대신 짧은 안내만 ============
+   선택한 블럭의 서식·정렬은 이미 아래 서식 바가 일괄로 처리한다
+   (bulk-format-script). 종류(글/말풍선) 바꾸기만 여기서 이어 준다. */
+(function(){
+  function mobile(){ return document.body.classList.contains('mobile-ui'); }
+  function tip(){
+    try{
+      if(typeof window.toast==='function') window.toast('원하는 블럭을 선택해 아래 서식창에서 적용하세요');
+    }catch(_){}
+  }
+  const prev=window.toggleParagraphSelectMode;
+  if(typeof prev==='function'){
+    window.toggleParagraphSelectMode=function(){
+      const wasOff=!(window.__paragraphSelection&&window.__paragraphSelection.active());
+      const r=prev.apply(this,arguments);
+      if(mobile()&&wasOff) tip();
+      return r;
+    };
+  }
+
+  /* 선택 중에 종류 버튼(글/말풍선)을 누르면 고른 블럭을 통째로 바꾼다 */
+  const prevType=window.setMsgType;
+  if(typeof prevType==='function'){
+    window.setMsgType=function(t){
+      const api=window.__paragraphSelection;
+      if(mobile()&&api&&api.active()&&api.ids().length&&(t==='text'||t==='chat')){
+        if(t==='chat'){
+          /* 일괄 변환은 발신자가 필요하다 — 작성창에서 고른 캐릭터를 쓴다 */
+          const sel=document.getElementById('senderSel');
+          let id=sel?sel.value:'';
+          if(!id&&state.members&&state.members.length) id=state.members[0].id;
+          const bulk=document.getElementById('paragraphBulkSender');
+          if(bulk){
+            if(id&&![...bulk.options].some(o=>o.value===id)){
+              const mem=(state.members||[]).find(m=>m.id===id);
+              const o=document.createElement('option');
+              o.value=id; o.textContent=mem?mem.name:id;
+              bulk.appendChild(o);
+            }
+            bulk.value=id||'';
+          }
+          if(!id){
+            try{ window.toast('먼저 말풍선으로 쓸 캐릭터를 골라 주세요'); }catch(_){}
+            return;
+          }
+        }
+        try{ window.applySelectedParagraphType(t); return; }catch(_){}
+      }
+      return prevType.apply(this,arguments);
+    };
+  }
 })();
 
 })();
