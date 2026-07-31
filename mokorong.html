@@ -16871,18 +16871,22 @@ if(chat&&window.MutationObserver){
     padding:0 2px 5px;
   }
   body.mobile-ui #mDockBar .mdock-seg{
-    display:flex;gap:2px;flex:none;min-width:0;
+    display:flex;gap:14px;flex:none;min-width:0;padding-left:5px;
+    align-self:stretch;align-items:flex-end;
   }
+  /* 데스크톱 .pane-tabs 와 같은 밑줄 탭 — 칸(버튼 상자) 없이 */
   body.mobile-ui #mDockBar .mdock-seg button{
-    flex:none;height:28px;padding:0 11px;
-    border:1px solid var(--line);border-radius:9px;background:var(--panel);
-    color:var(--muted);font-size:12px;font-weight:700;line-height:1;
-    display:flex;align-items:center;gap:4px;
+    flex:none;min-height:34px;padding:0 2px;margin:0;
+    border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;
+    color:var(--muted);font-size:13px;font-weight:700;letter-spacing:-.01em;line-height:1;
+    display:flex;align-items:center;justify-content:center;gap:5px;
+    transition-property:color,border-color;transition-duration:var(--dur);
     touch-action:manipulation;cursor:pointer;
   }
   body.mobile-ui #mDockBar .mdock-seg button.on{
-    background:var(--ink);border-color:var(--ink);color:#fff;
+    color:var(--ink);border-bottom-color:var(--ink);background:transparent;
   }
+  body.mobile-ui #mDockBar .mdock-seg button:active{transform:scale(.98)}
   /* 드래그해서 높이 조절 */
   body.mobile-ui #mDockGrip{
     flex:1 1 auto;min-width:28px;align-self:stretch;
