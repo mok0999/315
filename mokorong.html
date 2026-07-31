@@ -12146,24 +12146,45 @@ function speakerAndBody(raw){
   const pre=(typeof parseNamePrefix==='function')?parseNamePrefix(plain):null;
   return {plain:plain,pre:pre,body:(pre?String(pre.rest||''):plain).trim()};
 }
+/* 대사 뒤에 붙는 번역·주석 괄호는 '묶음 판정을 할 때만' 잠시 떼어 낸다.
+   예)  **이공오**｜"⋯⋯隻豬。" (⋯⋯돼지.)
+        → 판정은  "⋯⋯隻豬。"  로 하고, 말풍선에 들어가는 내용은 원문 그대로.
+   여는 기호로 시작하는 문단에만 영향을 주므로, 괄호로 끝나는 평범한 서술
+   문장이 말풍선으로 잘못 잡히지는 않는다. */
+const TRAIL_NOTE_RE=/[\s\u00A0]*[(（\[［{｛【〔][^(（\[［{｛【〔)）\]］}｝】〕]*[)）\]］}｝】〕][\s\u00A0]*$/;
+function stripTrailingNote(s){
+  let out=String(s||'').trim();
+  for(let i=0;i<4;i++){                    /* (번역) (주석) 처럼 여러 개 붙어도 */
+    const next=out.replace(TRAIL_NOTE_RE,'').trim();
+    if(!next||next===out) break;           /* 통째로 괄호뿐인 문단은 그대로 둔다 */
+    out=next;
+  }
+  return out;
+}
 function isStarWrapped(s){
   s=String(s||'').trim();
   return s.length>=2&&s.charAt(0)==='*'&&s.charAt(1)!=='*'&&
     s.charAt(s.length-1)==='*'&&s.charAt(s.length-2)!=='*';
 }
-function isQuoteWrapped(s){
-  s=String(s||'').trim();
+function quoteWrapCore(s){
   if(s.length<2) return false;
   const a=s.charAt(0),b=s.charAt(s.length-1);
   return (a==='"'&&b==='"')||(a==='“'&&b==='”')||(a==='「'&&b==='」');
 }
-function isPairWrapped(s,pair){
+function isQuoteWrapped(s){
   s=String(s||'').trim();
+  return quoteWrapCore(s)||quoteWrapCore(stripTrailingNote(s));
+}
+function pairWrapCore(s,pair){
   const o=pair.open,c=pair.close;
   if(s.length<o.length+c.length) return false;
   if(s.slice(0,o.length)!==o||s.slice(-c.length)!==c) return false;
   if(o==='*'&&c==='*') return isStarWrapped(s);   /* **굵게** 는 묶음으로 보지 않는다 */
   return true;
+}
+function isPairWrapped(s,pair){
+  s=String(s||'').trim();
+  return pairWrapCore(s,pair)||pairWrapCore(stripTrailingNote(s),pair);
 }
 function classifyParagraph(raw){
   const info=speakerAndBody(raw),r=state.paragraphRules;
