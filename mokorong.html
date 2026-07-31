@@ -16846,10 +16846,10 @@ if(chat&&window.MutationObserver){
   /* ---- 도구 패널을 독 안으로 (바텀 시트는 사용하지 않음) ---- */
   body.mobile-ui #mSheet{display:none!important}
   #mToolsHost{display:none}
+  /* 데스크톱 패널과 똑같이 — 상자에 넣지 않고 독 폭 전체를 쓴다 */
   body.mobile-ui.m-tools-open.m-dock-tools #mToolsHost{
     display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden;
-    margin-bottom:6px;padding:6px 7px 0;
-    border:1px solid var(--line);border-radius:12px;background:var(--panel-2,#F6F6F7);
+    margin:0 -8px;padding:0;border:0;border-radius:0;background:transparent;
   }
   body.mobile-ui.m-tools-open.m-dock-tools #mDock .composer-card>.bd{display:none!important}
   body.mobile-ui.m-dock-tools #mDock #mComposeFormatToggle{display:none!important}
@@ -16864,17 +16864,17 @@ if(chat&&window.MutationObserver){
     font-weight:700;
   }
 
-  /* ---- 독 머리줄: [작성 | 도구] + 최대화 ---- */
+  /* ---- 독 머리줄: [작성 | 도구] · 드래그 손잡이 · ⌃ 👁 ✕ ---- */
   #mDockBar{display:none}
   body.mobile-ui.m-tools-open #mDockBar{
     display:flex;flex:none;align-items:center;gap:6px;
     padding:0 2px 5px;
   }
   body.mobile-ui #mDockBar .mdock-seg{
-    display:flex;gap:2px;margin-right:auto;min-width:0;
+    display:flex;gap:2px;flex:none;min-width:0;
   }
   body.mobile-ui #mDockBar .mdock-seg button{
-    flex:none;height:28px;padding:0 12px;
+    flex:none;height:28px;padding:0 11px;
     border:1px solid var(--line);border-radius:9px;background:var(--panel);
     color:var(--muted);font-size:12px;font-weight:700;line-height:1;
     display:flex;align-items:center;gap:4px;
@@ -16883,16 +16883,40 @@ if(chat&&window.MutationObserver){
   body.mobile-ui #mDockBar .mdock-seg button.on{
     background:var(--ink);border-color:var(--ink);color:#fff;
   }
-  body.mobile-ui #mDockBar #mDockMax{
-    flex:none;width:32px;height:28px;padding:0;
+  /* 드래그해서 높이 조절 */
+  body.mobile-ui #mDockGrip{
+    flex:1 1 auto;min-width:28px;align-self:stretch;
+    display:flex;align-items:center;justify-content:center;
+    padding:8px 0 6px;margin:0;
+    touch-action:none;cursor:grab;
+  }
+  body.mobile-ui #mDockGrip>span{
+    display:block;width:38px;height:4px;border-radius:2px;background:#D4D4D8;
+  }
+  body.mobile-ui #mDockGrip:active{cursor:grabbing}
+  body.mobile-ui #mDockBar .mdock-btns{display:flex;gap:4px;flex:none}
+  body.mobile-ui #mDockBar .mdock-btns button{
+    flex:none;width:32px;height:30px;padding:0;
     border:1px solid var(--line);border-radius:9px;background:var(--panel);
-    color:var(--ink);font-size:12px;line-height:1;font-weight:700;
+    color:var(--ink);font-size:13px;line-height:1;
     display:flex;align-items:center;justify-content:center;
     touch-action:manipulation;cursor:pointer;
   }
   body.mobile-ui #mDockBar button:active{transform:scale(.94)}
-  body.mobile-ui.m-dock-max #mDockMax{
+  body.mobile-ui.m-dock-max #mDockMax,
+  body.mobile-ui.m-dock-min #mDockMin{
     background:var(--ink);color:#fff;border-color:var(--ink);
+  }
+
+  /* 👁 미리보기만 보기 — 머리줄과 입력줄만 남긴다 */
+  body.mobile-ui.m-tools-open.m-dock-min #mToolsHost,
+  body.mobile-ui.m-tools-open.m-dock-min #mDock .composer-card>.bd{display:none!important}
+  body.mobile-ui.m-tools-open.m-dock-min #mDock{height:auto!important}
+
+  /* 손잡이로 직접 잡은 높이가 최우선 */
+  body.mobile-ui.m-tools-open.m-dock-free #mDock{
+    height:var(--m-dock-h,50dvh)!important;
+    max-height:88dvh!important;
   }
 
   /* ---- 1) 멤버·설정 옆 '선택 삭제' 칩 숨김 (삭제 메뉴에 그대로 있음) ---- */
@@ -17013,7 +17037,8 @@ if(chat&&window.MutationObserver){
    쓰지 않는다. #mSheetBody 엘리먼트를 통째로 옮기므로 enterMobile /
    exitMobile 의 '#mSheetBody .settings-card' 선택자는 그대로 동작한다. */
 (function(){
-  const TOOLS='m-dock-tools', OPEN='m-tools-open', MAX='m-dock-max';
+  const TOOLS='m-dock-tools', OPEN='m-tools-open', MAX='m-dock-max',
+        MIN='m-dock-min', FREE='m-dock-free';
   let guard=false;
 
   function ensureHost(dock){
@@ -17030,24 +17055,39 @@ if(chat&&window.MutationObserver){
     return host;
   }
 
+  function clearFree(){
+    document.body.classList.remove(FREE);
+    document.body.style.removeProperty('--m-dock-h');
+  }
   function syncBar(){
     const c=document.getElementById('mDockTabCompose');
     const t=document.getElementById('mDockTabTools');
-    const m=document.getElementById('mDockMax');
-    const tools=document.body.classList.contains(TOOLS);
-    const max=document.body.classList.contains(MAX);
+    const mx=document.getElementById('mDockMax');
+    const mn=document.getElementById('mDockMin');
+    const cls=document.body.classList;
+    const tools=cls.contains(TOOLS), max=cls.contains(MAX), min=cls.contains(MIN);
     if(c){ c.classList.toggle('on',!tools); c.setAttribute('aria-selected',String(!tools)); }
     if(t){ t.classList.toggle('on',tools); t.setAttribute('aria-selected',String(tools)); }
-    if(m){
-      m.textContent=max?'❐':'▭';
-      m.title=max?'반 칸으로 되돌리기':'최대로 키우기 (화면 70%)';
-      m.setAttribute('aria-label',m.title);
-      m.setAttribute('aria-pressed',String(max));
+    if(mx){
+      mx.title=max?'원래 높이로':'최대로 키우기 (화면 70%)';
+      mx.setAttribute('aria-label',mx.title);
+      mx.setAttribute('aria-pressed',String(max));
     }
+    if(mn){
+      mn.title=min?'패널 다시 보기':'미리보기만 보기';
+      mn.setAttribute('aria-label',mn.title);
+      mn.setAttribute('aria-pressed',String(min));
+    }
+  }
+  /* 패널을 열면 '문단 자동 분류' 아코디언을 펼쳐 둔다 */
+  function expandRules(){
+    const box=document.getElementById('paragraphRulesBox');
+    if(box&&!box.open) box.open=true;
   }
   function setMode(mode){
     guard=true;
     document.body.classList.add(OPEN);
+    document.body.classList.remove(MIN);
     document.body.classList.toggle(TOOLS,mode==='tools');
     guard=false;
     if(mode==='tools'&&!document.querySelector('.tool-panel.show')){
@@ -17058,15 +17098,54 @@ if(chat&&window.MutationObserver){
   }
   function setMax(on){
     guard=true;
+    clearFree();
+    document.body.classList.remove(MIN);
     document.body.classList.toggle(MAX,!!on);
+    guard=false;
+    syncBar();
+  }
+  function setMin(on){
+    guard=true;
+    clearFree();
+    document.body.classList.toggle(MIN,!!on);
     guard=false;
     syncBar();
   }
   function closeDock(){
     guard=true;
-    document.body.classList.remove(OPEN,MAX);
+    clearFree();
+    document.body.classList.remove(OPEN,MAX,MIN);
     guard=false;
     syncBar();
+  }
+
+  /* 손잡이 드래그로 높이 직접 조절 */
+  function bindGrip(grip){
+    let drag=null;
+    grip.addEventListener('pointerdown',e=>{
+      const dock=document.getElementById('mDock'); if(!dock) return;
+      drag={y:e.clientY,h:dock.getBoundingClientRect().height,moved:false};
+      try{ grip.setPointerCapture(e.pointerId); }catch(_){}
+    });
+    grip.addEventListener('pointermove',e=>{
+      if(!drag) return;
+      const dy=drag.y-e.clientY;
+      if(!drag.moved){
+        if(Math.abs(dy)<4) return;
+        drag.moved=true;
+        guard=true;
+        document.body.classList.remove(MIN,MAX);
+        document.body.classList.add(FREE);
+        guard=false;
+      }
+      e.preventDefault();
+      const min=110, max=Math.round(window.innerHeight*0.88);
+      document.body.style.setProperty('--m-dock-h',
+        Math.max(min,Math.min(max,drag.h+dy))+'px');
+    });
+    const end=()=>{ drag=null; syncBar(); };
+    grip.addEventListener('pointerup',end);
+    grip.addEventListener('pointercancel',end);
   }
 
   function build(){
@@ -17082,12 +17161,22 @@ if(chat&&window.MutationObserver){
         +'<button type="button" id="mDockTabCompose" role="tab" aria-selected="true">✎ 작성</button>'
         +'<button type="button" id="mDockTabTools" role="tab" aria-selected="false">⚙ 도구</button>'
         +'</div>'
-        +'<button type="button" id="mDockMax" aria-pressed="false" title="최대로 키우기 (화면 70%)">▭</button>';
+        +'<div id="mDockGrip" title="드래그해서 높이 조절"><span></span></div>'
+        +'<div class="mdock-btns">'
+        +'<button type="button" id="mDockMax" aria-pressed="false" title="최대로 키우기 (화면 70%)">⌃</button>'
+        +'<button type="button" id="mDockMin" aria-pressed="false" title="미리보기만 보기">👁</button>'
+        +'<button type="button" id="mDockClose" title="닫기" aria-label="닫기">✕</button>'
+        +'</div>';
       bar.querySelector('#mDockTabCompose').addEventListener('click',()=>setMode('compose'));
       bar.querySelector('#mDockTabTools').addEventListener('click',()=>setMode('tools'));
       bar.querySelector('#mDockMax').addEventListener('click',()=>{
         setMax(!document.body.classList.contains(MAX));
       });
+      bar.querySelector('#mDockMin').addEventListener('click',()=>{
+        setMin(!document.body.classList.contains(MIN));
+      });
+      bar.querySelector('#mDockClose').addEventListener('click',closeDock);
+      bindGrip(bar.querySelector('#mDockGrip'));
     }
     if(dock.firstChild!==bar) dock.insertBefore(bar,dock.firstChild);
 
@@ -17103,12 +17192,6 @@ if(chat&&window.MutationObserver){
       };
     }
     syncBar();
-  }
-
-  /* 패널을 열면 '문단 자동 분류' 아코디언을 펼쳐 둔다 */
-  function expandRules(){
-    const box=document.getElementById('paragraphRulesBox');
-    if(box&&!box.open) box.open=true;
   }
 
   /* openSheet()(＋ 멤버·설정 칩 등)는 독의 도구 모드로 넘긴다 */
@@ -17127,7 +17210,13 @@ if(chat&&window.MutationObserver){
     const open=cls.contains(OPEN);
     if(open&&!wasOpen&&cls.contains('mobile-ui')) expandRules();
     wasOpen=open;
-    if(!open&&cls.contains(MAX)) setMax(false);
+    if(!open&&(cls.contains(MAX)||cls.contains(MIN)||cls.contains(FREE))){
+      guard=true;
+      clearFree();
+      cls.remove(MAX,MIN);
+      guard=false;
+      syncBar();
+    }
   }
   if(window.MutationObserver){
     new MutationObserver(watch).observe(document.body,{attributes:true,attributeFilter:['class'],childList:true});
