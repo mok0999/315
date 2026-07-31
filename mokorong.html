@@ -12072,7 +12072,9 @@ try{
    기호 없는 문단 → 사용자가 글/말풍선 중 선택
    ===================================================================== */
 const RULE_KEY='chatEditorParagraphRules_v1';
-const DEFAULT_RULES={on:false,starText:true,starTarget:'text',quoteChat:true,quoteTarget:'chat',unwrapped:'text',fallbackSenderId:'',mdHtml:false,htmlOwnLayout:false,pairs:null};
+/* 새 기본값(자동 분류 켜짐 + 묶음 전부 켜짐)을 한 번만 적용했는지 표시 */
+const RULE_DEFAULT_KEY='chatEditorParagraphRulesDefaultOn_v2';
+const DEFAULT_RULES={on:true,starText:true,starTarget:'text',quoteChat:true,quoteTarget:'chat',unwrapped:'text',fallbackSenderId:'',mdHtml:false,htmlOwnLayout:false,pairs:null};
 /* 묶음 기호는 사용자가 고치고 더할 수 있다. 예전 저장본(starText·quoteChat)은 아래에서 옮겨 담는다. */
 const BASE_PAIRS=[
   {open:'*',close:'*',target:'text',on:true},
@@ -12095,7 +12097,11 @@ function loadParagraphRules(){
   let saved=null;
   try{ saved=JSON.parse(localStorage.getItem(RULE_KEY)||'null'); }catch(_){}
   state.paragraphRules=Object.assign({},DEFAULT_RULES,state.paragraphRules||{},saved||{});
-  state.paragraphRules.on=state.paragraphRules.on===true;
+  /* 예전 저장본은 자동 분류가 꺼진 채로 남아 있다. 새 기본값을 딱 한 번만
+     밀어 넣고, 그 뒤에 사용자가 끈 선택은 그대로 존중한다. */
+  let firstRun=false;
+  try{ firstRun=!localStorage.getItem(RULE_DEFAULT_KEY); }catch(_){}
+  state.paragraphRules.on=firstRun?true:(state.paragraphRules.on!==false);
   state.paragraphRules.starText=state.paragraphRules.starText!==false;
   state.paragraphRules.quoteChat=state.paragraphRules.quoteChat!==false;
   state.paragraphRules.mdHtml=state.paragraphRules.mdHtml===true;
@@ -12111,7 +12117,19 @@ function loadParagraphRules(){
       return p;
     });
   }
+  /* 기본 제공 묶음(* " “” 「」)은 처음 한 번은 전부 켜진 상태로 시작한다 */
+  if(firstRun){
+    const base=new Set(BASE_PAIRS.map(p=>p.open+'\u0000'+p.close));
+    pairs.forEach(p=>{ if(base.has(p.open+'\u0000'+p.close)) p.on=true; });
+    normPairs(BASE_PAIRS).forEach(bp=>{
+      if(!pairs.some(p=>p.open===bp.open&&p.close===bp.close)) pairs.push(bp);
+    });
+  }
   state.paragraphRules.pairs=pairs;
+  if(firstRun){
+    try{ localStorage.setItem(RULE_DEFAULT_KEY,'1'); }catch(_){}
+    try{ saveParagraphRules(); }catch(_){}
+  }
 }
 function saveParagraphRules(){
   try{ localStorage.setItem(RULE_KEY,JSON.stringify(state.paragraphRules)); }catch(_){}
@@ -16531,62 +16549,35 @@ if(window.MutationObserver){
 stripPresetHint();
 syncMemberStars();
 
-/* ====== [M] '"" 「」 자동 말풍선' 스위치 복구 ======
-   인식 로직(NAME_PREFIX_RE·parseNamePrefix·bubbleViewMsg)은 멀쩡한데
-   state.autoQuoteBubble 을 켜는 UI만 사라져서 항상 꺼져 있었다.
-   바로 아래 '"" 「」 삭제' 토글과 똑같은 마크업으로 그 앞에 되돌려 넣는다. */
-(function restoreAutoQuoteToggle(){
-  if(document.getElementById('autoQuoteOn')) return;
-  let strip=null;
-  ['stripQuotesOn','showProfile','showMyIdentity','bubbleTailOn','bubbleShadowOn'].some(function(id){
-    const el=document.getElementById(id);
-    if(el&&el.closest('.toggle')){ strip=el; return true; }
-    return false;
-  });
-  if(!strip) return;
-  const host=strip.closest('.toggle');
-  if(!host||!host.parentElement) return;
-  const box=document.createElement('div');
-  box.className=host.className;
-  box.title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버';
-  const lb=document.createElement('div');
-  lb.className=(host.querySelector('.t-lb')||{className:'t-lb'}).className;
-  lb.textContent='"" 「」 자동 말풍선';
-  const sw=document.createElement('label');
-  sw.className=(strip.closest('label')||{className:'sw'}).className;
-  const input=document.createElement('input');
-  input.type='checkbox';
-  input.id='autoQuoteOn';
-  /* 기본은 켜짐. 사용자가 직접 끈 적이 있으면 그 선택을 기억한다. */
-  const AQ_KEY='mokorong.autoQuoteBubble';
-  let saved=null;
-  try{ saved=localStorage.getItem(AQ_KEY); }catch(_){}
-  const want=(saved===null)?true:(saved==='1');
-  input.checked=want;
-  /* 자동 저장 복원이 내 스크립트 뒤에 돌면서 state 를 되돌리므로 나중에 한 번 더 적용한다 */
-  function applyAQ(){
-    try{
-      const i=document.getElementById('autoQuoteOn');
-      if(i&&i.checked!==want) i.checked=want;
-      if(typeof state==='object'&&state&&state.autoQuoteBubble!==want){
-        state.autoQuoteBubble=want;
-        if(typeof renderPreview==='function') renderPreview();
-      }
-    }catch(_){}
+/* ====== [M] '"" 「」 자동 말풍선' 스위치 제거 ======
+   문단 자동 분류의 묶음 기호("…" 「…」 → 말풍선)가 입력 시점에 같은 일을
+   처리하므로, 보기 단계에서 한 번 더 바꾸던 이 스위치는 없앤다.
+   예전에 켜 둔 저장본·되돌리기 스냅샷이 남아 있어도 꺼진 채로 고정한다. */
+(function removeAutoQuoteToggle(){
+  try{ localStorage.removeItem('mokorong.autoQuoteBubble'); }catch(_){}
+  function dropUI(){
+    const input=document.getElementById('autoQuoteOn');
+    if(!input) return;
+    let host=input.closest('.toggle');
+    if(!host){
+      const lb=input.closest('label');
+      host=(lb&&lb.parentElement)?lb.parentElement:null;
+    }
+    if(host&&host.parentElement) host.parentElement.removeChild(host);
+    else input.remove();
   }
-  applyAQ();
-  window.addEventListener('load',applyAQ);
-  setTimeout(applyAQ,400);
-  setTimeout(applyAQ,1200);
-  input.addEventListener('change',function(){
-    try{ localStorage.setItem(AQ_KEY,this.checked?'1':'0'); }catch(_){}
-    try{ state.autoQuoteBubble=this.checked; renderPreview(); }catch(_){}
-  });
-  const track=document.createElement('span');
-  track.className=(strip.parentElement.querySelector('span')||{className:'track'}).className;
-  sw.appendChild(input); sw.appendChild(track);
-  box.appendChild(lb); box.appendChild(sw);
-  host.parentElement.insertBefore(box,host);
+  dropUI();
+  window.addEventListener('load',dropUI);
+  setTimeout(dropUI,400);
+  /* 저장본 복원이 다시 켜 놓더라도 그리기 직전에 꺼 둔다 */
+  const prevRender=window.renderPreview;
+  if(typeof prevRender==='function'){
+    window.renderPreview=function(){
+      try{ if(typeof state==='object'&&state) state.autoQuoteBubble=false; }catch(_){}
+      return prevRender.apply(this,arguments);
+    };
+  }
+  try{ if(typeof state==='object'&&state) state.autoQuoteBubble=false; }catch(_){}
 })();
 
 /* ====== [I] 아이콘 모양 교정 ======
@@ -16863,6 +16854,16 @@ if(chat&&window.MutationObserver){
   body.mobile-ui.m-tools-open.m-dock-tools #mDock .composer-card>.bd{display:none!important}
   body.mobile-ui.m-dock-tools #mDock #mComposeFormatToggle{display:none!important}
 
+  /* 도구 패널 탭은 아이콘 없이 글자만 */
+  body.mobile-ui #mSheetBody .tool-tabs button>span,
+  body.mobile-ui #mSheetBody .tool-tabs button>.ui-svg-icon{display:none!important}
+  body.mobile-ui #mSheetBody .tool-tabs button{
+    gap:3px!important;
+    padding:9px 10px!important;
+    font-size:12px!important;
+    font-weight:700;
+  }
+
   /* ---- 독 머리줄: [작성 | 도구] + 최대화 ---- */
   #mDockBar{display:none}
   body.mobile-ui.m-tools-open #mDockBar{
@@ -17052,6 +17053,7 @@ if(chat&&window.MutationObserver){
     if(mode==='tools'&&!document.querySelector('.tool-panel.show')){
       try{ switchToolPanel('style',true); }catch(_){}
     }
+    if(mode==='compose') expandRules();
     syncBar();
   }
   function setMax(on){
@@ -17103,7 +17105,14 @@ if(chat&&window.MutationObserver){
     syncBar();
   }
 
+  /* 패널을 열면 '문단 자동 분류' 아코디언을 펼쳐 둔다 */
+  function expandRules(){
+    const box=document.getElementById('paragraphRulesBox');
+    if(box&&!box.open) box.open=true;
+  }
+
   /* openSheet()(＋ 멤버·설정 칩 등)는 독의 도구 모드로 넘긴다 */
+  let wasOpen=false;
   function watch(){
     if(guard) return;
     build();
@@ -17115,7 +17124,10 @@ if(chat&&window.MutationObserver){
       setMode('tools');
       return;
     }
-    if(!cls.contains(OPEN)&&cls.contains(MAX)) setMax(false);
+    const open=cls.contains(OPEN);
+    if(open&&!wasOpen&&cls.contains('mobile-ui')) expandRules();
+    wasOpen=open;
+    if(!open&&cls.contains(MAX)) setMax(false);
   }
   if(window.MutationObserver){
     new MutationObserver(watch).observe(document.body,{attributes:true,attributeFilter:['class'],childList:true});
