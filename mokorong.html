@@ -7051,13 +7051,22 @@ function buildChrome(){
   /* 키보드가 올라오면 독을 함께 올림 */
   if(window.visualViewport){
     const vv=window.visualViewport;
+    /* 미리보기를 움직일 때 주소창이 접혔다 펴지면서 생기는 몇십 px의 오차로는
+       독을 움직이지 않는다. 글자를 입력하는 중(키보드가 실제로 올라온 경우)에만
+       따라 올려서, 도구 바를 켠 채 미리보기를 움직여도 바가 내려가지 않게 한다. */
+    const typing=()=>{
+      const a=document.activeElement;
+      return !!(a&&(a.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName||'')));
+    };
     const onVV=()=>{
       const d=document.getElementById('mDock'); if(!d) return;
       if(!isMobile()){ d.style.bottom=''; return; }
       const off=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
-      d.style.bottom=off+'px';
+      d.style.bottom=((off>120&&typing())?off:0)+'px';
     };
     vv.addEventListener('resize',onVV); vv.addEventListener('scroll',onVV);
+    document.addEventListener('focusin',onVV);
+    document.addEventListener('focusout',()=>setTimeout(onVV,80));
   }
 
   document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheet(); });
@@ -16746,6 +16755,209 @@ if(chat&&window.MutationObserver){
   });
   schedule();
 }
+})();
+</script>
+
+<style id="mobile-fix-2026">
+/* =====================================================================
+   모바일 보완 3종 (데스크톱·저장 로직 무영향)
+   1) 확대 후 한 손가락으로 가로·세로 자유 이동
+   2) 도구 바는 기본 반 칸까지만 · 넘치면 안에서 스크롤 · 최대화 버튼
+   3) 입력창이 내용에 따라 3줄까지 늘어남
+   ===================================================================== */
+@media(max-width:700px){
+
+  /* ---- 1) 확대했을 때 왼쪽 끝까지 닿도록 가운데 정렬 해제 ---- */
+  body.mobile-ui #stageEl.preview-scroll-x{
+    justify-content:flex-start!important;
+    touch-action:pan-x pan-y!important;
+  }
+  body.mobile-ui #stageEl.preview-scroll-x > #canvasFit{
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+
+  /* ---- 2) 도구 바 높이 제한 + 창 버튼 ---- */
+  body.mobile-ui #mDock{
+    display:flex!important;
+    flex-direction:column;
+  }
+  body.mobile-ui.m-tools-open #mDock{
+    max-height:50dvh!important;
+    overflow:hidden!important;
+  }
+  body.mobile-ui.m-tools-open.m-dock-max #mDock{
+    max-height:calc(100dvh - 52px - env(safe-area-inset-top))!important;
+  }
+  body.mobile-ui.m-tools-open #mDock .composer-card{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    max-height:none!important;
+  }
+  /* 반 칸을 넘는 내용은 도구 바 안에서만 스크롤 (스크롤 바 보이게) */
+  body.mobile-ui #mDock .composer-card>.bd{
+    scrollbar-width:thin!important;
+    scrollbar-color:var(--muted,#8A8A8F) transparent;
+  }
+  body.mobile-ui #mDock .composer-card>.bd::-webkit-scrollbar{width:6px}
+  body.mobile-ui #mDock .composer-card>.bd::-webkit-scrollbar-track{background:transparent}
+  body.mobile-ui #mDock .composer-card>.bd::-webkit-scrollbar-thumb{
+    background:var(--muted,#8A8A8F);border-radius:3px;
+  }
+
+  #mDockBar{display:none}
+  body.mobile-ui.m-tools-open #mDockBar{
+    display:flex;flex:none;align-items:center;gap:4px;
+    padding:0 2px 5px;
+  }
+  body.mobile-ui #mDockBar .mdock-title{
+    margin-right:auto;padding-left:4px;
+    font-size:11px;font-weight:700;color:var(--muted);letter-spacing:-.02em;
+  }
+  body.mobile-ui #mDockBar button{
+    flex:none;width:32px;height:26px;padding:0;
+    border:1px solid var(--line);border-radius:8px;background:var(--panel);
+    color:var(--ink);font-size:12px;line-height:1;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    touch-action:manipulation;cursor:pointer;
+  }
+  body.mobile-ui #mDockBar button:active{transform:scale(.94)}
+  body.mobile-ui.m-dock-max #mDockMax{
+    background:var(--ink);color:#fff;border-color:var(--ink);
+  }
+
+  /* ---- 3) 입력창: 내용이 늘면 3줄까지 커짐 ---- */
+  body.mobile-ui #mInputRow{
+    align-items:flex-end!important;
+  }
+  body.mobile-ui #mInputRow #composerTextField{
+    height:auto!important;
+    min-height:42px!important;
+    max-height:90px!important;
+    overflow:visible!important;
+  }
+  body.mobile-ui #mDock #msgContent{
+    height:auto!important;
+    min-height:42px!important;
+    max-height:90px!important;
+    padding:9px 15px!important;
+    line-height:22px!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+    border-radius:16px!important;
+    scrollbar-width:thin;
+  }
+  body.mobile-ui #mDock #msgContent::-webkit-scrollbar{width:5px}
+  body.mobile-ui #mDock #msgContent::-webkit-scrollbar-thumb{
+    background:var(--muted,#8A8A8F);border-radius:3px;
+  }
+}
+</style>
+<script id="mobile-fix-2026">
+(function(){
+'use strict';
+
+/* ============ 1) 확대 상태에서 한 손가락 자유 이동 ============
+   핀치 도중 touchstart가 preventDefault되면 브라우저가 같은 제스처의 남은
+   손가락에 네이티브 스크롤을 붙여 주지 않아 가로 이동이 먹지 않는다.
+   → 가로(또는 세로) 넘침이 있을 때만 한 손가락 팬을 직접 처리한다.
+   세로 전용 제스처는 브라우저 기본 스크롤 그대로 두어 관성을 유지한다. */
+(function(){
+  const stage=document.getElementById('stageEl');
+  if(!stage||!('ontouchstart' in window)) return;
+  const BLOCK='.drag-handle,.ctrl,button,a,input,select,textarea,[contenteditable="true"]';
+  let pan=null;
+
+  function metrics(){
+    const page=document.scrollingElement||document.documentElement;
+    return {
+      x:stage.scrollWidth-stage.clientWidth>2,
+      y:stage.scrollHeight-stage.clientHeight>2,
+      pageY:!!(page&&page.scrollHeight-window.innerHeight>2)
+    };
+  }
+  function seed(t,blocked){
+    pan={
+      x:t.clientX,y:t.clientY,
+      left:stage.scrollLeft,top:stage.scrollTop,
+      pageLeft:window.scrollX||0,pageTop:window.scrollY||0,
+      axis:'',active:false,blocked:!!blocked
+    };
+  }
+  stage.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1){ pan=null; return; }      /* 두 손가락 = 핀치 */
+    const t=e.target;
+    seed(e.touches[0],!!(t&&t.closest&&t.closest(BLOCK)));
+  },{passive:true});
+  stage.addEventListener('touchend',e=>{
+    if(e.touches.length===1) seed(e.touches[0],false);  /* 핀치에서 한 손가락 뗀 직후 */
+    else if(!e.touches.length) pan=null;
+  },{passive:true});
+  stage.addEventListener('touchcancel',()=>{ pan=null; },{passive:true});
+  stage.addEventListener('touchmove',e=>{
+    if(!pan||pan.blocked||e.touches.length!==1) return;
+    const m=metrics();
+    if(!m.x&&!m.y) return;                             /* 넘침 없음 → 기본 스크롤 */
+    const t=e.touches[0];
+    const dx=t.clientX-pan.x, dy=t.clientY-pan.y;
+    if(!pan.active&&Math.hypot(dx,dy)<6) return;       /* 말풍선 탭은 방해하지 않음 */
+    if(!pan.axis) pan.axis=Math.abs(dx)>Math.abs(dy)?'x':'y';
+    if(pan.axis==='y'&&!m.y) return;                   /* 세로 전용 → 페이지 기본 스크롤 */
+    pan.active=true;
+    e.preventDefault();
+    if(m.x) stage.scrollLeft=pan.left-dx;
+    if(m.y) stage.scrollTop=pan.top-dy;
+    else if(m.pageY) window.scrollTo(pan.pageLeft,pan.pageTop-dy);
+  },{passive:false});
+})();
+
+/* ============ 2) 도구 바 창 버튼 (최대화 / 닫기) ============ */
+(function(){
+  function setMax(on){
+    document.body.classList.toggle('m-dock-max',!!on);
+    const b=document.getElementById('mDockMax');
+    if(!b) return;
+    b.textContent=on?'❐':'▭';
+    b.title=on?'반 칸으로 되돌리기':'최대로 키우기';
+    b.setAttribute('aria-label',b.title);
+    b.setAttribute('aria-pressed',String(!!on));
+  }
+  function build(){
+    const dock=document.getElementById('mDock');
+    if(!dock||document.getElementById('mDockBar')) return;
+    const bar=document.createElement('div');
+    bar.id='mDockBar';
+    bar.innerHTML='<span class="mdock-title">작성 도구</span>'
+      +'<button type="button" id="mDockMax" title="최대로 키우기" aria-pressed="false">▭</button>'
+      +'<button type="button" id="mDockHide" title="도구 바 닫기" aria-label="도구 바 닫기">✕</button>';
+    dock.insertBefore(bar,dock.firstChild);
+    bar.querySelector('#mDockMax').addEventListener('click',()=>{
+      setMax(!document.body.classList.contains('m-dock-max'));
+    });
+    bar.querySelector('#mDockHide').addEventListener('click',()=>{
+      setMax(false);
+      document.body.classList.remove('m-tools-open');
+    });
+    setMax(false);
+  }
+  /* 도구를 닫으면 최대화 상태도 함께 초기화 */
+  let guard=false;
+  function watch(){
+    if(guard) return;
+    build();
+    if(!document.body.classList.contains('m-tools-open')
+       &&document.body.classList.contains('m-dock-max')){
+      guard=true; setMax(false); guard=false;
+    }
+  }
+  if(window.MutationObserver){
+    new MutationObserver(watch).observe(document.body,{attributes:true,attributeFilter:['class'],childList:true});
+  }
+  window.addEventListener('resize',watch,{passive:true});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',watch,{once:true});
+  else watch();
+})();
+
 })();
 </script>
 </body>
