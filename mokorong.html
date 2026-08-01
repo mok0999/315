@@ -1177,10 +1177,13 @@ html,body,#canvas,#chat,#canvas *{-webkit-text-size-adjust:100%!important;text-s
 <div class="colorrow" data-color="draftColor"></div>
 </div>
 <div class="member-color-col">
-<label class="lb">말풍선 색상</label>
-<label class="mini-check member-bubble-check"><input id="draftBubbleUse" onchange="toggleDraftBubbleUse(this.checked)" type="checkbox"/><span>이 멤버만 따로</span></label>
-<div class="colorrow" data-color="draftBubbleColor" id="draftBubbleRow" style="display:none"></div>
+<label class="lb">말풍선 색상<button class="mini member-bubble-clear" id="draftBubbleClear" onclick="clearDraftBubbleColor()" title="지정을 지우고 전체 말풍선 색을 따라가요" type="button">지정 해제</button></label>
+<div class="colorrow" data-color="draftBubbleColor" id="draftBubbleRow"></div>
 </div>
+</div>
+<div class="field" style="margin-top:12px">
+<label class="lb">별명 <span style="font-weight:400;color:var(--muted)">— 이 이름으로 써도 이 멤버로 인식해요</span></label>
+<input id="mAlias" placeholder="쉼표로 여러 개 (예: 서주, 유서주, Yuseoju)" type="text"/>
 </div></div><button class="btn primary full" id="memberBtn" onclick="addOrUpdateMember()">+ 멤버 추가</button></section></div></section><section class="tool-panel" id="panel-style"><div class="tool-panel-head"><div><strong>테마·배경</strong></div></div><div class="tool-panel-body" tabindex="0"><details class="preset-acc" id="themePresetAcc"><summary>🎨 테마 프리셋<span class="preset-acc-cnt" id="themePresetCnt"></span><span class="preset-tools summary-tools" onclick="event.preventDefault();event.stopPropagation()">
 <button class="mini" onclick="saveThemePrompt()" title="지금 색·여백·글꼴·너비를 테마로 저장">＋ 현재 테마</button>
 <button class="mini" onclick="exportThemes()" title="테마를 파일로 백업">↓</button>
@@ -1630,7 +1633,12 @@ function buildColorRow(row){
   });
 }
 function afterColor(key){
-  if(key==='draftColor'||key==='draftBubbleColor') return; // only used when adding member
+  /* 멤버 말풍선 색은 직접 고른 순간부터 '이 멤버만 따로'로 켠다 */
+  if(key==='draftBubbleColor'){
+    try{ if(typeof window.markDraftBubbleUsed==='function') window.markDraftBubbleUsed(); }catch(_){}
+    return;
+  }
+  if(key==='draftColor') return; // only used when adding member
   /* 배경/메시지 이미지가 있을 때 컬러피커를 드래그하면 input 이벤트마다 전체 미리보기를
      다시 그려 이미지 디코딩 비용으로 렉이 생긴다. 120ms 간격으로 묶어 그리되
      마지막 값은 반드시 반영되도록 트레일링 호출을 남긴다. */
@@ -1751,9 +1759,17 @@ function refreshColorRows(){document.querySelectorAll('.colorrow').forEach(build
 })();
 function toggleDraftBubbleUse(on){
   draftBubbleUse=!!on;
-  const cb=document.getElementById('draftBubbleUse'); if(cb) cb.checked=draftBubbleUse;
-  const row=document.getElementById('draftBubbleRow'); if(row) row.style.display=draftBubbleUse?'':'none';
+  const b=document.getElementById('draftBubbleClear');
+  if(b) b.style.visibility=draftBubbleUse?'visible':'hidden';
+  const row=document.getElementById('draftBubbleRow');
+  if(row) row.classList.toggle('is-unset',!draftBubbleUse);
 }
+/* 말풍선 색을 직접 고르면 그때부터 '이 멤버만 따로'가 켜진다 */
+window.markDraftBubbleUsed=function(){ toggleDraftBubbleUse(true); };
+window.clearDraftBubbleColor=function(){
+  toggleDraftBubbleUse(false);
+  try{ refreshColorRows(); }catch(_){}
+};
 
 /* ================= mode / shape ================= */
 function setMode(m){
@@ -2391,20 +2407,23 @@ function applyCrop(){
 function addOrUpdateMember(){
   const name=mName.value.trim();
   if(!name){alert('이름을 입력해 주세요.');return;}
+  const aliasEl=document.getElementById('mAlias');
+  const aliases=aliasEl?aliasEl.value.trim():'';
   if(editingMemberId){
     const m=state.members.find(x=>x.id===editingMemberId);
-    m.name=name; m.color=state.colors.draftColor;
+    m.name=name; m.color=state.colors.draftColor; m.aliases=aliases;
     m.bubbleColor=draftBubbleUse?state.colors.draftBubbleColor:null;
     if(draftAvatar) m.image=draftAvatar;
     editingMemberId=null; memberBtn.textContent='+ 멤버 추가';
   }else{
-    state.members.push({id:uid(),name,image:draftAvatar,color:state.colors.draftColor,bubbleColor:draftBubbleUse?state.colors.draftBubbleColor:null});
+    state.members.push({id:uid(),name,aliases:aliases,image:draftAvatar,color:state.colors.draftColor,bubbleColor:draftBubbleUse?state.colors.draftBubbleColor:null});
   }
   resetMemberForm();
   renderMembers(); renderSenders(); renderMeSelect(); renderPreview();
 }
 function resetMemberForm(){
   mName.value=''; mLink.value=''; draftAvatar=null;
+  const aliasEl=document.getElementById('mAlias'); if(aliasEl) aliasEl.value='';
   toggleDraftBubbleUse(false);
   avPreviewWrap.style.display='none';
   fileFake.childNodes[0].nodeValue='↑ 파일 선택 — 선택 안 됨 ';
@@ -2413,6 +2432,7 @@ function resetMemberForm(){
 function editMember(id){
   const m=state.members.find(x=>x.id===id);
   editingMemberId=id; mName.value=m.name;
+  const aliasEl=document.getElementById('mAlias'); if(aliasEl) aliasEl.value=m.aliases||'';
   state.colors.draftColor=m.color||'#424448';
   if(m.bubbleColor) state.colors.draftBubbleColor=m.bubbleColor;
   toggleDraftBubbleUse(!!m.bubbleColor);
@@ -2504,23 +2524,23 @@ function renderPresets(){
     : '이 환경에선 자동 저장이 안 돼요 — ↓ 내보내기로 프리셋을 파일로 백업해줘.';
   const cnt=document.getElementById('memberPresetCnt'); if(cnt) cnt.textContent=presets.length?String(presets.length):'';
 }
-function addPreset(name,image,color,bubbleColor){
+function addPreset(name,image,color,bubbleColor,aliases){
   if(!name){alert('먼저 이름을 입력해 주세요.');return;}
-  presets.push({id:uid(),name,image:image||null,color:color||'#424448',bubbleColor:bubbleColor||null});
+  presets.push({id:uid(),name,image:image||null,color:color||'#424448',bubbleColor:bubbleColor||null,aliases:aliases||''});
   persistPresets(); renderPresets();
 }
 function savePresetFromForm(){
-  addPreset(mName.value.trim(),draftAvatar,state.colors.draftColor,draftBubbleUse?state.colors.draftBubbleColor:null);
+  addPreset(mName.value.trim(),draftAvatar,state.colors.draftColor,draftBubbleUse?state.colors.draftBubbleColor:null,(document.getElementById('mAlias')||{}).value||'');
 }
 function savePresetFromMember(id){
   const m=state.members.find(x=>x.id===id); if(!m) return;
-  addPreset(m.name,m.image,m.color,m.bubbleColor);
+  addPreset(m.name,m.image,m.color,m.bubbleColor,m.aliases||'');
 }
 function usePreset(id){
   /* 프리셋 클릭 시 폼을 거치지 않고 곧바로 멤버로 등록한다. */
   const p=presets.find(x=>x.id===id); if(!p) return;
   editingMemberId=null; memberBtn.textContent='+ 멤버 추가';
-  state.members.push({id:uid(),name:p.name,image:p.image||null,color:p.color||'#424448',bubbleColor:p.bubbleColor||null});
+  state.members.push({id:uid(),name:p.name,image:p.image||null,color:p.color||'#424448',bubbleColor:p.bubbleColor||null,aliases:p.aliases||''});
   renderMembers(); renderSenders(); renderMeSelect(); renderPreview();
 }
 function deletePreset(id){
@@ -2565,8 +2585,23 @@ function defaultLayout(){
 }
 function defaultExport(){ return {ratio:'auto',hMargin:24,vMargin:24,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
 function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16,sep:'dot'}; }
+/* ---- mokorong — 기본으로 맨 앞에 놓이는 테마 ---- */
+function mokorongTheme(){
+  return {id:uid(),name:'mokorong',shape:'circle',parenOn:true,transparentBg:false,
+    colors:{bg:'#FFFFFF',nBubble:'#EDEEF0',nText:'#424448',myBubble:'#424448',myText:'#FFFFFF',
+      otBubble:'#FFFFFF',otText:'#424448',highlight:'#E4E4E6',quote:'#8A8F98',partial:'#D14343',
+      paren:'#8A8F98',credit:'#8A8F98',pageNum:'#8A8F98',bgOverlay:'#000000',
+      gradFrom:'#EDEDEE',gradVia:'#DCE3F0',gradTo:'#C9D6EE',
+      textShadow:'#000000',bubbleShadow:'#000000'},
+    layout:{...defaultLayout(),width:532,letterSpacing:-0.8,textAlign:'justify',
+      bubbleOpacity:100,bubbleTextOpacity:100},
+    export:{...defaultExport(),hMargin:67,vMargin:50},
+    credit:defaultCredit(),
+    backgroundImage:{src:'',size:100,rotation:0,x:50,y:50,blur:0,overlayOpacity:0}};
+}
 function seedThemes(){
   return [
+    mokorongTheme(),
     {id:uid(),name:'무채색',shape:'circle',parenOn:false,transparentBg:false,
      colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#FFFFFF',
        otBubble:'#FFFFFF',otText:'#424448',highlight:'#E4E4E6',partial:'#D14343',paren:'#8A8F98',credit:'#8A8F98'},
@@ -2619,6 +2654,12 @@ function loadThemesStore(){
       builtinThemesV2().forEach(t=>{ if(!names.has(t.name)) themes.push(t); });
       persistThemes();
       localStorage.setItem(THEME_SEED_VER_KEY,'3');
+    }
+    /* v4 — mokorong 테마를 맨 앞에 한 번만 넣는다 */
+    if(ver<4){
+      if(!themes.some(t=>t&&t.name==='mokorong')) themes.unshift(mokorongTheme());
+      persistThemes();
+      localStorage.setItem(THEME_SEED_VER_KEY,'4');
     }
   }catch(e){}
 }
@@ -3292,11 +3333,20 @@ function parseNamePrefix(s){
   if(t.endsWith(']')) rest=t.slice(0,-1);   // 끝에 ] 가 있으면 함께 제거 — ( ) 안 내용은 그대로 둔다
   return {name:m[1].trim(), rest:rest};
 }
+/* 별명 목록 — 쉼표·줄바꿈으로 나눠 둔 문자열을 배열로 */
+function memberAliases(m){
+  return String((m&&m.aliases)||'')
+    .split(/[,\n·|/]+/).map(s=>s.trim()).filter(Boolean);
+}
 function matchMemberByName(name){
   if(!name||!state.members.length) return null;
   const n=name.trim(); if(!n) return null;
+  /* 1) 이름이 정확히 같음 → 2) 별명이 정확히 같음
+     → 3) 이름이 부분적으로 겹침 → 4) 별명이 부분적으로 겹침 */
   return state.members.find(x=>(x.name||'').trim()===n)
+      || state.members.find(x=>memberAliases(x).some(a=>a===n))
       || state.members.find(x=>{const xn=(x.name||'').trim(); return xn&&(xn.includes(n)||n.includes(xn));})
+      || state.members.find(x=>memberAliases(x).some(a=>a.includes(n)||n.includes(a)))
       || null;
 }
 function bubbleViewMsg(m){
@@ -13035,20 +13085,20 @@ window.movePresetToFolder=function(id,folderId){
   preset.folderId=presetFolders.some(f=>f.id===folderId)?folderId:'';
   persistPresets();renderPresets();
 };
-window.addPreset=function(name,image,color,bubbleColor){
+window.addPreset=function(name,image,color,bubbleColor,aliases){
   if(!name){alert('먼저 이름을 입력해 주세요.');return;}
   const picker=document.getElementById('presetSaveFolder');
   const folderId=picker&&presetFolders.some(f=>f.id===picker.value)?picker.value:'';
   presets.push({id:uid(),name:name,image:image||null,color:color||'#424448',
-    bubbleColor:bubbleColor||null,folderId:folderId});
+    bubbleColor:bubbleColor||null,aliases:aliases||'',folderId:folderId});
   persistPresets();renderPresets();
 };
 window.savePresetFromForm=function(){
-  addPreset(mName.value.trim(),draftAvatar,state.colors.draftColor,draftBubbleUse?state.colors.draftBubbleColor:null);
+  addPreset(mName.value.trim(),draftAvatar,state.colors.draftColor,draftBubbleUse?state.colors.draftBubbleColor:null,(document.getElementById('mAlias')||{}).value||'');
 };
 window.savePresetFromMember=function(id){
   const m=state.members.find(x=>x.id===id);if(!m) return;
-  addPreset(m.name,m.image,m.color,m.bubbleColor);
+  addPreset(m.name,m.image,m.color,m.bubbleColor,m.aliases||'');
 };
 window.exportPresets=function(){
   if(!presets.length&&!presetFolders.length){alert('내보낼 프리셋이나 폴더가 없어요.');return;}
@@ -13080,7 +13130,7 @@ window.importPresets=function(e){
         if(!p||!p.name) return;
         presets.push({
           id:uid(),name:String(p.name),image:p.image||null,color:p.color||'#424448',
-          bubbleColor:p.bubbleColor||null,folderId:folderMap[String(p.folderId||'')]||''
+          bubbleColor:p.bubbleColor||null,aliases:p.aliases||'',folderId:folderMap[String(p.folderId||'')]||''
         });
         added++;
       });
@@ -14257,7 +14307,27 @@ input[type=text],input[type=number],textarea,select{font-family:var(--f-ui)}
 .member-color-pair{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);align-items:start}
 .member-color-col{min-width:0;display:flex;flex-direction:column}
 .member-color-col .colorrow{min-height:36px}
-.member-color-col .member-bubble-check{min-height:36px;margin:0}
+/* 두 칸(닉네임·말풍선)의 라벨 높이를 못박아 색상줄이 같은 선에 오게 한다 */
+.member-color-col>label.lb{
+  display:flex;align-items:center;gap:6px;
+  height:16px;line-height:16px;margin:0 0 var(--s1) 2px;
+}
+/* '지정 해제'는 라벨 높이를 밀지 않도록 줄 안에서만 자리를 쓴다 */
+.member-bubble-clear{
+  margin-left:auto;height:16px;padding:0 6px;
+  font-size:10px;font-weight:600;line-height:1;
+  border:1px solid var(--line);border-radius:var(--r-pill);
+  background:var(--panel);color:var(--muted);cursor:pointer;
+  display:inline-flex;align-items:center;flex:0 0 auto;
+}
+.member-bubble-clear:hover{color:var(--ink)}
+/* 아직 직접 고르지 않았을 때 — 크기·위치는 그대로 두고 사선 표시만 */
+.member-color-col .colorrow.is-unset .swatch::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(135deg,transparent calc(50% - 1px),var(--line) calc(50% - 1px),
+    var(--line) calc(50% + 1px),transparent calc(50% + 1px));
+}
+.member-color-col .colorrow.is-unset .color-code-input{color:var(--muted)}
 .colorrow input[type=text]{height:36px;min-height:36px}
 /* 도구 패널 — 제목줄은 멤버만 남기고, 카드 테두리 대신 직선으로 */
 .tool-panel-head{border-bottom:0}
@@ -15943,6 +16013,19 @@ body.mobile-ui #paragraphSelectBar .selection-summary{
 .ap-novel.ap-spread>.ap-foot-l{left:var(--ap-padl,0px)!important}
 .ap-novel.ap-spread>.ap-foot-r{
   left:calc(var(--ap-padl,0px) + var(--ap-colw,0px) + var(--ap-colgap,88px))!important}
+/* 첫 장 제목 */
+#chat.ap-novel>.ap-title{
+  display:block;width:100%;
+  white-space:pre-wrap;overflow-wrap:break-word;word-break:keep-all;
+  break-inside:avoid;-webkit-column-break-inside:avoid;
+  break-after:avoid;
+}
+#chat.ap-novel>.ap-title .text-heading{display:inline}
+/* 아래 정렬용 빈 칸 — 남는 여백을 쪽 위쪽으로 몰아 준다 */
+#chat.ap-novel>.ap-spacer{
+  display:block;width:100%;pointer-events:none;user-select:none;
+  break-inside:avoid;-webkit-column-break-inside:avoid;
+}
 /* 소설 모드에서는 손으로 자르는 ✂ 를 잠근다 */
 body.ap-on #chat .pmsg .ctrl button.split-btn{opacity:.24;pointer-events:none}
 /* 소설 모드가 위 캔버스 비율을 대신하는 동안에는 그 칸을 흐리게 */
@@ -15953,8 +16036,15 @@ body.ap-on #canvasRatioSection .field{opacity:.42}
 'use strict';
 
 const AP_KEY='moko.novelMode.v1';
+const AP_VA_KEY='moko.novelVAlignDefault.v1';
 const DEF_RATIO='210:297';
-const defaults={on:false,spread:false,gap:40,ratio:DEF_RATIO};
+const defaults={on:false,spread:false,gap:40,ratio:DEF_RATIO,vAlign:'mid',vAlignSpread:'bot'};
+const VALIGNS=['top','mid','bot'];
+/* 세로 위치는 한 쪽·펼침면이 서로 다른 기본값을 쓰므로 따로 기억한다 */
+function curVAlign(){
+  const A=state.autoPage;
+  return (A.spread?A.vAlignSpread:A.vAlign)||(A.spread?'bot':'mid');
+}
 const RATIOS=[
   ['210:297','A4 · A5 (1 : 1.414)'],
   ['176:250','B5 (1 : 1.42)'],
@@ -15973,13 +16063,41 @@ try{
     state.autoPage.spread=!!sv.spread;
     state.autoPage.gap=Math.max(0,Math.min(200,parseInt(sv.gap)||defaults.gap));
     if(RATIOS.some(r=>r[0]===sv.ratio)) state.autoPage.ratio=sv.ratio;
+    /* 예전 저장본은 세로 위치가 '상'으로 남아 있다. 새 기본값(중 / 붙임은 하)을
+       딱 한 번만 밀어 넣고, 그 뒤에 직접 고른 값은 그대로 존중한다. */
+    let seeded=false;
+    try{ seeded=!!localStorage.getItem(AP_VA_KEY); }catch(_){}
+    if(seeded){
+      if(VALIGNS.indexOf(sv.vAlign)>=0) state.autoPage.vAlign=sv.vAlign;
+      if(VALIGNS.indexOf(sv.vAlignSpread)>=0) state.autoPage.vAlignSpread=sv.vAlignSpread;
+    }else{
+      try{ localStorage.setItem(AP_VA_KEY,'1'); }catch(_){}
+    }
   }
 }catch(_){}
 let manualIds=[];
+const TITLE_KEY='moko.novelTitle.v1';
+const titleDefaults={on:false,text:'',align:'right',size:40,lh:1.25,top:40,gap:120};
+state.novelTitle=Object.assign({},titleDefaults);
+try{
+  const tv=JSON.parse(localStorage.getItem(TITLE_KEY)||'null');
+  if(tv&&typeof tv==='object'){
+    state.novelTitle.on=!!tv.on;
+    state.novelTitle.text=typeof tv.text==='string'?tv.text:'';
+    if(['left','center','right'].indexOf(tv.align)>=0) state.novelTitle.align=tv.align;
+    state.novelTitle.size=Math.max(14,Math.min(96,parseInt(tv.size)||titleDefaults.size));
+    state.novelTitle.top=Math.max(0,Math.min(400,parseInt(tv.top)||0));
+    state.novelTitle.gap=Math.max(0,Math.min(600,parseInt(tv.gap)||0));
+  }
+}catch(_){}
+function saveTitle(){
+  try{ localStorage.setItem(TITLE_KEY,JSON.stringify(state.novelTitle)); }catch(_){}
+}
 try{ const m=JSON.parse(localStorage.getItem(AP_KEY+'.manual')||'[]'); if(Array.isArray(m)) manualIds=m; }catch(_){}
 function savePrefs(){
   try{ localStorage.setItem(AP_KEY,JSON.stringify({on:!!state.autoPage.on,spread:!!state.autoPage.spread,
-    gap:state.autoPage.gap,ratio:state.autoPage.ratio})); }catch(_){}
+    gap:state.autoPage.gap,ratio:state.autoPage.ratio,
+    vAlign:state.autoPage.vAlign,vAlignSpread:state.autoPage.vAlignSpread})); }catch(_){}
 }
 function saveManual(){ try{ localStorage.setItem(AP_KEY+'.manual',JSON.stringify(manualIds)); }catch(_){} }
 
@@ -16084,7 +16202,8 @@ function footHTML(side,pageNo,total,showSig){
     }
   }
   if(p.on&&pageNo>0){
-    put(p.align,'<span class="page-num" data-page-num style="font-size:'+(p.size||12)+'px;color:'
+    /* 쪽 번호는 늘 바깥쪽 — 왼쪽 쪽은 왼쪽, 오른쪽 쪽은 오른쪽 (책과 같은 자리) */
+    put(side?'right':'left','<span class="page-num" data-page-num style="font-size:'+(p.size||12)+'px;color:'
       +(state.colors.pageNum||'#8A8F98')+'">'+esc(pageLabelOf(pageNo,total))+'</span>');
   }
   if(!zones.left&&!zones.center&&!zones.right) return '';
@@ -16129,7 +16248,8 @@ function computePages(){
   const per=nPages();
   const want=new Set();
   const used=[];            /* 각 장이 실제로 쓴 칸(쪽) 수 */
-  let col=0,acc=0,curUsed=1;
+  /* 첫 칸은 제목이 이미 쓴 만큼 차 있는 상태에서 시작한다 */
+  let col=0,acc=titleHeight(),curUsed=1;
   info.forEach((it,i)=>{
     if(i>0&&acc>0&&acc+it.h>limit){
       col++; acc=0;
@@ -16210,11 +16330,49 @@ function buildUI(){
           '<label class="lb">두 쪽 사이 간격</label>'+
           '<div class="rangewrap"><input id="novelGap" type="range" min="0" max="200" step="2" value="40" oninput="setAutoPage(\'gap\',this.value)"/>'+
           '<span class="val" id="novelGapV">40px</span></div></div>'+
+        '<div class="field" id="novelVAlignField" style="margin:12px 0 0">'+
+          '<label class="lb">본문 세로 위치</label>'+
+          '<div class="seg" id="novelVAlignSeg">'+
+            '<button type="button" onclick="setAutoPage(\'vAlign\',\'top\')">상</button>'+
+            '<button type="button" onclick="setAutoPage(\'vAlign\',\'mid\')">중</button>'+
+            '<button type="button" onclick="setAutoPage(\'vAlign\',\'bot\')">하</button>'+
+          '</div>'+
+          '<div class="field-help">모든 쪽에 똑같이 적용돼요. 쪽 나누는 자리는 그대로예요.</div>'+
+        '</div>'+
+        '<div class="toggle" style="margin-top:14px"><div class="t-lb">첫 장에 제목 넣기<span>첫 장 맨 위에만 들어가요 — 작성창과 같은 서식을 쓸 수 있어요</span></div>'+
+          '<label class="sw"><input id="novelTitleOn" type="checkbox" onchange="setNovelTitle(\'on\',this.checked)"/><span class="track"></span></label></div>'+
+        '<div class="np-sub" id="novelTitleSub" hidden>'+
+          '<div class="field" style="margin:0"><label class="lb">제목</label>'+
+            '<textarea id="novelTitleText" rows="3" spellcheck="false" '+
+              'placeholder="제목을 입력하세요&#10;부제" oninput="setNovelTitle(\'text\',this.value)"></textarea>'+
+            '<div class="field-help">**굵게** *기울임* ~~취소선~~ ++밑줄++ [#]큰제목[/#] [##]중제목[/##] [#RRGGBB]색[/] ==형광== 그대로 써요. 줄바꿈도 그대로 들어가요.</div>'+
+          '</div>'+
+          '<div class="field" style="margin:12px 0 0"><label class="lb">정렬</label>'+
+            '<div class="seg" id="novelTitleAlignSeg">'+
+              '<button type="button" onclick="setNovelTitle(\'align\',\'left\')">좌</button>'+
+              '<button type="button" onclick="setNovelTitle(\'align\',\'center\')">가운데</button>'+
+              '<button type="button" onclick="setNovelTitle(\'align\',\'right\')">우</button>'+
+            '</div></div>'+
+          '<div class="field" style="margin:12px 0 0"><label class="lb">글자 크기</label>'+
+            '<div class="rangewrap"><input id="novelTitleSize" type="range" min="14" max="96" step="1" value="40" oninput="setNovelTitle(\'size\',this.value)"/>'+
+            '<span class="val" id="novelTitleSizeV">40px</span></div></div>'+
+          '<div class="field" style="margin:12px 0 0"><label class="lb">제목 위 여백</label>'+
+            '<div class="rangewrap"><input id="novelTitleTop" type="range" min="0" max="400" step="4" value="40" oninput="setNovelTitle(\'top\',this.value)"/>'+
+            '<span class="val" id="novelTitleTopV">40px</span></div></div>'+
+          '<div class="field" style="margin:12px 0 0"><label class="lb">제목 아래 여백</label>'+
+            '<div class="rangewrap"><input id="novelTitleGap" type="range" min="0" max="600" step="4" value="120" oninput="setNovelTitle(\'gap\',this.value)"/>'+
+            '<span class="val" id="novelTitleGapV">120px</span></div></div>'+
+        '</div>'+
       '</div>'+
       '<div class="field-help" id="novelHelp"></div>'+
     '</div>';
   ratioSec.parentNode.insertBefore(sec,ratioSec.nextSibling);
   try{ if(typeof enhanceRange==='function') enhanceRange('novelGap','novelGapV',{min:0,max:200,step:2,nudge:2}); }catch(_){}
+  try{ if(typeof enhanceRange==='function'){
+    enhanceRange('novelTitleSize','novelTitleSizeV',{min:14,max:96,step:1,nudge:1});
+    enhanceRange('novelTitleTop','novelTitleTopV',{min:0,max:400,step:4,nudge:4});
+    enhanceRange('novelTitleGap','novelTitleGapV',{min:0,max:600,step:4,nudge:4});
+  } }catch(_){}
   syncControls();
 }
 function syncControls(){
@@ -16226,7 +16384,70 @@ function syncControls(){
   const gp=document.getElementById('novelGap'); if(gp) gp.value=A.gap;
   const gv=document.getElementById('novelGapV'); if(gv) gv.textContent=A.gap+'px';
   const gf=document.getElementById('novelGapField'); if(gf) gf.style.display=A.spread?'':'none';
+  const vs=document.getElementById('novelVAlignSeg');
+  if(vs){ const v=curVAlign();
+    [...vs.children].forEach((b,i)=>b.classList.toggle('on',VALIGNS[i]===v)); }
+  const T=state.novelTitle||{};
+  const to=document.getElementById('novelTitleOn'); if(to) to.checked=!!T.on;
+  const ts=document.getElementById('novelTitleSub'); if(ts) ts.hidden=!T.on;
+  const tt=document.getElementById('novelTitleText'); if(tt&&tt.value!==T.text) tt.value=T.text||'';
+  const ta=document.getElementById('novelTitleAlignSeg');
+  if(ta){ const order=['left','center','right'];
+    [...ta.children].forEach((b,i)=>b.classList.toggle('on',order[i]===(T.align||'right'))); }
+  const tz=document.getElementById('novelTitleSize'); if(tz) tz.value=T.size;
+  const tzv=document.getElementById('novelTitleSizeV'); if(tzv) tzv.textContent=(T.size||40)+'px';
+  const tp=document.getElementById('novelTitleTop'); if(tp) tp.value=T.top;
+  const tpv=document.getElementById('novelTitleTopV'); if(tpv) tpv.textContent=(T.top||0)+'px';
+  const tg=document.getElementById('novelTitleGap'); if(tg) tg.value=T.gap;
+  const tgv=document.getElementById('novelTitleGapV'); if(tgv) tgv.textContent=(T.gap||0)+'px';
+  lockPageNumAlign();
   updateHelp();
+}
+window.setNovelTitle=function(field,val){
+  const T=state.novelTitle;
+  if(field==='on') T.on=!!val;
+  else if(field==='text') T.text=String(val==null?'':val);
+  else if(field==='align'){ if(['left','center','right'].indexOf(val)>=0) T.align=val; }
+  else if(field==='size') T.size=Math.max(14,Math.min(96,parseInt(val)||40));
+  else if(field==='top') T.top=Math.max(0,Math.min(400,parseInt(val)||0));
+  else if(field==='gap') T.gap=Math.max(0,Math.min(600,parseInt(val)||0));
+  saveTitle();
+  /* 글자를 칠 때마다 커서가 튀지 않도록 입력칸 값은 되돌려 쓰지 않는다 */
+  if(field==='text'){
+    const sub=document.getElementById('novelTitleSub'); if(sub) sub.hidden=!T.on;
+  }else syncControls();
+  try{ renderPreview(); }catch(_){}
+  if(state.autoPage.on) run();
+};
+/* 펼침면일 때만 쪽 번호 자리를 책과 같게 고정하고 좌·가운데·우 선택을 잠근다.
+   한 쪽으로 낼 때는 고른 위치가 모든 쪽에 그대로 적용된다.
+   형식(1/3 · -1- · 01 · 1)은 어느 쪽이든 그대로 고를 수 있다. */
+function lockPageNumAlign(){
+  const seg=document.getElementById('pageNumAlignSeg');
+  if(!seg) return;
+  const lock=!!(state.autoPage.on&&state.autoPage.spread);
+  [...seg.children].forEach(b=>{ b.disabled=lock; b.style.pointerEvents=lock?'none':''; });
+  seg.style.opacity=lock?'.42':'';
+  const box=seg.parentElement;
+  if(box){
+    let note=box.querySelector('.np-pagenum-note');
+    if(lock){
+      if(!note){
+        note=document.createElement('div');
+        note.className='field-help np-pagenum-note';
+        box.appendChild(note);
+      }
+      note.textContent='소설 모드(붙임) — 왼쪽 면은 왼쪽, 오른쪽 면은 오른쪽 바깥에 고정돼요.';
+    }else if(note){ note.remove(); }
+  }
+}
+const _syncPN=window.syncPageNumControls;
+if(typeof _syncPN==='function'){
+  window.syncPageNumControls=function(){
+    const r=_syncPN.apply(this,arguments);
+    try{ lockPageNumAlign(); }catch(_){}
+    return r;
+  };
 }
 function updateHelp(){
   const el=document.getElementById('novelHelp'); if(!el) return;
@@ -16268,6 +16489,12 @@ window.setAutoPage=function(field,val){
     savePrefs(); syncControls();
     try{ renderPreview(); }catch(_){}
     if(A.on) run();
+  }else if(field==='vAlign'){
+    if(VALIGNS.indexOf(val)>=0){
+      if(A.spread) A.vAlignSpread=val; else A.vAlign=val;
+    }
+    savePrefs(); syncControls();
+    try{ renderPreview(); }catch(_){}
   }else if(field==='gap'){
     A.gap=Math.max(0,Math.min(200,parseInt(val)||0));
     const gv=document.getElementById('novelGapV'); if(gv) gv.textContent=A.gap+'px';
@@ -16283,6 +16510,7 @@ window.setAutoPage=function(field,val){
 const _creditHTML=window.creditHTML;
 if(typeof _creditHTML==='function'){
   window.creditHTML=function(){
+    /* 붙이지 않을 때는 쪽 번호도 고른 위치 그대로 — 왼/오 번갈이 없음 */
     if(!(novelOn()&&nPages()>1)) return _creditHTML.apply(this,arguments);
     footSig=colsSig;
     const spread=(typeof window.__currentPage==='function')?window.__currentPage():1;
@@ -16295,6 +16523,119 @@ if(typeof _creditHTML==='function'){
     return footHTML(0,first,total,!sigRight)
       +(rightUsed?footHTML(1,first+1,total,sigRight):'');
   };
+}
+
+/* ---------- 본문 세로 위치 ----------
+   CSS 다단(펼침면)은 칸별로 세로 정렬을 걸 수 없으므로, 그려진 결과를 재서
+   각 칸 맨 위에 딱 그만큼의 빈 칸을 끼워 넣는다. 빈 칸이 남은 자리를 정확히
+   채우므로 줄이 다른 칸으로 밀려나지 않는다. 두 번째 칸부터는 break-before 로
+   시작 위치를 못박는다.
+     · 한 쪽(붙이지 않음) — 언제나 가운데. 위아래 여백이 같아진다.
+     · 펼침면(붙임)       — 상 / 중 / 하 중에서 고른 값을 모든 쪽에 똑같이. */
+function applyPageAlign(){
+  const chat=document.getElementById('chat');
+  if(!chat) return;
+  [...chat.querySelectorAll(':scope > .ap-spacer')].forEach(n=>n.remove());
+  if(!novelOn()) return;
+
+  const spread=nPages()>1;
+  /* 상 / 중 / 하 — 한 쪽은 '중', 붙이면 '하'가 기본. 모든 쪽에 똑같이 */
+  const mode=curVAlign();
+  if(mode==='top') return;                 /* 위쪽 정렬은 기본 흐름 그대로 */
+
+  const total=(typeof window.__pageCount==='function')?window.__pageCount():1;
+  const page=(typeof window.__currentPage==='function')?window.__currentPage():1;
+  const isLast=(page>=total);
+  const rows=[...chat.querySelectorAll(':scope > .pmsg')]
+    .filter(r=>r.style.display!=='none'&&(r.offsetWidth||r.offsetHeight));
+  if(!rows.length) return;
+
+  const cs=getComputedStyle(chat), cr=chat.getBoundingClientRect();
+  const bottom=cr.bottom-(parseFloat(cs.borderBottomWidth)||0)-(parseFloat(cs.paddingBottom)||0);
+
+  /* 왼쪽 좌표가 같은 줄끼리 한 칸(=한 쪽) */
+  const cols=[];
+  rows.forEach(r=>{
+    const left=r.getBoundingClientRect().left;
+    const hit=cols.find(c=>Math.abs(c.left-left)<=6);
+    if(hit) hit.last=r;
+    else cols.push({left:left,first:r,last:r});
+  });
+  cols.sort((a,b)=>a.left-b.left);
+
+  cols.forEach((c,i)=>{
+    /* 펼침면에서 글이 끝나는 마지막 쪽만 그대로 둔다 — 끝이 위쪽에 남는 게
+       책에 가깝다. 한 쪽으로 낼 때는 마지막 쪽도 똑같이 가운데에 맞춘다. */
+    if(spread&&isLast&&i===cols.length-1) return;
+    const room=bottom-c.last.getBoundingClientRect().bottom;
+    if(!(room>1)) return;
+    const h=(mode==='mid')?room/2:room;
+    if(!(h>1)) return;
+    const sp=document.createElement('div');
+    sp.className='ap-spacer';
+    sp.setAttribute('aria-hidden','true');
+    sp.style.height=h+'px';
+    if(i>0){
+      sp.style.breakBefore='column';
+      sp.style.webkitColumnBreakBefore='always';
+    }
+    chat.insertBefore(sp,c.first);
+  });
+}
+
+/* ---------- 첫 장 제목 ----------
+   작성창과 같은 서식 문법을 그대로 쓴다(fmtText). 첫 장에만, 본문 맨 위에.
+   쪽 나누기 계산에서도 이 높이를 첫 칸이 이미 쓴 것으로 쳐서 넘치지 않는다. */
+function titleActive(){
+  return !!(novelOn()&&state.novelTitle&&state.novelTitle.on
+    &&String(state.novelTitle.text||'').trim());
+}
+function buildTitle(){
+  const T=state.novelTitle;
+  const el=document.createElement('div');
+  el.className='ap-title';
+  el.setAttribute('aria-hidden','true');
+  el.style.textAlign=T.align||'right';
+  el.style.fontSize=(Number(T.size)||40)+'px';
+  el.style.lineHeight=String(T.lh||1.25);
+  el.style.marginTop=(Number(T.top)||0)+'px';
+  el.style.marginBottom=(Number(T.gap)||0)+'px';
+  el.style.color=state.colors.nText||'inherit';
+  try{ el.innerHTML=fmtText(String(T.text||'')); }
+  catch(_){ el.textContent=String(T.text||''); }
+  return el;
+}
+function applyNovelTitle(){
+  const chat=document.getElementById('chat');
+  if(!chat) return;
+  [...chat.querySelectorAll(':scope > .ap-title')].forEach(n=>n.remove());
+  if(!titleActive()) return;
+  const page=(typeof window.__currentPage==='function')?window.__currentPage():1;
+  if(page!==1) return;
+  chat.insertBefore(buildTitle(),chat.firstChild);
+}
+/* 첫 칸이 제목에 이미 내준 높이 */
+function titleHeight(){
+  if(!titleActive()) return 0;
+  const chat=document.getElementById('chat');
+  if(!chat) return 0;
+  let el=chat.querySelector(':scope > .ap-title'), temp=false;
+  if(!el){ el=buildTitle(); chat.insertBefore(el,chat.firstChild); temp=true; }
+  const cs=getComputedStyle(el);
+  const h=(el.offsetHeight||0)+(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0);
+  if(temp&&el.parentNode) el.parentNode.removeChild(el);
+  return h;
+}
+{
+  const _rp=window.renderPreview;
+  if(typeof _rp==='function'){
+    window.renderPreview=function(){
+      const r=_rp.apply(this,arguments);
+      try{ applyNovelTitle(); }catch(_){}
+      try{ applyPageAlign(); }catch(_){}
+      return r;
+    };
+  }
 }
 
 const _applyCanvas=window.applyCanvas;
