@@ -17993,15 +17993,39 @@ function buildEmbedHTML(){
   const scoped=pick(css,node);
   const vars=frozenVars(css);
   const bg=state.transparentBg?'transparent':(state.colors.bg||'#FFFFFF');
+  /* 발췌는 정해진 픽셀 너비로 짜여 있어서, 그보다 좁은 블로그 본문에 넣으면
+     오른쪽이 잘린다. 겉을 한 겹 더 감싸고 들어갈 자리에 맞춰 통째로 줄인다.
+     (줄이는 것뿐이라 줄바꿈·말풍선 폭은 그대로 — 모양이 흐트러지지 않는다) */
+  const fitW=Math.max(1,Math.round(canvas.offsetWidth||state.layout.width||440));
 
   const style=rootSel+' *{box-sizing:border-box}\n'
     +rootSel+' img{max-width:100%}\n'
+    /* 스크립트가 막힌 블로그에서도 잘리지만은 않도록 가로 스크롤로 물러선다 */
+    +rootSel+' .moko-fit{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}\n'
+    +rootSel+' .moko-fit-in{width:'+fitW+'px;margin:0 auto;transform-origin:top left}\n'
     +scoped
     /* 지금 화면의 색 변수는 맨 마지막에 둬서 스코프된 :root 규칙을 덮어쓴다 */
     +rootSel+'{'+vars+';display:block;max-width:100%;margin:0 auto;'
     +'background:'+bg+';color:'+(state.colors.nText||'inherit')+';box-sizing:border-box}\n';
 
-  return '<div id="'+root+'">\n<style>\n'+style+'</style>\n'+node.outerHTML+'\n</div>';
+  /* 자리에 맞춰 줄이는 스크립트 — 스크립트를 지우는 블로그에서는
+     위의 overflow-x:auto 가 대신 받아 준다 */
+  const fitJs='(function(){var r=document.getElementById("'+root+'");if(!r)return;'
+    +'var f=r.querySelector(".moko-fit"),i=r.querySelector(".moko-fit-in"),W='+fitW+';'
+    +'function u(){var a=f.clientWidth||r.clientWidth||W;var s=Math.min(1,a/W);'
+    +'if(s<1){i.style.transform="scale("+s+")";f.style.overflow="hidden";'
+    +'f.style.height=Math.ceil(i.offsetHeight*s)+"px";}'
+    +'else{i.style.transform="";f.style.overflow="";f.style.height="";}}'
+    +'u();if(window.ResizeObserver){try{new ResizeObserver(u).observe(f);}catch(e){}}'
+    +'window.addEventListener("resize",u);'
+    +'try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(u);}catch(e){}'
+    +'Array.prototype.forEach.call(r.querySelectorAll("img"),function(m){'
+    +'if(!m.complete)m.addEventListener("load",u);});'
+    +'setTimeout(u,300);setTimeout(u,1200);})();';
+
+  return '<div id="'+root+'">\n<style>\n'+style+'</style>\n'
+    +'<div class="moko-fit"><div class="moko-fit-in">\n'+node.outerHTML+'\n</div></div>\n'
+    +'<script>'+fitJs+'<\/script>\n</div>';
 }
 
 /* ---------- 클립보드 ---------- */
