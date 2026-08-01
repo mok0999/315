@@ -1465,6 +1465,7 @@ html,body,#canvas,#chat,#canvas *{-webkit-text-size-adjust:100%!important;text-s
 <button class="btn" id="saveMenuBtn" title="저장 방식 선택" onclick="toggleSaveMenu(event)">▾</button>
 <button class="btn" onclick="copyImage()">⧉ 이미지 복사</button>
 <button class="btn" onclick="exportHTML()">↓ HTML 내보내기</button>
+<button class="btn" id="copyHtmlBtn" onclick="copyHTMLCode()" title="블로그 HTML 편집기에 붙여넣을 수 있는 코드로 복사">⧉ HTML 복사</button>
 <button class="btn del-cluster" id="bulkDeleteBtn" onclick="toggleBulkDeleteMode()">여러 개 삭제</button>
 <button class="btn del-cluster" id="bulkDeleteCancelBtn" onclick="cancelBulkDeleteMode()" style="display:none">선택 취소</button>
 <button class="btn del-cluster" id="clearAllBtn" onclick="openClear()">전부 삭제</button>
@@ -3436,7 +3437,7 @@ function normalizeTintMarkup(s){
 }
 /* 마크다운·HTML 렌더링 (문단 자동 분류 패널에서 켜고 끔).
    허용한 태그만 되살리고, 나머지는 이스케이프된 그대로 글자로 남긴다. */
-const MD_ALLOWED_TAGS=/^(b|strong|i|em|u|s|del|mark|br|code|small|sub|sup|h1|h2|h3|ul|ol|li|blockquote|p|span|a|hr)$/i;
+const MD_ALLOWED_TAGS=/^(b|strong|i|em|u|s|del|mark|br|code|small|sub|sup|h1|h2|h3|ul|ol|li|blockquote|p|span|a|hr|table|thead|tbody|tr|th|td|caption|colgroup|col)$/i;
 function unescapeAllowedHtml(t){
   return t.replace(/&lt;(\/?)([a-zA-Z0-9]+)((?:\s+[a-zA-Z-]+\s*=\s*&quot;[^&]*&quot;)*)\s*(\/?)&gt;/g,
     (full,slash,tag,attrs,selfClose)=>{
@@ -3453,7 +3454,97 @@ function unescapeAllowedHtml(t){
       return '<'+slash+tag.toLowerCase()+safe+selfClose+'>';
     });
 }
+/* ---- 표(파이프 테이블) ----
+   | 구분 | A | B |
+   |---|---|---|      ← 가운데 정렬은 :---:, 오른쪽 정렬은 ---:
+   | 값 | 값 | 값 |
+   fmtText 가 esc() 를 거친 뒤에 불리므로 여기서는 이스케이프된 글자를 다룬다.
+   굵게·기울임 같은 인라인 서식은 이미 적용된 상태로 칸 안에 들어간다.
+   만들어 낸 표 안에는 줄바꿈 문자를 남기지 않는다 — 뒤에서 \n 을 <br> 로
+   바꾸기 때문에, 남아 있으면 표 안에 빈 줄이 끼어든다. */
+const MD_TABLE_ROW=/^\s*\|.*\|\s*$/;
+const MD_TABLE_SEP=/^\s*\|(?:\s*:?-{1,}:?\s*\|)+\s*$/;
+function mdSplitRow(line){
+  const s=String(line).trim().replace(/^\|/,'').replace(/\|\s*$/,'');
+  const cells=[]; let buf='';
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    if(c==='\\'&&s[i+1]==='|'){ buf+='|'; i++; continue; }  /* \| 는 글자 그대로 */
+    if(c==='|'){ cells.push(buf); buf=''; continue; }
+    buf+=c;
+  }
+  cells.push(buf);
+  return cells.map(c=>c.trim());
+}
+function mdAlignOf(cell){
+  const s=String(cell).trim();
+  if(/^:-+:$/.test(s)) return 'center';
+  if(/^-+:$/.test(s))  return 'right';
+  return '';
+}
+function mdBuildTable(head,aligns,body){
+  const cell=(tag,txt,i)=>{
+    const a=aligns[i]||'';
+    return '<'+tag+(a?' style="text-align:'+a+'"':'')+'>'+(txt||'')+'</'+tag+'>';
+  };
+  /* 칸 수는 머리줄이 정한다 — 넘치는 칸은 버리고 모자라면 빈 칸으로 채운다 */
+  const cols=Math.max(1,head.length);
+  const pad=r=>{ const o=r.slice(0,cols); while(o.length<cols) o.push(''); return o; };
+  let html='<table class="md-table"><thead><tr>';
+  pad(head).forEach((c,i)=>{ html+=cell('th',c,i); });
+  html+='</tr></thead><tbody>';
+  body.forEach(r=>{
+    html+='<tr>';
+    pad(r).forEach((c,i)=>{ html+=cell('td',c,i); });
+    html+='</tr>';
+  });
+  return html+'</tbody></table>';
+}
+function applyMarkdownTables(t){
+  if(t.indexOf('|')<0) return t;
+  const lines=t.split('\n');
+  const out=[];
+  let i=0;
+  while(i<lines.length){
+    if(MD_TABLE_ROW.test(lines[i])&&i+1<lines.length&&MD_TABLE_SEP.test(lines[i+1])){
+      const head=mdSplitRow(lines[i]);
+      const aligns=mdSplitRow(lines[i+1]).map(mdAlignOf);
+      const body=[];
+      let j=i+2;
+      while(j<lines.length&&MD_TABLE_ROW.test(lines[j])&&!MD_TABLE_SEP.test(lines[j])){
+        body.push(mdSplitRow(lines[j])); j++;
+      }
+      out.push(mdBuildTable(head,aligns,body));
+      i=j;
+      continue;
+    }
+    out.push(lines[i]); i++;
+  }
+  /* 표 바로 앞뒤의 줄바꿈은 없앤다 — <br> 로 바뀌어 빈 줄이 되기 때문 */
+  return out.join('\n')
+    .replace(/\n+(<table class="md-table")/g,'$1')
+    .replace(/(<\/table>)\n+/g,'$1');
+}
+/* ---- 가름선 ----
+   따로 떨어진 줄에 --- (또는 *** ___) 만 있으면 가름선으로 바꾼다.
+   가름선 굵기·너비는 '가름' 블럭과 같은 설정(dividerWidth)을 따라간다.
+   표와 마찬가지로 안에 줄바꿈 문자를 남기지 않는다. */
+function mdHrHTML(){
+  const L=state.layout||{};
+  const w=Math.max(10,Math.min(100,Number(L.dividerWidth)||100));
+  const mg=Math.max(0,Number(L.dividerMargin)!=null?Number(L.dividerMargin):8);
+  return '<span class="md-hr" style="width:'+w+'%;margin:'+mg+'px auto"></span>';
+}
+function applyMarkdownHr(t){
+  return t
+    .replace(/^[ \t]*(?:-{3,}|\*{3,}|_{3,})[ \t]*$/gm,()=>mdHrHTML())
+    .replace(/\n+(<span class="md-hr")/g,'$1')
+    .replace(/(<\/span>)\n+(?=<span class="md-hr")/g,'$1')
+    .replace(/(<span class="md-hr"[^>]*><\/span>)\n+/g,'$1');
+}
 function applyMarkdown(t){
+  t=applyMarkdownTables(t);
+  t=applyMarkdownHr(t);
   t=t.replace(/^(?:###|##)\s+(.+)$/gm,'<span class="text-heading text-heading-2" data-heading="2">$1</span>');
   t=t.replace(/^#\s+(.+)$/gm,'<span class="text-heading text-heading-1" data-heading="1">$1</span>');
   t=t.replace(/^&gt;\s?(.+)$/gm,'<span class="quote-fmt" style="border-left:3.5px solid '+(state.colors&&state.colors.quote||'#8A8F98')+'">$1</span>');
@@ -4240,12 +4331,19 @@ applyThemeById=function(id){const t=themes.find(x=>x.id===id);__applyThemeRich(i
 const __syncControlsRich=syncControlsFromState;
 syncControlsFromState=function(){__syncControlsRich();const t=document.getElementById('bubbleTailOn'),s=document.getElementById('bubbleTailSize'),y=document.getElementById('bubbleTailY'),x=document.getElementById('bubbleTailX');if(t)t.checked=state.layout.tailOn;if(s)s.value=state.layout.tailSize;if(y)y.value=state.layout.tailY;if(x)x.value=state.layout.tailX;const sv=document.getElementById('bubbleTailSizeV'),yv=document.getElementById('bubbleTailYV'),xv=document.getElementById('bubbleTailXV');if(sv)sv.textContent=state.layout.tailSize+'px';if(yv)yv.textContent=state.layout.tailY+'px';if(xv)xv.textContent=state.layout.tailX+'px';updateBackgroundImageControls();updateMarginLinkButtons();};
 
+/* 편집할 때만 쓰는 것들 — 저장·내보내기 결과에는 절대 들어가면 안 된다.
+   ⠿ 순서 이동 손잡이(.paragraph-grip)는 .ctrl 바깥에 따로 붙기 때문에
+   예전처럼 .ctrl 만 지우면 HTML 에 그대로 남아 버렸다. */
+const EDITOR_ONLY_SEL='.ctrl,.drag-handle,.paragraph-grip,.paragraph-pick-badge,'
+  +'#selToolbar,#paragraphSelectBar,.paragraph-select-bar,[data-export-soft-break]';
+window.__EDITOR_ONLY_SEL=EDITOR_ONLY_SEL;
+
 /* Export every style block, not only the first one, so tails/backgrounds/rich typography survive HTML export. */
 exportHTML=function(){
   if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
   if(editingId){commitEdit();renderPreview();}applyCanvas();
   const node=document.getElementById('canvas').cloneNode(true);node.style.transform='none';node.style.boxShadow='none';
-  node.querySelectorAll('.ctrl').forEach(c=>c.remove());node.querySelectorAll('.editable').forEach(el=>{el.removeAttribute('contenteditable');el.classList.remove('editable','editing');});
+  node.querySelectorAll(EDITOR_ONLY_SEL).forEach(c=>c.remove());node.querySelectorAll('.editable').forEach(el=>{el.removeAttribute('contenteditable');el.classList.remove('editable','editing');});
   const css=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
   const bodyBg=state.transparentBg?'transparent':state.colors.bg;
   const transparentCss=state.transparentBg?'html,body,#canvas,#chat{background:transparent!important}#canvasBgImage,#canvasBgOverlay{display:none!important}':'';
@@ -6187,6 +6285,8 @@ else setTimeout(__idleLoadRenderer,1200);
     const sourceFlows=[...source.querySelectorAll('.glyph-scale')];
     const breakSets=sourceFlows.map(flow=>{
       const align=getComputedStyle(flow).textAlign;
+      /* 표는 칸마다 따로 줄바꿈이 일어나므로 흐름 단위 고정을 걸지 않는다 */
+      if(flow.querySelector('table')) return [];
       return align==='justify'?[]:measuredSoftBreaks(flow);
     });
 
@@ -8225,7 +8325,8 @@ stage.addEventListener('touchend',e=>{
     const breakSets=[];
     for(let i=0;i<sourceFlows.length;i++){
       const flow=sourceFlows[i];
-      breakSets.push(getComputedStyle(flow).textAlign==='justify'?[]:measuredSoftBreaks(flow));
+      /* 표는 칸마다 따로 줄바꿈이 일어나므로 흐름 단위 고정을 걸지 않는다 */
+      breakSets.push((flow.querySelector('table')||getComputedStyle(flow).textAlign==='justify')?[]:measuredSoftBreaks(flow));
       if(i&&i%20===0) await yieldThread();
     }
 
@@ -9452,6 +9553,31 @@ requestAnimationFrame(syncCtrlScale);
 <style id="fmt-split-button-capsule">
 /* ===== 인용구 서식 ===== */
 .quote-fmt{display:block;border-left:3.5px solid #8A8F98;padding:4px 0 4px 20px;margin:3px 0}
+/* 마크다운 가름선 (--- *** ___) — '가름' 블럭의 선과 같은 모양 */
+.md-hr{display:block;height:0;border:0;border-top:1px solid currentColor;opacity:.2}
+/* ===== 마크다운 표 =====
+   글자색을 그대로 물려받고, 선은 그 색을 옅게 깔아 어떤 테마에서도 어울리게.
+   저장(캡처) 때도 같게 보이도록 색은 currentColor 로만 계산한다. */
+.md-table{
+  display:table;width:100%;table-layout:auto;
+  border-collapse:collapse;margin:6px 0;
+  font-size:.94em;line-height:1.5;
+}
+.md-table th,.md-table td{
+  border:1px solid currentColor;
+  padding:5px 9px;text-align:left;vertical-align:top;
+  word-break:keep-all;overflow-wrap:break-word;
+}
+.md-table th{font-weight:700}
+/* 선과 머리줄 배경은 글자색을 옅게 — 밝은 테마·어두운 테마 모두에서 자연스럽게 */
+.md-table th,.md-table td{border-color:color-mix(in srgb,currentColor 22%,transparent)}
+.md-table thead th{background:color-mix(in srgb,currentColor 7%,transparent)}
+@supports not (color:color-mix(in srgb,red 50%,transparent)){
+  .md-table th,.md-table td{border-color:rgba(128,128,128,.38)}
+  .md-table thead th{background:rgba(128,128,128,.1)}
+}
+/* 캡처용 클론에서 줄바꿈을 고정할 때 칸 안 글자가 한 줄로 뻗지 않도록 */
+.md-table th,.md-table td{white-space:normal!important}
 .fmt .qt{font-size:15px;line-height:1}
 /* ===== 미리보기 헤더: 확대·축소 버튼과 설명을 '미리보기' 글자 바로 옆 한 줄에 ===== */
 .preview-heading{flex-wrap:nowrap;align-items:center;position:relative}
@@ -15871,6 +15997,7 @@ body.mobile-ui #paragraphSelectBar .selection-summary{
       addMenuButton(pop,'🗂','일괄 저장 (모든 장)',()=>typeof runSave==='function'?runSave('batch'):saveImage());
       addMenuButton(pop,'⧉','이미지 복사',()=>copyImage());
       addMenuButton(pop,'↓','HTML로 내보내기',()=>exportHTML());
+      addMenuButton(pop,'⧉','HTML 코드 복사',()=>copyHTMLCode());
     }else{
       if(typeof window.deleteCurrentPage==='function'){
         addMenuButton(pop,'🗑','현재 페이지 삭제',()=>window.deleteCurrentPage(),true);
@@ -17712,6 +17839,246 @@ if(chat&&window.MutationObserver){
   }
 })();
 
+})();
+</script>
+
+<script id="copy-html-code">
+(function(){
+'use strict';
+/* =====================================================================
+   ⧉ HTML 복사 — 블로그 HTML 편집기에 그대로 붙여넣는 코드
+   'HTML 내보내기'는 <html><head><style>… 로 된 완성된 문서라 블로그 글
+   본문에 붙이면 통째로 잘려 나간다. 그래서 여기서는
+     · 겉을 감싸는 <div> 하나로 묶고
+     · 앱 CSS 중 '이 발췌에 실제로 쓰인 규칙만' 골라
+     · 모든 선택자를 그 <div> 안쪽으로 한정(스코프)해서
+   블로그가 원래 쓰던 CSS와 서로 간섭하지 않게 만든다.
+   ===================================================================== */
+
+/* ---------- CSS 를 규칙 단위로 훑기 ---------- */
+function eachRule(css,onRule,onAt){
+  const n=css.length;
+  let i=0;
+  const blockEnd=start=>{                 /* '{' 위치를 받아 짝이 맞는 '}' 다음을 돌려준다 */
+    let depth=0;
+    for(let k=start;k<n;k++){
+      const c=css[k];
+      if(c==='{') depth++;
+      else if(c==='}'){ depth--; if(!depth) return k+1; }
+    }
+    return n;
+  };
+  while(i<n){
+    while(i<n&&/\s/.test(css[i])) i++;
+    if(i>=n) break;
+    if(css[i]==='@'){
+      let j=i;
+      while(j<n&&css[j]!=='{'&&css[j]!==';') j++;
+      const prelude=css.slice(i,j).trim();
+      if(j>=n||css[j]===';'){ onAt(prelude,null); i=j+1; continue; }
+      const end=blockEnd(j);
+      onAt(prelude,css.slice(j+1,end-1));
+      i=end; continue;
+    }
+    let j=i;
+    while(j<n&&css[j]!=='{') j++;
+    if(j>=n) break;
+    const sel=css.slice(i,j).trim();
+    const end=blockEnd(j);
+    onRule(sel,css.slice(j+1,end-1));
+    i=end;
+  }
+}
+
+/* ---------- 선택자를 감싸는 div 안쪽으로 한정 ---------- */
+function scopeSelector(sel,root){
+  let s=sel.trim();
+  if(!s) return '';
+  /* :root / html / body 에 걸린 규칙(주로 색 변수)은 감싸는 div 자신에게 준다 */
+  s=s.replace(/^(?::root|html|body)(?![\w-])/,'').trim();
+  if(!s) return root;
+  if(s[0]==='>'||s[0]==='+'||s[0]==='~') return root+' '+s;
+  return root+' '+s;
+}
+/* 매칭 검사용으로 상태·가상 요소를 떼어 낸다 (:hover, ::before 등) */
+const PSEUDO_STATE=/:(?:hover|active|focus|focus-visible|focus-within|visited|target|disabled|enabled|checked|indeterminate|placeholder-shown|autofill|read-only|read-write|default|valid|invalid|required|optional|any-link|link|user-invalid|-webkit-[a-z-]+|-moz-[a-z-]+)\b(?:\([^()]*\))?/gi;
+function testableSelector(sel){
+  return String(sel)
+    .replace(/::[a-zA-Z-]+(?:\([^()]*\))?/g,'')
+    .replace(PSEUDO_STATE,'')
+    .replace(/^(?::root|html|body)(?![\w-])/,'')
+    .trim();
+}
+function ruleUsed(sel,scope){
+  const t=testableSelector(sel);
+  if(!t) return true;                    /* :root{--색} 같은 규칙은 항상 남긴다 */
+  try{
+    if(scope.matches&&scope.matches(t)) return true;
+    return !!scope.querySelector(t);
+  }catch(_){ return true; }              /* 브라우저가 못 읽는 선택자는 안전하게 남긴다 */
+}
+
+/* ---------- 색 변수: 지금 화면의 값을 감싸는 div 에 직접 박는다 ----------
+   다크 모드 전환처럼 html[data-…] 에 걸린 규칙은 스코프하면 더 이상 맞지 않는다.
+   그래서 '지금 보이는 값'을 그대로 굳혀 블로그에서도 같은 색이 나오게 한다. */
+function frozenVars(css){
+  const names=new Set();
+  const re=/(--[A-Za-z0-9_-]+)\s*:/g;
+  let m;
+  while((m=re.exec(css))) names.add(m[1]);
+  const cs=getComputedStyle(document.documentElement);
+  const bs=getComputedStyle(document.body);
+  const out=[];
+  names.forEach(name=>{
+    let v=cs.getPropertyValue(name);
+    if(!v||!v.trim()) v=bs.getPropertyValue(name);
+    if(v&&v.trim()) out.push(name+':'+v.trim());
+  });
+  return out.join(';');
+}
+
+/* ---------- 붙여넣을 코드 만들기 ---------- */
+function buildEmbedHTML(){
+  const canvas=document.getElementById('canvas');
+  if(!canvas) return null;
+
+  const node=canvas.cloneNode(true);
+  node.style.transform='none';
+  node.style.boxShadow='none';
+  node.style.margin='0 auto';
+  node.querySelectorAll(window.__EDITOR_ONLY_SEL
+    ||'.ctrl,.drag-handle,.paragraph-grip,.paragraph-pick-badge,#selToolbar,[data-export-soft-break]')
+    .forEach(el=>el.remove());
+  node.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
+  node.querySelectorAll('.editable,.editing,.ctrl-open,.dragging,.drop-before,.drop-after')
+    .forEach(el=>el.classList.remove('editable','editing','ctrl-open','dragging','drop-before','drop-after'));
+  /* 화면 편집용으로 숨겨 둔 줄(다른 장)은 통째로 뺀다 */
+  node.querySelectorAll('*').forEach(el=>{ if(el.style&&el.style.display==='none') el.remove(); });
+
+  const root='moko-'+Math.random().toString(36).slice(2,8);
+  const rootSel='#'+root;
+  const css=[...document.querySelectorAll('style')].map(s=>s.textContent||'').join('\n')
+    .replace(/\/\*[\s\S]*?\*\//g,'');
+
+  /* 실제로 쓰인 규칙만 골라 스코프 */
+  const pick=(body,scope)=>{
+    let out='';
+    eachRule(body,(sel,decl)=>{
+      if(!decl||!decl.trim()) return;
+      const kept=sel.split(',').map(s=>s.trim())
+        .filter(s=>s&&ruleUsed(s,scope))
+        .map(s=>scopeSelector(s,rootSel))
+        .filter(Boolean);
+      if(kept.length) out+=kept.join(',')+'{'+decl.trim()+'}\n';
+    },(prelude,inner)=>{
+      if(inner===null) return;                       /* @import 등은 버린다 */
+      const name=(prelude.match(/^@([a-zA-Z-]+)/)||[])[1]||'';
+      if(/^(media|supports|layer|container)$/i.test(name)){
+        /* 화면 크기에 따라 달라지는 규칙은 블로그에서 오히려 방해가 된다 */
+        if(/^media$/i.test(name)&&/max-width|min-width|hover|pointer/i.test(prelude)) return;
+        const nested=pick(inner,scope);
+        if(nested.trim()) out+=prelude+'{'+nested+'}\n';
+        return;
+      }
+      if(/^keyframes$/i.test(name)) return;           /* 애니메이션은 정지 상태로 충분 */
+      if(/^font-face$/i.test(name)){
+        if(inner.length<4000) out+=prelude+'{'+inner+'}\n';  /* base64 로 박힌 글꼴은 너무 커서 뺀다 */
+        return;
+      }
+      out+=prelude+'{'+inner+'}\n';
+    });
+    return out;
+  };
+
+  const scoped=pick(css,node);
+  const vars=frozenVars(css);
+  const bg=state.transparentBg?'transparent':(state.colors.bg||'#FFFFFF');
+
+  const style=rootSel+' *{box-sizing:border-box}\n'
+    +rootSel+' img{max-width:100%}\n'
+    +scoped
+    /* 지금 화면의 색 변수는 맨 마지막에 둬서 스코프된 :root 규칙을 덮어쓴다 */
+    +rootSel+'{'+vars+';display:block;max-width:100%;margin:0 auto;'
+    +'background:'+bg+';color:'+(state.colors.nText||'inherit')+';box-sizing:border-box}\n';
+
+  return '<div id="'+root+'">\n<style>\n'+style+'</style>\n'+node.outerHTML+'\n</div>';
+}
+
+/* ---------- 클립보드 ---------- */
+async function toClipboard(text){
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  }catch(_){}
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=text;
+    ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.select(); ta.setSelectionRange(0,ta.value.length);
+    const ok=document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  }catch(_){ return false; }
+}
+
+window.copyHTMLCode=async function(){
+  if(!state.messages||!state.messages.length){ alert('먼저 메시지를 추가해 주세요.'); return; }
+  const btn=document.getElementById('copyHtmlBtn');
+  const label=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='만드는 중…'; }
+  try{
+    try{ if(typeof editingId!=='undefined'&&editingId){ commitEdit(); renderPreview(); } }catch(_){}
+    try{ applyCanvas(); }catch(_){}
+    await new Promise(r=>requestAnimationFrame(()=>r()));
+
+    const html=buildEmbedHTML();
+    if(!html){ alert('미리보기를 찾지 못했어요.'); return; }
+
+    const ok=await toClipboard(html);
+    const kb=Math.round(html.length/1024);
+    if(ok){
+      try{ window.toast('HTML 코드를 복사했어요 ('+kb+'KB) — 블로그의 HTML 편집기에 붙여넣으세요'); }catch(_){}
+    }else{
+      /* 복사가 막힌 환경에서는 직접 고를 수 있게 창을 띄운다 */
+      showCodeFallback(html);
+    }
+  }catch(err){
+    console.error('HTML 복사 실패',err);
+    alert('HTML 코드를 만들지 못했어요.');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=label||'⧉ HTML 복사'; }
+  }
+};
+
+function showCodeFallback(html){
+  const back=document.createElement('div');
+  back.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.45);'
+    +'display:flex;align-items:center;justify-content:center;padding:20px';
+  const box=document.createElement('div');
+  box.style.cssText='background:#fff;color:#222;border-radius:14px;padding:16px;'
+    +'width:min(680px,100%);max-height:80vh;display:flex;flex-direction:column;gap:10px;'
+    +'box-shadow:0 20px 60px rgba(0,0,0,.3)';
+  box.innerHTML='<div style="font-weight:700;font-size:14px">HTML 코드</div>'
+    +'<div style="font-size:12px;color:#777">자동 복사가 막혀 있어요. 아래 코드를 직접 복사해 주세요.</div>';
+  const ta=document.createElement('textarea');
+  ta.value=html;
+  ta.style.cssText='flex:1;min-height:220px;font-family:ui-monospace,Menlo,monospace;'
+    +'font-size:11px;line-height:1.5;padding:10px;border:1px solid #DDD;border-radius:10px;resize:vertical';
+  const close=document.createElement('button');
+  close.textContent='닫기';
+  close.style.cssText='align-self:flex-end;padding:8px 16px;border:1px solid #DDD;'
+    +'border-radius:9px;background:#F5F5F7;font-weight:700;cursor:pointer';
+  close.onclick=()=>back.remove();
+  box.appendChild(ta); box.appendChild(close);
+  back.appendChild(box);
+  back.addEventListener('click',e=>{ if(e.target===back) back.remove(); });
+  document.body.appendChild(back);
+  ta.focus(); ta.select();
+}
 })();
 </script>
 </body>
