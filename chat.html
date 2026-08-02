@@ -1527,13 +1527,13 @@ html, body, #canvas, #chat, #canvas * {
 <option value="'Mona12',sans-serif">Mona12 (픽셀 · 12px 권장)</option>
 <option value="-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif">시스템 기본</option>
 </select>
-<div class="field-help">중국어·일본어 문자는 자동 감지해 Noto Sans SC / JP로 보완하고, 이미지 저장에도 함께 포함해요.</div>
+<div class="field-help">중국어·일본어 문자는 자동 감지해 Noto Sans SC / JP로 보완하고, 이미지 저장에도 함께 포함해요. 한글 글꼴로 <b>명조</b>를 고르면 한자·가나도 Noto Serif SC / JP(명조)로 함께 바뀌어요.</div>
 <div class="field-help" id="fontLoadState" style="margin-top:6px"></div>
 </div>
 <div class="field">
 <label class="lb">한자·가나 크기 보정</label>
 <div class="rangewrap"><input id="lyCjkScale" max="120" min="80" oninput="setCjkScale(this.value)" step="1" type="range" value="100"/><span class="val" id="lyCjkScaleV">100%</span></div>
-<div class="field-help">대체 글꼴(Noto Sans SC / JP)로 그려지는 한자·가나만 키우거나 줄여요. 한글·영문은 그대로예요.</div>
+<div class="field-help">대체 글꼴(Noto Sans / Serif SC · JP)로 그려지는 한자·가나만 키우거나 줄여요. 한글·영문은 그대로예요.</div>
 </div>
 <div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">글자 크기</label>
@@ -4976,6 +4976,9 @@ else setTimeout(__idleLoadRenderer,1200);
 .cjk-auto{font-style:inherit;font-weight:inherit;letter-spacing:inherit;text-decoration:inherit;text-transform:inherit}
 .cjk-auto[data-cjk-lang="zh"]{font-family:'Noto Sans SC','Microsoft YaHei','PingFang SC','SimSun',sans-serif}
 .cjk-auto[data-cjk-lang="ja"]{font-family:'Noto Sans JP','Yu Gothic','YuGothic','Meiryo',sans-serif}
+/* 한글을 명조로 고르면 한자·가나도 명조로 — 획 굵기와 인상이 어긋나지 않게 */
+#chat.cjk-serif .cjk-auto[data-cjk-lang="zh"]{font-family:'Noto Serif SC','Songti SC','SimSun','STSong',serif}
+#chat.cjk-serif .cjk-auto[data-cjk-lang="ja"]{font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho','YuMincho','MS Mincho',serif}
 </style>
 <script id="cjk-auto-font-export-fix">
 /* ===== automatic Chinese / Japanese fallback + export embedding ===== */
@@ -4983,7 +4986,24 @@ else setTimeout(__idleLoadRenderer,1200);
   if(typeof __RUNTIME_FONT_CONFIG==='object'&&__RUNTIME_FONT_CONFIG){
     __RUNTIME_FONT_CONFIG['Noto Sans SC']={css:'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap',weights:[400,500,600,700,800]};
     __RUNTIME_FONT_CONFIG['Noto Sans JP']={css:'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap',weights:[400,500,600,700,800]};
+    /* 명조(세리프) 한글 글꼴을 골랐을 때 짝이 맞는 한자·가나 글꼴 */
+    __RUNTIME_FONT_CONFIG['Noto Serif SC']={css:'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700;800&display=swap',weights:[400,500,600,700,800]};
+    __RUNTIME_FONT_CONFIG['Noto Serif JP']={css:'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;800&display=swap',weights:[400,500,600,700,800]};
   }
+
+  /* 고른 한글 글꼴이 명조 계열이면 한자·가나도 명조로 맞춘다.
+     'sans-serif' 를 먼저 걷어내고 나서 serif / 명조 계열 이름을 찾는다. */
+  window.__cjkIsSerifStack=function(stack){
+    const s=String(stack==null?(state&&state.layout&&state.layout.font):stack||'').toLowerCase();
+    return /myeongjo|myungjo|batang|bataang|mincho|songti|song ti|\bsong\b|serif/.test(s.replace(/sans-serif/g,' ').replace(/sans serif/g,' '));
+  };
+  window.__cjkFamilyFor=function(lang){
+    const serif=window.__cjkIsSerifStack();
+    if(lang==='zh') return serif?'Noto Serif SC':'Noto Sans SC';
+    return serif?'Noto Serif JP':'Noto Sans JP';
+  };
+  function isZhFamily(f){ return f==='Noto Sans SC'||f==='Noto Serif SC'; }
+  function isJaFamily(f){ return f==='Noto Sans JP'||f==='Noto Serif JP'; }
 
   function cpOf(ch){return ch.codePointAt(0);}
   function isHan(ch){
@@ -5063,21 +5083,21 @@ else setTimeout(__idleLoadRenderer,1200);
   }
   function cjkFamilies(node){
     const list=[];
-    if(node&&node.querySelector('.cjk-auto[data-cjk-lang="zh"]'))list.push('Noto Sans SC');
-    if(node&&node.querySelector('.cjk-auto[data-cjk-lang="ja"]'))list.push('Noto Sans JP');
+    if(node&&node.querySelector('.cjk-auto[data-cjk-lang="zh"]'))list.push(window.__cjkFamilyFor('zh'));
+    if(node&&node.querySelector('.cjk-auto[data-cjk-lang="ja"]'))list.push(window.__cjkFamilyFor('ja'));
     return list;
   }
   function sampleForFamily(node,family){
     if(!node)return 'ABC123';
-    if(family==='Noto Sans SC')return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="zh"]')].map(x=>x.textContent).join(''))||'中文';
-    if(family==='Noto Sans JP')return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="ja"]')].map(x=>x.textContent).join(''))||'日本語';
+    if(isZhFamily(family))return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="zh"]')].map(x=>x.textContent).join(''))||'中文';
+    if(isJaFamily(family))return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="ja"]')].map(x=>x.textContent).join(''))||'日本語';
     const clone=node.cloneNode(true);clone.querySelectorAll&&clone.querySelectorAll('.cjk-auto').forEach(x=>x.remove());
     return uniqueChars(clone.textContent)||'가나다ABC123';
   }
   function weightsForFamily(node,family){
     const set=new Set();let elements=[];
-    if(family==='Noto Sans SC')elements=[...node.querySelectorAll('.cjk-auto[data-cjk-lang="zh"]')];
-    else if(family==='Noto Sans JP')elements=[...node.querySelectorAll('.cjk-auto[data-cjk-lang="ja"]')];
+    if(isZhFamily(family))elements=[...node.querySelectorAll('.cjk-auto[data-cjk-lang="zh"]')];
+    else if(isJaFamily(family))elements=[...node.querySelectorAll('.cjk-auto[data-cjk-lang="ja"]')];
     else elements=[node,...node.querySelectorAll('*')].filter(el=>el.textContent&&el.textContent.trim()&&String(getComputedStyle(el).fontFamily||'').toLowerCase().includes(family.toLowerCase()));
     elements.forEach(el=>set.add(normalizedWeight(getComputedStyle(el).fontWeight)));if(!set.size)set.add(400);
     return [...set].sort((a,b)=>a-b);
@@ -12640,6 +12660,36 @@ window.__onBulkSelectionChange=function(active,ids){
 #frPreset .fr-preset-add:hover{border-color:var(--accent);color:var(--ink)}
 #frPreset .fr-preset-empty{font-size:11px;color:var(--muted);padding:10px 2px;text-align:center}
 
+/* =====================================================================
+   프로필을 껐을 때 꼬리가 좌우 여백 밖으로 삐져나오던 문제
+   ---------------------------------------------------------------------
+   꼬리는 말풍선 바깥으로 약 (꼬리 크기 x 0.9 - 1px) 만큼 튀어나온다.
+   프로필이 있을 땐 프로필과 말풍선 사이 12px 틈에 들어가서 안 보이지만,
+   프로필을 끄면 말풍선이 바로 여백 선에 붙어서 꼬리만 밖으로 나갔다.
+   튀어나오는 만큼 말풍선을 안쪽으로 밀고 최대 폭도 같이 줄여,
+   꼬리 끝이 정확히 여백 선에 맞도록 한다. (왼쪽 정렬일 때만)
+   ===================================================================== */
+#chat{
+  --tail-overhang-base:max(0px,calc(var(--bubble-tail-size,10px) * 0.9 - var(--bubble-tail-x,0px) - 1px));
+}
+/* 말풍선 모서리가 클 땐 꼬리가 안쪽으로 당겨지므로 그만큼 빼 준다 */
+#chat .n-bubble{
+  --tail-overhang:max(0px,calc(var(--bubble-tail-size,10px) * 0.9
+    - var(--bubble-tail-inward-delta,0px) * 0.55 - var(--bubble-tail-x,0px) - 1px));
+}
+#chat:not(.bubble-tail-off) .n-msg.no-av.bubble-align-left:not(.log-row) > .n-body > .n-bubble{
+  margin-left:var(--tail-overhang,0px);
+  max-width:calc(100% - var(--tail-overhang,0px));
+}
+/* 메신저 모드에서 받은 말풍선도 같은 사정 (이름표는 -2px 만큼 더 나가 있다) */
+#chat:not(.bubble-tail-off) .m-msg.no-av:not(.mine) > .m-bubble,
+#chat:not(.bubble-tail-off) .m-msg.no-av:not(.mine) > .m-name{
+  margin-left:calc(var(--tail-overhang-base,0px) + 2px);
+}
+#chat:not(.bubble-tail-off) .m-msg.no-av:not(.mine) > .m-bubble{
+  max-width:calc(78% - var(--tail-overhang-base,0px) - 2px);
+}
+
 /* 찾은 자리 표시 — 화면에서만 보이는 표식. 내용·서식은 그대로다.
    저장(캡처)할 때는 클론이 aria-hidden 컨테이너 안에 들어가므로 자동으로 지워진다. */
 #chat .fr-hit{
@@ -13486,6 +13536,215 @@ matchMemberByName=function(name){
 });
 
 syncDraftRows();
+})();
+</script>
+
+<style id="divider-align-styles">
+/* =====================================================================
+   가름선 정렬 (왼쪽 · 가운데 · 오른쪽) — 가름선마다 따로
+   ===================================================================== */
+.divider-row.div-align-left{justify-content:flex-start}
+.divider-row.div-align-right{justify-content:flex-end}
+.divider-row.line-only.div-align-left{justify-content:flex-start}
+.divider-row.line-only.div-align-right{justify-content:flex-end}
+/* 가름선일 땐 '양쪽 정렬'과 글씨 크기 칸을 감춘다 (가름선엔 쓸 데가 없다) */
+#alignField.divider-align #alignSeg > button:first-child,
+#alignField.divider-align #alignHeadingDiv,
+#alignField.divider-align #textHeadingCol{display:none!important}
+</style>
+<script id="divider-align-script">
+(function(){
+'use strict';
+
+/* 가름선은 원래 늘 가운데였다 — 예전 가름선(align 없음)은 그대로 가운데로 본다 */
+const DIV_ALIGNS=['left','center','right'];
+const SEG_ORDER=['justify','left','center','right'];
+function normDivAlign(a){ return DIV_ALIGNS.indexOf(a)>=0?a:'center'; }
+try{ if(!state.draftDividerAlign) state.draftDividerAlign='center'; }catch(_){}
+
+function dividerMode(){ try{ return state.composerType==='divider'; }catch(_){ return false; } }
+function syncDivAlignSeg(){
+  const seg=document.getElementById('alignSeg'); if(!seg) return;
+  const a=normDivAlign(state.draftDividerAlign);
+  [].slice.call(seg.children).forEach(function(b,i){ b.classList.toggle('on',SEG_ORDER[i]===a); });
+}
+
+/* ---- 정렬 버튼: 가름선일 땐 가름선 쪽 값을 만진다 ---- */
+const __setAlignDiv=window.setAlign;
+window.setAlign=function(a){
+  if(!dividerMode()) return __setAlignDiv.apply(this,arguments);
+  a=normDivAlign(a==='justify'?'center':a);
+  state.draftDividerAlign=a;
+  syncDivAlignSeg();
+  /* 지금 고치고 있는 가름선이 있으면 바로 반영 */
+  try{
+    if(typeof composerEditId!=='undefined'&&composerEditId){
+      const m=(state.messages||[]).find(function(x){ return x&&x.id===composerEditId; });
+      if(m&&m.type==='divider'&&m.align!==a){ m.align=a; renderPreview(); }
+    }
+  }catch(_){}
+};
+
+/* ---- 작성창 종류가 바뀔 때 정렬 칸을 함께 켜고 라벨을 바꾼다 ---- */
+const __setMsgTypeDiv=window.setMsgType;
+window.setMsgType=function(t){
+  const r=__setMsgTypeDiv.apply(this,arguments);
+  const af=document.getElementById('alignField');
+  const isDiv=(t==='divider');
+  if(af){
+    af.classList.toggle('divider-align',isDiv);
+    if(isDiv) af.style.display='';
+    const lb=af.querySelector('.tfr-col .lb');
+    if(lb) lb.textContent=isDiv?'\uAC00\uB984\uC120 \uC815\uB82C':'\uAE00 \uC815\uB82C';
+  }
+  if(isDiv) syncDivAlignSeg();
+  else { try{ if(typeof window.__syncAlignSeg==='function') window.__syncAlignSeg(); }catch(_){} }
+  return r;
+};
+
+/* ---- 새 가름선 · 수정 · 불러오기 ---- */
+const __addDividerDiv=window.addDivider;
+if(typeof __addDividerDiv==='function'){
+  window.addDivider=function(){
+    const before=(state.messages||[]).length;
+    const r=__addDividerDiv.apply(this,arguments);
+    const list=state.messages||[];
+    if(list.length>before){
+      const m=list[list.length-1];
+      if(m&&m.type==='divider'){ m.align=normDivAlign(state.draftDividerAlign); try{ renderPreview(); }catch(_){} }
+    }
+    return r;
+  };
+}
+
+const __commitDiv=window.commitComposerEdit;
+if(typeof __commitDiv==='function'){
+  window.commitComposerEdit=function(){
+    const id=(typeof composerEditId!=='undefined')?composerEditId:null;
+    const wasDivMode=dividerMode();
+    const r=__commitDiv.apply(this,arguments);
+    if(id){
+      const m=(state.messages||[]).find(function(x){ return x&&x.id===id; });
+      /* 원래 코드가 가름선으로 저장할 때 align 을 지우므로 여기서 다시 얹는다 */
+      if(m&&m.type==='divider'){
+        m.align=normDivAlign(wasDivMode?state.draftDividerAlign:m.align);
+        try{ renderPreview(); }catch(_){}
+      }
+    }
+    return r;
+  };
+}
+
+const __beginDiv=window.beginComposerEdit;
+if(typeof __beginDiv==='function'){
+  window.beginComposerEdit=function(id){
+    const r=__beginDiv.apply(this,arguments);
+    try{
+      const m=(state.messages||[]).find(function(x){ return x&&x.id===id; });
+      if(m&&m.type==='divider'){ state.draftDividerAlign=normDivAlign(m.align); syncDivAlignSeg(); }
+    }catch(_){}
+    return r;
+  };
+}
+
+/* ---- 그릴 때 정렬 클래스를 붙인다 ---- */
+const __dividerRowDiv=window.dividerRow;
+if(typeof __dividerRowDiv==='function'){
+  window.dividerRow=function(m,gap){
+    const html=__dividerRowDiv.apply(this,arguments);
+    const a=normDivAlign(m&&m.align);
+    if(a==='center') return html;
+    return html.replace('class="pmsg divider-row','class="pmsg divider-row div-align-'+a+' ');
+  };
+}
+
+/* ---- '여러 개 선택'으로 고른 가름선도 한 번에 ---- */
+const __bulkAlignDiv=window.__bulkApplyAlign;
+if(typeof __bulkAlignDiv==='function'){
+  window.__bulkApplyAlign=function(a){
+    if(!dividerMode()) return __bulkAlignDiv.apply(this,arguments);
+    const want=normDivAlign(a==='justify'?'center':a);
+    const S=window.__bulkSelection;
+    if(!S||!S.active()) return false;     /* 선택 모드가 아니면 평소대로 작성창 값만 바꾼다 */
+    const ids=S.ids();
+    if(!ids.length) return false;
+    const set=new Set(ids);
+    const ms=(state.messages||[]).filter(function(m){ return m&&set.has(m.id)&&m.type==='divider'; });
+    if(!ms.length) return false;
+    try{ if(typeof window.pushUndo==='function') window.pushUndo('\uAC00\uB984\uC120 \uC815\uB82C \uBCC0\uACBD'); }catch(_){}
+    ms.forEach(function(m){ m.align=want; });
+    state.draftDividerAlign=want; syncDivAlignSeg();
+    try{ renderPreview(); }catch(_){}
+    try{ S.refresh(); }catch(_){}
+    try{ if(typeof window.toast==='function') window.toast(ms.length+'\uAC1C \uAC00\uB984\uC120\uC758 \uC815\uB82C\uC744 \uBC14\uAFE8\uC5B4\uC694',{action:'\uC2E4\uD589 \uCDE8\uC18C',onAction:window.undoLast}); }catch(_){}
+    return true;
+  };
+}
+
+/* ---- 정렬 버튼 표시가 어긋나지 않게 ----
+   기존 syncControlsFromState 는 언제나 '글 정렬(draftAlign)' 기준으로 버튼을 칠한다.
+   프로젝트 불러오기·테마 적용·되돌리기 뒤에는 가름선 탭인데도 글 정렬이 켜진 것처럼
+   보여서, 화면의 버튼과 실제로 추가되는 정렬이 달라 보였다. */
+const __syncCtlDiv=window.syncControlsFromState;
+if(typeof __syncCtlDiv==='function'){
+  window.syncControlsFromState=function(){
+    const r=__syncCtlDiv.apply(this,arguments);
+    if(dividerMode()) syncDivAlignSeg();
+    return r;
+  };
+}
+/* 작성창을 닫거나 수정을 끝낸 뒤에도 한 번 더 맞춘다 */
+['endComposerEdit','cancelComposerEdit'].forEach(function(fn){
+  const prev=window[fn];
+  if(typeof prev!=='function') return;
+  window[fn]=function(){
+    const r=prev.apply(this,arguments);
+    if(dividerMode()) syncDivAlignSeg();
+    return r;
+  };
+});
+
+if(dividerMode()) syncDivAlignSeg();
+})();
+</script>
+
+<script id="cjk-serif-match-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   한글 글꼴이 명조(세리프)면 한자·가나도 명조로
+   ---------------------------------------------------------------------
+   한자·가나는 원래 Noto Sans SC / JP(고딕)로만 보완돼서,
+   나눔명조처럼 명조를 골라도 한자만 고딕으로 튀어 보였다.
+   고른 글꼴이 명조 계열이면 #chat 에 표시를 달아
+   Noto Serif SC / JP 로 바꾸고, 이미지·HTML 저장에 심는 글꼴도 같이 바뀐다.
+   ===================================================================== */
+
+function serifNow(){
+  try{ return !!(window.__cjkIsSerifStack&&window.__cjkIsSerifStack()); }catch(_){ return false; }
+}
+function syncCjkSerifClass(){
+  const chat=document.getElementById('chat');
+  if(!chat) return;
+  const on=serifNow();
+  if(chat.classList.contains('cjk-serif')!==on) chat.classList.toggle('cjk-serif',on);
+}
+window.__syncCjkSerifClass=syncCjkSerifClass;
+
+/* 미리보기를 그릴 때마다 / 캔버스 설정이 바뀔 때마다 맞춘다.
+   (글꼴 로딩·저장 파이프라인이 이 표시를 보고 심을 글꼴을 고른다) */
+['renderPreview','applyCanvas','setFont'].forEach(function(fn){
+  const prev=window[fn];
+  if(typeof prev!=='function') return;
+  window[fn]=function(){
+    const r=prev.apply(this,arguments);
+    try{ syncCjkSerifClass(); }catch(_){}
+    return r;
+  };
+});
+
+syncCjkSerifClass();
 })();
 </script>
 
