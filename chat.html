@@ -12567,6 +12567,543 @@ window.__onBulkSelectionChange=function(active,ids){
 })();
 </script>
 
+<style id="glyph-metrics-and-regex-preset-styles">
+/* =====================================================================
+   추가 팩 (전부 추가형 — 기존 규칙은 덮어쓰지 않음)
+   A) 장평을 '실제 폭'으로 취급 — 줄바꿈·여백·말풍선 폭이 장평을 그대로 따른다
+   B) 찾기·바꾸기 프리셋 (…→⋯, 따옴표 등) 골라서 한 번에 적용
+   ===================================================================== */
+
+/* ---- B) 프리셋 카드 ---- */
+#frPreset{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+#frPreset .fr-preset-head{display:flex;align-items:center;gap:7px;padding:9px 10px;cursor:pointer;user-select:none}
+#frPreset .fr-preset-caret{border:none;background:transparent;color:var(--muted);font-size:10px;line-height:1;
+  padding:0;width:12px;height:12px;display:flex;align-items:center;justify-content:center;transition:transform .18s}
+#frPreset.fr-collapsed .fr-preset-caret{transform:rotate(-90deg)}
+#frPreset .fr-preset-title{flex:1;min-width:0;font-size:12px;font-weight:700;letter-spacing:-.02em}
+#frPreset .fr-preset-count{flex:0 0 auto;font:700 10.5px ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:var(--muted);background:var(--panel-2);border-radius:99px;padding:2px 8px}
+#frPreset .fr-preset-raw{flex:0 0 auto;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);
+  border-radius:99px;padding:3px 8px;font:700 9.5px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.2}
+#frPreset .fr-preset-raw:hover{border-color:var(--accent);color:var(--ink)}
+#frPreset .fr-preset-raw.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#frPreset .fr-preset-body{padding:0 10px 10px}
+#frPreset.fr-collapsed .fr-preset-body{display:none}
+#frPreset.fr-collapsed{border-bottom-left-radius:12px;border-bottom-right-radius:12px}
+#frPreset .fr-preset-list{display:flex;flex-direction:column;gap:5px}
+
+.fr-prow{display:grid;align-items:center;gap:5px;background:var(--panel-2);
+  border:1px solid transparent;border-radius:9px;padding:5px 6px}
+.fr-prow.raw{grid-template-columns:16px minmax(0,1fr) 12px minmax(0,1fr) 74px 16px}
+.fr-prow.friendly{grid-template-columns:16px minmax(0,1fr) 12px minmax(0,1fr) 16px;row-gap:3px}
+.fr-prow .fr-pchip{display:flex;align-items:center;justify-content:center;height:27px;min-width:0;
+  padding:0 5px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink);
+  font:600 11.5px 'Pretendard',-apple-system,system-ui,sans-serif;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr-prow .fr-pname{grid-column:2 / 6;font-size:10px;color:var(--muted);line-height:1.35;padding:0 1px 1px}
+.fr-prow.off{opacity:.5}
+.fr-prow>input[type="checkbox"]{width:15px;height:15px;margin:0;accent-color:var(--accent);cursor:pointer}
+.fr-prow .fr-pin{width:100%;min-width:0;height:27px;border:1px solid var(--line);border-radius:7px;
+  background:var(--panel);padding:0 5px;color:var(--ink);text-align:center;
+  font:600 11px ui-monospace,SFMono-Regular,Menlo,monospace}
+.fr-prow .fr-pin::placeholder{color:#BFBFC4;font-weight:500}
+.fr-prow .fr-pin:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.fr-prow .fr-parrow{text-align:center;color:var(--muted);font-size:10px;line-height:1}
+.fr-prow .fr-psel{height:27px;min-width:0;width:100%;border:1px solid var(--line);border-radius:7px;
+  background:var(--panel);color:var(--ink);font-size:10.5px;font-weight:600;padding:0 15px 0 6px;
+  appearance:none;-webkit-appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239A9AA0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 5px center;background-size:8px 5px}
+.fr-prow .fr-psel:focus{outline:none;border-color:var(--accent)}
+.fr-prow .fr-px{border:none;background:transparent;color:var(--muted);font-size:15px;line-height:1;
+  padding:0;width:16px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center}
+.fr-prow .fr-px:hover{background:var(--line);color:var(--ink)}
+
+#frPreset .fr-preset-add{margin-top:7px;border:1px dashed var(--line);background:transparent;color:var(--muted);
+  border-radius:8px;height:29px;padding:0 11px;font-size:11px;font-weight:700;letter-spacing:-.01em}
+#frPreset .fr-preset-add:hover{border-color:var(--accent);color:var(--ink)}
+#frPreset .fr-preset-empty{font-size:11px;color:var(--muted);padding:10px 2px;text-align:center}
+
+/* 카드 바깥 영역 — 위쪽 찾기·바꾸기 버튼들과 같은 눈높이로 패널에 그대로 놓인다 */
+#frPresetFoot{margin-top:10px}
+#frPresetFoot .fr-preset-actions{display:flex;gap:7px;flex-wrap:wrap}
+#frPresetFoot .fr-preset-actions .btn{flex:1 1 0;min-width:88px}
+#frPresetFoot .fr-preset-help{font-size:10px;color:var(--muted);line-height:1.5;margin:8px 1px 0}
+
+/* 규칙을 직접 만들 때만 펼쳐 보는 기호 도움말 */
+#frPresetFoot .fr-guide{margin-top:9px;border-top:1px solid var(--line-2);padding-top:8px}
+#frPresetFoot .fr-guide>summary{list-style:none;cursor:pointer;font-size:10.5px;font-weight:700;color:var(--muted);
+  display:flex;align-items:center;gap:5px;padding:2px 1px;user-select:none}
+#frPresetFoot .fr-guide>summary::-webkit-details-marker{display:none}
+#frPresetFoot .fr-guide>summary:before{content:'\25B8';font-size:9px;transition:transform .18s}
+#frPresetFoot .fr-guide[open]>summary:before{transform:rotate(90deg)}
+#frPresetFoot .fr-guide>summary:hover{color:var(--ink)}
+#frPresetFoot .fr-guide-body{padding:7px 2px 2px}
+#frPresetFoot .fr-guide-body p{margin:0 0 7px;font-size:10px;color:var(--muted);line-height:1.55}
+#frPresetFoot .fr-guide-body code{font:600 10px ui-monospace,SFMono-Regular,Menlo,monospace;
+  background:var(--panel-2);border-radius:4px;padding:1px 4px;color:var(--ink)}
+#frPresetFoot .fr-guide-list{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 8px;margin:0 0 8px}
+#frPresetFoot .fr-guide-list dt{font:700 10px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink);
+  background:var(--panel-2);border-radius:5px;padding:2px 5px;text-align:center;white-space:nowrap}
+#frPresetFoot .fr-guide-list dd{margin:0;font-size:10px;color:var(--muted);line-height:1.6;align-self:center}
+#frPresetFoot .fr-guide-ex{margin-bottom:0!important}
+
+@media (max-width:520px){
+  .fr-prow.raw{grid-template-columns:16px minmax(0,1fr) 12px minmax(0,1fr) 16px;row-gap:5px}
+  .fr-prow.raw .fr-px{grid-column:5;grid-row:1}
+  .fr-prow.raw .fr-psel{grid-column:2 / 6;grid-row:2}
+}
+</style>
+<script id="glyph-metrics-and-regex-preset-script">
+(function(){
+'use strict';
+
+/* =====================================================================
+   A) 장평을 '진짜 폭'으로 — 줄바꿈·여백이 장평을 그대로 따르게 한다
+   ---------------------------------------------------------------------
+   scaleX() 는 그리기만 줄일 뿐 레이아웃 폭은 그대로라서,
+   지금까지는 장평을 줄여도 줄바꿈은 100% 기준으로 계산되고
+   (→ 오른쪽에 쓰지 못한 빈 폭이 남고 줄바꿈 위치가 엉망),
+   장평을 키우면 말풍선이 여백을 뚫고 나갔다.
+
+   새 계산 방식 (모든 값을 px 로 환산):
+     쓸 수 있는 안쪽 폭            = avail
+     글이 실제로 흘러야 할 폭      = avail / 장평   ← 줄바꿈은 여기서 일어난다
+     화면에 보이는 폭              = 흐른 폭 × 장평 ≤ avail
+   말풍선처럼 글을 감싸는 상자는 '보이는 폭 + 좌우 안여백' 으로 다시 잡아
+   장평을 어떻게 바꿔도 여백을 넘지 않고, 남는 폭도 생기지 않는다.
+   측정은 두 번의 읽기 패스로만 묶어 긴 로그에서도 느려지지 않게 했다.
+   ===================================================================== */
+
+/* 글자를 감싸며 폭을 글자에 맞추는 상자(=말풍선/로그 한 줄) */
+const GS_HUG='.n-bubble,.m-bubble,.n-plain';
+/* 폭이 이미 정해져 있어 글이 가득 차야 하는 상자(=글 블럭) */
+const GS_FILL='.t-inner';
+
+function gsScale(){
+  let v=100;
+  try{ v=Number(state.layout.widthScale); }catch(_){ v=100; }
+  if(!isFinite(v)||!v) v=100;
+  return Math.max(.7,Math.min(1.3,v/100));
+}
+function gsResetFlow(g){
+  const s=g.style;
+  s.width=''; s.minWidth=''; s.maxWidth=''; s.display='';
+}
+function gsResetBox(el){
+  if(!el) return;
+  const s=el.style;
+  s.width=''; s.minWidth=''; s.maxWidth='';
+}
+
+function applyGlyphScaleCore(){
+  const chat=document.getElementById('chat');
+  if(!chat) return;
+  const flows=[].slice.call(chat.querySelectorAll('.glyph-scale'));
+  const inlines=[].slice.call(chat.querySelectorAll('.glyph-inline'));
+  const scale=gsScale();
+
+  /* ---- 1) 되돌리기 (쓰기만) ---- */
+  for(let i=0;i<flows.length;i++){
+    const g=flows[i], host=g.parentElement;
+    gsResetFlow(g);
+    if(host&&host.matches&&host.matches(GS_HUG)) gsResetBox(host);
+  }
+  for(let i=0;i<inlines.length;i++) inlines[i].style.marginRight='';
+  if(scale===1) return;
+
+  /* ---- 2) 재기 준비 (쓰기만) ---- */
+  const jobs=[];
+  for(let i=0;i<flows.length;i++){
+    const g=flows[i], host=g.parentElement;
+    if(!host||!host.matches) continue;
+    const hug=host.matches(GS_HUG);
+    const fill=!hug&&host.matches(GS_FILL);
+    if(!hug&&!fill) continue;
+    /* 사진이 폭을 정하는 말풍선은 손대지 않는다 */
+    if(hug&&host.querySelector('.mimg')) continue;
+    /* 가운데·오른쪽 정렬에서 .n-body 가 width:fit-content 라
+       그대로 재면 '쓸 수 있는 최대 폭' 대신 지금 내용 폭이 잡힌다.
+       잠깐 100% 로 펴서 진짜 최대 폭을 잰 뒤 되돌린다. */
+    const body=hug?host.closest('.n-body'):null;
+    const bodyW=body?body.style.width:'';
+    if(body) body.style.width='100%';
+    if(hug) host.style.width='100%';
+    g.style.display='block';
+    g.style.maxWidth='none';
+    g.style.width='max-content';
+    if(!g.style.width) g.style.width='-webkit-max-content';   /* 예전 사파리 */
+    jobs.push({g:g,host:host,hug:hug,body:body,bodyW:bodyW,ok:!!g.style.width});
+  }
+
+  /* ---- 3) 재기 (읽기만) ---- */
+  for(let i=0;i<jobs.length;i++){
+    const j=jobs[i], cs=getComputedStyle(j.host);
+    const padL=parseFloat(cs.paddingLeft)||0, padR=parseFloat(cs.paddingRight)||0;
+    const brdL=parseFloat(cs.borderLeftWidth)||0, brdR=parseFloat(cs.borderRightWidth)||0;
+    j.avail=Math.max(0,(j.host.clientWidth||0)-padL-padR);
+    j.frame=padL+padR+brdL+brdR;   /* box-sizing:border-box 라 폭에 함께 들어간다 */
+    j.natural=j.g.offsetWidth||0;  /* 줄바꿈 없이 한 줄로 폈을 때의 폭 */
+  }
+  const inlineJobs=[];
+  for(let i=0;i<inlines.length;i++) inlineJobs.push({s:inlines[i],w:inlines[i].offsetWidth||0});
+
+  /* ---- 4) 확정 (쓰기만) ---- */
+  for(let i=0;i<jobs.length;i++){
+    const j=jobs[i];
+    if(j.body) j.body.style.width=j.bodyW||'';
+    const limit=j.avail/scale;                       /* 글이 흐를 수 있는 최대 폭 */
+    /* 잴 수 없었거나(빈 말풍선·구형 브라우저) 폭이 0이면 원래대로 둔다 */
+    if(!j.ok||!(j.avail>0)||!(limit>0)||(j.hug&&!(j.natural>0))){
+      gsResetFlow(j.g); if(j.hug) gsResetBox(j.host); continue;
+    }
+    /* 감싸는 상자는 글자 폭에 맞춰 줄이고, 가득 차는 상자는 항상 최대 폭으로 */
+    const flowW=j.hug?Math.min(j.natural,limit):limit;
+    if(!(flowW>0)){ gsResetFlow(j.g); if(j.hug) gsResetBox(j.host); continue; }
+    j.g.style.display='block';
+    j.g.style.maxWidth='none';
+    j.g.style.width=flowW.toFixed(2)+'px';
+    /* 폭을 직접 잡았으므로 확대·축소 기준점은 항상 왼쪽 위.
+       (가운데·오른쪽 정렬은 상자 안의 text-align 이 그대로 처리한다) */
+    j.g.style.transformOrigin='left top';
+    if(j.hug) j.host.style.width=(flowW*scale+j.frame).toFixed(2)+'px';
+  }
+  /* 이름표처럼 한 줄짜리 조각은 차지하는 자리도 장평만큼만 쓰게 보정한다 */
+  for(let i=0;i<inlineJobs.length;i++){
+    const o=inlineJobs[i];
+    if(!o.w) continue;
+    o.s.style.marginRight=(o.w*(scale-1)).toFixed(2)+'px';
+  }
+}
+
+/* 기존 applyGlyphScale 을 새 계산으로 교체 (가운데 정렬 보정은 그대로 이어서 호출) */
+window.applyGlyphScale=function(){
+  try{ applyGlyphScaleCore(); }catch(_){}
+  try{ if(typeof window.applyProfileAwareBubbleCentering==='function') window.applyProfileAwareBubbleCentering(); }catch(_){}
+};
+/* 미리보기 안에서 바로 고칠 때는 잠가 둔 폭을 풀어 준다 (수정 중 줄바꿈이 어긋나지 않게) */
+const __gsEnterEdit=window.enterEdit;
+if(typeof __gsEnterEdit==='function'){
+  window.enterEdit=function(el){
+    try{ if(el&&el.matches&&el.matches(GS_HUG)) gsResetBox(el); }catch(_){}
+    return __gsEnterEdit.apply(this,arguments);
+  };
+}
+try{ window.applyGlyphScale(); }catch(_){}
+try{ if(document.fonts&&document.fonts.ready) document.fonts.ready.then(function(){ try{ window.applyGlyphScale(); }catch(_){} }); }catch(_){}
+
+
+/* =====================================================================
+   B) 찾기·바꾸기 프리셋
+   서식 기호(**, ==[#hex], [#hex]…[/] 등)는 건드리지 않고 글자에만 적용한다.
+   (기존 찾기·바꾸기와 같은 원리로 기호 사이 조각만 골라 바꾼다)
+   ===================================================================== */
+const FR_MARK_TOKEN=/(\*\*|~~|\+\+|==\[#[0-9A-Fa-f]{6}\]|==|%%\[#[0-9A-Fa-f]{6}\]|%%|\[#[0-9A-Fa-f]{6}\]|\[\/\]|\[##\]|\[\/##\]|\[#\]|\[\/#\]|\*)/g;
+const FR_PRESET_KEY='moko.fr.presets.v2';
+const FR_PRESET_OPEN_KEY='moko.fr.presets.open.v1';
+const FR_PRESET_RAW_KEY='moko.fr.presets.raw.v1';
+
+/* find/rep 는 실제로 돌아가는 값(정규식),
+   sf/sr 은 화면에 보여 줄 '눈에 보이는 보기'.
+   보기가 있으면 평소엔 정규식을 감추고 이 보기만 띄운다. */
+const FR_PRESET_DEFAULTS=[
+  {on:true,  re:true, find:'\\.{2,}',       rep:'\u22EF',
+   sf:'...',  sr:'\u22EF',  name:'\uB9D0\uC904\uC784\uD45C\uB97C \uAC00\uC6B4\uB370 \uC810\uC73C\uB85C'},
+  {on:true,  re:true, find:'\u2026+',        rep:'\u22EF',
+   sf:'\u2026', sr:'\u22EF', name:'\uB9D0\uC904\uC784\uD45C(\u2026)\uB97C \uAC00\uC6B4\uB370 \uC810\uC73C\uB85C'},
+  {on:true,  re:true, find:'"([^"\\n]*)"',  rep:'\u201C$1\u201D',
+   sf:'"\uAE00"', sr:'\u201C\uAE00\u201D', name:'\uD070\uB530\uC634\uD45C\uB97C \uACE1\uC120\uC73C\uB85C \u2014 \uC548\uCABD \uAE00\uC740 \uADF8\uB300\uB85C'},
+  {on:true,  re:true, find:"'([^'\\n]*)'",  rep:'\u2018$1\u2019',
+   sf:"'\uAE00'", sr:'\u2018\uAE00\u2019', name:'\uC791\uC740\uB530\uC634\uD45C\uB97C \uACE1\uC120\uC73C\uB85C \u2014 \uC548\uCABD \uAE00\uC740 \uADF8\uB300\uB85C'},
+  {on:false, re:true, find:'-{2,}',         rep:'\u2015',
+   sf:'--',   sr:'\u2015', name:'\uBC18\uBCF5\uB41C \uBE7C\uAE30\uD45C\uB97C \uC904\uD45C\uB85C'},
+  {on:false, re:true, find:'\u3161+',        rep:'\u2015',
+   sf:'\u3161', sr:'\u2015', name:'\uBAA8\uC74C \u3161 \uC744 \uC904\uD45C\uB85C'},
+  {on:false, re:true, find:' {2,}',         rep:' ',
+   sf:'\uAE00\u00B7\u00B7\uC790', sr:'\uAE00\u00B7\uC790', name:'\uC5F0\uC18D\uB41C \uACF5\uBC31\uC744 \uD558\uB098\uB85C'},
+  {on:false, re:true, find:'\\s+([,.!?])',  rep:'$1',
+   sf:'\uAE00\u00B7,', sr:'\uAE00,', name:'\uBB38\uC7A5\uBD80\uD638 \uC55E \uACF5\uBC31 \uC81C\uAC70'}
+];
+
+function frPresetClone(list){ return JSON.parse(JSON.stringify(list)); }
+let frPresets=frPresetClone(FR_PRESET_DEFAULTS);
+try{
+  const raw=localStorage.getItem(FR_PRESET_KEY);
+  if(raw){
+    const parsed=JSON.parse(raw);
+    if(Array.isArray(parsed)) frPresets=parsed.map(function(p){
+      return {on:!!p.on,re:!!p.re,find:String(p.find==null?'':p.find),
+              rep:String(p.rep==null?'':p.rep),name:String(p.name==null?'':p.name),
+              sf:(p.sf==null?'':String(p.sf)),sr:(p.sr==null?'':String(p.sr))};
+    });
+  }
+}catch(_){}
+let frPresetRaw=false;   /* 정규식 원문을 직접 보여 줄지 */
+try{ frPresetRaw=localStorage.getItem(FR_PRESET_RAW_KEY)==='1'; }catch(_){}
+function frPresetSave(){ try{ localStorage.setItem(FR_PRESET_KEY,JSON.stringify(frPresets)); }catch(_){} }
+
+function frPresetSay(msg,bad){
+  const el=document.getElementById('frResult');
+  if(!el) return;
+  el.textContent=msg||'';
+  el.classList.toggle('bad',!!bad);
+}
+function frPresetRegex(find,useRe,caseSens){
+  const flags='gm'+(caseSens?'':'i');
+  return useRe?new RegExp(find,flags)
+              :new RegExp(String(find).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),flags);
+}
+function frPresetExpand(tpl,match,groups){
+  return String(tpl).replace(/\$(\d{1,2}|&|\$)/g,function(w,g){
+    if(g==='$') return '$';
+    if(g==='&') return match;
+    const i=parseInt(g,10);
+    return groups[i-1]!=null?groups[i-1]:'';
+  });
+}
+function frPresetReplaceContent(content,re,rep,useRe,counter){
+  const parts=String(content).split(FR_MARK_TOKEN);
+  for(let i=0;i<parts.length;i+=2){
+    const seg=parts[i];
+    if(!seg) continue;
+    re.lastIndex=0;
+    parts[i]=seg.replace(re,function(match){
+      counter.n++;
+      if(!useRe) return rep;
+      let rest=[].slice.call(arguments,1);
+      if(rest.length&&typeof rest[rest.length-1]==='object') rest.pop();
+      rest=rest.slice(0,-2);
+      return frPresetExpand(rep,match,rest);
+    });
+  }
+  return parts.join('');
+}
+
+function frPresetRender(){
+  const list=document.getElementById('frPresetList');
+  const count=document.getElementById('frPresetCount');
+  const rawBtn=document.getElementById('frPresetRawBtn');
+  if(!list) return;
+  if(rawBtn){
+    rawBtn.classList.toggle('on',frPresetRaw);
+    rawBtn.title=frPresetRaw?'\uC815\uADDC\uC2DD \uC228\uAE30\uAE30':'\uC815\uADDC\uC2DD \uC6D0\uBB38 \uBCF4\uAE30';
+  }
+  list.innerHTML='';
+  if(!frPresets.length){
+    const empty=document.createElement('div');
+    empty.className='fr-preset-empty';
+    empty.textContent='\uC800\uC7A5\uB41C \uADDC\uCE59\uC774 \uC5C6\uC5B4\uC694 \u2014 \uC544\uB798\uC5D0\uC11C \uCD94\uAC00\uD574 \uC8FC\uC138\uC694.';
+    list.appendChild(empty);
+  }
+  frPresets.forEach(function(p,i){
+    /* 보기(sf/sr)가 있는 기본 규칙은 평소엔 정규식을 감추고 눈에 보이는 예시만 띄운다.
+       '<>' 를 켜면 어떤 규칙이든 실제 정규식을 그대로 고칠 수 있다. */
+    const showSample=!frPresetRaw&&!!p.sf;
+    const row=document.createElement('div');
+    row.className='fr-prow '+(frPresetRaw?'raw':'friendly')+(p.on?'':' off');
+    if(p.name) row.title=p.name;
+
+    const cb=document.createElement('input');
+    cb.type='checkbox'; cb.checked=!!p.on;
+    cb.setAttribute('aria-label',p.name||'\uADDC\uCE59 \uC0AC\uC6A9');
+    cb.addEventListener('change',function(){ p.on=cb.checked; frPresetSave(); frPresetRender(); });
+
+    let findEl,repEl;
+    if(showSample){
+      findEl=document.createElement('span'); findEl.className='fr-pchip'; findEl.textContent=p.sf;
+      repEl =document.createElement('span'); repEl.className='fr-pchip';  repEl.textContent=p.sr;
+    }else{
+      findEl=document.createElement('input');
+      findEl.type='text'; findEl.className='fr-pin'; findEl.value=p.find;
+      findEl.placeholder='\uCC3E\uC744 \uAC12';
+      findEl.addEventListener('input',function(){ p.find=findEl.value; frPresetSave(); });
+      repEl=document.createElement('input');
+      repEl.type='text'; repEl.className='fr-pin'; repEl.value=p.rep;
+      repEl.placeholder='\uBE44\uC6B0\uBA74 \uC0AD\uC81C';
+      repEl.addEventListener('input',function(){ p.rep=repEl.value; frPresetSave(); });
+    }
+
+    const arrow=document.createElement('span');
+    arrow.className='fr-parrow'; arrow.textContent='\u2192';
+
+    const del=document.createElement('button');
+    del.type='button'; del.className='fr-px'; del.textContent='\u00D7';
+    del.title='\uADDC\uCE59 \uC9C0\uC6B0\uAE30';
+    del.addEventListener('click',function(){ frPresets.splice(i,1); frPresetSave(); frPresetRender(); });
+
+    if(frPresetRaw){
+      const sel=document.createElement('select');
+      sel.className='fr-psel';
+      [['re','\u2731 \uC815\uADDC\uC2DD'],['text','\uAE00\uC790 \uADF8\uB300\uB85C']].forEach(function(o){
+        const opt=document.createElement('option');
+        opt.value=o[0]; opt.textContent=o[1];
+        sel.appendChild(opt);
+      });
+      sel.value=p.re?'re':'text';
+      sel.addEventListener('change',function(){ p.re=(sel.value==='re'); frPresetSave(); });
+      row.append(cb,findEl,arrow,repEl,sel,del);
+    }else{
+      row.append(cb,findEl,arrow,repEl,del);
+      if(p.name){
+        const cap=document.createElement('div');
+        cap.className='fr-pname'; cap.textContent=p.name;
+        row.appendChild(cap);
+      }
+    }
+    list.appendChild(row);
+  });
+  if(count) count.textContent=frPresets.filter(function(p){return p.on;}).length+'/'+frPresets.length;
+}
+
+window.frPresetRawToggle=function(e){
+  if(e&&e.stopPropagation) e.stopPropagation();
+  frPresetRaw=!frPresetRaw;
+  try{ localStorage.setItem(FR_PRESET_RAW_KEY,frPresetRaw?'1':'0'); }catch(_){}
+  frPresetRender();
+};
+
+window.frPresetAdd=function(){
+  frPresets.push({on:true,re:false,find:'',rep:'',name:''});
+  frPresetSave(); frPresetRender();
+  const rows=document.querySelectorAll('#frPresetList .fr-prow');
+  const last=rows[rows.length-1];
+  const input=last&&last.querySelector('.fr-pin');
+  if(input) input.focus();
+};
+window.frPresetRestore=function(){
+  frPresets=frPresetClone(FR_PRESET_DEFAULTS);
+  frPresetSave(); frPresetRender();
+  frPresetSay('\uAE30\uBCF8 \uADDC\uCE59\uC73C\uB85C \uB418\uB3CC\uB838\uC5B4\uC694.');
+};
+window.frPresetToggle=function(){
+  const card=document.getElementById('frPreset');
+  if(!card) return;
+  const collapsed=card.classList.toggle('fr-collapsed');
+  const caret=card.querySelector('.fr-preset-caret');
+  if(caret) caret.setAttribute('aria-expanded',collapsed?'false':'true');
+  try{ localStorage.setItem(FR_PRESET_OPEN_KEY,collapsed?'0':'1'); }catch(_){}
+};
+
+window.frPresetRun=function(doReplace){
+  const active=frPresets.filter(function(p){ return p.on&&p.find; });
+  if(!active.length){ frPresetSay('\uBA3C\uC800 \uC801\uC6A9\uD560 \uADDC\uCE59\uC744 \uACE8\uB77C \uC8FC\uC138\uC694.',true); return; }
+  const caseSens=!!(document.getElementById('frCase')||{}).checked;
+  const on=function(id){ const e=document.getElementById(id); return !e||e.checked; };
+  const tg={chat:on('frInChat'),text:on('frInText'),divider:on('frInDivider')};
+
+  const rules=[];
+  for(let i=0;i<active.length;i++){
+    const p=active[i];
+    try{ rules.push({re:frPresetRegex(p.find,p.re,caseSens),rep:p.rep||'',useRe:!!p.re}); }
+    catch(err){ frPresetSay('\uC815\uADDC\uC2DD\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694 \u2014 '+p.find,true); return; }
+  }
+
+  let total=0,blocks=0;
+  const changes=[];
+  (state.messages||[]).forEach(function(m){
+    if(!m||typeof m.content!=='string') return;
+    const type=m.type||'chat';
+    if(type==='chat'&&!tg.chat) return;
+    if(type==='text'&&!tg.text) return;
+    if(type==='divider'&&!tg.divider) return;
+    if(type==='image') return;
+    let next=m.content,hit=0;
+    for(let i=0;i<rules.length;i++){
+      const c={n:0};
+      next=frPresetReplaceContent(next,rules[i].re,rules[i].rep,rules[i].useRe,c);
+      hit+=c.n;
+    }
+    if(!hit||next===m.content) return;
+    total+=hit; blocks++;
+    changes.push({m:m,next:next});
+  });
+
+  if(!total){ frPresetSay('\uBC14\uAFC0 \uB0B4\uC6A9\uC774 \uC5C6\uC5B4\uC694.'); return; }
+  if(!doReplace){
+    frPresetSay('\uD83D\uDD0E \uADDC\uCE59 '+active.length+'\uAC1C\uB85C '+total+'\uACF3 \uBC1C\uACAC (\uBE14\uB7ED '+blocks+'\uAC1C)');
+    return;
+  }
+  try{ if(typeof window.pushUndo==='function') window.pushUndo('\uD504\uB9AC\uC14B \uCE58\uD658'); }catch(_){}
+  changes.forEach(function(c){ c.m.content=c.next; });
+  try{ renderPreview(); }catch(_){}
+  frPresetSay('\u2713 '+total+'\uACF3\uC744 \uBC14\uAFE8\uC5B4\uC694 (\uBE14\uB7ED '+blocks+'\uAC1C)');
+  try{
+    if(typeof window.toast==='function')
+      window.toast('\u2713 '+total+'\uACF3\uC744 \uBC14\uAFE8\uC5B4\uC694',{action:'\uC2E4\uD589 \uCDE8\uC18C',onAction:window.undoLast});
+  }catch(_){}
+};
+
+(function insertPresetUI(){
+  const host=document.getElementById('accFindReplace');
+  if(!host||document.getElementById('frPreset')) return;
+  const body=host.querySelector('.flat-tool-body')||host;
+  const card=document.createElement('div');
+  card.id='frPreset';
+  card.innerHTML=
+    '<div class="fr-preset-head" onclick="frPresetToggle()">'
+   +'<button class="fr-preset-caret" type="button" aria-expanded="true">\u25BE</button>'
+   +'<span class="fr-preset-title">\u2726 \uC790\uC8FC \uC4F0\uB294 \uCE58\uD658</span>'
+   +'<button class="fr-preset-raw" type="button" id="frPresetRawBtn" onclick="frPresetRawToggle(event)">&lt;/&gt;</button>'
+   +'<span class="fr-preset-count" id="frPresetCount">0/0</span>'
+   +'</div>'
+   +'<div class="fr-preset-body">'
+   +'<div class="fr-preset-list" id="frPresetList"></div>'
+   +'<button class="fr-preset-add" type="button" onclick="frPresetAdd()">+ \uADDC\uCE59 \uCD94\uAC00</button>'
+   +'</div>';
+
+  const foot=document.createElement('div');
+  foot.id='frPresetFoot';
+  foot.innerHTML=
+    '<div class="fr-preset-actions">'
+   +'<button class="btn sm" type="button" onclick="frPresetRun(false)">\uD83D\uDD0E \uBA87 \uAC1C\uC778\uC9C0 \uBCF4\uAE30</button>'
+   +'<button class="btn sm primary" type="button" onclick="frPresetRun(true)">\uCCB4\uD06C\uD55C \uADDC\uCE59 \uC801\uC6A9</button>'
+   +'<button class="btn sm" type="button" onclick="frPresetRestore()">\uAE30\uBCF8\uAC12</button>'
+   +'</div>'
+   +'<div class="fr-preset-help">\uCCB4\uD06C\uD55C \uADDC\uCE59\uC744 \uC704\uC5D0\uC11C\uBD80\uD130 \uCC28\uB840\uB300\uB85C \uC801\uC6A9\uD574\uC694. '
+   +'\uC704\uCABD \uC801\uC6A9 \uBC94\uC704(\uB9D0\uD48D\uC120\u00B7\uAE00\u00B7\uAC00\uB984\uC120)\uC640 \uB300\uC18C\uBB38\uC790 \uAD6C\uBD84 \uC124\uC815\uC744 \uAC19\uC774 \uB530\uB77C\uAC00\uC694. '
+   +'\uACE0\uCE5C \uADDC\uCE59\uC740 \uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uC800\uC7A5\uB3FC\uC694.</div>'
+   +'<details class="fr-guide">'
+   +'<summary>\uADDC\uCE59\uC744 \uC9C1\uC811 \uB9CC\uB4E4\uACE0 \uC2F6\uB2E4\uBA74 \u2014 \uAE30\uD638 \uB3C4\uC6C0\uB9D0</summary>'
+   +'<div class="fr-guide-body">'
+   +'<p>\uC624\uB978\uCABD \uC704 <code>&lt;/&gt;</code> \uB97C \uB204\uB974\uBA74 \uADDC\uCE59\uC758 \uC2E4\uC81C \uBAA8\uC2B5\uC744 \uBCF4\uACE0 \uACE0\uCE60 \uC218 \uC788\uC5B4\uC694. '
+   +'\uAE00\uC790\uB97C \uADF8\uB300\uB85C \uCC3E\uACE0 \uC2F6\uC744 \uB550 \u2018\uAE00\uC790 \uADF8\uB300\uB85C\u2019, \uD328\uD134\uC73C\uB85C \uCC3E\uACE0 \uC2F6\uC744 \uB550 \u2018\uC815\uADDC\uC2DD\u2019\uC744 \uACE8\uB77C\uC694.</p>'
+   +'<dl class="fr-guide-list">'
+   +'<dt>.</dt><dd>\uC544\uBB34 \uAE00\uC790 \uD558\uB098</dd>'
+   +'<dt>*</dt><dd>\uBC14\uB85C \uC55E\uC758 \uAC83\uC774 0\uBC88 \uC774\uC0C1</dd>'
+   +'<dt>+</dt><dd>\uBC14\uB85C \uC55E\uC758 \uAC83\uC774 1\uBC88 \uC774\uC0C1</dd>'
+   +'<dt>{2,}</dt><dd>\uBC14\uB85C \uC55E\uC758 \uAC83\uC774 2\uBC88 \uC774\uC0C1</dd>'
+   +'<dt>[^"]</dt><dd>\uD070\uB530\uC634\uD45C\uAC00 <b>\uC544\uB2CC</b> \uAE00\uC790 (<code>^</code>\uC774 \u2018\uC544\uB2CC\u2019)</dd>'
+   +'<dt>\\s</dt><dd>\uACF5\uBC31\u00B7\uC904\uBC14\uAFC8</dd>'
+   +'<dt>\\.</dt><dd>\uAE30\uD638\uB97C \uAE30\uB2A5\uC774 \uC544\uB2CC \uAE00\uC790 \uADF8\uB300\uB85C (\uC5EC\uAE30\uC120 \uB9C8\uCE68\uD45C)</dd>'
+   +'<dt>( )</dt><dd>\uC774 \uBD80\uBD84\uC744 \uAE30\uC5B5\uD574 \uB450\uAE30</dd>'
+   +'<dt>$1</dt><dd>\uAE30\uC5B5\uD574 \uB454 \uCCAB \uBC88\uC9F8 \uBD80\uBD84\uC744 \uADF8\uB300\uB85C \uB2E4\uC2DC \uB123\uAE30</dd>'
+   +'</dl>'
+   +'<p class="fr-guide-ex">\uC608\uB97C \uB4E4\uBA74 \uD070\uB530\uC634\uD45C \uADDC\uCE59\uC740 <code>"([^"\\n]*)"</code> \u2192 <code>\u201C$1\u201D</code> \uC778\uB370, '
+   +'\u201C\uD070\uB530\uC634\uD45C\uB85C \uAC10\uC2FC \uAE00\uC744 \uCC3E\uC544\uC11C, \uC548\uCABD \uAE00(<code>$1</code>)\uC740 \uADF8\uB300\uB85C \uB450\uACE0 '
+   +'\uBC14\uAE65\uCABD \uB530\uC634\uD45C\uB9CC \uACE1\uC120\uC73C\uB85C \uBC14\uAFB8\uB77C\u201D\uB294 \uB73B\uC774\uC5D0\uC694.</p>'
+   +'</div>'
+   +'</details>';
+
+  body.appendChild(card);
+  body.appendChild(foot);
+  /* 기존 찾기·바꾸기 안내 문구는 프리셋 도움말과 겹쳐서 걷어낸다 */
+  try{
+    const oldHelp=body.querySelector(':scope > .field-help');
+    if(oldHelp) oldHelp.remove();
+  }catch(_){}
+  let open=true;
+  try{ open=localStorage.getItem(FR_PRESET_OPEN_KEY)!=='0'; }catch(_){}
+  if(!open){
+    card.classList.add('fr-collapsed');
+    const caret=card.querySelector('.fr-preset-caret');
+    if(caret) caret.setAttribute('aria-expanded','false');
+  }
+  frPresetRender();
+})();
+
+})();
+</script>
+
 </body>
 
 
