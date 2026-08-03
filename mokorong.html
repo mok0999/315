@@ -17902,9 +17902,14 @@ function scopeSelector(sel,root){
 }
 /* 매칭 검사용으로 상태·가상 요소를 떼어 낸다 (:hover, ::before 등) */
 const PSEUDO_STATE=/:(?:hover|active|focus|focus-visible|focus-within|visited|target|disabled|enabled|checked|indeterminate|placeholder-shown|autofill|read-only|read-write|default|valid|invalid|required|optional|any-link|link|user-invalid|-webkit-[a-z-]+|-moz-[a-z-]+)\b(?:\([^()]*\))?/gi;
+/* 옛 표기(홑콜론) 가상 요소도 같이 떼어 낸다.
+   querySelector 는 가상 요소를 절대 매칭하지 않아서, :before/:after 를 남겨 두면
+   말풍선 꼬리 규칙이 통째로 '안 쓰인 규칙'으로 판정돼 잘려 나간다. */
+const PSEUDO_ELEMENT_LEGACY=/:(?:before|after|first-line|first-letter)\b/gi;
 function testableSelector(sel){
   return String(sel)
     .replace(/::[a-zA-Z-]+(?:\([^()]*\))?/g,'')
+    .replace(PSEUDO_ELEMENT_LEGACY,'')
     .replace(PSEUDO_STATE,'')
     .replace(/^(?::root|html|body)(?![\w-])/,'')
     .trim();
