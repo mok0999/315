@@ -15158,7 +15158,7 @@ async function prepareExportAudio(vid,stream,rate,seed){
         const tr=dest.stream.getAudioTracks()[0];
         if(tr){
           stream.addTrack(tr); pack.mode='buffer'; pack.track=tr; pack.source=src; pack.dest=dest;
-          pack.start=()=>{ if(pack.started) return; pack.started=true; try{ src.start(0); }catch(_){} };
+          pack.start=off=>{ if(pack.started) return; pack.started=true; try{ src.start(0,Math.max(0,Number(off)||0)); }catch(_){ try{ src.start(0); }catch(__){} } };
           pack.stop=()=>{ try{ if(pack.started) src.stop(); }catch(_){} try{ tr.stop(); }catch(_){} };
           return pack;
         }
@@ -15629,24 +15629,36 @@ window.exportBackgroundVideo=async function(opt){
       try{ ctx.drawImage(overlay,0,0,W,H); }catch(_){}
     };
     draw();
-    /* timeslice를 주면 모바일 크로미움 MP4가 여러 조각으로 갈라져 갤럭시 갤러리가
-       첫 조각만 3초짜리로 표시하는 경우가 있다. stop 시 한 번에 받도록 시작한다. */
-    try{ rec.start(); }
-    catch(startErr){ throw new Error('recorder init failed: '+String(startErr&&startErr.name||startErr)); }
-    recStartedAt=performance.now();
     vid.currentTime=0;
     vid.defaultPlaybackRate=playRate; vid.playbackRate=playRate;
     try{
       await vid.play();
-      if(audioPack&&audioPack.start) audioPack.start();
     }catch(_){
       /* 소리가 video 요소에 직접 붙은 경로만 자동 재생 제한을 받을 수 있다.
          Web Audio 버퍼가 준비돼 있으면 영상만 음소거로 재생하고 소리는 별도 트랙에 담는다. */
       vid.muted=true;
       try{ await vid.play(); }catch(e2){ throw new Error('play blocked'); }
-      if(audioPack&&audioPack.start) audioPack.start();
       if(!audioPack||audioPack.mode==='none'||audioPack.mode==='capture'||audioPack.mode==='media-element') T('브라우저가 소리 있는 자동 재생을 막아서 소리 없이 담았어요');
     }
+    /* 아이폰은 play() 가 끝나도 실제 재생이 시작되기까지 0.5초쯤 걸린다.
+       그 사이를 녹화하면 앞에 멈춘 화면이 붙고 길이 계산도 어긋나므로,
+       그림이 실제로 흐르기 시작한 뒤에 녹화기를 켠다. */
+    await new Promise(res=>{
+      const waitFrom=performance.now();
+      const wait=()=>{
+        if(cancelled||(Number(vid.currentTime)||0)>0.02||performance.now()-waitFrom>1500){ res(); return; }
+        requestAnimationFrame(wait);
+      };
+      wait();
+    });
+    draw();
+    /* timeslice를 주면 모바일 크로미움 MP4가 여러 조각으로 갈라져 갤럭시 갤러리가
+       첫 조각만 3초짜리로 표시하는 경우가 있다. stop 시 한 번에 받도록 시작한다. */
+    try{ rec.start(); }
+    catch(startErr){ throw new Error('recorder init failed: '+String(startErr&&startErr.name||startErr)); }
+    recStartedAt=performance.now();
+    /* 소리는 영상이 이미 흘러간 만큼 건너뛰고 시작해 화면과 어긋나지 않게 한다 */
+    if(audioPack&&audioPack.start) audioPack.start(Number(vid.currentTime)||0);
 
     const t0=performance.now();
     /* 사파리는 캔버스가 바뀔 때마다 프레임을 담기 때문에, rAF(60~120Hz)마다 그리면
@@ -15731,22 +15743,13 @@ window.exportBackgroundVideo=async function(opt){
         }
         const dNum=Number(vid.duration);
         if(cancelled||vid.ended||(Number.isFinite(dNum)&&dNum>0&&ct>=dNum-0.02)){
-          stop(Math.max(lastMoveAt,lastDecodeAt,lastFrameAt,lastSigAt),cancelled?'cancel':'ended');
+          stop(now,cancelled?'cancel':'ended');
           return;
         }
-        /* 재생이 실제로 시작된 뒤에만 '멈춤'으로 판단한다 (오판으로 일찍 끊지 않게) */
-        const playing=lastCT>startCT+0.05;
-        const decodeStalled=useDecoded&&lastDecoded>decodeStart+2&&(now-lastDecodeAt>1100);
-        const frameStalled=useFrameCb&&frameHits>2&&(now-lastFrameAt>1200);
-        const pixelStalled=sigOk&&(now-lastSigAt>2600);
-        const timeStalled=playing&&(now-lastMoveAt>900);
-        if(now-t0>1500&&(decodeStalled||frameStalled||pixelStalled||timeStalled)){
-          if(decodeStalled) stop(lastDecodeAt,'decode-stall');
-          else if(frameStalled) stop(lastFrameAt,'frame-stall');
-          else if(pixelStalled) stop(lastSigAt,'pixel-stall');
-          else stop(lastMoveAt,'time-stall');
-          return;
-        }
+        /* 안전장치: 어떤 이유로도 예상 길이의 3배를 넘기지 않는다.
+           (신호로 '멈춤'을 판정하던 방식은 아이폰에서 오판이 잦아 걷어냈다 —
+            디코딩 프레임 수가 실제보다 훨씬 적게 보고돼 녹화가 중간에 잘렸다) */
+        if(now-t0>dur*3000+5000){ stop(now,'safety-cap'); return; }
         if(Math.abs(vid.playbackRate-playRate)>.001) vid.playbackRate=playRate;
         if(now-lastDraw>=frameGap-1){ lastDraw=now; draw(); }
         const pct=2+96*Math.min(1,(now-t0)/(dur*1000));
@@ -15760,27 +15763,25 @@ window.exportBackgroundVideo=async function(opt){
     cancelAnimationFrame(raf);
     try{ vid.pause(); }catch(_){}
     if(!contentEndAt) contentEndAt=performance.now();
-    await new Promise(r=>setTimeout(r,90));   /* 마지막 프레임이 담기게 잠깐 */
+    await new Promise(r=>setTimeout(r,60));   /* 마지막 프레임이 담기게 잠깐 */
     recEndedAt=performance.now();
     rec.stop();
     await done;
 
-    /* 결과 길이 계산
-       playedSeconds : 실제로 그림이 흐른 영상 구간 (얼어붙은 뒷부분 제외)
-       targetSeconds : 나와야 하는 결과 길이 = 그 구간 ÷ 재생 속도
-       spanSeconds   : 담긴 프레임 전체를 펼칠 길이 — 내용 구간이 정확히
-                       targetSeconds 를 차지하도록 맞춘다 (속도가 안 먹은 기기 보정) */
-    /* 그림이 마지막으로 살아 있던 지점 기준 (얼어붙은 뒷부분은 길이에서 뺀다) */
-    const playedRaw=(aliveCT>startCT+0.05)?(aliveCT-startCT)
-      :((useFrameCb&&frameHits>2&&frameCT>startCT)?(frameCT-startCT):(lastCT-startCT));
-    const played=(playedRaw>.05)?playedRaw:(Number(vid.duration)||dur*playRate);
-    let targetSeconds=Math.max(.05,played/playRate);
-    if(Math.abs(targetSeconds-dur)<=dur*.15) targetSeconds=dur;   /* 원본 길이와 비슷하면 딱 맞춤 */
+    /* ---- 결과 길이 ----
+       진단으로 확인된 사실: 이 파일의 길이는 오로지 '샘플 수 × 샘플 간격' 으로 정해진다.
+       (moov 에 적은 길이는 플레이어가 무시한다.)
+       그러니 답은 하나뿐이다 — 담긴 프레임 전체를 '실제로 녹화기가 돌아간 시간'에
+       그대로 펼치면 된다. 브라우저가 30fps로 담든 60fps로 담든 자동으로 맞는다.
+       이전처럼 '내용 구간'을 따로 추정해서 비율로 늘리면, 그 추정이 틀리는 순간
+       길이가 몇 배로 튄다(= 방금 20초 사고). 추정을 아예 쓰지 않는다. */
     const wallTotal=Math.max(.05,(recEndedAt-recStartedAt)/1000);
-    const wallContent=Math.max(.05,Math.min(wallTotal,(contentEndAt-recStartedAt)/1000));
-    const spanSeconds=Math.max(.05,targetSeconds*(wallTotal/wallContent));
-    /* 이 브라우저가 실제로 낸 재생 속도. 설정한 속도를 무시하는 기기가 있다. */
-    const observedRate=played/wallContent;
+    const wallContent=wallTotal;
+    const playedRaw=lastCT-startCT;
+    const played=(playedRaw>.05)?playedRaw:wallTotal*playRate;
+    const observedRate=played/wallTotal;
+    const spanSeconds=wallTotal;      /* 프레임을 펼칠 길이 = 실제 녹화 시간 */
+    const targetSeconds=wallTotal;    /* 파일에 적을 길이도 같은 값 */
     outputDuration=targetSeconds;
 
     if(cancelled){ T('영상 저장을 그만뒀어요'); return; }
@@ -15788,20 +15789,13 @@ window.exportBackgroundVideo=async function(opt){
     const outMime=String(chunkMime||(rec&&rec.mimeType)||mime||'video/webm').split(';')[0];
     let blob=new Blob(chunks,{type:outMime});
     if(!blob.size) throw new Error('empty recording');
-    /* 녹화기는 흐른 시간(wallTotal)보다 긴 그림을 담을 수 없다. 그보다 긴 길이를
-       파일에 적으면 플레이어가 마지막 장면을 붙잡은 채 남은 시간을 채운다
-       (= 아이폰에서 보이던 '멈춘 화면 잉여 시간'). 실제로 담긴 만큼만 적는다. */
-    const recordedCap=wallTotal+0.2;
     let declared=targetSeconds, mp4Fixed=false, mp4Samples=0;
     if(/mp4/i.test(outMime)){
       const timeline={seconds:0,applied:false,samples:0,fps:0,timescale:0,fragments:0,bail:''};
       blob=await normalizeMp4VideoFps(blob,fps,spanSeconds,timeline);
       mp4Fixed=!!timeline.applied; mp4Samples=timeline.samples||0;
-      /* 프레임 시간표를 다시 쓴 경우에만 원하는 길이로 줄여 적을 수 있다.
-         못 고쳤으면 프레임은 실제 시간 그대로이므로 그 길이를 적어야 한다. */
-      declared=timeline.applied
-        ? Math.min(targetSeconds,timeline.seconds||targetSeconds)
-        : Math.min(targetSeconds,wallContent+0.15,recordedCap);
+      /* 실제 샘플 총합과 똑같은 길이를 적어 둔다 (어긋나면 멈춘 화면이 생긴다) */
+      declared=timeline.applied?(timeline.seconds||targetSeconds):targetSeconds;
       blob=await normalizeMp4DurationMetadata(blob,declared);
       window.__lastMp4Timeline=timeline;
       if(!timeline.applied&&Math.abs(observedRate-playRate)>playRate*0.15){
