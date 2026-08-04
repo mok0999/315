@@ -4371,7 +4371,27 @@ exportHTML=function(){
   const css=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
   const bodyBg=state.transparentBg?'transparent':state.colors.bg;
   const transparentCss=state.transparentBg?'html,body,#canvas,#chat{background:transparent!important}#canvasBgImage,#canvasBgOverlay{display:none!important}':'';
-  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>채팅 발췌</title><style>'+css+'html,body{height:auto;min-height:100%;overflow:auto}body{background:'+bodyBg+';display:flex;justify-content:center;padding:0;margin:0}'+transparentCss+'</style></head><body>'+node.outerHTML+'</body></html>';
+  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>채팅 발췌</title><style>'+css+'html,body{height:auto;min-height:100%;overflow:auto}body{background:'+bodyBg+';display:flex;justify-content:center;padding:0;margin:0}'+transparentCss+'</style>
+<style id="transparent-preview-checkerboard-only">
+/* 배경 투명화 상태를 미리보기에서만 알려 주는 체크보드예요.
+   실제 저장 대상은 #canvas이므로 PNG·HTML 결과에는 포함되지 않아요. */
+#stageEl.transparent-bg{
+  background:#F0F0F2!important;
+  background-image:none!important;
+}
+#stageEl.transparent-bg #canvasFit{
+  background-color:#fff;
+  background-image:
+    linear-gradient(45deg,#D9D9DD 25%,transparent 25%),
+    linear-gradient(-45deg,#D9D9DD 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#D9D9DD 75%),
+    linear-gradient(-45deg,transparent 75%,#D9D9DD 75%);
+  background-size:18px 18px;
+  background-position:0 0,0 9px,9px -9px,-9px 0;
+  box-shadow:0 0 0 1px rgba(66,68,72,.08);
+}
+</style>
+</head><body>'+node.outerHTML+'</body></html>';
   const blob=new Blob([html],{type:'text/html'});
   const fname=safeFilename(state.export.filename)+'.html';
   window.__saveBlobAs(blob,fname,()=>{const a=document.createElement('a');a.download=fname;a.href=URL.createObjectURL(blob);a.click();});
