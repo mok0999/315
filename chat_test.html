@@ -15186,15 +15186,18 @@ async function closeExportAudio(pack){
   try{ if(pack.ctx&&pack.ctx.state!=='closed') await pack.ctx.close(); }catch(_){}
 }
 
-/* 크로미움의 MediaRecorder MP4는 실제로 30fps로 녹화했어도 조각 안의 프레임 간격이
-   1~수 ms씩 흔들리면서 일부 사이트가 1000fps 같은 값으로 오인할 수 있다.
-   저장 직전에 MP4의 비디오 샘플 간격을 선택한 FPS로 고정해 X(트위터) 등에서
-   60fps 초과 영상으로 판정되지 않게 한다. 영상 데이터 자체를 다시 인코딩하지 않으므로
-   화질과 저장 속도에는 영향을 주지 않는다. */
+/* MP4 시간표 정리 — 영상 트랙 + 소리 트랙 모두
+   진단으로 확인된 것: 영상 트랙은 3.15초로 맞게 계산됐는데 파일은 6.3초로 나왔다.
+   = 파일 길이를 늘리는 건 다른 트랙(소리)이다. 아이폰의 Web Audio 경로로 붙인
+   소리 트랙이 실제 녹화 시간의 2배 길이로 기록되면서, 영상이 끝난 뒤에도
+   마지막 화면이 얼어붙은 채 남았다.
+   그래서 이제 '모든 트랙'의 샘플 간격을 실제 녹화 시간에 맞춰 고른 간격으로 다시 쓴다.
+   (덤으로 크로미움 MP4가 1000fps 같은 값으로 오인되던 문제도 그대로 해결된다.) */
 async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
   try{
     if(!blob||!/mp4/i.test(String(blob.type||''))||typeof blob.arrayBuffer!=='function') return blob;
     const fps=Math.max(1,Math.min(60,Math.round(Number(targetFps)||30)));
+    const span=Number(realSeconds)||0;
     const buf=await blob.arrayBuffer();
     const u8=new Uint8Array(buf), dv=new DataView(buf);
     const limit=u8.byteLength;
@@ -15226,8 +15229,8 @@ async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
       else{ w32(o,Math.floor(v/4294967296)); w32(o+4,v>>>0); }
     };
 
-    /* moov 안에서 비디오 트랙 번호와 그 트랙의 시간 단위를 찾는다. */
-    let videoTrackId=0,timescale=0,trexDurationOffset=-1;
+    /* ---- moov: 트랙마다 번호·시간단위·종류 ---- */
+    const tracks=new Map();   /* id -> {timescale, handler} */
     const top=boxes(0,limit);
     const moov=top.find(b=>b.type==='moov');
     if(!moov){ if(info) info.bail='moov 없음'; return blob; }
@@ -15249,23 +15252,28 @@ async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
           }
         }
       }
-      if(handler==='vide'){ videoTrackId=trackId; timescale=scale; break; }
+      if(trackId&&scale) tracks.set(trackId,{timescale:scale,handler});
     }
-    if(!videoTrackId||!timescale){ if(info) info.bail='트랙/시간단위 못 찾음'; return blob; }
+    if(!tracks.size){ if(info) info.bail='트랙/시간단위 못 찾음'; return blob; }
 
+    /* trex 기본 간격 (조각 안에 간격이 없을 때 쓰는 값) */
+    const trexOffset=new Map();
     const mvex=moovKids.find(b=>b.type==='mvex');
     if(mvex){
       for(const trex of boxes(mvex.p+mvex.head,mvex.p+mvex.size)){
-        if(trex.type==='trex'&&u32(trex.p+12)===videoTrackId){ trexDurationOffset=trex.p+20; break; }
+        if(trex.type==='trex') trexOffset.set(u32(trex.p+12),trex.p+20);
       }
     }
 
-    const fragments=[];
+    /* ---- 조각(moof)에서 트랙별 샘플 모으기 ---- */
+    const perTrack=new Map();   /* id -> {sampleCount, frags:[]} */
     for(const moof of top.filter(b=>b.type==='moof')){
       for(const traf of boxes(moof.p+moof.head,moof.p+moof.size).filter(b=>b.type==='traf')){
         const kids=boxes(traf.p+traf.head,traf.p+traf.size);
         const tfhd=kids.find(b=>b.type==='tfhd');
-        if(!tfhd||u32(tfhd.p+12)!==videoTrackId) continue;
+        if(!tfhd) continue;
+        const trackId=u32(tfhd.p+12);
+        if(!tracks.has(trackId)) continue;
         const tfhdFlags=u32(tfhd.p+8)&0xFFFFFF;
         let q=tfhd.p+16,defaultDurationOffset=-1;
         if(tfhdFlags&0x000001) q+=8;
@@ -15294,53 +15302,64 @@ async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
             if(p>trun.p+trun.size) break;
           }
         }
-        if(frag.sampleCount) fragments.push(frag);
+        if(!frag.sampleCount) continue;
+        if(!perTrack.has(trackId)) perTrack.set(trackId,{sampleCount:0,frags:[]});
+        const slot=perTrack.get(trackId);
+        slot.sampleCount+=frag.sampleCount;
+        slot.frags.push(frag);
       }
     }
-    if(!fragments.length){ if(info){ info.bail='moof 조각 없음'; info.fragments=0; } return blob; }
+    if(!perTrack.size){ if(info){ info.bail='moof 조각 없음'; info.fragments=0; } return blob; }
 
-    /* 사파리(아이폰)는 captureStream(fps) 의 fps 요청을 무시하고 화면 주사율(보통 60)
-       그대로 프레임을 담는다. 그래서 "30fps일 것"이라고 가정하고 간격을 고정하면
-       실제로 60장/초로 담긴 영상이 2배 길이로 늘어나 뒤에 잉여 시간이 붙는다.
-       실제로 담긴 프레임 수를 진짜 녹화 길이로 나눠 간격을 정하면
-       어떤 브라우저에서든 원본 영상 길이 그대로 나온다. */
-    let totalSamples=0;
-    for(const frag of fragments) totalSamples+=frag.sampleCount;
-    let effFps=fps;
-    const real=Number(realSeconds)||0;
-    if(real>.05&&totalSamples>1){
-      const measured=totalSamples/real;
-      if(measured>=1&&measured<=240) effFps=(measured>60&&measured<=63)?60:measured;
-    }
-    const frameDuration=Math.max(1,Math.round(timescale/effFps));
-    if(info){
-      info.seconds=totalSamples*frameDuration/timescale;
-      info.samples=totalSamples; info.fps=effFps;
-      info.timescale=timescale; info.fragments=fragments.length;
-    }
-
-    let changed=false;
-    for(const frag of fragments){
-      for(const off of frag.durationOffsets){ w32(off,frameDuration); changed=true; }
-      if(frag.defaultDurationOffset>=0){ w32(frag.defaultDurationOffset,frameDuration); changed=true; }
-    }
-    if(!changed&&trexDurationOffset>=0){ w32(trexDurationOffset,frameDuration); changed=true; }
-    if(!changed){ if(info) info.bail='고칠 자리 없음'; return blob; }
-    if(info) info.applied=true;
-
-    /* 여러 조각으로 녹화된 MP4라면 뒤 조각의 시작 시각도 새 고정 간격에 맞춘다. */
-    let base=fragments[0].tfdtOffset>=0?fragments[0].tfdtBase:0;
-    let passed=0;
-    for(const frag of fragments){
-      if(frag.tfdtOffset>=0){
-        const t=base+passed;
-        if(frag.tfdtVersion===1) setU64(frag.tfdtOffset,t); else w32(frag.tfdtOffset,t);
+    /* ---- 트랙마다 '실제 녹화 시간'에 맞춰 고른 간격으로 다시 쓴다 ---- */
+    let changedAny=false;
+    const trackInfo=[];
+    for(const [trackId,slot] of perTrack){
+      const meta=tracks.get(trackId)||{};
+      const ts=Number(meta.timescale)||0;
+      if(!ts||!slot.sampleCount) continue;
+      const isVideo=meta.handler==='vide';
+      let unit;
+      if(span>.05){
+        unit=Math.max(1,Math.round(ts*span/slot.sampleCount));
+      }else if(isVideo){
+        unit=Math.max(1,Math.round(ts/fps));
+      }else{
+        continue;   /* 기준 시간이 없으면 소리는 건드리지 않는다 */
       }
-      passed+=frag.sampleCount*frameDuration;
+      let changed=false;
+      for(const frag of slot.frags){
+        for(const off of frag.durationOffsets){ w32(off,unit); changed=true; }
+        if(frag.defaultDurationOffset>=0){ w32(frag.defaultDurationOffset,unit); changed=true; }
+      }
+      if(!changed&&trexOffset.has(trackId)){ w32(trexOffset.get(trackId),unit); changed=true; }
+      if(!changed) continue;
+      /* 뒤 조각의 시작 시각도 새 간격에 맞춘다 */
+      const base=slot.frags[0].tfdtOffset>=0?slot.frags[0].tfdtBase:0;
+      let passed=0;
+      for(const frag of slot.frags){
+        if(frag.tfdtOffset>=0){
+          const t=base+passed;
+          if(frag.tfdtVersion===1) setU64(frag.tfdtOffset,t); else w32(frag.tfdtOffset,t);
+        }
+        passed+=frag.sampleCount*unit;
+      }
+      changedAny=true;
+      const seconds=slot.sampleCount*unit/ts;
+      trackInfo.push((isVideo?'영상':(meta.handler==='soun'?'소리':meta.handler))
+        +' '+slot.sampleCount+'샘플/ts'+ts+'/'+(Math.round(seconds*100)/100)+'초');
+      if(info&&isVideo){
+        info.seconds=seconds; info.samples=slot.sampleCount;
+        info.fps=ts/unit; info.timescale=ts; info.fragments=slot.frags.length;
+      }
+      if(info&&!isVideo) info.audioSeconds=seconds;
     }
+    if(!changedAny){ if(info) info.bail='고칠 자리 없음'; return blob; }
+    if(info){ info.applied=true; info.tracks=trackInfo.join(' · '); }
     return new Blob([buf],{type:blob.type||'video/mp4'});
   }catch(e){
     console.warn('MP4 frame-rate metadata normalization skipped',e);
+    if(info) info.bail='오류: '+((e&&e.message)||e);
     return blob;
   }
 }
@@ -15822,6 +15841,9 @@ window.exportBackgroundVideo=async function(opt){
       'MP4 시간표 수정: '+(mp4Fixed?'적용됨':'실패')+(tl.bail?(' ('+tl.bail+')'):'')
         +' · 샘플 '+(mp4Samples||tl.samples||0)+'개 · 조각 '+(tl.fragments||0)
         +' · timescale '+(tl.timescale||0)+' · 계산fps '+round(tl.fps),
+      '트랙별: '+(tl.tracks||'없음'),
+      '소리: 설정 '+((V()&&V().sound)?'켬':'끔')+' · 경로 '+((audioPack&&audioPack.mode)||'none')
+        +' · 스트림 오디오트랙 '+((stream&&stream.getAudioTracks)?stream.getAudioTracks().length:'?'),
       '결과 파일 실제 길이(측정): '+(measured==null?'못 잼':(round(measured)+'초')),
       '캔버스 '+W+'×'+H+' · 요청 '+fps+'fps · '+outMime+' · '+round(blob.size/1048576,10)+'MB'
     ].join('\n');
