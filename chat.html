@@ -15490,7 +15490,12 @@ window.exportBackgroundVideo=async function(opt){
     });
     /* 일부 모바일 브라우저는 src/load 뒤 playbackRate를 1로 되돌리므로 다시 고정한다. */
     vid.defaultPlaybackRate=playRate; vid.playbackRate=playRate;
-    const dur=Math.max(.1,(Number(vid.duration)||1)/playRate);
+    /* 아이폰은 blob URL 영상의 길이를 Infinity/NaN 으로 주는 일이 있다.
+       그 경우에도 진행 표시만 어림값을 쓰고, 실제 끝은 아래 재생 감지로 정한다. */
+    const rawDur=Number(vid.duration);
+    const dur=Number.isFinite(rawDur)&&rawDur>0
+      ? Math.max(.1,rawDur/playRate)
+      : 15;
     outputDuration=dur;
     if(dur>180&&!confirm('영상이 '+Math.round(dur)+'초예요. 그만큼 실제로 재생하면서 녹화해서 시간이 걸려요. 계속할까요?')){
       throw new Error('cancelled');
@@ -15552,15 +15557,46 @@ window.exportBackgroundVideo=async function(opt){
        고른 fps 간격으로만 다시 그려서 담기는 프레임 수 자체를 맞춘다. */
     const frameGap=1000/fps;
     let lastDraw=-1e9;
+
+    /* ---- 진짜로 그림이 흐른 구간만 담기 ----
+       아이폰에서는 파일에 적힌 길이가 실제 그림보다 길거나 ended 가 늦게 떠서,
+       마지막 장면이 얼어붙은 채로 원본만큼 더 담기는 일이 있었다(= 2배 + 잉여).
+       새 영상 프레임이 실제로 도착하는지(requestVideoFrameCallback)와
+       currentTime 이 흐르는지를 같이 보고, 그림이 멈추면 거기서 끊는다. */
+    const startCT=Number(vid.currentTime)||0;
+    let lastCT=startCT, frameCT=0, frameHits=0;
+    let lastMoveAt=t0, lastFrameAt=t0, contentEndAt=0;
+    let useFrameCb=false;
+    if(typeof vid.requestVideoFrameCallback==='function'){
+      const onFrame=()=>{
+        lastFrameAt=performance.now(); frameHits++;
+        const c=Number(vid.currentTime); if(Number.isFinite(c)) frameCT=c;
+        try{ vid.requestVideoFrameCallback(onFrame); }catch(_){}
+      };
+      try{ vid.requestVideoFrameCallback(onFrame); useFrameCb=true; }catch(_){ useFrameCb=false; }
+    }
     await new Promise(res=>{
+      const stop=endAt=>{ contentEndAt=endAt||performance.now(); res(); };
       const tick=()=>{
-        if(cancelled||vid.ended||vid.currentTime>=(vid.duration-0.02)){ res(); return; }
-        if(Math.abs(vid.playbackRate-playRate)>.001) vid.playbackRate=playRate;
         const now=performance.now();
+        const ct=Number(vid.currentTime)||0;
+        if(ct>lastCT+0.004){ lastCT=ct; lastMoveAt=now; }
+        const dNum=Number(vid.duration);
+        if(cancelled||vid.ended||(Number.isFinite(dNum)&&dNum>0&&ct>=dNum-0.02)){
+          stop(useFrameCb&&frameHits>2?Math.max(lastFrameAt,lastMoveAt):lastMoveAt); return;
+        }
+        /* 재생이 실제로 시작된 뒤에만 '멈춤'으로 판단한다 (오판으로 일찍 끊지 않게) */
+        const playing=lastCT>startCT+0.05;
+        const frameStalled=useFrameCb&&frameHits>2&&(now-lastFrameAt>1200);
+        const timeStalled=playing&&(now-lastMoveAt>900);
+        if(now-t0>1200&&(frameStalled||timeStalled)){
+          stop(useFrameCb&&frameHits>2?lastFrameAt:lastMoveAt); return;
+        }
+        if(Math.abs(vid.playbackRate-playRate)>.001) vid.playbackRate=playRate;
         if(now-lastDraw>=frameGap-1){ lastDraw=now; draw(); }
-        const pct=2+96*Math.min(1,(performance.now()-t0)/(dur*1000));
+        const pct=2+96*Math.min(1,(now-t0)/(dur*1000));
         prog(true,'영상 만드는 중',
-          Math.round((performance.now()-t0)/1000)+'초 / '+Math.round(dur)+'초 · 재생하면서 담는 중이라 실제 길이만큼 걸려요',pct);
+          Math.round((now-t0)/1000)+'초 / '+Math.round(dur)+'초 · 재생하면서 담는 중이라 실제 길이만큼 걸려요',pct);
         raf=requestAnimationFrame(tick);
       };
       raf=requestAnimationFrame(tick);
@@ -15568,17 +15604,25 @@ window.exportBackgroundVideo=async function(opt){
     draw();
     cancelAnimationFrame(raf);
     try{ vid.pause(); }catch(_){}
-    await new Promise(r=>setTimeout(r,140));   /* 마지막 프레임이 담기게 잠깐 */
+    if(!contentEndAt) contentEndAt=performance.now();
+    await new Promise(r=>setTimeout(r,90));   /* 마지막 프레임이 담기게 잠깐 */
     recEndedAt=performance.now();
     rec.stop();
     await done;
 
-    /* 실제로 담긴 시간. 원본 길이와 25% 안쪽으로 비슷하면 원본 길이로 딱 맞춰
-       (재생 시작 지연·마지막 여유 프레임 때문에 생기는 자투리를 없앤다) */
-    let recordedSeconds=(recEndedAt-recStartedAt)/1000;
-    if(!(recordedSeconds>.05)) recordedSeconds=dur;
-    else if(Math.abs(recordedSeconds-dur)<=dur*.25) recordedSeconds=dur;
-    outputDuration=recordedSeconds;
+    /* 결과 길이 계산
+       playedSeconds : 실제로 그림이 흐른 영상 구간 (얼어붙은 뒷부분 제외)
+       targetSeconds : 나와야 하는 결과 길이 = 그 구간 ÷ 재생 속도
+       spanSeconds   : 담긴 프레임 전체를 펼칠 길이 — 내용 구간이 정확히
+                       targetSeconds 를 차지하도록 맞춘다 (속도가 안 먹은 기기 보정) */
+    const playedRaw=(useFrameCb&&frameHits>2&&frameCT>startCT)?(frameCT-startCT):(lastCT-startCT);
+    const played=(playedRaw>.05)?playedRaw:(Number(vid.duration)||dur*playRate);
+    let targetSeconds=Math.max(.05,played/playRate);
+    if(Math.abs(targetSeconds-dur)<=dur*.15) targetSeconds=dur;   /* 원본 길이와 비슷하면 딱 맞춤 */
+    const wallTotal=Math.max(.05,(recEndedAt-recStartedAt)/1000);
+    const wallContent=Math.max(.05,Math.min(wallTotal,(contentEndAt-recStartedAt)/1000));
+    const spanSeconds=Math.max(.05,targetSeconds*(wallTotal/wallContent));
+    outputDuration=targetSeconds;
 
     if(cancelled){ T('영상 저장을 그만뒀어요'); return; }
     const chunkMime=chunks.find(x=>x&&x.type)&&chunks.find(x=>x&&x.type).type;
@@ -15587,8 +15631,8 @@ window.exportBackgroundVideo=async function(opt){
     if(!blob.size) throw new Error('empty recording');
     if(/mp4/i.test(outMime)){
       const timeline={seconds:0};
-      blob=await normalizeMp4VideoFps(blob,fps,recordedSeconds,timeline);
-      blob=await normalizeMp4DurationMetadata(blob,timeline.seconds||recordedSeconds||dur);
+      blob=await normalizeMp4VideoFps(blob,fps,spanSeconds,timeline);
+      blob=await normalizeMp4DurationMetadata(blob,targetSeconds);
     }
     const ext=extOf(outMime,rec);
     const name=((typeof safeFilename==='function')?safeFilename(s.export.filename):'chat')+'.'+ext;
