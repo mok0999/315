@@ -15475,6 +15475,104 @@ async function normalizeMp4DurationMetadata(blob,durationSeconds){
 }
 
 
+/* 저장 직전 파일을 '실제로 읽어서' 값을 확인한다.
+   지금까지 진단에 찍힌 트랙 길이는 내가 계산한 값이라, 파일에 제대로 들어갔는지는
+   확인된 적이 없었다. 여기서는 완성된 파일의 바이트를 직접 읽는다. */
+async function inspectMp4(blob){
+  try{
+    if(!blob||!/mp4/i.test(String(blob.type||''))) return 'mp4 아님';
+    const buf=await blob.arrayBuffer();
+    const u8=new Uint8Array(buf), dv=new DataView(buf), limit=u8.byteLength;
+    const u32=o=>dv.getUint32(o,false);
+    const u64=o=>typeof dv.getBigUint64==='function'?Number(dv.getBigUint64(o,false)):u32(o)*4294967296+u32(o+4);
+    const i32=o=>dv.getInt32(o,false);
+    const typeAt=o=>String.fromCharCode(u8[o+4],u8[o+5],u8[o+6],u8[o+7]);
+    const boxes=(s,e)=>{
+      const out=[]; let p=s;
+      while(p+8<=e){
+        let size=u32(p),head=8;
+        if(size===1){ if(p+16>e) break; size=u64(p+8); head=16; }
+        else if(size===0) size=e-p;
+        if(!Number.isFinite(size)||size<head||p+size>e) break;
+        out.push({p,size,head,type:typeAt(p)}); p+=size;
+      }
+      return out;
+    };
+    const sec=(v,ts)=>ts?(Math.round(v/ts*100)/100)+'초':'?';
+    const lines=[];
+    const top=boxes(0,limit);
+    const moov=top.find(b=>b.type==='moov');
+    if(!moov) return 'moov 없음';
+    const kids=boxes(moov.p+moov.head,moov.p+moov.size);
+    let movieTs=0;
+    const mvhd=kids.find(b=>b.type==='mvhd');
+    if(mvhd){
+      const v=u8[mvhd.p+8];
+      movieTs=u32(mvhd.p+(v===1?28:20));
+      const d=v===1?u64(mvhd.p+32):u32(mvhd.p+24);
+      lines.push('mvhd v'+v+' ts'+movieTs+' dur'+d+'('+sec(d,movieTs)+')');
+    }
+    for(const trak of kids.filter(b=>b.type==='trak')){
+      const tk=boxes(trak.p+trak.head,trak.p+trak.size);
+      let id=0,tdur=0;
+      const tkhd=tk.find(b=>b.type==='tkhd');
+      if(tkhd){ const v=u8[tkhd.p+8]; id=u32(tkhd.p+(v===1?28:20)); tdur=v===1?u64(tkhd.p+36):u32(tkhd.p+28); }
+      let h='',mts=0,mdur=0,mv=0;
+      const mdia=tk.find(b=>b.type==='mdia');
+      if(mdia) for(const md of boxes(mdia.p+mdia.head,mdia.p+mdia.size)){
+        if(md.type==='hdlr') h=String.fromCharCode(u8[md.p+16],u8[md.p+17],u8[md.p+18],u8[md.p+19]);
+        else if(md.type==='mdhd'){ mv=u8[md.p+8]; mts=u32(md.p+(mv===1?28:20)); mdur=mv===1?u64(md.p+32):u32(md.p+24); }
+      }
+      lines.push('trak'+id+' '+h+' tkhd'+tdur+'('+sec(tdur,movieTs)+') mdhd v'+mv+' ts'+mts+' dur'+mdur+'('+sec(mdur,mts)+')');
+      const edts=tk.find(b=>b.type==='edts');
+      if(edts){
+        const el=boxes(edts.p+edts.head,edts.p+edts.size).find(b=>b.type==='elst');
+        if(el){
+          const v=u8[el.p+8], c=u32(el.p+12), st=v===1?20:12, rows=[];
+          for(let i=0;i<c&&el.p+16+i*st+st<=el.p+el.size;i++){
+            const q=el.p+16+i*st;
+            rows.push((v===1?u64(q):u32(q))+'/'+(v===1?u64(q+8):i32(q+4)));
+          }
+          lines.push('  elst '+rows.join(' , '));
+        }
+      }
+    }
+    const moofs=top.filter(b=>b.type==='moof');
+    lines.push('moof '+moofs.length+'개');
+    const first=moofs[0];
+    if(first) for(const traf of boxes(first.p+first.head,first.p+first.size).filter(b=>b.type==='traf')){
+      const k=boxes(traf.p+traf.head,traf.p+traf.size);
+      const tfhd=k.find(b=>b.type==='tfhd');
+      if(!tfhd) continue;
+      const id=u32(tfhd.p+12), f=u32(tfhd.p+8)&0xFFFFFF;
+      let q=tfhd.p+16, dd=-1;
+      if(f&0x1) q+=8;
+      if(f&0x2) q+=4;
+      if(f&0x8){ dd=u32(q); q+=4; }
+      const tfdt=k.find(b=>b.type==='tfdt');
+      const base=tfdt?(u8[tfdt.p+8]===1?u64(tfdt.p+12):u32(tfdt.p+12)):-1;
+      const truns=k.filter(b=>b.type==='trun');
+      let cnt=0,tf=0,head3=[];
+      for(const trun of truns){
+        tf=u32(trun.p+8)&0xFFFFFF;
+        const c=u32(trun.p+12); cnt+=c;
+        let p=trun.p+16;
+        if(tf&0x1) p+=4;
+        if(tf&0x4) p+=4;
+        for(let i=0;i<c;i++){
+          if(tf&0x100){ if(head3.length<3) head3.push(u32(p)); p+=4; }
+          if(tf&0x200) p+=4;
+          if(tf&0x400) p+=4;
+          if(tf&0x800) p+=4;
+        }
+      }
+      lines.push('  traf'+id+' tfhd0x'+f.toString(16)+' 기본간격'+dd+' tfdt'+base
+        +' trun0x'+tf.toString(16)+' 샘플'+cnt+' 앞3간격['+head3.join(',')+']');
+    }
+    return lines.join('\n');
+  }catch(e){ return '읽기 실패: '+((e&&e.message)||e); }
+}
+
 /* ---------- 진단 ----------
    원인을 기기 없이 맞히기 어려워, 저장된 파일의 실제 길이를 그 자리에서 재고
    계산에 쓴 숫자를 전부 남긴다. 결과가 예상과 다르면 복사창을 띄운다. */
@@ -15834,8 +15932,15 @@ window.exportBackgroundVideo=async function(opt){
     const outMime=String(chunkMime||(rec&&rec.mimeType)||mime||'video/webm').split(';')[0];
     let blob=new Blob(chunks,{type:outMime});
     if(!blob.size) throw new Error('empty recording');
+    /* ---- 사파리(아이폰)에서는 파일을 손대지 않는다 ----
+       MP4 시간표 손질은 원래 크로미움(갤럭시) 전용 보정이었다. 사파리가 만든 파일에
+       그걸 그대로 적용하면서 길이가 두 배가 됐다. 아이폰에서는 녹화기가 만든 파일을
+       그대로 저장한다. 정말로 '그대로'. */
+    const rawSave=/iP(hone|ad|od)/i.test(navigator.userAgent||'')
+      ||(/Safari/i.test(navigator.userAgent||'')&&!/Chrome|Chromium|CriOS|Edg|OPR|Whale/i.test(navigator.userAgent||''));
+    if(rawSave) window.__lastMp4Timeline=null;
     let declared=targetSeconds, mp4Fixed=false, mp4Samples=0;
-    if(/mp4/i.test(outMime)){
+    if(/mp4/i.test(outMime)&&!rawSave){
       const timeline={seconds:0,applied:false,samples:0,fps:0,timescale:0,fragments:0,bail:''};
       blob=await normalizeMp4VideoFps(blob,fps,spanSeconds,timeline);
       mp4Fixed=!!timeline.applied; mp4Samples=timeline.samples||0;
@@ -15848,9 +15953,10 @@ window.exportBackgroundVideo=async function(opt){
       }
     }
 
-    /* 저장된 파일의 실제 길이를 그 자리에서 재 본다 */
-    let measured=null;
+    /* 저장된 파일의 실제 길이를 그 자리에서 재 보고, 안을 직접 읽어 확인한다 */
+    let measured=null, inside='';
     try{ measured=await probeBlobDuration(blob); }catch(_){}
+    try{ inside=await inspectMp4(blob); }catch(e){ inside='읽기 실패'; }
     const tl=window.__lastMp4Timeline||{};
     const round=(x,n)=>(x==null||!Number.isFinite(Number(x)))?String(x):(Math.round(Number(x)*(n||100))/(n||100));
     const report=[
@@ -15867,8 +15973,12 @@ window.exportBackgroundVideo=async function(opt){
       'MP4 시간표 수정: '+(mp4Fixed?'적용됨':'실패')+(tl.bail?(' ('+tl.bail+')'):'')
         +' · 샘플 '+(mp4Samples||tl.samples||0)+'개 · 조각 '+(tl.fragments||0)
         +' · timescale '+(tl.timescale||0)+' · 계산fps '+round(tl.fps),
-      '트랙별: '+(tl.tracks||'없음'),
+      '후처리: '+(rawSave?'손대지 않음(사파리 원본 그대로)':'적용'),
+      '트랙별(계산값): '+(tl.tracks||'없음'),
       '파일 구조: '+(tl.top||'-'),
+      '--- 저장된 파일 실제 내용 ---',
+      inside,
+      '---',
       '소리: 설정 '+((V()&&V().sound)?'켬':'끔')+' · 경로 '+((audioPack&&audioPack.mode)||'none')
         +' · 스트림 오디오트랙 '+((stream&&stream.getAudioTracks)?stream.getAudioTracks().length:'?'),
       '결과 파일 실제 길이(측정): '+(measured==null?'못 잼':(round(measured)+'초')),
