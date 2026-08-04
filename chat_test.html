@@ -15334,20 +15334,23 @@ async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
       }
       if(!changed&&trexOffset.has(trackId)){ w32(trexOffset.get(trackId),unit); changed=true; }
       if(!changed) continue;
-      /* 뒤 조각의 시작 시각도 새 간격에 맞춘다 */
-      const base=slot.frags[0].tfdtOffset>=0?slot.frags[0].tfdtBase:0;
+      /* 시작 시각(tfdt)을 0으로 맞춘다.
+         사파리는 첫 조각의 baseMediaDecodeTime 에 녹화 시작 전 시간을 넣어 두는데,
+         그러면 '앞의 빈 구간 + 실제 내용' 이 합쳐져 파일 길이가 두 배가 되고
+         마지막 화면이 얼어붙은 채 남는다. 0부터 이어 붙인다. */
+      const origBase=slot.frags[0].tfdtOffset>=0?slot.frags[0].tfdtBase:0;
       let passed=0;
       for(const frag of slot.frags){
         if(frag.tfdtOffset>=0){
-          const t=base+passed;
-          if(frag.tfdtVersion===1) setU64(frag.tfdtOffset,t); else w32(frag.tfdtOffset,t);
+          if(frag.tfdtVersion===1) setU64(frag.tfdtOffset,passed); else w32(frag.tfdtOffset,passed);
         }
         passed+=frag.sampleCount*unit;
       }
       changedAny=true;
       const seconds=slot.sampleCount*unit/ts;
       trackInfo.push((isVideo?'영상':(meta.handler==='soun'?'소리':meta.handler))
-        +' '+slot.sampleCount+'샘플/ts'+ts+'/'+(Math.round(seconds*100)/100)+'초');
+        +' '+slot.sampleCount+'샘플/ts'+ts+'/'+(Math.round(seconds*100)/100)+'초'
+        +'/시작'+(Math.round(origBase/ts*100)/100)+'초→0');
       if(info&&isVideo){
         info.seconds=seconds; info.samples=slot.sampleCount;
         info.fps=ts/unit; info.timescale=ts; info.fragments=slot.frags.length;
@@ -15355,7 +15358,12 @@ async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
       if(info&&!isVideo) info.audioSeconds=seconds;
     }
     if(!changedAny){ if(info) info.bail='고칠 자리 없음'; return blob; }
-    if(info){ info.applied=true; info.tracks=trackInfo.join(' · '); }
+    if(info){
+      info.applied=true; info.tracks=trackInfo.join(' · ');
+      const last=top[top.length-1];
+      info.top=top.map(b=>b.type).join('+')
+        +' (훑은 끝 '+(last?last.p+last.size:0)+'/'+limit+')';
+    }
     return new Blob([buf],{type:blob.type||'video/mp4'});
   }catch(e){
     console.warn('MP4 frame-rate metadata normalization skipped',e);
@@ -15427,12 +15435,30 @@ async function normalizeMp4DurationMetadata(blob,durationSeconds){
           if(scale) setVersionedDuration(mdhd,24,32,seconds*scale);
         }
       }
+      /* 편집 목록(elst) 정리.
+         '빈 편집'(media_time = -1) 이 앞에 붙어 있으면 그만큼 앞이 비어서
+         전체 길이가 늘고 마지막 화면이 얼어붙은 채 남는다. 빈 편집은 길이를 0으로
+         만들고, 실제 편집은 0초부터 전체 길이를 재생하도록 맞춘다. */
       const edts=tkids.find(b=>b.type==='edts');
       if(edts&&movieScale){
         const elst=boxes(edts.p+edts.head,edts.p+edts.size).find(b=>b.type==='elst');
-        if(elst&&elst.p+16<=elst.p+elst.size&&u32(elst.p+12)===1){
+        if(elst){
           const ver=u8[elst.p+8];
-          if(ver===1) w64(elst.p+16,seconds*movieScale); else w32(elst.p+16,seconds*movieScale);
+          const count=u32(elst.p+12);
+          const entry=ver===1?20:12;
+          let q=elst.p+16, real=true;
+          for(let i=0;i<count&&q+entry<=elst.p+elst.size;i++,q+=entry){
+            const mediaTime=ver===1?dv.getBigInt64(q+8,false):dv.getInt32(q+4,false);
+            const empty=(ver===1?Number(mediaTime):mediaTime)<0;
+            if(empty){
+              /* 빈 구간 제거 */
+              if(ver===1) w64(q,0); else w32(q,0);
+            }else if(real){
+              real=false;
+              if(ver===1){ w64(q,seconds*movieScale); dv.setBigInt64(q+8,BigInt(0),false); }
+              else{ w32(q,seconds*movieScale); dv.setInt32(q+4,0,false); }
+            }
+          }
         }
       }
     }
@@ -15842,6 +15868,7 @@ window.exportBackgroundVideo=async function(opt){
         +' · 샘플 '+(mp4Samples||tl.samples||0)+'개 · 조각 '+(tl.fragments||0)
         +' · timescale '+(tl.timescale||0)+' · 계산fps '+round(tl.fps),
       '트랙별: '+(tl.tracks||'없음'),
+      '파일 구조: '+(tl.top||'-'),
       '소리: 설정 '+((V()&&V().sound)?'켬':'끔')+' · 경로 '+((audioPack&&audioPack.mode)||'none')
         +' · 스트림 오디오트랙 '+((stream&&stream.getAudioTracks)?stream.getAudioTracks().length:'?'),
       '결과 파일 실제 길이(측정): '+(measured==null?'못 잼':(round(measured)+'초')),
