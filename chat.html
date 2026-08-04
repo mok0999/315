@@ -15191,7 +15191,7 @@ async function closeExportAudio(pack){
    저장 직전에 MP4의 비디오 샘플 간격을 선택한 FPS로 고정해 X(트위터) 등에서
    60fps 초과 영상으로 판정되지 않게 한다. 영상 데이터 자체를 다시 인코딩하지 않으므로
    화질과 저장 속도에는 영향을 주지 않는다. */
-async function normalizeMp4VideoFps(blob,targetFps){
+async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
   try{
     if(!blob||!/mp4/i.test(String(blob.type||''))||typeof blob.arrayBuffer!=='function') return blob;
     const fps=Math.max(1,Math.min(60,Math.round(Number(targetFps)||30)));
@@ -15260,7 +15260,6 @@ async function normalizeMp4VideoFps(blob,targetFps){
       }
     }
 
-    const frameDuration=Math.max(1,Math.round(timescale/fps));
     const fragments=[];
     for(const moof of top.filter(b=>b.type==='moof')){
       for(const traf of boxes(moof.p+moof.head,moof.p+moof.size).filter(b=>b.type==='traf')){
@@ -15299,6 +15298,22 @@ async function normalizeMp4VideoFps(blob,targetFps){
       }
     }
     if(!fragments.length) return blob;
+
+    /* 사파리(아이폰)는 captureStream(fps) 의 fps 요청을 무시하고 화면 주사율(보통 60)
+       그대로 프레임을 담는다. 그래서 "30fps일 것"이라고 가정하고 간격을 고정하면
+       실제로 60장/초로 담긴 영상이 2배 길이로 늘어나 뒤에 잉여 시간이 붙는다.
+       실제로 담긴 프레임 수를 진짜 녹화 길이로 나눠 간격을 정하면
+       어떤 브라우저에서든 원본 영상 길이 그대로 나온다. */
+    let totalSamples=0;
+    for(const frag of fragments) totalSamples+=frag.sampleCount;
+    let effFps=fps;
+    const real=Number(realSeconds)||0;
+    if(real>.05&&totalSamples>1){
+      const measured=totalSamples/real;
+      if(measured>=1&&measured<=240) effFps=(measured>60&&measured<=63)?60:measured;
+    }
+    const frameDuration=Math.max(1,Math.round(timescale/effFps));
+    if(info) info.seconds=totalSamples*frameDuration/timescale;
 
     let changed=false;
     for(const frag of fragments){
@@ -15444,7 +15459,7 @@ window.exportBackgroundVideo=async function(opt){
 
   busy=true; cancelled=false;
   let overlay=null, vid=null, rec=null, raf=0, audioPack=null;
-  let outputDuration=0;
+  let outputDuration=0, recStartedAt=0, recEndedAt=0;
   try{
     const autoReduced=S<requestedS*.97;
     prog(true,'영상 만드는 중',autoReduced
@@ -15516,6 +15531,7 @@ window.exportBackgroundVideo=async function(opt){
        첫 조각만 3초짜리로 표시하는 경우가 있다. stop 시 한 번에 받도록 시작한다. */
     try{ rec.start(); }
     catch(startErr){ throw new Error('recorder init failed: '+String(startErr&&startErr.name||startErr)); }
+    recStartedAt=performance.now();
     vid.currentTime=0;
     vid.defaultPlaybackRate=playRate; vid.playbackRate=playRate;
     try{
@@ -15531,11 +15547,17 @@ window.exportBackgroundVideo=async function(opt){
     }
 
     const t0=performance.now();
+    /* 사파리는 캔버스가 바뀔 때마다 프레임을 담기 때문에, rAF(60~120Hz)마다 그리면
+       고른 30fps가 아니라 화면 주사율대로 담겨 영상이 길게 늘어난다.
+       고른 fps 간격으로만 다시 그려서 담기는 프레임 수 자체를 맞춘다. */
+    const frameGap=1000/fps;
+    let lastDraw=-1e9;
     await new Promise(res=>{
       const tick=()=>{
         if(cancelled||vid.ended||vid.currentTime>=(vid.duration-0.02)){ res(); return; }
         if(Math.abs(vid.playbackRate-playRate)>.001) vid.playbackRate=playRate;
-        draw();
+        const now=performance.now();
+        if(now-lastDraw>=frameGap-1){ lastDraw=now; draw(); }
         const pct=2+96*Math.min(1,(performance.now()-t0)/(dur*1000));
         prog(true,'영상 만드는 중',
           Math.round((performance.now()-t0)/1000)+'초 / '+Math.round(dur)+'초 · 재생하면서 담는 중이라 실제 길이만큼 걸려요',pct);
@@ -15547,8 +15569,16 @@ window.exportBackgroundVideo=async function(opt){
     cancelAnimationFrame(raf);
     try{ vid.pause(); }catch(_){}
     await new Promise(r=>setTimeout(r,140));   /* 마지막 프레임이 담기게 잠깐 */
+    recEndedAt=performance.now();
     rec.stop();
     await done;
+
+    /* 실제로 담긴 시간. 원본 길이와 25% 안쪽으로 비슷하면 원본 길이로 딱 맞춰
+       (재생 시작 지연·마지막 여유 프레임 때문에 생기는 자투리를 없앤다) */
+    let recordedSeconds=(recEndedAt-recStartedAt)/1000;
+    if(!(recordedSeconds>.05)) recordedSeconds=dur;
+    else if(Math.abs(recordedSeconds-dur)<=dur*.25) recordedSeconds=dur;
+    outputDuration=recordedSeconds;
 
     if(cancelled){ T('영상 저장을 그만뒀어요'); return; }
     const chunkMime=chunks.find(x=>x&&x.type)&&chunks.find(x=>x&&x.type).type;
@@ -15556,8 +15586,9 @@ window.exportBackgroundVideo=async function(opt){
     let blob=new Blob(chunks,{type:outMime});
     if(!blob.size) throw new Error('empty recording');
     if(/mp4/i.test(outMime)){
-      blob=await normalizeMp4VideoFps(blob,fps);
-      blob=await normalizeMp4DurationMetadata(blob,outputDuration||dur);
+      const timeline={seconds:0};
+      blob=await normalizeMp4VideoFps(blob,fps,recordedSeconds,timeline);
+      blob=await normalizeMp4DurationMetadata(blob,timeline.seconds||recordedSeconds||dur);
     }
     const ext=extOf(outMime,rec);
     const name=((typeof safeFilename==='function')?safeFilename(s.export.filename):'chat')+'.'+ext;
@@ -15787,6 +15818,138 @@ if(typeof prevSave==='function'){
 }
 window.addEventListener('resize',decorateAndPlace,{passive:true});
 window.addEventListener('orientationchange',()=>setTimeout(decorateAndPlace,80),{passive:true});
+})();
+</script>
+
+
+<style id="save-menu-tiny-bubble">
+/* =====================================================================
+   저장 메뉴를 설명 없는 작은 말풍선으로 (데스크톱 팝오버 · 모바일 공통)
+   글자만 자그맣게 남기고 설명(small)·제목·너비/배율 줄은 감춘다.
+   기능은 그대로 — 너비는 [여백·크기] 탭, 저장 배율은 [저장] 탭에 그대로 있다.
+   ===================================================================== */
+#mokoSaveMenu{width:188px;padding:6px;gap:3px;border-radius:15px}
+#mokoSaveMenu .msm-head,#mokoSaveMenu .msm-row,#mokoSaveMenu .msm-sep{display:none}
+#mokoSaveMenu .msm-item{min-height:0;padding:7px 11px;border-radius:10px;
+  font:700 12px/1.3 inherit;white-space:nowrap}
+#mokoSaveMenu .msm-item small{display:none}
+
+@media(max-width:700px){
+  #mobileSaveChoice .mobile-save-panel{
+    width:min(188px,calc(100vw - 20px));
+    padding:6px;border-radius:15px;
+  }
+  #mobileSaveChoice .mobile-save-buttons{gap:3px}
+  #mobileSaveChoice .mobile-save-buttons button{
+    min-height:0;padding:7px 11px;border-radius:10px;
+    font:700 12px/1.3 inherit;white-space:nowrap;
+  }
+  #mobileSaveChoice .mobile-save-buttons button small{display:none}
+}
+</style>
+<script id="save-menu-tiny-bubble-script">
+(function(){
+'use strict';
+/* 버튼 글자를 짧게 줄인다 (설명은 위 CSS가 감춘다).
+   textContent 로 넣으므로 남아 있던 설명 조각까지 함께 지워진다. */
+const SHORT=[
+  [/HTML\s*(코드\s*)?복사/,'⧉ HTML 복사'],
+  [/HTML\s*(파일|저장|내보내기)/,'↓ HTML 저장'],
+  [/이미지\s*복사/,'⧉ 이미지 복사'],
+  [/이미지\s*저장/,'↓ 이미지 저장'],
+  [/장별/,'🗂 장별 저장'],
+  [/영상/,'🎬 영상 저장']
+];
+function relabel(btn){
+  if(!btn) return;
+  const raw=(btn.textContent||'').replace(/\s+/g,' ').trim();
+  if(!raw||raw==='닫기') return;
+  for(let i=0;i<SHORT.length;i++){
+    if(SHORT[i][0].test(raw)){
+      if(btn.textContent!==SHORT[i][1]) btn.textContent=SHORT[i][1];
+      return;
+    }
+  }
+}
+/* ---- 눌린 '저장' 버튼 위치 기억 ----
+   모바일 헤더의 [↓ 저장]은 id도 없고 .preview-actions 밖에 있어서, 기존 배치
+   코드가 버튼을 못 찾고 화면 왼쪽 위에 창을 띄웠다. 실제로 눌린 버튼을 기억해 둔다. */
+let lastAnchor=null;
+document.addEventListener('click',e=>{
+  try{
+    const b=e.target&&e.target.closest&&e.target.closest('button');
+    if(!b) return;
+    const t=((b.textContent||'')+' '+(b.title||'')).replace(/\s+/g,' ');
+    if(/저장/.test(t)&&!b.closest('#mobileSaveChoice')&&!b.closest('#mobileSavedImageViewer')) lastAnchor=b;
+  }catch(_){}
+},true);
+function findAnchor(){
+  const seen=el=>{
+    if(!el||!el.isConnected||!el.getBoundingClientRect) return null;
+    const r=el.getBoundingClientRect();
+    return (r.width>0&&r.height>0)?el:null;
+  };
+  return seen(lastAnchor)
+    ||seen(document.getElementById('mokoSaveBtn'))
+    ||seen([...document.querySelectorAll('#mHdrBtns button,.top button,.preview-actions button')]
+        .find(b=>/저장/.test(((b.textContent||'')+' '+(b.title||''))))) 
+    ||null;
+}
+/* 저장 버튼 바로 아래(오른쪽 끝 맞춤)에 말풍선을 붙인다 */
+function placeBubble(){
+  const sheet=document.getElementById('mobileSaveChoice');
+  const panel=sheet&&sheet.querySelector('.mobile-save-panel');
+  if(!sheet||!panel||!sheet.classList.contains('show')) return;
+  if(!(window.matchMedia&&window.matchMedia('(max-width:700px)').matches)) return;
+  const a=findAnchor();
+  if(!a) return;
+  const r=a.getBoundingClientRect();
+  const w=panel.offsetWidth||188, h=panel.offsetHeight||180;
+  let top=r.bottom+7;
+  if(top+h>window.innerHeight-8) top=Math.max(8,r.top-h-7);
+  const left=Math.max(8,Math.min(r.right-w,window.innerWidth-w-8));
+  panel.style.left=left+'px';
+  panel.style.top=Math.max(8,Math.min(top,window.innerHeight-h-8))+'px';
+}
+function tidy(){
+  try{
+    const menu=document.getElementById('mokoSaveMenu');
+    if(menu&&!menu.hidden) menu.querySelectorAll('.msm-item').forEach(relabel);
+  }catch(_){}
+  try{
+    const sheet=document.getElementById('mobileSaveChoice');
+    if(sheet&&sheet.classList.contains('show')){
+      sheet.querySelectorAll('.mobile-save-buttons button').forEach(b=>{
+        if(b.dataset&&b.dataset.action==='close') return;
+        relabel(b);
+      });
+    }
+  }catch(_){}
+  try{ placeBubble(); }catch(_){}
+}
+/* 메뉴를 그리는 기존 코드들이 모두 끝난 뒤에 글자만 다듬는다 */
+function schedule(){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(tidy)));
+  setTimeout(tidy,90); setTimeout(tidy,260);
+}
+const prevOpen=window.openMobileSaveActions;
+if(typeof prevOpen==='function'){
+  window.openMobileSaveActions=function(){
+    const r=prevOpen.apply(this,arguments);
+    schedule();
+    return r;
+  };
+}
+const prevToggle=window.toggleSaveMenu;
+if(typeof prevToggle==='function'){
+  window.toggleSaveMenu=function(){
+    const r=prevToggle.apply(this,arguments);
+    schedule();
+    return r;
+  };
+}
+window.addEventListener('resize',()=>setTimeout(tidy,140),{passive:true});
+window.addEventListener('orientationchange',()=>setTimeout(tidy,200),{passive:true});
 })();
 </script>
 
