@@ -15322,6 +15322,7 @@ async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
     }
     if(!changed&&trexDurationOffset>=0){ w32(trexDurationOffset,frameDuration); changed=true; }
     if(!changed) return blob;
+    if(info) info.applied=true;
 
     /* 여러 조각으로 녹화된 MP4라면 뒤 조각의 시작 시각도 새 고정 간격에 맞춘다. */
     let base=fragments[0].tfdtOffset>=0?fragments[0].tfdtBase:0;
@@ -15458,7 +15459,7 @@ window.exportBackgroundVideo=async function(opt){
   const H=Math.max(2,Math.round(ch*S/2)*2);       /* 짝수 (H.264 요구) */
 
   busy=true; cancelled=false;
-  let overlay=null, vid=null, rec=null, raf=0, audioPack=null;
+  let overlay=null, vid=null, vidHolder=null, rec=null, raf=0, audioPack=null;
   let outputDuration=0, recStartedAt=0, recEndedAt=0;
   try{
     const autoReduced=S<requestedS*.97;
@@ -15473,7 +15474,18 @@ window.exportBackgroundVideo=async function(opt){
     vid=document.createElement('video');
     const playRate=Math.max(.25,Math.min(3,Number(v.speed)||1));
     vid.muted=!v.sound; vid.playsInline=true; vid.loop=false; vid.preload='auto';
+    vid.setAttribute('playsinline','');
+    vid.setAttribute('webkit-playsinline','');
     vid.defaultPlaybackRate=playRate; vid.playbackRate=playRate;
+    /* 아이폰은 문서에 붙어 있지 않은 <video> 를 제대로 디코딩·재생하지 않고
+       재생 속도도 무시하는 경우가 있다. 눈에 안 띄는 2px 자리에 실제로 붙여 둔다. */
+    vidHolder=document.createElement('div');
+    vidHolder.setAttribute('aria-hidden','true');
+    vidHolder.style.cssText='position:fixed;left:0;bottom:0;width:2px;height:2px;'
+      +'overflow:hidden;opacity:.01;pointer-events:none;z-index:-1';
+    vid.style.cssText='width:2px;height:2px;object-fit:cover';
+    vidHolder.appendChild(vid);
+    document.body.appendChild(vidHolder);
     vid.src=v.src;
     await new Promise((res,rej)=>{
       if(vid.readyState>=2){ res(); return; }
@@ -15622,6 +15634,8 @@ window.exportBackgroundVideo=async function(opt){
     const wallTotal=Math.max(.05,(recEndedAt-recStartedAt)/1000);
     const wallContent=Math.max(.05,Math.min(wallTotal,(contentEndAt-recStartedAt)/1000));
     const spanSeconds=Math.max(.05,targetSeconds*(wallTotal/wallContent));
+    /* 이 브라우저가 실제로 낸 재생 속도. 설정한 속도를 무시하는 기기가 있다. */
+    const observedRate=played/wallContent;
     outputDuration=targetSeconds;
 
     if(cancelled){ T('영상 저장을 그만뒀어요'); return; }
@@ -15629,10 +15643,22 @@ window.exportBackgroundVideo=async function(opt){
     const outMime=String(chunkMime||(rec&&rec.mimeType)||mime||'video/webm').split(';')[0];
     let blob=new Blob(chunks,{type:outMime});
     if(!blob.size) throw new Error('empty recording');
+    /* 녹화기는 흐른 시간(wallTotal)보다 긴 그림을 담을 수 없다. 그보다 긴 길이를
+       파일에 적으면 플레이어가 마지막 장면을 붙잡은 채 남은 시간을 채운다
+       (= 아이폰에서 보이던 '멈춘 화면 잉여 시간'). 실제로 담긴 만큼만 적는다. */
+    const recordedCap=wallTotal+0.2;
     if(/mp4/i.test(outMime)){
-      const timeline={seconds:0};
+      const timeline={seconds:0,applied:false};
       blob=await normalizeMp4VideoFps(blob,fps,spanSeconds,timeline);
-      blob=await normalizeMp4DurationMetadata(blob,targetSeconds);
+      /* 프레임 시간표를 다시 쓴 경우에만 원하는 길이로 줄여 적을 수 있다.
+         못 고쳤으면 프레임은 실제 시간 그대로이므로 그 길이를 적어야 한다. */
+      const declared=timeline.applied
+        ? Math.min(targetSeconds,timeline.seconds||targetSeconds)
+        : Math.min(targetSeconds,wallContent+0.15,recordedCap);
+      blob=await normalizeMp4DurationMetadata(blob,declared);
+      if(!timeline.applied&&Math.abs(observedRate-playRate)>playRate*0.15){
+        T('이 브라우저가 재생 속도를 무시해서 원래 속도 그대로 담겼어요');
+      }
     }
     const ext=extOf(outMime,rec);
     const name=((typeof safeFilename==='function')?safeFilename(s.export.filename):'chat')+'.'+ext;
@@ -15667,6 +15693,7 @@ window.exportBackgroundVideo=async function(opt){
     try{ if(rec&&rec.state!=='inactive') rec.stop(); }catch(_){}
     try{ await closeExportAudio(audioPack||audioSeed); }catch(_){}
     try{ if(vid){ vid.pause(); vid.removeAttribute('src'); vid.load(); } }catch(_){}
+    try{ if(vidHolder&&vidHolder.parentNode) vidHolder.parentNode.removeChild(vidHolder); }catch(_){}
     try{ if(overlay&&overlay.close) overlay.close(); }catch(_){}
     prog(false);
     busy=false;
