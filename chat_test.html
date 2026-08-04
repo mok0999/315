@@ -15104,6 +15104,18 @@ function primeAudioContext(enabled){
     return {ctx,ready};
   }catch(_){ return null; }
 }
+/* iOS 사파리는 스피커(destination)로 아무것도 안 나가는 AudioContext 를
+   몇 초 뒤 놀고 있는 것으로 보고 재워 버린다. 그러면 녹화 중간부터 소리가 끊긴다.
+   들리지 않을 만큼 작은 소리를 destination 으로 계속 흘려보내 깨어 있게 한다. */
+function keepContextAwake(ctx,node){
+  try{
+    const g=ctx.createGain();
+    g.gain.value=0.0001;
+    node.connect(g);
+    g.connect(ctx.destination);
+    return g;
+  }catch(_){ return null; }
+}
 async function prepareExportAudio(vid,stream,rate,seed){
   const pack={mode:'none',track:null,ctx:seed&&seed.ctx||null,source:null,dest:null,mediaStream:null,
     started:false,start(){},stop(){}};
@@ -15155,6 +15167,7 @@ async function prepareExportAudio(vid,stream,rate,seed){
         src.buffer=audioBuffer;
         src.playbackRate.value=rate;
         src.connect(dest);
+        pack.keep=keepContextAwake(ctx,src);
         const tr=dest.stream.getAudioTracks()[0];
         if(tr){
           stream.addTrack(tr); pack.mode='buffer'; pack.track=tr; pack.source=src; pack.dest=dest;
@@ -15163,13 +15176,17 @@ async function prepareExportAudio(vid,stream,rate,seed){
           return pack;
         }
       }
-    }catch(e){ console.warn('decoded audio export fallback failed',e); }
+    }catch(e){
+      pack.bufferError=(e&&e.message)||String(e||'');
+      console.warn('decoded audio export fallback failed',e);
+    }
 
     /* 마지막 호환 경로: media element 오디오를 Web Audio의 MediaStreamDestination으로 보낸다. */
     try{
       const src=ctx.createMediaElementSource(vid);
       const dest=ctx.createMediaStreamDestination();
       src.connect(dest);
+      pack.keep=keepContextAwake(ctx,src);
       const tr=dest.stream.getAudioTracks()[0];
       if(tr){
         stream.addTrack(tr); pack.mode='media-element'; pack.track=tr; pack.source=src; pack.dest=dest;
@@ -15183,6 +15200,7 @@ async function prepareExportAudio(vid,stream,rate,seed){
 async function closeExportAudio(pack){
   if(!pack) return;
   try{ pack.stop&&pack.stop(); }catch(_){}
+  try{ pack.keep&&pack.keep.disconnect(); }catch(_){}
   try{ if(pack.ctx&&pack.ctx.state!=='closed') await pack.ctx.close(); }catch(_){}
 }
 
@@ -15809,6 +15827,8 @@ window.exportBackgroundVideo=async function(opt){
        고른 fps 간격으로만 다시 그려서 담기는 프레임 수 자체를 맞춘다. */
     const frameGap=1000/fps;
     let lastDraw=-1e9;
+    let audioCheckAt=0, lastAudioState=(audioPack&&audioPack.ctx&&audioPack.ctx.state)||'-';
+    const audioStates=['0s:'+lastAudioState];
 
     /* ---- 진짜로 그림이 흐른 구간만 담기 ----
        아이폰에서는 파일에 적힌 길이가 실제 그림보다 길거나 ended 가 늦게 떠서,
@@ -15894,6 +15914,13 @@ window.exportBackgroundVideo=async function(opt){
             디코딩 프레임 수가 실제보다 훨씬 적게 보고돼 녹화가 중간에 잘렸다) */
         if(now-t0>dur*3000+5000){ stop(now,'safety-cap'); return; }
         if(Math.abs(vid.playbackRate-playRate)>.001) vid.playbackRate=playRate;
+        /* 소리 끊김 방지: 오디오 컨텍스트가 잠들면 바로 깨운다 */
+        if(audioPack&&audioPack.ctx&&now-audioCheckAt>400){
+          audioCheckAt=now;
+          const st=audioPack.ctx.state;
+          if(st!==lastAudioState){ audioStates.push(Math.round((now-t0)/100)/10+'s:'+st); lastAudioState=st; }
+          if(st!=='running'){ try{ audioPack.ctx.resume(); }catch(_){} }
+        }
         if(now-lastDraw>=frameGap-1){ lastDraw=now; draw(); }
         const pct=2+96*Math.min(1,(now-t0)/(dur*1000));
         prog(true,'영상 만드는 중',
@@ -15981,6 +16008,11 @@ window.exportBackgroundVideo=async function(opt){
       '---',
       '소리: 설정 '+((V()&&V().sound)?'켬':'끔')+' · 경로 '+((audioPack&&audioPack.mode)||'none')
         +' · 스트림 오디오트랙 '+((stream&&stream.getAudioTracks)?stream.getAudioTracks().length:'?'),
+      '소리 상태: '+audioStates.join(' → ')
+        +' · 끝 '+((audioPack&&audioPack.ctx&&audioPack.ctx.state)||'-')
+        +' · sampleRate '+((audioPack&&audioPack.ctx&&audioPack.ctx.sampleRate)||'-')
+        +' · 트랙 '+((audioPack&&audioPack.track)?(audioPack.track.readyState+'/'+(audioPack.track.muted?'muted':'live')):'-')
+        +(audioPack&&audioPack.bufferError?(' · 버퍼경로실패: '+audioPack.bufferError):''),
       '결과 파일 실제 길이(측정): '+(measured==null?'못 잼':(round(measured)+'초')),
       '캔버스 '+W+'×'+H+' · 요청 '+fps+'fps · '+outMime+' · '+round(blob.size/1048576,10)+'MB'
     ].join('\n');
@@ -16040,8 +16072,11 @@ function installButton(){
     +'<select id="bgvExportScale" title="저장 배율"><option value="1">1×</option>'
     +'<option value="1.5">1.5×</option><option value="2" selected>2×</option><option value="3">3×</option></select>'
     +'<select id="bgvExportFps" title="초당 프레임"><option value="24">24fps</option>'
-    +'<option value="30" selected>30fps</option><option value="60">60fps</option></select>';
+    +'<option value="30" selected>30fps</option><option value="60">60fps</option></select>'
+    +'<button class="btn sm" id="bgvDiagBtn" type="button" title="마지막 저장의 진단 정보">🩺</button>';
   help.parentNode.insertBefore(row,help);
+  const diagBtn=$('bgvDiagBtn');
+  if(diagBtn) diagBtn.onclick=()=>{ try{ window.showVideoExportReport(); }catch(_){} };
   $('bgvExportBtn').onclick=()=>window.exportBackgroundVideo({
     scale:Number($('bgvExportScale').value)||2,
     fps:Number($('bgvExportFps').value)||30
