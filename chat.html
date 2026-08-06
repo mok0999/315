@@ -4171,6 +4171,25 @@ syncPreviewScrollbar();
 switchToolPanel('members',true);
 if(!state.members.length) openMemberEditor(false);
 </script>
+<style id="transparent-preview-checkerboard-only">
+/* 배경 투명화 상태를 미리보기에서만 알려 주는 체크보드예요.
+   실제 저장 대상은 #canvas이므로 PNG·HTML 결과에는 포함되지 않아요. */
+#stageEl.transparent-bg{
+  background:#F0F0F2!important;
+  background-image:none!important;
+}
+#stageEl.transparent-bg #canvasFit{
+  background-color:#fff;
+  background-image:
+    linear-gradient(45deg,#D9D9DD 25%,transparent 25%),
+    linear-gradient(-45deg,#D9D9DD 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#D9D9DD 75%),
+    linear-gradient(-45deg,transparent 75%,#D9D9DD 75%);
+  background-size:18px 18px;
+  background-position:0 0,0 9px,9px -9px,-9px 0;
+  box-shadow:0 0 0 1px rgba(66,68,72,.08);
+}
+</style>
 <script id="rich-background-tail-script">
 /* ===== rich composer, background image, linked margins, soft tails ===== */
 state.backgroundImage=Object.assign({src:'',size:100,rotation:0,x:50,y:50,blur:0,overlayOpacity:0},state.backgroundImage||{});
@@ -4371,27 +4390,7 @@ exportHTML=function(){
   const css=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
   const bodyBg=state.transparentBg?'transparent':state.colors.bg;
   const transparentCss=state.transparentBg?'html,body,#canvas,#chat{background:transparent!important}#canvasBgImage,#canvasBgOverlay{display:none!important}':'';
-  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>채팅 발췌</title><style>'+css+'html,body{height:auto;min-height:100%;overflow:auto}body{background:'+bodyBg+';display:flex;justify-content:center;padding:0;margin:0}'+transparentCss+'</style>
-<style id="transparent-preview-checkerboard-only">
-/* 배경 투명화 상태를 미리보기에서만 알려 주는 체크보드예요.
-   실제 저장 대상은 #canvas이므로 PNG·HTML 결과에는 포함되지 않아요. */
-#stageEl.transparent-bg{
-  background:#F0F0F2!important;
-  background-image:none!important;
-}
-#stageEl.transparent-bg #canvasFit{
-  background-color:#fff;
-  background-image:
-    linear-gradient(45deg,#D9D9DD 25%,transparent 25%),
-    linear-gradient(-45deg,#D9D9DD 25%,transparent 25%),
-    linear-gradient(45deg,transparent 75%,#D9D9DD 75%),
-    linear-gradient(-45deg,transparent 75%,#D9D9DD 75%);
-  background-size:18px 18px;
-  background-position:0 0,0 9px,9px -9px,-9px 0;
-  box-shadow:0 0 0 1px rgba(66,68,72,.08);
-}
-</style>
-</head><body>'+node.outerHTML+'</body></html>';
+  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>채팅 발췌</title><style>'+css+'html,body{height:auto;min-height:100%;overflow:auto}body{background:'+bodyBg+';display:flex;justify-content:center;padding:0;margin:0}'+transparentCss+'</style></head><body>'+node.outerHTML+'</body></html>';
   const blob=new Blob([html],{type:'text/html'});
   const fname=safeFilename(state.export.filename)+'.html';
   window.__saveBlobAs(blob,fname,()=>{const a=document.createElement('a');a.download=fname;a.href=URL.createObjectURL(blob);a.click();});
@@ -15104,6 +15103,18 @@ function primeAudioContext(enabled){
     return {ctx,ready};
   }catch(_){ return null; }
 }
+/* iOS 사파리는 스피커(destination)로 아무것도 안 나가는 AudioContext 를
+   몇 초 뒤 놀고 있는 것으로 보고 재워 버린다. 그러면 녹화 중간부터 소리가 끊긴다.
+   들리지 않을 만큼 작은 소리를 destination 으로 계속 흘려보내 깨어 있게 한다. */
+function keepContextAwake(ctx,node){
+  try{
+    const g=ctx.createGain();
+    g.gain.value=0.0001;
+    node.connect(g);
+    g.connect(ctx.destination);
+    return g;
+  }catch(_){ return null; }
+}
 async function prepareExportAudio(vid,stream,rate,seed){
   const pack={mode:'none',track:null,ctx:seed&&seed.ctx||null,source:null,dest:null,mediaStream:null,
     started:false,start(){},stop(){}};
@@ -15155,21 +15166,26 @@ async function prepareExportAudio(vid,stream,rate,seed){
         src.buffer=audioBuffer;
         src.playbackRate.value=rate;
         src.connect(dest);
+        pack.keep=keepContextAwake(ctx,src);
         const tr=dest.stream.getAudioTracks()[0];
         if(tr){
           stream.addTrack(tr); pack.mode='buffer'; pack.track=tr; pack.source=src; pack.dest=dest;
-          pack.start=()=>{ if(pack.started) return; pack.started=true; try{ src.start(0); }catch(_){} };
+          pack.start=off=>{ if(pack.started) return; pack.started=true; try{ src.start(0,Math.max(0,Number(off)||0)); }catch(_){ try{ src.start(0); }catch(__){} } };
           pack.stop=()=>{ try{ if(pack.started) src.stop(); }catch(_){} try{ tr.stop(); }catch(_){} };
           return pack;
         }
       }
-    }catch(e){ console.warn('decoded audio export fallback failed',e); }
+    }catch(e){
+      pack.bufferError=(e&&e.message)||String(e||'');
+      console.warn('decoded audio export fallback failed',e);
+    }
 
     /* 마지막 호환 경로: media element 오디오를 Web Audio의 MediaStreamDestination으로 보낸다. */
     try{
       const src=ctx.createMediaElementSource(vid);
       const dest=ctx.createMediaStreamDestination();
       src.connect(dest);
+      pack.keep=keepContextAwake(ctx,src);
       const tr=dest.stream.getAudioTracks()[0];
       if(tr){
         stream.addTrack(tr); pack.mode='media-element'; pack.track=tr; pack.source=src; pack.dest=dest;
@@ -15183,18 +15199,22 @@ async function prepareExportAudio(vid,stream,rate,seed){
 async function closeExportAudio(pack){
   if(!pack) return;
   try{ pack.stop&&pack.stop(); }catch(_){}
+  try{ pack.keep&&pack.keep.disconnect(); }catch(_){}
   try{ if(pack.ctx&&pack.ctx.state!=='closed') await pack.ctx.close(); }catch(_){}
 }
 
-/* 크로미움의 MediaRecorder MP4는 실제로 30fps로 녹화했어도 조각 안의 프레임 간격이
-   1~수 ms씩 흔들리면서 일부 사이트가 1000fps 같은 값으로 오인할 수 있다.
-   저장 직전에 MP4의 비디오 샘플 간격을 선택한 FPS로 고정해 X(트위터) 등에서
-   60fps 초과 영상으로 판정되지 않게 한다. 영상 데이터 자체를 다시 인코딩하지 않으므로
-   화질과 저장 속도에는 영향을 주지 않는다. */
+/* MP4 시간표 정리 — 영상 트랙 + 소리 트랙 모두
+   진단으로 확인된 것: 영상 트랙은 3.15초로 맞게 계산됐는데 파일은 6.3초로 나왔다.
+   = 파일 길이를 늘리는 건 다른 트랙(소리)이다. 아이폰의 Web Audio 경로로 붙인
+   소리 트랙이 실제 녹화 시간의 2배 길이로 기록되면서, 영상이 끝난 뒤에도
+   마지막 화면이 얼어붙은 채 남았다.
+   그래서 이제 '모든 트랙'의 샘플 간격을 실제 녹화 시간에 맞춰 고른 간격으로 다시 쓴다.
+   (덤으로 크로미움 MP4가 1000fps 같은 값으로 오인되던 문제도 그대로 해결된다.) */
 async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
   try{
     if(!blob||!/mp4/i.test(String(blob.type||''))||typeof blob.arrayBuffer!=='function') return blob;
     const fps=Math.max(1,Math.min(60,Math.round(Number(targetFps)||30)));
+    const span=Number(realSeconds)||0;
     const buf=await blob.arrayBuffer();
     const u8=new Uint8Array(buf), dv=new DataView(buf);
     const limit=u8.byteLength;
@@ -15226,11 +15246,11 @@ async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
       else{ w32(o,Math.floor(v/4294967296)); w32(o+4,v>>>0); }
     };
 
-    /* moov 안에서 비디오 트랙 번호와 그 트랙의 시간 단위를 찾는다. */
-    let videoTrackId=0,timescale=0,trexDurationOffset=-1;
+    /* ---- moov: 트랙마다 번호·시간단위·종류 ---- */
+    const tracks=new Map();   /* id -> {timescale, handler} */
     const top=boxes(0,limit);
     const moov=top.find(b=>b.type==='moov');
-    if(!moov) return blob;
+    if(!moov){ if(info) info.bail='moov 없음'; return blob; }
     const moovKids=boxes(moov.p+moov.head,moov.p+moov.size);
     for(const trak of moovKids.filter(b=>b.type==='trak')){
       let trackId=0,handler='',scale=0;
@@ -15249,23 +15269,28 @@ async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
           }
         }
       }
-      if(handler==='vide'){ videoTrackId=trackId; timescale=scale; break; }
+      if(trackId&&scale) tracks.set(trackId,{timescale:scale,handler});
     }
-    if(!videoTrackId||!timescale) return blob;
+    if(!tracks.size){ if(info) info.bail='트랙/시간단위 못 찾음'; return blob; }
 
+    /* trex 기본 간격 (조각 안에 간격이 없을 때 쓰는 값) */
+    const trexOffset=new Map();
     const mvex=moovKids.find(b=>b.type==='mvex');
     if(mvex){
       for(const trex of boxes(mvex.p+mvex.head,mvex.p+mvex.size)){
-        if(trex.type==='trex'&&u32(trex.p+12)===videoTrackId){ trexDurationOffset=trex.p+20; break; }
+        if(trex.type==='trex') trexOffset.set(u32(trex.p+12),trex.p+20);
       }
     }
 
-    const fragments=[];
+    /* ---- 조각(moof)에서 트랙별 샘플 모으기 ---- */
+    const perTrack=new Map();   /* id -> {sampleCount, frags:[]} */
     for(const moof of top.filter(b=>b.type==='moof')){
       for(const traf of boxes(moof.p+moof.head,moof.p+moof.size).filter(b=>b.type==='traf')){
         const kids=boxes(traf.p+traf.head,traf.p+traf.size);
         const tfhd=kids.find(b=>b.type==='tfhd');
-        if(!tfhd||u32(tfhd.p+12)!==videoTrackId) continue;
+        if(!tfhd) continue;
+        const trackId=u32(tfhd.p+12);
+        if(!tracks.has(trackId)) continue;
         const tfhdFlags=u32(tfhd.p+8)&0xFFFFFF;
         let q=tfhd.p+16,defaultDurationOffset=-1;
         if(tfhdFlags&0x000001) q+=8;
@@ -15294,49 +15319,72 @@ async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
             if(p>trun.p+trun.size) break;
           }
         }
-        if(frag.sampleCount) fragments.push(frag);
+        if(!frag.sampleCount) continue;
+        if(!perTrack.has(trackId)) perTrack.set(trackId,{sampleCount:0,frags:[]});
+        const slot=perTrack.get(trackId);
+        slot.sampleCount+=frag.sampleCount;
+        slot.frags.push(frag);
       }
     }
-    if(!fragments.length) return blob;
+    if(!perTrack.size){ if(info){ info.bail='moof 조각 없음'; info.fragments=0; } return blob; }
 
-    /* 사파리(아이폰)는 captureStream(fps) 의 fps 요청을 무시하고 화면 주사율(보통 60)
-       그대로 프레임을 담는다. 그래서 "30fps일 것"이라고 가정하고 간격을 고정하면
-       실제로 60장/초로 담긴 영상이 2배 길이로 늘어나 뒤에 잉여 시간이 붙는다.
-       실제로 담긴 프레임 수를 진짜 녹화 길이로 나눠 간격을 정하면
-       어떤 브라우저에서든 원본 영상 길이 그대로 나온다. */
-    let totalSamples=0;
-    for(const frag of fragments) totalSamples+=frag.sampleCount;
-    let effFps=fps;
-    const real=Number(realSeconds)||0;
-    if(real>.05&&totalSamples>1){
-      const measured=totalSamples/real;
-      if(measured>=1&&measured<=240) effFps=(measured>60&&measured<=63)?60:measured;
-    }
-    const frameDuration=Math.max(1,Math.round(timescale/effFps));
-    if(info) info.seconds=totalSamples*frameDuration/timescale;
-
-    let changed=false;
-    for(const frag of fragments){
-      for(const off of frag.durationOffsets){ w32(off,frameDuration); changed=true; }
-      if(frag.defaultDurationOffset>=0){ w32(frag.defaultDurationOffset,frameDuration); changed=true; }
-    }
-    if(!changed&&trexDurationOffset>=0){ w32(trexDurationOffset,frameDuration); changed=true; }
-    if(!changed) return blob;
-    if(info) info.applied=true;
-
-    /* 여러 조각으로 녹화된 MP4라면 뒤 조각의 시작 시각도 새 고정 간격에 맞춘다. */
-    let base=fragments[0].tfdtOffset>=0?fragments[0].tfdtBase:0;
-    let passed=0;
-    for(const frag of fragments){
-      if(frag.tfdtOffset>=0){
-        const t=base+passed;
-        if(frag.tfdtVersion===1) setU64(frag.tfdtOffset,t); else w32(frag.tfdtOffset,t);
+    /* ---- 트랙마다 '실제 녹화 시간'에 맞춰 고른 간격으로 다시 쓴다 ---- */
+    let changedAny=false;
+    const trackInfo=[];
+    for(const [trackId,slot] of perTrack){
+      const meta=tracks.get(trackId)||{};
+      const ts=Number(meta.timescale)||0;
+      if(!ts||!slot.sampleCount) continue;
+      const isVideo=meta.handler==='vide';
+      let unit;
+      if(span>.05){
+        unit=Math.max(1,Math.round(ts*span/slot.sampleCount));
+      }else if(isVideo){
+        unit=Math.max(1,Math.round(ts/fps));
+      }else{
+        continue;   /* 기준 시간이 없으면 소리는 건드리지 않는다 */
       }
-      passed+=frag.sampleCount*frameDuration;
+      let changed=false;
+      for(const frag of slot.frags){
+        for(const off of frag.durationOffsets){ w32(off,unit); changed=true; }
+        if(frag.defaultDurationOffset>=0){ w32(frag.defaultDurationOffset,unit); changed=true; }
+      }
+      if(!changed&&trexOffset.has(trackId)){ w32(trexOffset.get(trackId),unit); changed=true; }
+      if(!changed) continue;
+      /* 시작 시각(tfdt)을 0으로 맞춘다.
+         사파리는 첫 조각의 baseMediaDecodeTime 에 녹화 시작 전 시간을 넣어 두는데,
+         그러면 '앞의 빈 구간 + 실제 내용' 이 합쳐져 파일 길이가 두 배가 되고
+         마지막 화면이 얼어붙은 채 남는다. 0부터 이어 붙인다. */
+      const origBase=slot.frags[0].tfdtOffset>=0?slot.frags[0].tfdtBase:0;
+      let passed=0;
+      for(const frag of slot.frags){
+        if(frag.tfdtOffset>=0){
+          if(frag.tfdtVersion===1) setU64(frag.tfdtOffset,passed); else w32(frag.tfdtOffset,passed);
+        }
+        passed+=frag.sampleCount*unit;
+      }
+      changedAny=true;
+      const seconds=slot.sampleCount*unit/ts;
+      trackInfo.push((isVideo?'영상':(meta.handler==='soun'?'소리':meta.handler))
+        +' '+slot.sampleCount+'샘플/ts'+ts+'/'+(Math.round(seconds*100)/100)+'초'
+        +'/시작'+(Math.round(origBase/ts*100)/100)+'초→0');
+      if(info&&isVideo){
+        info.seconds=seconds; info.samples=slot.sampleCount;
+        info.fps=ts/unit; info.timescale=ts; info.fragments=slot.frags.length;
+      }
+      if(info&&!isVideo) info.audioSeconds=seconds;
+    }
+    if(!changedAny){ if(info) info.bail='고칠 자리 없음'; return blob; }
+    if(info){
+      info.applied=true; info.tracks=trackInfo.join(' · ');
+      const last=top[top.length-1];
+      info.top=top.map(b=>b.type).join('+')
+        +' (훑은 끝 '+(last?last.p+last.size:0)+'/'+limit+')';
     }
     return new Blob([buf],{type:blob.type||'video/mp4'});
   }catch(e){
     console.warn('MP4 frame-rate metadata normalization skipped',e);
+    if(info) info.bail='오류: '+((e&&e.message)||e);
     return blob;
   }
 }
@@ -15404,12 +15452,30 @@ async function normalizeMp4DurationMetadata(blob,durationSeconds){
           if(scale) setVersionedDuration(mdhd,24,32,seconds*scale);
         }
       }
+      /* 편집 목록(elst) 정리.
+         '빈 편집'(media_time = -1) 이 앞에 붙어 있으면 그만큼 앞이 비어서
+         전체 길이가 늘고 마지막 화면이 얼어붙은 채 남는다. 빈 편집은 길이를 0으로
+         만들고, 실제 편집은 0초부터 전체 길이를 재생하도록 맞춘다. */
       const edts=tkids.find(b=>b.type==='edts');
       if(edts&&movieScale){
         const elst=boxes(edts.p+edts.head,edts.p+edts.size).find(b=>b.type==='elst');
-        if(elst&&elst.p+16<=elst.p+elst.size&&u32(elst.p+12)===1){
+        if(elst){
           const ver=u8[elst.p+8];
-          if(ver===1) w64(elst.p+16,seconds*movieScale); else w32(elst.p+16,seconds*movieScale);
+          const count=u32(elst.p+12);
+          const entry=ver===1?20:12;
+          let q=elst.p+16, real=true;
+          for(let i=0;i<count&&q+entry<=elst.p+elst.size;i++,q+=entry){
+            const mediaTime=ver===1?dv.getBigInt64(q+8,false):dv.getInt32(q+4,false);
+            const empty=(ver===1?Number(mediaTime):mediaTime)<0;
+            if(empty){
+              /* 빈 구간 제거 */
+              if(ver===1) w64(q,0); else w32(q,0);
+            }else if(real){
+              real=false;
+              if(ver===1){ w64(q,seconds*movieScale); dv.setBigInt64(q+8,BigInt(0),false); }
+              else{ w32(q,seconds*movieScale); dv.setInt32(q+4,0,false); }
+            }
+          }
         }
       }
     }
@@ -15424,6 +15490,185 @@ async function normalizeMp4DurationMetadata(blob,durationSeconds){
     return blob;
   }
 }
+
+
+/* 저장 직전 파일을 '실제로 읽어서' 값을 확인한다.
+   지금까지 진단에 찍힌 트랙 길이는 내가 계산한 값이라, 파일에 제대로 들어갔는지는
+   확인된 적이 없었다. 여기서는 완성된 파일의 바이트를 직접 읽는다. */
+async function inspectMp4(blob){
+  try{
+    if(!blob||!/mp4/i.test(String(blob.type||''))) return 'mp4 아님';
+    const buf=await blob.arrayBuffer();
+    const u8=new Uint8Array(buf), dv=new DataView(buf), limit=u8.byteLength;
+    const u32=o=>dv.getUint32(o,false);
+    const u64=o=>typeof dv.getBigUint64==='function'?Number(dv.getBigUint64(o,false)):u32(o)*4294967296+u32(o+4);
+    const i32=o=>dv.getInt32(o,false);
+    const typeAt=o=>String.fromCharCode(u8[o+4],u8[o+5],u8[o+6],u8[o+7]);
+    const boxes=(s,e)=>{
+      const out=[]; let p=s;
+      while(p+8<=e){
+        let size=u32(p),head=8;
+        if(size===1){ if(p+16>e) break; size=u64(p+8); head=16; }
+        else if(size===0) size=e-p;
+        if(!Number.isFinite(size)||size<head||p+size>e) break;
+        out.push({p,size,head,type:typeAt(p)}); p+=size;
+      }
+      return out;
+    };
+    const sec=(v,ts)=>ts?(Math.round(v/ts*100)/100)+'초':'?';
+    const lines=[];
+    const top=boxes(0,limit);
+    const moov=top.find(b=>b.type==='moov');
+    if(!moov) return 'moov 없음';
+    const kids=boxes(moov.p+moov.head,moov.p+moov.size);
+    let movieTs=0;
+    const mvhd=kids.find(b=>b.type==='mvhd');
+    if(mvhd){
+      const v=u8[mvhd.p+8];
+      movieTs=u32(mvhd.p+(v===1?28:20));
+      const d=v===1?u64(mvhd.p+32):u32(mvhd.p+24);
+      lines.push('mvhd v'+v+' ts'+movieTs+' dur'+d+'('+sec(d,movieTs)+')');
+    }
+    for(const trak of kids.filter(b=>b.type==='trak')){
+      const tk=boxes(trak.p+trak.head,trak.p+trak.size);
+      let id=0,tdur=0;
+      const tkhd=tk.find(b=>b.type==='tkhd');
+      if(tkhd){ const v=u8[tkhd.p+8]; id=u32(tkhd.p+(v===1?28:20)); tdur=v===1?u64(tkhd.p+36):u32(tkhd.p+28); }
+      let h='',mts=0,mdur=0,mv=0;
+      const mdia=tk.find(b=>b.type==='mdia');
+      if(mdia) for(const md of boxes(mdia.p+mdia.head,mdia.p+mdia.size)){
+        if(md.type==='hdlr') h=String.fromCharCode(u8[md.p+16],u8[md.p+17],u8[md.p+18],u8[md.p+19]);
+        else if(md.type==='mdhd'){ mv=u8[md.p+8]; mts=u32(md.p+(mv===1?28:20)); mdur=mv===1?u64(md.p+32):u32(md.p+24); }
+      }
+      lines.push('trak'+id+' '+h+' tkhd'+tdur+'('+sec(tdur,movieTs)+') mdhd v'+mv+' ts'+mts+' dur'+mdur+'('+sec(mdur,mts)+')');
+      const edts=tk.find(b=>b.type==='edts');
+      if(edts){
+        const el=boxes(edts.p+edts.head,edts.p+edts.size).find(b=>b.type==='elst');
+        if(el){
+          const v=u8[el.p+8], c=u32(el.p+12), st=v===1?20:12, rows=[];
+          for(let i=0;i<c&&el.p+16+i*st+st<=el.p+el.size;i++){
+            const q=el.p+16+i*st;
+            rows.push((v===1?u64(q):u32(q))+'/'+(v===1?u64(q+8):i32(q+4)));
+          }
+          lines.push('  elst '+rows.join(' , '));
+        }
+      }
+    }
+    const moofs=top.filter(b=>b.type==='moof');
+    lines.push('moof '+moofs.length+'개');
+    const first=moofs[0];
+    if(first) for(const traf of boxes(first.p+first.head,first.p+first.size).filter(b=>b.type==='traf')){
+      const k=boxes(traf.p+traf.head,traf.p+traf.size);
+      const tfhd=k.find(b=>b.type==='tfhd');
+      if(!tfhd) continue;
+      const id=u32(tfhd.p+12), f=u32(tfhd.p+8)&0xFFFFFF;
+      let q=tfhd.p+16, dd=-1;
+      if(f&0x1) q+=8;
+      if(f&0x2) q+=4;
+      if(f&0x8){ dd=u32(q); q+=4; }
+      const tfdt=k.find(b=>b.type==='tfdt');
+      const base=tfdt?(u8[tfdt.p+8]===1?u64(tfdt.p+12):u32(tfdt.p+12)):-1;
+      const truns=k.filter(b=>b.type==='trun');
+      let cnt=0,tf=0,head3=[];
+      for(const trun of truns){
+        tf=u32(trun.p+8)&0xFFFFFF;
+        const c=u32(trun.p+12); cnt+=c;
+        let p=trun.p+16;
+        if(tf&0x1) p+=4;
+        if(tf&0x4) p+=4;
+        for(let i=0;i<c;i++){
+          if(tf&0x100){ if(head3.length<3) head3.push(u32(p)); p+=4; }
+          if(tf&0x200) p+=4;
+          if(tf&0x400) p+=4;
+          if(tf&0x800) p+=4;
+        }
+      }
+      lines.push('  traf'+id+' tfhd0x'+f.toString(16)+' 기본간격'+dd+' tfdt'+base
+        +' trun0x'+tf.toString(16)+' 샘플'+cnt+' 앞3간격['+head3.join(',')+']');
+    }
+    return lines.join('\n');
+  }catch(e){ return '읽기 실패: '+((e&&e.message)||e); }
+}
+
+/* ---------- 진단 ----------
+   원인을 기기 없이 맞히기 어려워, 저장된 파일의 실제 길이를 그 자리에서 재고
+   계산에 쓴 숫자를 전부 남긴다. 결과가 예상과 다르면 복사창을 띄운다. */
+function probeBlobDuration(blob){
+  return new Promise(resolve=>{
+    let url='';
+    try{ url=URL.createObjectURL(blob); }catch(_){ resolve(null); return; }
+    const p=document.createElement('video');
+    p.preload='metadata'; p.muted=true; p.playsInline=true;
+    p.setAttribute('playsinline','');
+    let done=false;
+    const finish=v=>{
+      if(done) return; done=true;
+      clearTimeout(timer);
+      try{ URL.revokeObjectURL(url); }catch(_){}
+      resolve(v);
+    };
+    const timer=setTimeout(()=>finish(null),6000);
+    p.onloadedmetadata=()=>{
+      const d=Number(p.duration);
+      if(Number.isFinite(d)&&d>0){ finish(d); return; }
+      /* Infinity 로 나오면 끝까지 탐색시켜 실제 길이를 얻는다 */
+      try{ p.currentTime=1e6; }catch(_){ finish(null); }
+      p.ontimeupdate=()=>{
+        const d2=Number(p.duration);
+        if(Number.isFinite(d2)&&d2>0) finish(d2);
+      };
+    };
+    p.onerror=()=>finish(null);
+    p.src=url;
+  });
+}
+function showVideoReport(text){
+  let el=$('mokoVidDiag');
+  if(el) el.remove();
+  el=document.createElement('div');
+  el.id='mokoVidDiag';
+  el.style.cssText='position:fixed;inset:0;z-index:4600;background:rgba(28,29,33,.5);'
+    +'display:flex;align-items:center;justify-content:center;padding:16px';
+  const box=document.createElement('div');
+  box.style.cssText='background:#fff;color:#333;border-radius:16px;padding:14px;'
+    +'width:min(560px,100%);max-height:84vh;display:flex;flex-direction:column;gap:9px;'
+    +'box-shadow:0 20px 60px rgba(0,0,0,.3);font:400 12px/1.5 inherit';
+  box.innerHTML='<strong style="font-size:14px">영상 길이 진단</strong>'
+    +'<div style="font-size:11px;opacity:.7;line-height:1.5">결과 길이가 예상과 달라요. '
+    +'아래 내용을 통째로 복사해서 알려주면 원인을 정확히 짚을 수 있어요.</div>';
+  const ta=document.createElement('textarea');
+  ta.value=text;
+  ta.readOnly=true;
+  ta.style.cssText='flex:1;min-height:210px;padding:9px;border:1px solid #E4E4E6;border-radius:10px;'
+    +'background:#F6F6F7;color:inherit;resize:vertical;'
+    +'font:400 11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace';
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;gap:8px;justify-content:flex-end';
+  const copy=document.createElement('button');
+  copy.type='button'; copy.textContent='⧉ 복사';
+  copy.style.cssText='padding:9px 15px;border-radius:10px;border:0;background:#424448;color:#fff;font:700 12.5px/1 inherit';
+  copy.onclick=async()=>{
+    try{
+      ta.select(); ta.setSelectionRange(0,ta.value.length);
+      if(navigator.clipboard&&navigator.clipboard.writeText) await navigator.clipboard.writeText(ta.value);
+      else document.execCommand('copy');
+      copy.textContent='✓ 복사됨';
+    }catch(_){ copy.textContent='길게 눌러 복사해 주세요'; }
+  };
+  const close=document.createElement('button');
+  close.type='button'; close.textContent='닫기';
+  close.style.cssText='padding:9px 15px;border-radius:10px;border:1px solid #E4E4E6;background:#F4F4F5;color:#424448;font:700 12.5px/1 inherit';
+  close.onclick=()=>el.remove();
+  row.append(copy,close);
+  box.append(ta,row);
+  el.appendChild(box);
+  el.addEventListener('click',e=>{ if(e.target===el) el.remove(); });
+  document.body.appendChild(el);
+}
+window.showVideoExportReport=function(){
+  if(window.__lastVideoExportReport) showVideoReport(window.__lastVideoExportReport);
+  else alert('아직 영상을 저장한 기록이 없어요.');
+};
 
 /* ---------- 본체 ---------- */
 let busy=false;
@@ -15544,24 +15789,36 @@ window.exportBackgroundVideo=async function(opt){
       try{ ctx.drawImage(overlay,0,0,W,H); }catch(_){}
     };
     draw();
-    /* timeslice를 주면 모바일 크로미움 MP4가 여러 조각으로 갈라져 갤럭시 갤러리가
-       첫 조각만 3초짜리로 표시하는 경우가 있다. stop 시 한 번에 받도록 시작한다. */
-    try{ rec.start(); }
-    catch(startErr){ throw new Error('recorder init failed: '+String(startErr&&startErr.name||startErr)); }
-    recStartedAt=performance.now();
     vid.currentTime=0;
     vid.defaultPlaybackRate=playRate; vid.playbackRate=playRate;
     try{
       await vid.play();
-      if(audioPack&&audioPack.start) audioPack.start();
     }catch(_){
       /* 소리가 video 요소에 직접 붙은 경로만 자동 재생 제한을 받을 수 있다.
          Web Audio 버퍼가 준비돼 있으면 영상만 음소거로 재생하고 소리는 별도 트랙에 담는다. */
       vid.muted=true;
       try{ await vid.play(); }catch(e2){ throw new Error('play blocked'); }
-      if(audioPack&&audioPack.start) audioPack.start();
       if(!audioPack||audioPack.mode==='none'||audioPack.mode==='capture'||audioPack.mode==='media-element') T('브라우저가 소리 있는 자동 재생을 막아서 소리 없이 담았어요');
     }
+    /* 아이폰은 play() 가 끝나도 실제 재생이 시작되기까지 0.5초쯤 걸린다.
+       그 사이를 녹화하면 앞에 멈춘 화면이 붙고 길이 계산도 어긋나므로,
+       그림이 실제로 흐르기 시작한 뒤에 녹화기를 켠다. */
+    await new Promise(res=>{
+      const waitFrom=performance.now();
+      const wait=()=>{
+        if(cancelled||(Number(vid.currentTime)||0)>0.02||performance.now()-waitFrom>1500){ res(); return; }
+        requestAnimationFrame(wait);
+      };
+      wait();
+    });
+    draw();
+    /* timeslice를 주면 모바일 크로미움 MP4가 여러 조각으로 갈라져 갤럭시 갤러리가
+       첫 조각만 3초짜리로 표시하는 경우가 있다. stop 시 한 번에 받도록 시작한다. */
+    try{ rec.start(); }
+    catch(startErr){ throw new Error('recorder init failed: '+String(startErr&&startErr.name||startErr)); }
+    recStartedAt=performance.now();
+    /* 소리는 영상이 이미 흘러간 만큼 건너뛰고 시작해 화면과 어긋나지 않게 한다 */
+    if(audioPack&&audioPack.start) audioPack.start(Number(vid.currentTime)||0);
 
     const t0=performance.now();
     /* 사파리는 캔버스가 바뀔 때마다 프레임을 담기 때문에, rAF(60~120Hz)마다 그리면
@@ -15569,6 +15826,8 @@ window.exportBackgroundVideo=async function(opt){
        고른 fps 간격으로만 다시 그려서 담기는 프레임 수 자체를 맞춘다. */
     const frameGap=1000/fps;
     let lastDraw=-1e9;
+    let audioCheckAt=0, lastAudioState=(audioPack&&audioPack.ctx&&audioPack.ctx.state)||'-';
+    const audioStates=['0s:'+lastAudioState];
 
     /* ---- 진짜로 그림이 흐른 구간만 담기 ----
        아이폰에서는 파일에 적힌 길이가 실제 그림보다 길거나 ended 가 늦게 떠서,
@@ -15576,35 +15835,91 @@ window.exportBackgroundVideo=async function(opt){
        새 영상 프레임이 실제로 도착하는지(requestVideoFrameCallback)와
        currentTime 이 흐르는지를 같이 보고, 그림이 멈추면 거기서 끊는다. */
     const startCT=Number(vid.currentTime)||0;
-    let lastCT=startCT, frameCT=0, frameHits=0;
-    let lastMoveAt=t0, lastFrameAt=t0, contentEndAt=0;
+    let lastCT=startCT, frameCT=0, frameHits=0, aliveCT=startCT;
+    let lastMoveAt=t0, lastFrameAt=t0, contentEndAt=0, endReason='';
     let useFrameCb=false;
     if(typeof vid.requestVideoFrameCallback==='function'){
       const onFrame=()=>{
         lastFrameAt=performance.now(); frameHits++;
-        const c=Number(vid.currentTime); if(Number.isFinite(c)) frameCT=c;
+        const c=Number(vid.currentTime);
+        if(Number.isFinite(c)){ frameCT=c; aliveCT=c; }
         try{ vid.requestVideoFrameCallback(onFrame); }catch(_){}
       };
       try{ vid.requestVideoFrameCallback(onFrame); useFrameCb=true; }catch(_){ useFrameCb=false; }
     }
+
+    /* 신호 ① 디코딩된 프레임 수 — 그림이 실제로 새로 풀리고 있는지 (가장 확실) */
+    const decodedCount=()=>{
+      try{
+        if(typeof vid.getVideoPlaybackQuality==='function'){
+          const q=vid.getVideoPlaybackQuality();
+          const n=Number(q&&q.totalVideoFrames);
+          if(Number.isFinite(n)) return n;
+        }
+      }catch(_){}
+      const w=Number(vid.webkitDecodedFrameCount);
+      return Number.isFinite(w)?w:-1;
+    };
+    const decodeStart=decodedCount();
+    const useDecoded=decodeStart>=0;
+    let lastDecoded=decodeStart, lastDecodeAt=t0;
+
+    /* 신호 ② 16×16으로 줄인 화면 지문 — 픽셀이 정말 바뀌는지 (API 없는 기기용) */
+    let sigCtx=null;
+    try{
+      const sc=document.createElement('canvas'); sc.width=16; sc.height=16;
+      sigCtx=sc.getContext('2d',{willReadFrequently:true});
+    }catch(_){ sigCtx=null; }
+    let lastSig=null, lastSigAt=t0, sigCheckAt=0, sigOk=false;
+    const signature=()=>{
+      if(!sigCtx||!vid.videoWidth) return null;
+      try{
+        sigCtx.drawImage(vid,0,0,16,16);
+        const d=sigCtx.getImageData(0,0,16,16).data;
+        let h=0;
+        for(let i=0;i<d.length;i+=4) h=(h*31+d[i]+d[i+1]*3+d[i+2]*7)|0;
+        return h;
+      }catch(_){ return null; }
+    };
+
     await new Promise(res=>{
-      const stop=endAt=>{ contentEndAt=endAt||performance.now(); res(); };
+      const stop=(endAt,why)=>{ contentEndAt=endAt||performance.now(); endReason=why||'end'; res(); };
       const tick=()=>{
         const now=performance.now();
         const ct=Number(vid.currentTime)||0;
         if(ct>lastCT+0.004){ lastCT=ct; lastMoveAt=now; }
+        if(useDecoded){
+          const n=decodedCount();
+          if(n>lastDecoded){ lastDecoded=n; lastDecodeAt=now; aliveCT=ct; }
+        }
+        if(sigCtx&&now-sigCheckAt>250){
+          sigCheckAt=now;
+          const sg=signature();
+          if(sg!==null){
+            sigOk=true;
+            if(sg!==lastSig){
+              lastSig=sg; lastSigAt=now;
+              if(!useDecoded&&!useFrameCb) aliveCT=ct;
+            }
+          }
+        }
         const dNum=Number(vid.duration);
         if(cancelled||vid.ended||(Number.isFinite(dNum)&&dNum>0&&ct>=dNum-0.02)){
-          stop(useFrameCb&&frameHits>2?Math.max(lastFrameAt,lastMoveAt):lastMoveAt); return;
+          stop(now,cancelled?'cancel':'ended');
+          return;
         }
-        /* 재생이 실제로 시작된 뒤에만 '멈춤'으로 판단한다 (오판으로 일찍 끊지 않게) */
-        const playing=lastCT>startCT+0.05;
-        const frameStalled=useFrameCb&&frameHits>2&&(now-lastFrameAt>1200);
-        const timeStalled=playing&&(now-lastMoveAt>900);
-        if(now-t0>1200&&(frameStalled||timeStalled)){
-          stop(useFrameCb&&frameHits>2?lastFrameAt:lastMoveAt); return;
-        }
+        /* 안전장치: 어떤 이유로도 예상 길이의 3배를 넘기지 않는다.
+           (신호로 '멈춤'을 판정하던 방식은 아이폰에서 오판이 잦아 걷어냈다 —
+            디코딩 프레임 수가 실제보다 훨씬 적게 보고돼 녹화가 중간에 잘렸다) */
+        if(now-t0>dur*3000+5000){ stop(now,'safety-cap'); return; }
         if(Math.abs(vid.playbackRate-playRate)>.001) vid.playbackRate=playRate;
+        /* 소리 끊김 방지: 오디오 컨텍스트가 잠들면 바로 깨운다 */
+        if(audioPack&&audioPack.ctx&&now-audioCheckAt>400){
+          audioCheckAt=now;
+          const st=audioPack.ctx.state;
+          if(st!==lastAudioState){ audioStates.push(Math.round((now-t0)/100)/10+'s:'+st); lastAudioState=st; }
+          if(st!=='running'){ try{ audioPack.ctx.resume(); }catch(_){} }
+        }
         if(now-lastDraw>=frameGap-1){ lastDraw=now; draw(); }
         const pct=2+96*Math.min(1,(now-t0)/(dur*1000));
         prog(true,'영상 만드는 중',
@@ -15617,25 +15932,25 @@ window.exportBackgroundVideo=async function(opt){
     cancelAnimationFrame(raf);
     try{ vid.pause(); }catch(_){}
     if(!contentEndAt) contentEndAt=performance.now();
-    await new Promise(r=>setTimeout(r,90));   /* 마지막 프레임이 담기게 잠깐 */
+    await new Promise(r=>setTimeout(r,60));   /* 마지막 프레임이 담기게 잠깐 */
     recEndedAt=performance.now();
     rec.stop();
     await done;
 
-    /* 결과 길이 계산
-       playedSeconds : 실제로 그림이 흐른 영상 구간 (얼어붙은 뒷부분 제외)
-       targetSeconds : 나와야 하는 결과 길이 = 그 구간 ÷ 재생 속도
-       spanSeconds   : 담긴 프레임 전체를 펼칠 길이 — 내용 구간이 정확히
-                       targetSeconds 를 차지하도록 맞춘다 (속도가 안 먹은 기기 보정) */
-    const playedRaw=(useFrameCb&&frameHits>2&&frameCT>startCT)?(frameCT-startCT):(lastCT-startCT);
-    const played=(playedRaw>.05)?playedRaw:(Number(vid.duration)||dur*playRate);
-    let targetSeconds=Math.max(.05,played/playRate);
-    if(Math.abs(targetSeconds-dur)<=dur*.15) targetSeconds=dur;   /* 원본 길이와 비슷하면 딱 맞춤 */
+    /* ---- 결과 길이 ----
+       진단으로 확인된 사실: 이 파일의 길이는 오로지 '샘플 수 × 샘플 간격' 으로 정해진다.
+       (moov 에 적은 길이는 플레이어가 무시한다.)
+       그러니 답은 하나뿐이다 — 담긴 프레임 전체를 '실제로 녹화기가 돌아간 시간'에
+       그대로 펼치면 된다. 브라우저가 30fps로 담든 60fps로 담든 자동으로 맞는다.
+       이전처럼 '내용 구간'을 따로 추정해서 비율로 늘리면, 그 추정이 틀리는 순간
+       길이가 몇 배로 튄다(= 방금 20초 사고). 추정을 아예 쓰지 않는다. */
     const wallTotal=Math.max(.05,(recEndedAt-recStartedAt)/1000);
-    const wallContent=Math.max(.05,Math.min(wallTotal,(contentEndAt-recStartedAt)/1000));
-    const spanSeconds=Math.max(.05,targetSeconds*(wallTotal/wallContent));
-    /* 이 브라우저가 실제로 낸 재생 속도. 설정한 속도를 무시하는 기기가 있다. */
-    const observedRate=played/wallContent;
+    const wallContent=wallTotal;
+    const playedRaw=lastCT-startCT;
+    const played=(playedRaw>.05)?playedRaw:wallTotal*playRate;
+    const observedRate=played/wallTotal;
+    const spanSeconds=wallTotal;      /* 프레임을 펼칠 길이 = 실제 녹화 시간 */
+    const targetSeconds=wallTotal;    /* 파일에 적을 길이도 같은 값 */
     outputDuration=targetSeconds;
 
     if(cancelled){ T('영상 저장을 그만뒀어요'); return; }
@@ -15643,23 +15958,68 @@ window.exportBackgroundVideo=async function(opt){
     const outMime=String(chunkMime||(rec&&rec.mimeType)||mime||'video/webm').split(';')[0];
     let blob=new Blob(chunks,{type:outMime});
     if(!blob.size) throw new Error('empty recording');
-    /* 녹화기는 흐른 시간(wallTotal)보다 긴 그림을 담을 수 없다. 그보다 긴 길이를
-       파일에 적으면 플레이어가 마지막 장면을 붙잡은 채 남은 시간을 채운다
-       (= 아이폰에서 보이던 '멈춘 화면 잉여 시간'). 실제로 담긴 만큼만 적는다. */
-    const recordedCap=wallTotal+0.2;
-    if(/mp4/i.test(outMime)){
-      const timeline={seconds:0,applied:false};
+    /* ---- 사파리(아이폰)에서는 파일을 손대지 않는다 ----
+       MP4 시간표 손질은 원래 크로미움(갤럭시) 전용 보정이었다. 사파리가 만든 파일에
+       그걸 그대로 적용하면서 길이가 두 배가 됐다. 아이폰에서는 녹화기가 만든 파일을
+       그대로 저장한다. 정말로 '그대로'. */
+    const rawSave=/iP(hone|ad|od)/i.test(navigator.userAgent||'')
+      ||(/Safari/i.test(navigator.userAgent||'')&&!/Chrome|Chromium|CriOS|Edg|OPR|Whale/i.test(navigator.userAgent||''));
+    if(rawSave) window.__lastMp4Timeline=null;
+    let declared=targetSeconds, mp4Fixed=false, mp4Samples=0;
+    if(/mp4/i.test(outMime)&&!rawSave){
+      const timeline={seconds:0,applied:false,samples:0,fps:0,timescale:0,fragments:0,bail:''};
       blob=await normalizeMp4VideoFps(blob,fps,spanSeconds,timeline);
-      /* 프레임 시간표를 다시 쓴 경우에만 원하는 길이로 줄여 적을 수 있다.
-         못 고쳤으면 프레임은 실제 시간 그대로이므로 그 길이를 적어야 한다. */
-      const declared=timeline.applied
-        ? Math.min(targetSeconds,timeline.seconds||targetSeconds)
-        : Math.min(targetSeconds,wallContent+0.15,recordedCap);
+      mp4Fixed=!!timeline.applied; mp4Samples=timeline.samples||0;
+      /* 실제 샘플 총합과 똑같은 길이를 적어 둔다 (어긋나면 멈춘 화면이 생긴다) */
+      declared=timeline.applied?(timeline.seconds||targetSeconds):targetSeconds;
       blob=await normalizeMp4DurationMetadata(blob,declared);
+      window.__lastMp4Timeline=timeline;
       if(!timeline.applied&&Math.abs(observedRate-playRate)>playRate*0.15){
         T('이 브라우저가 재생 속도를 무시해서 원래 속도 그대로 담겼어요');
       }
     }
+
+    /* 저장된 파일의 실제 길이를 그 자리에서 재 보고, 안을 직접 읽어 확인한다 */
+    let measured=null, inside='';
+    try{ measured=await probeBlobDuration(blob); }catch(_){}
+    try{ inside=await inspectMp4(blob); }catch(e){ inside='읽기 실패'; }
+    const tl=window.__lastMp4Timeline||{};
+    const round=(x,n)=>(x==null||!Number.isFinite(Number(x)))?String(x):(Math.round(Number(x)*(n||100))/(n||100));
+    const report=[
+      '[영상 길이 진단]',
+      'UA: '+(navigator.userAgent||''),
+      '원본 duration: '+String(vid.duration)+' (dur '+round(dur)+'초)',
+      '설정 배속: '+playRate+' / 관측 배속: '+round(observedRate),
+      'startCT '+round(startCT)+' · aliveCT '+round(aliveCT)+' · lastCT '+round(lastCT)+' · frameCT '+round(frameCT),
+      '종료 이유: '+endReason,
+      '신호: decoded='+(useDecoded?(decodeStart+'→'+lastDecoded):'없음')
+        +' · rVFC='+(useFrameCb?frameHits:'없음')+' · pixel='+(sigOk?'ok':'없음'),
+      '벽시계: 전체 '+round(wallTotal)+'초 / 내용 '+round(wallContent)+'초',
+      '계산: target '+round(targetSeconds)+'초 · span '+round(spanSeconds)+'초 · 적은 길이 '+round(declared)+'초',
+      'MP4 시간표 수정: '+(mp4Fixed?'적용됨':'실패')+(tl.bail?(' ('+tl.bail+')'):'')
+        +' · 샘플 '+(mp4Samples||tl.samples||0)+'개 · 조각 '+(tl.fragments||0)
+        +' · timescale '+(tl.timescale||0)+' · 계산fps '+round(tl.fps),
+      '후처리: '+(rawSave?'손대지 않음(사파리 원본 그대로)':'적용'),
+      '트랙별(계산값): '+(tl.tracks||'없음'),
+      '파일 구조: '+(tl.top||'-'),
+      '--- 저장된 파일 실제 내용 ---',
+      inside,
+      '---',
+      '소리: 설정 '+((V()&&V().sound)?'켬':'끔')+' · 경로 '+((audioPack&&audioPack.mode)||'none')
+        +' · 스트림 오디오트랙 '+((stream&&stream.getAudioTracks)?stream.getAudioTracks().length:'?'),
+      '소리 상태: '+audioStates.join(' → ')
+        +' · 끝 '+((audioPack&&audioPack.ctx&&audioPack.ctx.state)||'-')
+        +' · sampleRate '+((audioPack&&audioPack.ctx&&audioPack.ctx.sampleRate)||'-')
+        +' · 트랙 '+((audioPack&&audioPack.track)?(audioPack.track.readyState+'/'+(audioPack.track.muted?'muted':'live')):'-')
+        +(audioPack&&audioPack.bufferError?(' · 버퍼경로실패: '+audioPack.bufferError):''),
+      '결과 파일 실제 길이(측정): '+(measured==null?'못 잼':(round(measured)+'초')),
+      '캔버스 '+W+'×'+H+' · 요청 '+fps+'fps · '+outMime+' · '+round(blob.size/1048576,10)+'MB'
+    ].join('\n');
+    window.__lastVideoExportReport=report;
+    console.log(report);
+    const expected=declared||targetSeconds;
+    const wayOff=(measured!=null)&&(measured>expected*1.25+0.5||measured<expected*0.75-0.5);
+    if(wayOff) setTimeout(()=>{ try{ showVideoReport(report); }catch(_){} },900);
     const ext=extOf(outMime,rec);
     const name=((typeof safeFilename==='function')?safeFilename(s.export.filename):'chat')+'.'+ext;
     const fallback=()=>{
@@ -15711,8 +16071,11 @@ function installButton(){
     +'<select id="bgvExportScale" title="저장 배율"><option value="1">1×</option>'
     +'<option value="1.5">1.5×</option><option value="2" selected>2×</option><option value="3">3×</option></select>'
     +'<select id="bgvExportFps" title="초당 프레임"><option value="24">24fps</option>'
-    +'<option value="30" selected>30fps</option><option value="60">60fps</option></select>';
+    +'<option value="30" selected>30fps</option><option value="60">60fps</option></select>'
+    +'<button class="btn sm" id="bgvDiagBtn" type="button" title="마지막 저장의 진단 정보">🩺</button>';
   help.parentNode.insertBefore(row,help);
+  const diagBtn=$('bgvDiagBtn');
+  if(diagBtn) diagBtn.onclick=()=>{ try{ window.showVideoExportReport(); }catch(_){} };
   $('bgvExportBtn').onclick=()=>window.exportBackgroundVideo({
     scale:Number($('bgvExportScale').value)||2,
     fps:Number($('bgvExportFps').value)||30
