@@ -1606,7 +1606,8 @@ html, body, #canvas, #chat, #canvas * {
 <option value="16:9">16 : 9 가로</option>
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
-</div><div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
+</div>
+<div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
 <div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요"><div class="t-lb">프로필 사진</div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
@@ -4378,6 +4379,11 @@ function applyBackgroundLayers(){
   overlay.style.background=state.colors.bgOverlay;overlay.style.opacity=String(B.overlayOpacity/100);
   chat.classList.toggle('bubble-tail-off',!state.layout.tailOn);
   chat.style.setProperty('--bubble-tail-size',state.layout.tailSize+'px');
+  /* 말풍선 안쪽에만 있던 값을 #chat 에도 올려 둔다.
+     이름표는 말풍선의 자식이 아니라서 인라인 변수를 물려받지 못했고,
+     그래서 꼬리 보정이 말풍선에만 걸리고 이름표는 어긋나 있었다. */
+  chat.style.setProperty('--bubble-tail-inward-delta',
+    Math.max(0,(Number(state.layout.radius)||0)-22)+'px');
   chat.style.setProperty('--bubble-tail-y',state.layout.tailY+'px');
   chat.style.setProperty('--bubble-tail-x',state.layout.tailX+'px');
 }
@@ -12853,37 +12859,44 @@ window.__onBulkSelectionChange=function(active,ids){
   --tail-overhang-base:max(0px,calc(var(--bubble-tail-size,10px) * 0.9 - var(--bubble-tail-x,0px) - 1px));
 }
 /* 말풍선 모서리가 클 땐 꼬리가 안쪽으로 당겨지므로 그만큼 빼 준다 */
-#chat .n-bubble,
-#chat .m-bubble{
+#chat{
   --tail-overhang:max(0px,calc(var(--bubble-tail-size,10px) * 0.9
     - var(--bubble-tail-inward-delta,0px) * 0.55 - var(--bubble-tail-x,0px) - 1px));
 }
-#chat:not(.bubble-tail-off) .n-msg.no-av.bubble-align-left:not(.log-row) > .n-body > .n-bubble{
+#chat:not(.bubble-tail-off):not(.no-tail-theme) .n-msg.no-av.bubble-align-left:not(.log-row) > .n-body > .n-bubble{
   margin-left:var(--tail-overhang,0px);
   max-width:calc(100% - var(--tail-overhang,0px));
 }
 /* 메신저 모드에서 받은 말풍선도 같은 사정 (이름표는 -2px 만큼 더 나가 있다) */
-#chat:not(.bubble-tail-off) .m-msg.no-av:not(.mine) > .m-bubble,
-#chat:not(.bubble-tail-off) .m-msg.no-av:not(.mine) > .m-name{
+#chat:not(.bubble-tail-off):not(.no-tail-theme) .m-msg.no-av:not(.mine) > .m-bubble,
+#chat:not(.bubble-tail-off):not(.no-tail-theme) .m-msg.no-av:not(.mine) > .m-name{
   margin-left:calc(var(--tail-overhang-base,0px) + 2px);
 }
-#chat:not(.bubble-tail-off) .m-msg.no-av:not(.mine) > .m-bubble{
+#chat:not(.bubble-tail-off):not(.no-tail-theme) .m-msg.no-av:not(.mine) > .m-bubble{
   max-width:calc(78% - var(--tail-overhang-base,0px) - 2px);
 }
 /* 내 말풍선(오른쪽)도 같은 사정 — 꼬리가 오른쪽으로 튀어나가 여백 밖으로 나갔다.
    받은 말풍선만 고쳐져 있어서 오른쪽만 남아 있던 문제. */
+/* 꼬리가 없는 테마 + 프로필도 없을 때는, 꼬리를 전제로 한 미세 조정들이 모두 군더더기다.
+   - 받은 말풍선의 left:-2px 는 여백 밖으로 2px 삐져나가게 만들고
+   - 이름표의 좌우 3px 는 말풍선 끝과 어긋나 보이게 만든다
+   전부 0 으로 되돌려 말풍선과 이름표가 여백 선에 딱 맞게 한다. */
+#chat.no-tail-theme .m-msg.no-av:not(.mine) > .m-bubble{left:0}
+#chat.no-tail-theme .m-msg.no-av.mine > .m-bubble{right:0}
+#chat.no-tail-theme .m-msg.no-av > .m-name{margin-left:0;margin-right:0;left:0;right:0}
+
 /* 받은 말풍선은 .m-msg:not(.mine) .m-bubble{left:-2px} 로 프로필 쪽에 2px 붙어 있다.
    내 말풍선엔 그 짝이 없어서, 프로필을 켜면 왼쪽 틈 12px / 오른쪽 틈 14px 로 어긋나 보였다. */
 #chat .m-msg.mine.own-avatar-column > .m-bubble{position:relative;right:-2px}
-#chat:not(.bubble-tail-off) .m-msg.no-av.mine > .m-bubble,
-#chat:not(.bubble-tail-off) .m-msg.no-av.mine > .m-name{
+#chat:not(.bubble-tail-off):not(.no-tail-theme) .m-msg.no-av.mine > .m-bubble,
+#chat:not(.bubble-tail-off):not(.no-tail-theme) .m-msg.no-av.mine > .m-name{
   margin-right:var(--tail-overhang,0px);
 }
-#chat:not(.bubble-tail-off) .m-msg.no-av.mine > .m-bubble{
+#chat:not(.bubble-tail-off):not(.no-tail-theme) .m-msg.no-av.mine > .m-bubble{
   max-width:calc(78% - var(--tail-overhang,0px));
 }
 /* 일반 모드에서 내 프로필을 껐을 때의 내 말풍선(오른쪽 정렬)도 마찬가지 */
-#chat:not(.bubble-tail-off) .n-msg.no-av.mine:not(.log-row) > .n-body > .n-bubble{
+#chat:not(.bubble-tail-off):not(.no-tail-theme) .n-msg.no-av.mine:not(.log-row) > .n-body > .n-bubble{
   margin-right:var(--tail-overhang,0px);
   max-width:calc(100% - var(--tail-overhang,0px));
 }
@@ -17306,6 +17319,10 @@ function apply(){
   if(!st||!chat) return;
   const t=norm(st.bubbleTheme);
   THEMES.forEach(x=>chat.classList.toggle('btheme-'+x, x!=='default'&&x===t));
+  /* 꼬리가 없는 테마에서는 '꼬리가 삐져나온 만큼 밀어 주는' 보정을 꺼야 한다.
+     그대로 두면 있지도 않은 꼬리 자리만큼 말풍선이 안쪽으로 밀리고,
+     모서리 둥글기를 올릴 때마다 그 값이 변해 좌우로 흔들려 보인다. */
+  chat.classList.toggle('no-tail-theme', t!=='default');
   const grid=document.getElementById('bubbleThemeGrid');
   if(grid) [].forEach.call(grid.querySelectorAll('.btheme-btn'),b=>b.classList.toggle('on',b.dataset.theme===t));
   /* 꼬리가 없는 테마에서는 '말풍선 꼬리' 토글이 의미가 없으니 흐리게 */
