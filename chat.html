@@ -4110,6 +4110,19 @@ html,body{height:auto;min-height:100%;overflow:auto}body{background:${bodyBg};di
 }
 </style>
 
+
+<!-- ===== 내 프로필(오른쪽) 말풍선 글자 두께 실제 300 =====
+     이전 375는 Pretendard 로더에 300대 weight가 없어서 실제로는 400으로 매칭될 수 있었다.
+     이번에는 Pretendard 300 weight 자체를 로드/저장 임베드하고,
+     오른쪽 '내 말풍선(.mine)' 본문에만 300을 적용한다.
+     왼쪽 상대 말풍선은 기존 400 그대로. -->
+<style id="my-bubble-real-light-weight">
+#chat .m-msg.mine > .m-bubble > .glyph-scale,
+#chat .n-msg.mine:not(.log-row) > .n-body > .n-bubble > .glyph-scale{
+  font-weight:300 !important;
+}
+</style>
+
 </body></html>`;
   const blob=new Blob([html],{type:'text/html'});
   const a=document.createElement('a');
@@ -4537,7 +4550,7 @@ const __RUNTIME_FONT_CONFIG={
   'Freesentation':{css:'https://cdn.jsdelivr.net/gh/fonts-archive/Freesentation/Freesentation.css',weights:[400,700]},
   'Paperlogy':{css:'https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css',weights:[400,700]},
   'Mona12':{css:'https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css',weights:[400,700]},
-  'Pretendard':{css:'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css',weights:[400,500,600,700,800]},
+  'Pretendard':{css:'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css',weights:[300,400,500,600,700,800]},
   /* 굴림·조선신명조는 이 파일 안에 base64 로 들어 있어서 받아올 주소가 없다 */
   'Gulim':{inlineCss:true,weights:[400]},
   'ChosunSm':{inlineCss:true,weights:[400]}
@@ -4791,7 +4804,7 @@ else setTimeout(__idleLoadRenderer,1200);
 (function(){
   const PRETENDARD_DYNAMIC_CSS='https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css';
   if(typeof __RUNTIME_FONT_CONFIG==='object'&&__RUNTIME_FONT_CONFIG){
-    __RUNTIME_FONT_CONFIG['Pretendard']={css:PRETENDARD_DYNAMIC_CSS,weights:[400,500,600,700,800]};
+    __RUNTIME_FONT_CONFIG['Pretendard']={css:PRETENDARD_DYNAMIC_CSS,weights:[300,400,500,600,700,800]};
   }
   try{ if(__targetFontCssCache&&__targetFontCssCache.clear) __targetFontCssCache.clear(); }catch(_){}
 
