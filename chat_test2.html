@@ -17439,26 +17439,6 @@ setTimeout(()=>{ bind(); apply(); },400);
 #chat.novel-mode>.pmsg{break-inside:avoid}
 /* 글 블럭은 단 경계에서 문장 중간이라도 이어지게 (소설 조판처럼) */
 #chat.novel-mode>.pmsg.t-block{break-inside:auto}
-/* 모바일 Safari(WebKit)는 position:relative인 블럭이 다단 경계에서 잘릴 때
-   조각의 '자리'만 다음 단에 만들고 글자는 첫 단에 그대로 칠하는 경우가 있다.
-   모바일 여러 단 모드에서만 텍스트 블럭을 정적 흐름으로 돌려 실제 조각도
-   다음 단에 그려지게 한다. 원본 수정 툴바는 모바일에서 body 프록시를 쓰므로
-   이 변경이 편집 버튼의 화면 위치에는 영향을 주지 않는다. */
-@media(max-width:700px){
-  body.mobile-ui #chat.novel-mode>.pmsg.t-block{
-    position:static!important;
-    break-inside:auto!important;
-    -webkit-column-break-inside:auto!important;
-  }
-  body.mobile-ui #chat.novel-mode>.pmsg.t-block>.t-inner{
-    break-inside:auto!important;
-    -webkit-column-break-inside:auto!important;
-  }
-  body.mobile-ui #chat.novel-mode>.pmsg.col-break{
-    break-before:column!important;
-    -webkit-column-break-before:always!important;
-  }
-}
 /* ✂ 를 찍은 자리 = 강제로 다음 단에서 시작 */
 #chat.novel-mode>.pmsg.col-break{break-before:column}
 /* 서명·페이지 번호는 단 전체를 가로지르는 한 줄로 맨 아래에 —
@@ -17835,30 +17815,11 @@ function reflowColumns(chat){
   reflowTimer=requestAnimationFrame(()=>{
     reflowTimer=0;
     if(!chat.classList.contains('novel-mode')) return;
-
-    /* 모바일 Safari에서는 축소용 transform이 걸린 조상 아래에서 다단을
-       강제 리플로우하면 '다음 단의 공간만 비우고 글자는 이전 단에 남는'
-       페인팅 오류가 생길 수 있다. 리플로우 순간에만 미리보기 transform을
-       잠깐 빼고, 조각 계산이 끝난 뒤 같은 값으로 되돌린다. 저장/데스크톱
-       레이아웃 값은 건드리지 않는다. */
-    const canvas=document.getElementById('canvas');
-    const mobile=!!(document.body&&document.body.classList.contains('mobile-ui'));
-    const savedTransform=(mobile&&canvas)?canvas.style.transform:'';
-    const hadPreviewTransform=!!(mobile&&canvas&&savedTransform&&savedTransform!=='none');
-    if(hadPreviewTransform){
-      canvas.style.transform='none';
-      void canvas.offsetWidth;
-    }
-
     const disp=chat.style.display;
     chat.style.display='none';
     void chat.offsetWidth;        /* 여기서 사파리가 앞의 결과를 버린다 */
     chat.style.display=disp||'';
     void chat.offsetWidth;        /* 그리고 처음부터 다시 짠다 */
-
-    if(hadPreviewTransform){
-      canvas.style.transform=savedTransform;
-    }
   });
 }
 
@@ -18112,6 +18073,105 @@ window.__novelDump=dump;
   window[n]=function(){ const r=prev.apply(this,arguments); try{ dump(); }catch(_){} return r; };
 });
 setTimeout(dump,800);
+})();
+</script>
+
+
+<!-- ===== iOS Safari multicol text-fragment paint fix ===== -->
+<style id="ios-novel-column-fragment-fix-style">
+/*
+  iOS Safari/WebKit bug:
+  .t-block itself is allowed to split across CSS columns, but its inner
+  .glyph-scale always has transform:scaleX(...) (even at 100% => scaleX(1)).
+  WebKit can reserve the continuation fragment in the next column while
+  painting that transformed child only in the first fragment. Result:
+  the next column has the correct empty space, but the continued text is missing.
+
+  Only in iOS/iPadOS + normal multi-column mode + widthScale=100, remove the
+  no-op transform from inserted text blocks. Desktop and every other layout stay
+  untouched. The class is toggled by the script below.
+*/
+#chat.ios-novel-fragment-fix.novel-mode > .pmsg.t-block,
+#chat.ios-novel-fragment-fix.novel-mode > .pmsg.t-block > .t-inner,
+#chat.ios-novel-fragment-fix.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
+  break-inside:auto!important;
+  -webkit-column-break-inside:auto!important;
+}
+#chat.ios-novel-fragment-fix.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
+  transform:none!important;
+  transform-origin:left top!important;
+}
+</style>
+<script id="ios-novel-column-fragment-fix-script">
+(function(){
+'use strict';
+
+/* iPadOS can identify as Macintosh when desktop-site UA is used, so include
+   touch-capable Mac detection as well. Keep this Safari/WebKit-only. */
+function isIOSWebKit(){
+  const ua=navigator.userAgent||'';
+  const iOS=/iPad|iPhone|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints>1);
+  const webkit=/AppleWebKit/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
+  return iOS && webkit;
+}
+
+function syncIOSNovelFragmentFix(){
+  const chat=document.getElementById('chat');
+  if(!chat) return;
+  let s=null;
+  try{ s=state; }catch(_){ s=window.state||null; }
+  const novel=s&&s.novel;
+  const layout=s&&s.layout;
+  const scale=Number(layout&&layout.widthScale!=null?layout.widthScale:100);
+  /* The transform is a visual no-op at 100%, so removing it changes no styling;
+     it only lets WebKit really paint the second fragment. */
+  const on=!!(isIOSWebKit() && novel && novel.on && novel.mode!=='ratio' && Math.abs(scale-100)<0.001);
+  chat.classList.toggle('ios-novel-fragment-fix',on);
+  if(on){
+    /* Force one fresh fragmentation pass after the transform has disappeared. */
+    const h=chat.style.height;
+    chat.style.height=h;
+    void chat.offsetHeight;
+  }
+}
+
+/* renderPreview rebuilds #chat.innerHTML, so sync after every render. */
+const prevRender=window.renderPreview;
+if(typeof prevRender==='function'){
+  window.renderPreview=function(){
+    const r=prevRender.apply(this,arguments);
+    try{ syncIOSNovelFragmentFix(); }catch(_){}
+    /* One extra frame is intentional: applyCanvas/applyGlyphScale may finish
+       later in the same render pass and restore inline transform styles. */
+    requestAnimationFrame(function(){
+      try{
+        syncIOSNovelFragmentFix();
+        const chat=document.getElementById('chat');
+        if(chat&&chat.classList.contains('ios-novel-fragment-fix')){
+          const d=chat.style.display;
+          chat.style.display='none'; void chat.offsetWidth;
+          chat.style.display=d||''; void chat.offsetWidth;
+        }
+      }catch(_){}
+    });
+    return r;
+  };
+}
+
+/* Direct setting changes can happen outside renderPreview wrappers. */
+const prevSetNovel=window.setNovel;
+if(typeof prevSetNovel==='function'){
+  window.setNovel=function(){
+    const r=prevSetNovel.apply(this,arguments);
+    try{ syncIOSNovelFragmentFix(); }catch(_){}
+    return r;
+  };
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  try{ syncIOSNovelFragmentFix(); }catch(_){}
+  setTimeout(function(){ try{ syncIOSNovelFragmentFix(); }catch(_){} },250);
+});
 })();
 </script>
 </body>
