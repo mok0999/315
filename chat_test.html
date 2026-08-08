@@ -17583,7 +17583,7 @@ document.addEventListener('click',function(e){
    덜 불러와졌거나 배율 반올림이 어긋나면 잰 값이 몇 픽셀씩 달라진다.
    그 몇 픽셀 때문에 단 수가 하나 줄면 넘칠 자리가 사라져 블럭이 안 쪼개지고 뭉쳤다.
    → 글·글씨 설정이 실제로 바뀌었을 때만 다시 재고, 그 외에는 이전 값을 그대로 쓴다. */
-let colCache=null;           /* {sig, plan} */
+let colCache=null;           /* {sig, cols} */
 function hashStr(str){ let h=5381; for(let i=0;i<str.length;i++) h=((h<<5)+h+str.charCodeAt(i))|0; return h; }
 function layoutSig(){
   const s=ST(); if(!s) return '';
@@ -17641,155 +17641,180 @@ function restoreChat(canvas,chat){
 window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   const n=cfg();
   if(!n.on){
-    teardown(canvas,chat);
+    restoreChat(canvas,chat);
     chat.classList.remove('novel-mode','novel-fixed');
     chat.style.columnCount=''; chat.style.columnGap=''; chat.style.height=''; chat.style.transform='';
     chat.style.paddingLeft=''; chat.style.paddingRight='';
     chat.style.marginLeft=''; chat.style.marginRight=''; chat.style.clipPath='';
-    canvas.classList.remove('novel-canvas','novel-sheets');
+    canvas.classList.remove('novel-canvas');
+    canvas.classList.remove('novel-sheets');
     canvas.querySelectorAll('.novel-folio,.novel-paper').forEach(e=>e.remove());
     return false;
   }
   chat.classList.add('novel-mode');
   canvas.classList.add('novel-canvas');
   markBreaks();
-  watchImages(chat);
-
-  /* ── 치수 정하기 ───────────────────────────────────────────── */
-  let colW, pageH, slots, gap, canvasW, canvasH, padX, padY, paperW=0, paperH=0, ratioMode=false;
-  if(n.mode==='ratio'){
-    ratioMode=true;
-    chat.classList.add('novel-fixed');
-    const pr=String(n.ratio).split(':').map(Number);
-    const rw=pr[0]>0?pr[0]:210, rh=pr[1]>0?pr[1]:297;
-    const PAPER_W=720;
-    paperW=PAPER_W; paperH=Math.round(PAPER_W*rh/rw);
-    padX=Math.round(PAPER_W*0.125); padY=Math.round(PAPER_W*0.075);
-    colW=PAPER_W-2*padX;
-    const autoGap=2*padX;
-    gap=(!n.single&&n.gutter!=null)?Math.max(0,n.gutter|0):autoGap;
-    pageH=Math.max(80,paperH-2*padY-folioBand());
-    slots=n.single?1:2;
-    canvasW=PAPER_W*slots; canvasH=paperH;
-  }else{
-    chat.classList.remove('novel-fixed');
-    colW=Math.round(baseChatW); gap=Math.max(0,n.gap|0);
-    padX=hMargin; padY=vMargin;
-    slots=Math.max(1,Math.min(8,n.cols|0)||2);
-    pageH=0;                       /* 아래에서 전체 높이를 나눠 정한다 */
-  }
-
-  /* ── 흐름을 '보통 한 단'으로 펴서 잰다 (다단 기능을 쓰지 않는다) ── */
-  teardown(canvas,chat,true);
-  chat.style.columnCount=''; chat.style.columnGap='';
-  chat.style.transform=''; chat.style.clipPath='';
-  chat.style.marginLeft='0px'; chat.style.marginRight='0px';
+  /* #chat 에는 원래 좌우 안쪽 여백이 있어서, 그대로 두면 단 폭이 그만큼 좁아진다.
+     (그 결과 둘째 쪽부터 안쪽 여백이 조금씩 줄어들어 좌우가 어긋나 보였다) */
   chat.style.paddingLeft='0px'; chat.style.paddingRight='0px';
-  chat.style.width=colW+'px'; chat.style.minWidth=colW+'px'; chat.style.maxWidth=colW+'px';
-  chat.style.height='auto';
 
-  const sig=layoutSig()+'~'+colW+'~'+slots+'~'+gap+'~'+pageH;
-  let plan=(colCache&&colCache.sig===sig)?colCache.plan:null;
-  if(!plan){
+  const colW=Math.round(baseChatW), gap=n.gap;
+  const setW=(cols)=>{
+    const w=colW*cols+gap*(cols-1);
+    chat.style.width=w+'px'; chat.style.minWidth=w+'px'; chat.style.maxWidth=w+'px';
+    chat.style.columnCount=String(cols);
+    chat.style.columnGap=gap+'px';
+    return w;
+  };
+
+  if(n.mode!=='ratio'){
+    /* 단 수는 내가 고르고, 쪽 길이는 글 양에 맞춰 자동 (단마다 고르게) */
+    restoreChat(canvas,chat);
+    chat.classList.remove('novel-fixed');
+    chat.style.transform=''; chat.style.clipPath='';
+    chat.style.marginLeft=''; chat.style.marginRight='';
+    canvas.classList.remove('novel-sheets');
+    canvas.querySelectorAll('.novel-folio,.novel-paper').forEach(e=>e.remove());
+    const w=setW(n.cols);
+    chat.style.height='auto';
+    const h=Math.ceil(Math.max(chat.offsetHeight,chat.scrollHeight));
+    canvas.style.display='block';
+    canvas.style.width=Math.ceil(w+2*hMargin)+'px';
+    canvas.style.height=Math.ceil(h+2*vMargin)+'px';
+    canvas.style.padding=vMargin+'px '+hMargin+'px';
+    return true;
+  }
+
+  /* 소설 비율 — 판형만 고르면 나머지는 전부 고정이다.
+     정형화된 소설 조판 비율(쪽 폭의 13.5%를 사방 여백)을 그대로 쓰므로
+     본문 너비·캔버스 여백 슬라이더는 이 모드에서 쓰이지 않는다.
+     캔버스 = 펼침 한 장(2쪽) 또는 한 쪽이고, 넘기는 건 미리보기 아래 이동 바가 맡는다. */
+  chat.classList.add('novel-fixed');
+  const pr=String(n.ratio).split(':').map(Number);
+  const rw=pr[0]>0?pr[0]:210, rh=pr[1]>0?pr[1]:297;
+
+  const PAPER_W=720;                              /* 한 쪽의 기준 폭 (고정) */
+  const paperH=Math.round(PAPER_W*rh/rw);
+  const mgX=Math.round(PAPER_W*0.125);            /* 좌우 여백 */
+  const mgY=Math.round(PAPER_W*0.075);            /* 위아래 여백 — 가로보다 좁게 */
+  const colW2=PAPER_W-2*mgX;                      /* 본문 폭 */
+  const folioH=folioBand();
+  const textH=Math.max(80,paperH-2*mgY-folioH);
+
+  /* 종이(용지 크기·비율)는 어떤 값에서도 고정이고, 글이 담긴 단 사이만 움직인다.
+     기본값은 두 쪽의 안쪽 여백이 맞붙은 폭(2*mgX)이고, 줄이면 글이 가운데로 모인다.
+     한 장 보기에서는 뜻이 없으므로 기본값으로 돌아간다. */
+  const autoGap=2*mgX;
+  const colGap=(!n.single&&n.gutter!=null)?Math.max(0,n.gutter|0):autoGap;
+  const setCols=(k)=>{
+    const ww=colW2*k+colGap*(k-1);
+    chat.style.width=ww+'px'; chat.style.minWidth=ww+'px'; chat.style.maxWidth=ww+'px';
+    chat.style.columnCount=String(k);
+    chat.style.columnGap=colGap+'px';
+    return ww;
+  };
+
+  watchImages(chat);
+  const per=n.single?1:2;                          /* 한 번에 보여줄 쪽 수 */
+  const apply=(k)=>{ const ww=setCols(k); chat.style.height=textH+'px'; return ww; };
+  const sig=layoutSig();
+  let cols;
+  if(colCache&&colCache.sig===sig){
+    /* 글도 설정도 그대로면 다시 재지 않는다 — 재면 잴 때마다 값이 흔들린다 */
+    cols=colCache.cols;
+    apply(cols);
+  }else{
+    setCols(1); chat.style.height='auto';
     const total=Math.ceil(Math.max(chat.offsetHeight,chat.scrollHeight));
-    let ph=pageH;
-    if(!ph) ph=Math.max(40,Math.ceil(total/slots));   /* 단 수로 모드: 고르게 나눈다 */
-    const cuts=cutPoints(lineBounds(chat),total,ph);
-    plan={total:total,pageH:ph,cuts:cuts};
-    colCache={sig:sig,plan:plan};
+    cols=Math.max(per,Math.ceil(total/textH));
+    /* 펼침이 반토막 나지 않게 짝수로 맞춘다 —
+       반드시 실제로 그리기 '전에' 정해야 한다. 나중에 숫자만 바꾸면
+       화면에 그려진 단 수와 계산이 어긋나 잘라내는 위치가 틀어진다. */
+    if(cols%per) cols+=per-(cols%per);
+    apply(cols);
   }
-  pageH=plan.pageH;
-  const pages=plan.cuts.length;
-  n.__pages=ratioMode?Math.max(1,Math.ceil(pages/slots)):1;
+  /* 넘치면 늘리기만 한다 (줄이지 않는다 — 줄이는 순간 블럭이 뭉친다) */
+  for(let i=0;i<24&&chat.scrollWidth>chat.clientWidth+2;i++){ cols+=per; apply(cols); }
+  colCache={sig:sig,cols:cols};
+
+  const units=Math.max(1,Math.ceil(cols/per));
+  n.__pages=units;
   if(n.page==null||n.page<0) n.page=0;
-  if(n.page>n.__pages-1) n.page=n.__pages-1;
+  if(n.page>units-1) n.page=units-1;
 
-  /* ── 쪽마다 창을 만들어 흐름의 다른 구간을 보여 준다 ────────── */
-  const first=ratioMode?n.page*slots:0;
-  const shown=ratioMode?slots:Math.max(1,Math.min(slots,pages));
-  const center=ratioMode?((2*padX-gap)/2):0;
-
-  if(!ratioMode){ canvasW=colW*slots+gap*(slots-1); canvasH=pageH; }
-
+  const first=n.page*per;                          /* 이 화면의 첫 쪽 */
   canvas.style.display='block';
-  canvas.style.width=Math.ceil(canvasW)+'px';
-  canvas.style.height=Math.ceil(canvasH)+'px';
-  canvas.style.padding=padY+'px '+padX+'px';
+  canvas.style.width=(PAPER_W*per)+'px';
+  canvas.style.height=paperH+'px';
+  canvas.style.padding=mgY+'px '+mgX+'px';
 
-  const host=document.createDocumentFragment();
-  for(let k=0;k<shown;k++){
-    const idx=first+k;
-    const win=document.createElement('div');
-    win.className='novel-win';
-    win.style.cssText='position:absolute;overflow:hidden;top:'+padY+'px;left:'
-      +(padX+center+k*(colW+gap))+'px;width:'+colW+'px;height:'+pageH+'px;z-index:1';
-    let inner;
-    if(k===0){ inner=chat; }
-    else { inner=makeClone(chat); }
-    inner.style.marginTop=(-(plan.cuts[idx]||0))+'px';
-    win.appendChild(inner);
-    host.appendChild(win);
-  }
-  canvas.appendChild(host);
+  /* 글 사이를 좁히면 흐름 전체가 짧아져서, 가운데 정렬 탓에 뒤쪽 쪽이
+     캔버스 안으로 밀려 들어와 세 번째 단이 보였다.
+     왼쪽에 고정한 뒤 지금 보여 줄 두 쪽만 남기고 잘라 낸다. */
+  const winL=first*(colW2+colGap);
+  const winW=colW2*per+colGap*(per-1);
+  /* 두 쪽 묶음을 캔버스 한가운데에 놓는다.
+     그래야 간격을 줄이거나 늘려도 왼쪽·오른쪽이 가운데를 기준으로 똑같이 움직인다. */
+  const center=(autoGap-colGap)/2;
 
-  if(ratioMode){
-    drawPapers(canvas,paperW,paperH,paperW,slots,padX);
-    drawFolios(canvas,colW,gap,pages,padX+center,padY,folioBand(),first,slots);
-  }
+  /* 보여 줄 구간만 드러내는 '창'을 따로 두고 그 안에 본문을 넣는다.
+     예전에는 본문 자체에 transform·clip-path 를 걸었는데, 사파리(아이폰)에서는
+     그 둘이 다단 쪼개기를 망가뜨려서 글이 단을 넘기지 못하고 종이 밖으로
+     그냥 흘러넘쳤다. 다단 요소에는 아무 것도 걸지 않는 게 안전하다. */
+  chat.style.transform=''; chat.style.clipPath='';
+  chat.style.marginRight='0px';
+  chat.style.marginLeft=(-winL)+'px';
+  let win=canvas.querySelector('#novelWindow');
+  if(!win){ win=document.createElement('div'); win.id='novelWindow'; }
+  win.style.cssText='position:absolute;overflow:hidden;top:'+mgY+'px;left:'+(mgX+center)
+    +'px;width:'+winW+'px;height:'+textH+'px;z-index:1';
+  if(chat.parentElement!==win) win.appendChild(chat);
+  if(win.parentElement!==canvas) canvas.appendChild(win);
+  drawPapers(canvas,PAPER_W,paperH,PAPER_W,per,mgX);
+  /* 본문이 가운데로 움직인 만큼 쪽번호도 같이 움직여야 글 끝과 맞는다 */
+  drawFolios(canvas,colW2,colGap,cols,mgX+center,mgY,folioH,first,per);
+  /* ── 사파리 대응 ───────────────────────────────────────────────
+     사파리는 이미 그려 둔 다단을 다시 계산할 때 앞의 쪼갠 결과를 그대로
+     들고 있어서, 확대·축소·터치로 다시 그릴 때마다 블럭이 도로 붙어 버린다.
+     (처음 한 번은 제대로 쪼개진다.)
+     잠깐 감췄다 되살려 '처음부터 다시 짜라'고 시키면 매번 새로 쪼개진다. */
+  reflowColumns(chat);
   syncPager();
   return true;
 };
 
-/* 창·복제본을 걷어내고 본문을 캔버스 직속으로 되돌린다 */
-function teardown(canvas,chat,keepClasses){
-  canvas.querySelectorAll('.novel-clone').forEach(e=>e.remove());
-  if(chat.parentElement&&chat.parentElement.classList.contains('novel-win')) canvas.appendChild(chat);
-  canvas.querySelectorAll('.novel-win').forEach(e=>e.remove());
-  chat.style.marginTop='';
-  const old=canvas.querySelector('#novelWindow'); if(old) old.remove();
-}
-
-/* 다른 쪽에 보여 줄 복제본 — 글자만 보여 주고 직접 고치지는 못하게 한다
-   (✎ 수정·× 삭제 단추는 그대로 동작한다) */
-function makeClone(chat){
-  const c=chat.cloneNode(true);
-  c.removeAttribute('id');
-  c.classList.add('novel-clone');
-  c.querySelectorAll('[contenteditable]').forEach(e=>e.removeAttribute('contenteditable'));
-  c.querySelectorAll('.editable').forEach(e=>e.classList.remove('editable'));
-  return c;
-}
-
-/* 글줄·그림의 위아래 위치를 모아 둔다 (자를 때 줄 한가운데를 지나가지 않도록) */
-function lineBounds(root){
-  const out=[]; const top=root.getBoundingClientRect().top;
-  const rg=document.createRange();
-  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
-  let node;
-  while((node=walker.nextNode())){
-    if(!node.nodeValue||!node.nodeValue.trim()) continue;
-    rg.selectNodeContents(node);
-    const rects=rg.getClientRects();
-    for(let i=0;i<rects.length;i++){ const r=rects[i]; if(r.height>0) out.push(r.bottom-top); }
-  }
-  root.querySelectorAll('img,.n-bubble,.m-bubble,.divider-row,.image-row').forEach(e=>{
-    const r=e.getBoundingClientRect(); if(r.height>0) out.push(r.bottom-top);
+let reflowTimer=0;
+function reflowColumns(chat){
+  /* 확대·축소처럼 짧은 사이에 여러 번 불릴 때는 마지막 한 번만 다시 짠다
+     (매번 하면 손가락 움직임이 끊긴다) */
+  if(reflowTimer) cancelAnimationFrame(reflowTimer);
+  reflowTimer=requestAnimationFrame(()=>{
+    reflowTimer=0;
+    if(!chat.classList.contains('novel-mode')) return;
+    const disp=chat.style.display;
+    chat.style.display='none';
+    void chat.offsetWidth;        /* 여기서 사파리가 앞의 결과를 버린다 */
+    chat.style.display=disp||'';
+    void chat.offsetWidth;        /* 그리고 처음부터 다시 짠다 */
   });
-  out.sort((a,b)=>a-b);
-  return out;
 }
 
-/* 쪽마다 어디서 자를지 — 쪽 높이를 넘지 않는 가장 아래 줄 끝에서 자른다 */
-function cutPoints(bounds,total,pageH){
-  const cuts=[0]; let cur=0, guard=0;
-  while(cur+pageH<total-1&&guard++<400){
-    const want=cur+pageH;
-    let best=cur;
-    for(let i=0;i<bounds.length;i++){ const b=bounds[i]; if(b<=want+0.5&&b>best) best=b; }
-    if(best<=cur+1) best=want;      /* 한 줄이 쪽보다 클 때의 안전장치 */
-    cuts.push(best); cur=best;
-  }
-  return cuts;
+/* 쪽마다 종이면을 깔아 낱장으로 보이게 한다 (본문 뒤에) */
+function drawPapers(canvas,paperW,paperH,pitch,count,pad){
+  canvas.querySelectorAll('.novel-paper').forEach(e=>e.remove());
+  canvas.classList.add('novel-sheets');
+  try{
+    const bg=getComputedStyle(canvas).backgroundColor;
+    if(bg&&bg!=='rgba(0, 0, 0, 0)') canvas.style.setProperty('--novel-paper',bg);
+  }catch(_){}
+  /* 펼침은 종이 한 장으로 그린다 — 쪽마다 나눠 그리면 가운데에 접힌 듯한 선이 생긴다.
+     (절대 배치의 기준은 이미 캔버스 테두리라 패딩을 따로 빼지 않는다) */
+  const d=document.createElement('div');
+  d.className='novel-paper';
+  d.style.left='0px';
+  d.style.width=(paperW*count)+'px';
+  d.style.height=paperH+'px';
+  canvas.insertBefore(d,canvas.firstChild);
 }
 
 /* 쪽번호 띠의 높이 — 글자 크기에 여유를 더한 값 */
@@ -17802,23 +17827,6 @@ function folioBand(){
   return Math.round(size+16);
 }
 
-/* 펼침 종이면 (쪽마다 나누면 가운데 접힌 선이 생기므로 한 장으로 그린다) */
-function drawPapers(canvas,paperW,paperH,pitch,count,pad){
-  canvas.querySelectorAll('.novel-paper').forEach(e=>e.remove());
-  canvas.classList.add('novel-sheets');
-  try{
-    const bg=getComputedStyle(canvas).backgroundColor;
-    if(bg&&bg!=='rgba(0, 0, 0, 0)') canvas.style.setProperty('--novel-paper',bg);
-  }catch(_){}
-  const d=document.createElement('div');
-  d.className='novel-paper';
-  d.style.left='0px';
-  d.style.width=(paperW*count)+'px';
-  d.style.height=paperH+'px';
-  canvas.insertBefore(d,canvas.firstChild);
-}
-
-/* 단(=쪽)마다 쪽번호 + 서명. 왼쪽 쪽은 왼쪽 끝, 오른쪽 쪽은 오른쪽 끝으로 고정 */
 function drawFolios(canvas,colW,gap,cols,hMargin,vMargin,folioH,from,count){
   canvas.querySelectorAll('.novel-folio').forEach(e=>e.remove());
   const s=ST(); if(!s) return;
@@ -17836,16 +17844,16 @@ function drawFolios(canvas,colW,gap,cols,hMargin,vMargin,folioH,from,count){
   from=from||0; count=count||cols;
   for(let k=0;k<count;k++){
     const i=from+k;
-    if(i>=cols) break;
     const bits=[];
     if(parts.length) bits.push(parts.join(sep));
     if(pn.on) bits.push(String(i+1));
     if(!bits.length) continue;
-    const left=(i%2===0);
+    const left=(i%2===0);           /* 짝수번째 단 = 펼침의 왼쪽 쪽 */
     const d=document.createElement('div');
     d.className='novel-folio';
     d.textContent=left?bits.join('   '):bits.slice().reverse().join('   ');
     d.style.cssText+=';font-size:'+size+'px;color:'+color+';opacity:.9;'+fontCss;
+    /* 본문 아래에 비워 둔 띠 한가운데에 앉힌다 */
     d.style.bottom=(vMargin+Math.max(0,((folioH||size+16)-size)/2))+'px';
     const colLeft=hMargin+k*(colW+gap);
     if(left){ d.style.left=colLeft+'px'; }
