@@ -18077,103 +18077,178 @@ setTimeout(dump,800);
 </script>
 
 
-<!-- ===== iOS Safari multicol text-fragment paint fix ===== -->
-<style id="ios-novel-column-fragment-fix-style">
+<!-- ===== iOS Safari multicol paint/compositing workaround v3 ===== -->
+<style id="ios-novel-columns-v3-style">
 /*
-  iOS Safari/WebKit bug:
-  .t-block itself is allowed to split across CSS columns, but its inner
-  .glyph-scale always has transform:scaleX(...) (even at 100% => scaleX(1)).
-  WebKit can reserve the continuation fragment in the next column while
-  painting that transformed child only in the first fragment. Result:
-  the next column has the correct empty space, but the continued text is missing.
+  iOS Safari can lay out a fragmented text block correctly but paint later
+  fragments back in the first column when either the fragmentable block or an
+  ancestor is promoted to a transform/compositing layer.
 
-  Only in iOS/iPadOS + normal multi-column mode + widthScale=100, remove the
-  no-op transform from inserted text blocks. Desktop and every other layout stay
-  untouched. The class is toggled by the script below.
+  Keep this workaround strictly inside iOS/iPadOS + "여러 단" mode.
 */
-#chat.ios-novel-fragment-fix.novel-mode > .pmsg.t-block,
-#chat.ios-novel-fragment-fix.novel-mode > .pmsg.t-block > .t-inner,
-#chat.ios-novel-fragment-fix.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
-  break-inside:auto!important;
+#chat.ios-novel-columns-v3.novel-mode > .pmsg.t-block{
+  position:static!important;
   -webkit-column-break-inside:auto!important;
-}
-#chat.ios-novel-fragment-fix.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
+  break-inside:auto!important;
+  -webkit-transform:none!important;
   transform:none!important;
-  transform-origin:left top!important;
+  -webkit-backface-visibility:visible!important;
+  backface-visibility:visible!important;
+}
+#chat.ios-novel-columns-v3.novel-mode > .pmsg.t-block > .t-inner{
+  position:static!important;
+  -webkit-column-break-inside:auto!important;
+  break-inside:auto!important;
+  -webkit-transform:none!important;
+  transform:none!important;
+}
+/* Remove only the no-op glyph transform at 장평 100%. Non-100% 장평 keeps its
+   existing scaleX so the user's typography setting is not changed. */
+#chat.ios-novel-columns-v3.ios-novel-glyph-100.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
+  -webkit-transform:none!important;
+  transform:none!important;
+  will-change:auto!important;
+}
+/* The normal mobile preview scales #canvas with transform:scale(). In iOS
+   multi-column mode use WebKit zoom instead, while #canvasFit keeps the exact
+   already-calculated visual box size. This leaves export geometry untouched. */
+body.ios-novel-preview-zoom.mobile-ui #canvas{
+  zoom:var(--ios-novel-preview-zoom,1)!important;
+  -webkit-transform:none!important;
+  transform:none!important;
+  transform-origin:top left!important;
 }
 </style>
-<script id="ios-novel-column-fragment-fix-script">
+<script id="ios-novel-columns-v3-script">
 (function(){
 'use strict';
 
-/* iPadOS can identify as Macintosh when desktop-site UA is used, so include
-   touch-capable Mac detection as well. Keep this Safari/WebKit-only. */
+function ST(){ try{return state;}catch(_){return window.state||null;} }
 function isIOSWebKit(){
-  const ua=navigator.userAgent||'';
-  const iOS=/iPad|iPhone|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints>1);
-  const webkit=/AppleWebKit/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
-  return iOS && webkit;
+  var ua=navigator.userAgent||'';
+  var ios=/iPad|iPhone|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints>1);
+  /* Every iOS browser uses WebKit; exclude nothing here because embedded browsers
+     can still expose CriOS/FxiOS while having the same column painter. */
+  return !!(ios && /AppleWebKit/i.test(ua));
 }
-
-function syncIOSNovelFragmentFix(){
-  const chat=document.getElementById('chat');
-  if(!chat) return;
-  let s=null;
-  try{ s=state; }catch(_){ s=window.state||null; }
-  const novel=s&&s.novel;
-  const layout=s&&s.layout;
-  const scale=Number(layout&&layout.widthScale!=null?layout.widthScale:100);
-  /* The transform is a visual no-op at 100%, so removing it changes no styling;
-     it only lets WebKit really paint the second fragment. */
-  const on=!!(isIOSWebKit() && novel && novel.on && novel.mode!=='ratio' && Math.abs(scale-100)<0.001);
-  chat.classList.toggle('ios-novel-fragment-fix',on);
-  if(on){
-    /* Force one fresh fragmentation pass after the transform has disappeared. */
-    const h=chat.style.height;
-    chat.style.height=h;
-    void chat.offsetHeight;
+function novelIsOn(){
+  var s=ST(), n=s&&s.novel;
+  return !!(s && n && n.on && n.mode!=='ratio');
+}
+function syncColumnClass(){
+  var chat=document.getElementById('chat');
+  if(!chat) return false;
+  var on=isIOSWebKit() && novelIsOn();
+  chat.classList.toggle('ios-novel-columns-v3',on);
+  var s=ST(), ws=Number(s&&s.layout&&s.layout.widthScale!=null?s.layout.widthScale:100);
+  chat.classList.toggle('ios-novel-glyph-100',on && Math.abs(ws-100)<0.001);
+  return on;
+}
+function transformScale(el){
+  if(!el) return 1;
+  var tr='none';
+  try{ tr=getComputedStyle(el).transform||'none'; }catch(_){}
+  if(tr && tr!=='none'){
+    var m=tr.match(/^matrix\(([^,]+),/);
+    if(m){ var a=parseFloat(m[1]); if(isFinite(a)&&a>0) return a; }
+    var m3=tr.match(/^matrix3d\(([^,]+),/);
+    if(m3){ var a3=parseFloat(m3[1]); if(isFinite(a3)&&a3>0) return a3; }
   }
+  try{
+    var ow=el.offsetWidth, rw=el.getBoundingClientRect().width;
+    if(ow>0&&rw>0){ var k=rw/ow; if(isFinite(k)&&k>0) return k; }
+  }catch(_){}
+  return 1;
+}
+function clearPreviewZoom(){
+  var body=document.body, canvas=document.getElementById('canvas');
+  if(body) body.classList.remove('ios-novel-preview-zoom');
+  if(canvas) canvas.style.removeProperty('--ios-novel-preview-zoom');
+}
+function applyPreviewZoom(){
+  if(!(isIOSWebKit() && novelIsOn())){ clearPreviewZoom(); return; }
+  var body=document.body, canvas=document.getElementById('canvas');
+  if(!body||!canvas) return;
+  /* Read the scale produced by the existing fitPreview before replacing the
+     transform. The wrapper already has width/height = export size * this scale. */
+  var k=transformScale(canvas);
+  if(!(k>0)) k=1;
+  canvas.style.setProperty('--ios-novel-preview-zoom',String(k));
+  body.classList.add('ios-novel-preview-zoom');
+  canvas.style.transform='none';
+  canvas.style.webkitTransform='none';
+  /* Force a paint after the compositing layer has been removed. */
+  void canvas.offsetWidth;
+}
+function hardReflow(){
+  var chat=document.getElementById('chat');
+  if(!chat||!chat.classList.contains('ios-novel-columns-v3')) return;
+  /* Changing display itself is not enough on recent iOS; temporarily remove the
+     column count so WebKit must throw away all old fragments, then restore it. */
+  var cc=chat.style.columnCount, wc=chat.style.webkitColumnCount;
+  chat.style.columnCount='1'; chat.style.webkitColumnCount='1';
+  void chat.offsetHeight;
+  chat.style.columnCount=cc||''; chat.style.webkitColumnCount=wc||'';
+  void chat.offsetHeight;
 }
 
-/* renderPreview rebuilds #chat.innerHTML, so sync after every render. */
-const prevRender=window.renderPreview;
+/* Wrap the FINAL fitPreview visible at this point. Remove our zoom class before
+   the original routine measures export geometry, then swap its transform scale
+   to zoom afterwards. */
+var prevFit=window.fitPreview;
+if(typeof prevFit==='function'){
+  window.fitPreview=function(){
+    clearPreviewZoom();
+    var r=prevFit.apply(this,arguments);
+    try{ syncColumnClass(); applyPreviewZoom(); }catch(_){}
+    return r;
+  };
+}
+
+/* renderPreview rebuilds #chat. Re-apply the mobile-only fragmentation classes
+   after the existing renderer/layout code has finished, then force one clean
+   column pass. */
+var prevRender=window.renderPreview;
 if(typeof prevRender==='function'){
   window.renderPreview=function(){
-    const r=prevRender.apply(this,arguments);
-    try{ syncIOSNovelFragmentFix(); }catch(_){}
-    /* One extra frame is intentional: applyCanvas/applyGlyphScale may finish
-       later in the same render pass and restore inline transform styles. */
+    clearPreviewZoom();
+    var r=prevRender.apply(this,arguments);
+    try{ syncColumnClass(); applyPreviewZoom(); }catch(_){}
     requestAnimationFrame(function(){
-      try{
-        syncIOSNovelFragmentFix();
-        const chat=document.getElementById('chat');
-        if(chat&&chat.classList.contains('ios-novel-fragment-fix')){
-          const d=chat.style.display;
-          chat.style.display='none'; void chat.offsetWidth;
-          chat.style.display=d||''; void chat.offsetWidth;
-        }
-      }catch(_){}
+      try{ syncColumnClass(); hardReflow(); applyPreviewZoom(); }catch(_){}
     });
     return r;
   };
 }
 
-/* Direct setting changes can happen outside renderPreview wrappers. */
-const prevSetNovel=window.setNovel;
+/* The setting function itself may trigger rendering through nested wrappers, but
+   syncing here also covers state restores and unusual call order. */
+var prevSetNovel=window.setNovel;
 if(typeof prevSetNovel==='function'){
   window.setNovel=function(){
-    const r=prevSetNovel.apply(this,arguments);
-    try{ syncIOSNovelFragmentFix(); }catch(_){}
+    var r=prevSetNovel.apply(this,arguments);
+    try{ syncColumnClass(); }catch(_){}
+    requestAnimationFrame(function(){ try{ hardReflow(); applyPreviewZoom(); }catch(_){} });
     return r;
   };
 }
 
-document.addEventListener('DOMContentLoaded',function(){
-  try{ syncIOSNovelFragmentFix(); }catch(_){}
-  setTimeout(function(){ try{ syncIOSNovelFragmentFix(); }catch(_){} },250);
+function resync(){
+  try{ syncColumnClass(); }catch(_){}
+  requestAnimationFrame(function(){ try{ hardReflow(); applyPreviewZoom(); }catch(_){} });
+}
+document.addEventListener('DOMContentLoaded',function(){ setTimeout(resync,80); });
+window.addEventListener('orientationchange',function(){ setTimeout(resync,180); });
+if(window.visualViewport) window.visualViewport.addEventListener('resize',function(){
+  if(novelIsOn()) requestAnimationFrame(function(){ try{ applyPreviewZoom(); }catch(_){} });
 });
+try{
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(resync).catch(function(){});
+}catch(_){}
+setTimeout(resync,350);
 })();
 </script>
+
 </body>
 
 
