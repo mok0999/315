@@ -17717,6 +17717,14 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   watchImages(chat);
   const per=n.single?1:2;                          /* 한 번에 보여줄 쪽 수 */
   const apply=(k)=>{ const ww=setCols(k); chat.style.height=textH+'px'; return ww; };
+  /* 사파리는 넘칠 때 단을 더 만들지 않고 아래로 흘려보낸다.
+     그래서 가로로만 검사하면 '넘쳤다'는 걸 영영 알아채지 못한다. 세로도 같이 본다. */
+  const overflowing=()=> (chat.scrollWidth>chat.clientWidth+2)
+                      || (chat.scrollHeight>chat.clientHeight+2);
+  /* 사파리는 다시 계산할 때 앞의 결과를 들고 있으므로, 재기 전에 한 번 비워 준다 */
+  const kick=()=>{ const d=chat.style.display; chat.style.display='none';
+                   void chat.offsetWidth; chat.style.display=d||''; void chat.offsetWidth; };
+
   const sig=layoutSig();
   let cols;
   if(colCache&&colCache.sig===sig){
@@ -17734,7 +17742,8 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
     apply(cols);
   }
   /* 넘치면 늘리기만 한다 (줄이지 않는다 — 줄이는 순간 블럭이 뭉친다) */
-  for(let i=0;i<24&&chat.scrollWidth>chat.clientWidth+2;i++){ cols+=per; apply(cols); }
+  kick();
+  for(let i=0;i<24&&overflowing();i++){ cols+=per; apply(cols); kick(); }
   colCache={sig:sig,cols:cols};
 
   const units=Math.max(1,Math.ceil(cols/per));
