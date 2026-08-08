@@ -17456,6 +17456,7 @@ setTimeout(()=>{ bind(); apply(); },400);
 .novel-paper{position:absolute;top:0;background:var(--novel-paper,#EDEDEE);
   box-shadow:0 1px 5px rgba(0,0,0,.10);pointer-events:none;z-index:0}
 #canvas.novel-canvas>#chat{position:relative;z-index:1}
+#canvas.novel-canvas>#novelWindow{z-index:1}
 #canvas.novel-canvas>.novel-folio{z-index:2}
 .novel-pager{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px}
 .novel-pager button{width:34px;height:28px;border:1px solid var(--line,#E4E4E6);background:var(--panel,#fff);
@@ -17629,9 +17630,18 @@ function markBreaks(){
   });
 }
 
+/* 창 안에 들어가 있던 본문을 캔버스 직속으로 되돌린다 */
+function restoreChat(canvas,chat){
+  const win=canvas.querySelector('#novelWindow');
+  if(!win) return;
+  if(chat.parentElement===win) canvas.appendChild(chat);
+  win.remove();
+}
+
 window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   const n=cfg();
   if(!n.on){
+    restoreChat(canvas,chat);
     chat.classList.remove('novel-mode','novel-fixed');
     chat.style.columnCount=''; chat.style.columnGap=''; chat.style.height=''; chat.style.transform='';
     chat.style.paddingLeft=''; chat.style.paddingRight='';
@@ -17659,6 +17669,7 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
 
   if(n.mode!=='ratio'){
     /* 단 수는 내가 고르고, 쪽 길이는 글 양에 맞춰 자동 (단마다 고르게) */
+    restoreChat(canvas,chat);
     chat.classList.remove('novel-fixed');
     chat.style.transform=''; chat.style.clipPath='';
     chat.style.marginLeft=''; chat.style.marginRight='';
@@ -17740,17 +17751,25 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   /* 글 사이를 좁히면 흐름 전체가 짧아져서, 가운데 정렬 탓에 뒤쪽 쪽이
      캔버스 안으로 밀려 들어와 세 번째 단이 보였다.
      왼쪽에 고정한 뒤 지금 보여 줄 두 쪽만 남기고 잘라 낸다. */
-  chat.style.marginLeft='0px'; chat.style.marginRight='0px';
-  const flowW=colW2*cols+colGap*(cols-1);
   const winL=first*(colW2+colGap);
   const winW=colW2*per+colGap*(per-1);
-  /* 지금 보여 줄 쪽만 남기고 잘라 낸다 (뒤쪽 쪽이 새어 나오지 않게) */
-  chat.style.clipPath='inset(0 '+Math.max(0,flowW-winL-winW)+'px 0 '+winL+'px)';
   /* 두 쪽 묶음을 캔버스 한가운데에 놓는다.
-     그래야 간격을 줄이거나 늘려도 왼쪽·오른쪽이 가운데를 기준으로 똑같이 움직인다.
-     (가운데 정렬을 안 하면 묶음이 통째로 왼쪽으로 쏠려 오른쪽 쪽이 비어 보인다) */
+     그래야 간격을 줄이거나 늘려도 왼쪽·오른쪽이 가운데를 기준으로 똑같이 움직인다. */
   const center=(autoGap-colGap)/2;
-  chat.style.transform='translateX('+(-winL+center)+'px)';
+
+  /* 보여 줄 구간만 드러내는 '창'을 따로 두고 그 안에 본문을 넣는다.
+     예전에는 본문 자체에 transform·clip-path 를 걸었는데, 사파리(아이폰)에서는
+     그 둘이 다단 쪼개기를 망가뜨려서 글이 단을 넘기지 못하고 종이 밖으로
+     그냥 흘러넘쳤다. 다단 요소에는 아무 것도 걸지 않는 게 안전하다. */
+  chat.style.transform=''; chat.style.clipPath='';
+  chat.style.marginRight='0px';
+  chat.style.marginLeft=(-winL)+'px';
+  let win=canvas.querySelector('#novelWindow');
+  if(!win){ win=document.createElement('div'); win.id='novelWindow'; }
+  win.style.cssText='position:absolute;overflow:hidden;top:'+mgY+'px;left:'+(mgX+center)
+    +'px;width:'+winW+'px;height:'+textH+'px;z-index:1';
+  if(chat.parentElement!==win) win.appendChild(chat);
+  if(win.parentElement!==canvas) canvas.appendChild(win);
   drawPapers(canvas,PAPER_W,paperH,PAPER_W,per,mgX);
   /* 본문이 가운데로 움직인 만큼 쪽번호도 같이 움직여야 글 끝과 맞는다 */
   drawFolios(canvas,colW2,colGap,cols,mgX+center,mgY,folioH,first,per);
