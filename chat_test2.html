@@ -18075,179 +18075,97 @@ window.__novelDump=dump;
 setTimeout(dump,800);
 })();
 </script>
+<!-- ===== iOS Safari multicol fragmented-text paint fix v4 =====
+     모바일 Safari에서 글 블럭의 '자리'는 다음 단에 생기는데 실제 glyph layer만
+     첫 단 좌표계에 남는 WebKit fragmentation/compositing 문제를 피한다.
+     여러 단 모드 + 모바일 WebKit에서만 적용. 단 계산/데스크탑/일반 모드는 그대로. -->
+<style id="ios-novel-fragment-paint-fix-v4">
+@supports (-webkit-touch-callout:none){
+  /* fragment가 되어야 하는 블럭 자신이 positioned box가 되지 않게 한다.
+     모바일 툴바는 이미 body fixed proxy를 사용하므로 원래 기능은 유지된다. */
+  body.mobile-ui #chat.novel-mode > .pmsg.t-block{
+    position:static !important;
+    z-index:auto !important;
+    transform:none !important;
+    -webkit-transform:none !important;
+    will-change:auto !important;
+    contain:none !important;
+    isolation:auto !important;
+    filter:none !important;
+    -webkit-filter:none !important;
+    perspective:none !important;
+  }
 
+  /* 실제 글자를 그리는 레이어가 stacking/compositing layer가 되면 WebKit이
+     두 번째 column fragment의 좌표를 첫 column 좌표로 그리는 경우가 있다.
+     장평 100%에서는 transform 자체가 시각적으로 아무 일도 하지 않으므로
+     해당 레이어를 완전히 평범한 flow로 되돌린다. */
+  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode > .pmsg.t-block > .t-inner,
+  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
+    position:static !important;
+    z-index:auto !important;
+    transform:none !important;
+    -webkit-transform:none !important;
+    transform-origin:initial !important;
+    -webkit-transform-origin:initial !important;
+    will-change:auto !important;
+    contain:none !important;
+    isolation:auto !important;
+    filter:none !important;
+    -webkit-filter:none !important;
+    perspective:none !important;
+    backface-visibility:visible !important;
+    -webkit-backface-visibility:visible !important;
+  }
+  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
+    display:block !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    margin-right:0 !important;
+  }
 
-<!-- ===== iOS Safari multicol paint/compositing workaround v3 ===== -->
-<style id="ios-novel-columns-v3-style">
-/*
-  iOS Safari can lay out a fragmented text block correctly but paint later
-  fragments back in the first column when either the fragmentable block or an
-  ancestor is promoted to a transform/compositing layer.
-
-  Keep this workaround strictly inside iOS/iPadOS + "여러 단" mode.
-*/
-#chat.ios-novel-columns-v3.novel-mode > .pmsg.t-block{
-  position:static!important;
-  -webkit-column-break-inside:auto!important;
-  break-inside:auto!important;
-  -webkit-transform:none!important;
-  transform:none!important;
-  -webkit-backface-visibility:visible!important;
-  backface-visibility:visible!important;
-}
-#chat.ios-novel-columns-v3.novel-mode > .pmsg.t-block > .t-inner{
-  position:static!important;
-  -webkit-column-break-inside:auto!important;
-  break-inside:auto!important;
-  -webkit-transform:none!important;
-  transform:none!important;
-}
-/* Remove only the no-op glyph transform at 장평 100%. Non-100% 장평 keeps its
-   existing scaleX so the user's typography setting is not changed. */
-#chat.ios-novel-columns-v3.ios-novel-glyph-100.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
-  -webkit-transform:none!important;
-  transform:none!important;
-  will-change:auto!important;
-}
-/* The normal mobile preview scales #canvas with transform:scale(). In iOS
-   multi-column mode use WebKit zoom instead, while #canvasFit keeps the exact
-   already-calculated visual box size. This leaves export geometry untouched. */
-body.ios-novel-preview-zoom.mobile-ui #canvas{
-  zoom:var(--ios-novel-preview-zoom,1)!important;
-  -webkit-transform:none!important;
-  transform:none!important;
-  transform-origin:top left!important;
+  body.mobile-ui #chat.novel-mode > .pmsg.t-block{
+    break-inside:auto !important;
+    -webkit-column-break-inside:auto !important;
+  }
 }
 </style>
-<script id="ios-novel-columns-v3-script">
+<script id="ios-novel-fragment-paint-fix-v4-script">
 (function(){
-'use strict';
-
-function ST(){ try{return state;}catch(_){return window.state||null;} }
-function isIOSWebKit(){
-  var ua=navigator.userAgent||'';
-  var ios=/iPad|iPhone|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints>1);
-  /* Every iOS browser uses WebKit; exclude nothing here because embedded browsers
-     can still expose CriOS/FxiOS while having the same column painter. */
-  return !!(ios && /AppleWebKit/i.test(ua));
-}
-function novelIsOn(){
-  var s=ST(), n=s&&s.novel;
-  return !!(s && n && n.on && n.mode!=='ratio');
-}
-function syncColumnClass(){
-  var chat=document.getElementById('chat');
-  if(!chat) return false;
-  var on=isIOSWebKit() && novelIsOn();
-  chat.classList.toggle('ios-novel-columns-v3',on);
-  var s=ST(), ws=Number(s&&s.layout&&s.layout.widthScale!=null?s.layout.widthScale:100);
-  chat.classList.toggle('ios-novel-glyph-100',on && Math.abs(ws-100)<0.001);
-  return on;
-}
-function transformScale(el){
-  if(!el) return 1;
-  var tr='none';
-  try{ tr=getComputedStyle(el).transform||'none'; }catch(_){}
-  if(tr && tr!=='none'){
-    var m=tr.match(/^matrix\(([^,]+),/);
-    if(m){ var a=parseFloat(m[1]); if(isFinite(a)&&a>0) return a; }
-    var m3=tr.match(/^matrix3d\(([^,]+),/);
-    if(m3){ var a3=parseFloat(m3[1]); if(isFinite(a3)&&a3>0) return a3; }
+  'use strict';
+  function sync(){
+    var mobile=document.body.classList.contains('mobile-ui');
+    var novel=false, scale=100;
+    try{ novel=!!(state&&state.novel&&state.novel.on&&state.novel.mode!=='ratio'); }catch(_){}
+    try{ scale=Number(state&&state.layout&&state.layout.widthScale)||100; }catch(_){}
+    /* scaleX(1) + will-change:transform 만 제거하는 안전 경로.
+       장평을 실제로 바꾼 경우에는 장평 기능을 훼손하지 않도록 기존 렌더를 유지한다. */
+    document.body.classList.toggle('novel-glyph-fragment-safe', mobile&&novel&&Math.abs(scale-100)<0.001);
   }
-  try{
-    var ow=el.offsetWidth, rw=el.getBoundingClientRect().width;
-    if(ow>0&&rw>0){ var k=rw/ow; if(isFinite(k)&&k>0) return k; }
-  }catch(_){}
-  return 1;
-}
-function clearPreviewZoom(){
-  var body=document.body, canvas=document.getElementById('canvas');
-  if(body) body.classList.remove('ios-novel-preview-zoom');
-  if(canvas) canvas.style.removeProperty('--ios-novel-preview-zoom');
-}
-function applyPreviewZoom(){
-  if(!(isIOSWebKit() && novelIsOn())){ clearPreviewZoom(); return; }
-  var body=document.body, canvas=document.getElementById('canvas');
-  if(!body||!canvas) return;
-  /* Read the scale produced by the existing fitPreview before replacing the
-     transform. The wrapper already has width/height = export size * this scale. */
-  var k=transformScale(canvas);
-  if(!(k>0)) k=1;
-  canvas.style.setProperty('--ios-novel-preview-zoom',String(k));
-  body.classList.add('ios-novel-preview-zoom');
-  canvas.style.transform='none';
-  canvas.style.webkitTransform='none';
-  /* Force a paint after the compositing layer has been removed. */
-  void canvas.offsetWidth;
-}
-function hardReflow(){
-  var chat=document.getElementById('chat');
-  if(!chat||!chat.classList.contains('ios-novel-columns-v3')) return;
-  /* Changing display itself is not enough on recent iOS; temporarily remove the
-     column count so WebKit must throw away all old fragments, then restore it. */
-  var cc=chat.style.columnCount, wc=chat.style.webkitColumnCount;
-  chat.style.columnCount='1'; chat.style.webkitColumnCount='1';
-  void chat.offsetHeight;
-  chat.style.columnCount=cc||''; chat.style.webkitColumnCount=wc||'';
-  void chat.offsetHeight;
-}
-
-/* Wrap the FINAL fitPreview visible at this point. Remove our zoom class before
-   the original routine measures export geometry, then swap its transform scale
-   to zoom afterwards. */
-var prevFit=window.fitPreview;
-if(typeof prevFit==='function'){
-  window.fitPreview=function(){
-    clearPreviewZoom();
-    var r=prevFit.apply(this,arguments);
-    try{ syncColumnClass(); applyPreviewZoom(); }catch(_){}
-    return r;
-  };
-}
-
-/* renderPreview rebuilds #chat. Re-apply the mobile-only fragmentation classes
-   after the existing renderer/layout code has finished, then force one clean
-   column pass. */
-var prevRender=window.renderPreview;
-if(typeof prevRender==='function'){
-  window.renderPreview=function(){
-    clearPreviewZoom();
-    var r=prevRender.apply(this,arguments);
-    try{ syncColumnClass(); applyPreviewZoom(); }catch(_){}
-    requestAnimationFrame(function(){
-      try{ syncColumnClass(); hardReflow(); applyPreviewZoom(); }catch(_){}
-    });
-    return r;
-  };
-}
-
-/* The setting function itself may trigger rendering through nested wrappers, but
-   syncing here also covers state restores and unusual call order. */
-var prevSetNovel=window.setNovel;
-if(typeof prevSetNovel==='function'){
-  window.setNovel=function(){
-    var r=prevSetNovel.apply(this,arguments);
-    try{ syncColumnClass(); }catch(_){}
-    requestAnimationFrame(function(){ try{ hardReflow(); applyPreviewZoom(); }catch(_){} });
-    return r;
-  };
-}
-
-function resync(){
-  try{ syncColumnClass(); }catch(_){}
-  requestAnimationFrame(function(){ try{ hardReflow(); applyPreviewZoom(); }catch(_){} });
-}
-document.addEventListener('DOMContentLoaded',function(){ setTimeout(resync,80); });
-window.addEventListener('orientationchange',function(){ setTimeout(resync,180); });
-if(window.visualViewport) window.visualViewport.addEventListener('resize',function(){
-  if(novelIsOn()) requestAnimationFrame(function(){ try{ applyPreviewZoom(); }catch(_){} });
-});
-try{
-  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(resync).catch(function(){});
-}catch(_){}
-setTimeout(resync,350);
+  window.addEventListener('resize',sync,{passive:true});
+  document.addEventListener('DOMContentLoaded',sync);
+  document.addEventListener('click',function(){ requestAnimationFrame(sync); },true);
+  var prevRender=window.renderPreview;
+  if(typeof prevRender==='function'){
+    window.renderPreview=function(){
+      var r=prevRender.apply(this,arguments);
+      sync();
+      return r;
+    };
+  }
+  var prevNovel=window.setNovel;
+  if(typeof prevNovel==='function'){
+    window.setNovel=function(){
+      var r=prevNovel.apply(this,arguments);
+      sync();
+      return r;
+    };
+  }
+  setTimeout(sync,0); setTimeout(sync,400);
 })();
 </script>
+
 
 </body>
 
