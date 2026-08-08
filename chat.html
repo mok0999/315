@@ -4500,7 +4500,16 @@ exportHTML=function(){
   const css=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
   const bodyBg=state.transparentBg?'transparent':state.colors.bg;
   const transparentCss=state.transparentBg?'html,body,#canvas,#chat{background:transparent!important}#canvasBgImage,#canvasBgOverlay{display:none!important}':'';
-  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>채팅 발췌</title><style>'+css+'html,body{height:auto;min-height:100%;overflow:auto}body{background:'+bodyBg+';display:flex;justify-content:center;padding:0;margin:0}'+transparentCss+'</style></head><body>'+node.outerHTML+'</body></html>';
+  const __htmlNovel=!!(state.novel&&state.novel.on);
+  const __htmlFitW=Math.max(1,Math.round(document.getElementById('canvas').offsetWidth||state.layout.width||440));
+  const __htmlFluidCss=!__htmlNovel
+    ? 'html,body{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;}'
+      +'body{width:100%!important;max-width:none!important;display:block!important;margin:0!important;padding:0!important;background:'+bodyBg+';}'
+      +'#canvas{width:100%!important;max-width:'+__htmlFitW+'px!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;zoom:1!important;display:block!important;margin:0 auto!important;box-sizing:border-box!important;}'
+      +'#chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important;}'
+      +'img{max-width:100%!important;height:auto;}'
+    : 'html,body{height:auto;min-height:100%;overflow:auto}body{background:'+bodyBg+';display:flex;justify-content:center;padding:0;margin:0}';
+  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>채팅 발췌</title><style>'+css+__htmlFluidCss+transparentCss+'</style></head><body>'+node.outerHTML+'</body></html>';
   const blob=new Blob([html],{type:'text/html'});
   const fname=safeFilename(state.export.filename)+'.html';
   window.__saveBlobAs(blob,fname,()=>{const a=document.createElement('a');a.download=fname;a.href=URL.createObjectURL(blob);a.click();});
@@ -14521,6 +14530,94 @@ function fontImports(){
   return out;
 }
 
+/* =====================================================================
+   티스토리 백업 최적화 — 프로필 Base64 중복 제거
+   같은 프로필이 대사마다 <img src="data:image/..."> 로 반복되면 HTML 용량이
+   대사 수에 비례해 커진다. 블로그용 복사본에서만 동일 프로필 데이터를 CSS에
+   한 번 넣고, 각 위치는 짧은 클래스만 참조하게 바꾼다.
+   원본 프로젝트/미리보기/JSON에는 전혀 손대지 않는다.
+   ===================================================================== */
+function __mokoByteSize(v){
+  try{ return new Blob([String(v==null?'':v)]).size; }
+  catch(_){ return unescape(encodeURIComponent(String(v==null?'':v))).length; }
+}
+function __mokoCssString(v){
+  return '"'+String(v||'')
+    .replace(/\\/g,'\\\\')
+    .replace(/"/g,'\\22 ')
+    .replace(/[\r\n\f]/g,'')+'"';
+}
+function optimizeEmbedProfileImages(node,rootSel){
+  const all=[...node.querySelectorAll('img.av[src]')];
+  const groups=new Map();
+  const uniqueAll=new Set();
+
+  all.forEach(img=>{
+    const src=img.getAttribute('src')||'';
+    if(!src) return;
+    uniqueAll.add(src);
+    if(!/^data:image\//i.test(src)) return;   /* URL 이미지는 이미 짧으므로 그대로 둔다 */
+    let g=groups.get(src);
+    if(!g){ g=[]; groups.set(src,g); }
+    g.push(img);
+  });
+
+  let css='', seq=0, dedupRefs=0, dedupUnique=0;
+  let beforeProfileDataBytes=0, afterProfileDataBytes=0;
+  let beforeFragmentBytes=0, afterFragmentBytes=0;
+
+  groups.forEach((nodes,src)=>{
+    const srcBytes=__mokoByteSize(src);
+    beforeProfileDataBytes+=srcBytes*nodes.length;
+
+    if(nodes.length<2){
+      afterProfileDataBytes+=srcBytes;
+      return;
+    }
+
+    seq++;
+    dedupUnique++;
+    dedupRefs+=nodes.length;
+    const cls='moko-av-dedup-'+seq;
+    const rule=rootSel+' .'+cls+'{'
+      +'background-image:url('+__mokoCssString(src)+')!important;'
+      +'background-size:cover!important;background-position:center!important;'
+      +'background-repeat:no-repeat!important;}\n';
+    css+=rule;
+    afterProfileDataBytes+=srcBytes;
+
+    nodes.forEach(img=>{
+      beforeFragmentBytes+=__mokoByteSize(img.outerHTML);
+      const span=document.createElement('span');
+      [...img.attributes].forEach(a=>{
+        const n=a.name.toLowerCase();
+        if(n==='src'||n==='alt') return;
+        try{ span.setAttribute(a.name,a.value); }catch(_){}
+      });
+      span.classList.add(cls);
+      span.setAttribute('aria-hidden','true');
+      img.replaceWith(span);
+      afterFragmentBytes+=__mokoByteSize(span.outerHTML);
+    });
+  });
+
+  afterFragmentBytes+=__mokoByteSize(css);
+  const savedBytes=Math.max(0,beforeFragmentBytes-afterFragmentBytes);
+
+  return {
+    css,
+    profileRefs:all.length,
+    profileUnique:uniqueAll.size,
+    dataProfileRefs:[...groups.values()].reduce((n,a)=>n+a.length,0),
+    dataProfileUnique:groups.size,
+    dedupRefs,
+    dedupUnique,
+    beforeProfileDataBytes,
+    afterProfileDataBytes,
+    savedBytes
+  };
+}
+
 function buildEmbedHTML(){
   const canvas=$('canvas');
   if(!canvas) return null;
@@ -14542,6 +14639,10 @@ function buildEmbedHTML(){
 
   const root='moko-'+Math.random().toString(36).slice(2,8);
   const rootSel='#'+root;
+
+  /* 같은 Base64 프로필은 블로그용 복사본에서 한 번만 보관한다. */
+  const avatarOpt=optimizeEmbedProfileImages(node,rootSel);
+
   const css=[...document.querySelectorAll('style')].map(s=>s.textContent||'').join('\n')
     .replace(/\/\*[\s\S]*?\*\//g,'');
 
@@ -14580,50 +14681,128 @@ function buildEmbedHTML(){
   const bg=s0.transparentBg?'transparent':((s0.colors&&s0.colors.bg)||'#FFFFFF');
   const fitW=Math.max(1,Math.round(canvas.offsetWidth||(s0.layout&&s0.layout.width)||440));
   const fitH=Math.max(1,Math.round(canvas.offsetHeight||0));
+  const isNovel=!!(s0.novel&&s0.novel.on);
+
+  /* ---------------------------------------------------------------
+     블로그용 HTML은 '축소된 고정 캔버스'가 아니라 진짜 반응형 레이아웃으로.
+     예전 방식:
+       - .moko-fit-in width:488px 같은 고정폭
+       - 컨테이너가 좁으면 transform:scale()
+       - 스크립트가 잘리면 overflow-x:auto
+       - aspect-ratio / JS height 로 높이를 고정
+     이 조합 때문에 티스토리/모바일에서 글이 잘리거나 별도 스크롤이 생겼다.
+
+     일반/로그/메신저는 실제 폭을 100%로 줄이고 텍스트를 다시 줄바꿈(reflow)한다.
+     최대 폭만 원래 캔버스 폭으로 두므로 데스크톱 모양은 유지되고,
+     모바일에서는 부모 폭에 맞춰 자연스럽게 좁아지며 높이는 내용만큼 늘어난다.
+
+     소설/여러 단은 '페이지 조판' 자체가 고정 폭·높이에 의존하므로
+     기존 비율 축소 방식을 유지한다.
+     --------------------------------------------------------------- */
+  const fluidCss=!isNovel
+    ? rootSel+' .moko-fit,'+rootSel+' .moko-fit-in{'
+        +'width:100%!important;max-width:100%!important;'
+        +'height:auto!important;min-height:0!important;max-height:none!important;'
+        +'overflow:visible!important;transform:none!important;'
+        +'margin:0!important;padding:0!important;}\n'
+      +rootSel+' #canvas{'
+        +'width:100%!important;max-width:100%!important;min-width:0!important;'
+        +'height:auto!important;min-height:0!important;max-height:none!important;'
+        +'overflow:visible!important;transform:none!important;zoom:1!important;'
+        +'display:block!important;margin:0 auto!important;box-sizing:border-box!important;}\n'
+      +rootSel+' #chat{'
+        +'width:100%!important;max-width:100%!important;min-width:0!important;'
+        +'height:auto!important;min-height:0!important;max-height:none!important;'
+        +'overflow:visible!important;transform:none!important;'
+        +'margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important;}\n'
+      +rootSel+' img{max-width:100%!important;height:auto;}\n'
+    : rootSel+' .moko-fit{width:100%;max-width:100%;overflow-x:hidden;-webkit-overflow-scrolling:touch}\n'
+      +rootSel+' .moko-fit-in{width:'+fitW+'px;transform-origin:top left}\n'
+      +'@supports (container-type:inline-size) and (width:tan(atan2(1px,1px))){'
+        +rootSel+' .moko-fit{container-type:inline-size;overflow:hidden;aspect-ratio:'+fitW+'/'+(fitH+2)+'}'
+        +rootSel+' .moko-fit-in{transform:scale(min(1,tan(atan2(100cqw,'+fitW+'px))))}'
+      +'}\n';
 
   const style=fontImports()
     +rootSel+'{'+'display:block;width:100%;max-width:'+fitW+'px;margin:0 auto;'
+      +'height:auto;min-height:0;overflow:visible;'
       +'background:'+bg+';box-sizing:border-box}\n'
     +rootSel+' *{box-sizing:border-box}\n'
     +rootSel+' img{max-width:100%}\n'
-    /* 스크립트를 지우는 블로그에서도 잘리지만은 않도록 가로 스크롤로 물러선다 */
-    +rootSel+' .moko-fit{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}\n'
-    +rootSel+' .moko-fit-in{width:'+fitW+'px;transform-origin:top left}\n'
-    /* 스크립트가 없어도 자리에 맞춰 비율 그대로 줄어들게 (컨테이너 쿼리 지원 시) */
-    +'@supports (container-type:inline-size) and (width:tan(atan2(1px,1px))){'
-      +rootSel+' .moko-fit{container-type:inline-size;overflow:hidden;aspect-ratio:'+fitW+'/'+(fitH+2)+'}'
-      +rootSel+' .moko-fit-in{transform:scale(min(1,tan(atan2(100cqw,'+fitW+'px))))}'
-    +'}\n'
+    +fluidCss
     +scoped
+    /* 프로필 이미지 data URL은 여기 한 번만 들어간다.
+       scoped 원본의 background shorthand보다 뒤에 두고 !important로 확정한다. */
+    +avatarOpt.css
+    /* scoped 원본 CSS 안에 #canvas{overflow:hidden}, width/height 인라인 계산 등이
+       다시 나올 수 있으므로 fluid 보정은 scoped 뒤에서 한 번 더 확정한다. */
+    +(!isNovel
+      ?rootSel+' .moko-fit,'+rootSel+' .moko-fit-in{width:100%!important;max-width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;}\n'
+       +rootSel+' #canvas{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;zoom:1!important;display:block!important;}\n'
+       +rootSel+' #chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;}\n'
+      :'')
     /* 지금 화면의 색 변수는 맨 마지막에 둬서 스코프된 :root 규칙을 덮어쓴다 */
     +rootSel+'{'+vars+'}\n'
-    /* HTML 코드 복사에서는 원본 앱의 body/html 배경 규칙이 rootSel로 스코프되며
-       앞쪽의 background:transparent를 다시 덮을 수 있다. 투명화가 켜졌다면
-       가장 마지막 규칙에서 발췌 바깥 래퍼와 실제 캔버스를 모두 투명하게 고정하고,
-       배경 이미지·오버레이·영상 레이어도 제거한다. */
     +(s0.transparentBg
       ?rootSel+','+rootSel+' .moko-fit,'+rootSel+' .moko-fit-in,'+rootSel+' #canvas,'+rootSel+' #chat{background:transparent!important;background-color:transparent!important;background-image:none!important}\n'
        +rootSel+' #canvasBgImage,'+rootSel+' #canvasBgOverlay,'+rootSel+' #canvasBgVideoLayer,'+rootSel+' #canvasBgVideo,'+rootSel+' #canvasBgVideoStill,'+rootSel+' #canvasBgVideoDim{display:none!important;background:none!important}\n'
       :'');
 
-  /* 자리에 맞춰 줄이는 스크립트 — 절대 원본보다 커지지 않고(scale ≤ 1),
-     좁아지면 비율 그대로 줄인다. 글꼴·이미지가 늦게 와도 다시 잰다. */
-  const fitJs='(function(){var r=document.getElementById("'+root+'");if(!r)return;'
-    +'var f=r.querySelector(".moko-fit"),i=r.querySelector(".moko-fit-in"),W='+fitW+';'
-    +'function u(){var a=f.clientWidth||r.clientWidth||W;var s=Math.min(1,a/W);'
-    +'if(s<1){i.style.transform="scale("+s+")";f.style.overflow="hidden";'
-    +'f.style.height=Math.ceil(i.offsetHeight*s)+"px";}'
-    +'else{i.style.transform="none";f.style.overflow="";f.style.height="";}}'
-    +'u();if(window.ResizeObserver){try{new ResizeObserver(u).observe(f);}catch(e){}}'
-    +'window.addEventListener("resize",u);window.addEventListener("orientationchange",u);'
-    +'try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(u);}catch(e){}'
-    +'Array.prototype.forEach.call(r.querySelectorAll("img"),function(m){'
-    +'if(!m.complete){m.addEventListener("load",u);m.addEventListener("error",u);}});'
-    +'setTimeout(u,300);setTimeout(u,1200);setTimeout(u,3000);})();';
+  /* 일반/로그/메신저는 스크립트 없이도 완전히 유동적이어야 한다.
+     티스토리가 <script>를 제거해도 텍스트가 전부 보이고 별도 스크롤이 생기지 않는다.
+     소설/여러 단만 기존 페이지 비율 축소 스크립트를 사용한다. */
+  let fitJs='';
+  if(isNovel){
+    fitJs='(function(){var r=document.getElementById("'+root+'");if(!r)return;'
+      +'var f=r.querySelector(".moko-fit"),i=r.querySelector(".moko-fit-in"),W='+fitW+';'
+      +'function u(){var a=f.clientWidth||r.clientWidth||W;var s=Math.min(1,a/W);'
+      +'if(s<1){i.style.transform="scale("+s+")";f.style.overflow="hidden";'
+      +'f.style.height=Math.ceil(i.offsetHeight*s)+"px";}'
+      +'else{i.style.transform="none";f.style.overflow="";f.style.height="";}}'
+      +'u();if(window.ResizeObserver){try{new ResizeObserver(u).observe(f);}catch(e){}}'
+      +'window.addEventListener("resize",u);window.addEventListener("orientationchange",u);'
+      +'try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(u);}catch(e){}'
+      +'Array.prototype.forEach.call(r.querySelectorAll("img"),function(m){'
+      +'if(!m.complete){m.addEventListener("load",u);m.addEventListener("error",u);}});'
+      +'setTimeout(u,300);setTimeout(u,1200);setTimeout(u,3000);})();';
+  }
 
-  return '<div id="'+root+'">\n<style>\n'+style+'</style>\n'
+  const result='<div id="'+root+'">\n<style>\n'+style+'</style>\n'
     +'<div class="moko-fit"><div class="moko-fit-in">\n'+node.outerHTML+'\n</div></div>\n'
-    +'<script>'+fitJs+'<\/script>\n</div>';
+    +(fitJs?'<script>'+fitJs+'<\/script>\n':'')
+    +'</div>';
+
+  /* ---- 티스토리 용량 진단 ----
+     최종 HTML 바이트와, 프로필 중복 제거가 없었을 때의 근사 용량을 같이 기록한다. */
+  try{
+    const finalBytes=__mokoByteSize(result);
+    const beforeBytes=finalBytes+(avatarOpt.savedBytes||0);
+
+    const msgImgs=[...node.querySelectorAll('img.mimg[src]')];
+    let insertedImageBytes=0, insertedImageCount=0;
+    msgImgs.forEach(img=>{
+      const src=img.getAttribute('src')||'';
+      if(/^data:image\//i.test(src)){ insertedImageCount++; insertedImageBytes+=__mokoByteSize(src); }
+    });
+
+    /* 배경/스티커 등은 remainder에 포함된다. 진단은 '무엇이 큰지' 보는 용도다. */
+    const profileBytes=Math.max(0,avatarOpt.afterProfileDataBytes||0);
+    const otherBytes=Math.max(0,finalBytes-profileBytes-insertedImageBytes);
+
+    window.__lastTistoryEmbedDiag={
+      finalBytes,beforeBytes,
+      savedBytes:Math.max(0,avatarOpt.savedBytes||0),
+      profileRefs:avatarOpt.profileRefs||0,
+      profileUnique:avatarOpt.profileUnique||0,
+      dataProfileRefs:avatarOpt.dataProfileRefs||0,
+      dataProfileUnique:avatarOpt.dataProfileUnique||0,
+      dedupRefs:avatarOpt.dedupRefs||0,
+      dedupUnique:avatarOpt.dedupUnique||0,
+      profileBytes,insertedImageCount,insertedImageBytes,otherBytes
+    };
+  }catch(_){ window.__lastTistoryEmbedDiag=null; }
+
+  return result;
 }
 
 async function toClipboard(text){
@@ -14644,6 +14823,77 @@ async function toClipboard(text){
     return ok;
   }catch(_){ return false; }
 }
+function __mokoHumanBytes(n){
+  n=Math.max(0,Number(n)||0);
+  if(n<1024) return Math.round(n)+'B';
+  if(n<1024*1024) return (n/1024).toFixed(n<10240?1:0)+'KB';
+  return (n/1024/1024).toFixed(n<10*1024*1024?2:1)+'MB';
+}
+function showTistoryDiagnostic(diag,html){
+  const old=document.getElementById('mokoTistoryDiag');
+  if(old) old.remove();
+
+  const d=diag||{};
+  const mb=(Number(d.finalBytes)||0)/(1024*1024);
+  let tone='good', status='✓ 비교적 가벼운 편이에요';
+  if(mb>=3){ tone='warn'; status='⚠ 코드 용량이 큰 편이에요 — 티스토리 환경에 따라 저장에 실패할 수 있어요'; }
+  else if(mb>=1){ tone='mid'; status='△ 코드가 조금 큰 편이에요'; }
+
+  const box=document.createElement('div');
+  box.id='mokoTistoryDiag';
+  box.className='moko-tistory-diag '+tone;
+
+  const profileLine=(d.profileRefs||0)
+    ? '프로필 이미지 <b>'+d.profileRefs+'회 → 고유 '+d.profileUnique+'개</b>'
+      +((d.dedupRefs||0)>0?' · 중복 제거 완료':' · 중복 없음')
+    : '프로필 이미지 없음';
+
+  box.innerHTML=
+    '<div class="mtd-head"><strong>티스토리 백업 진단</strong><button type="button" aria-label="닫기">×</button></div>'
+    +'<div class="mtd-total">최종 코드 <b>'+__mokoHumanBytes(d.finalBytes)+'</b></div>'
+    +'<div class="mtd-row">'+profileLine+'</div>'
+    +'<div class="mtd-row">프로필 데이터 <b>'+__mokoHumanBytes(d.profileBytes)+'</b>'
+      +' · 삽입 이미지 '+(d.insertedImageCount||0)+'개 <b>'+__mokoHumanBytes(d.insertedImageBytes)+'</b></div>'
+    +'<div class="mtd-row">텍스트·스타일·기타 <b>'+__mokoHumanBytes(d.otherBytes)+'</b></div>'
+    +((d.savedBytes||0)>0
+      ?'<div class="mtd-saved">최적화 전 약 <b>'+__mokoHumanBytes(d.beforeBytes)+'</b>'
+       +' → 후 <b>'+__mokoHumanBytes(d.finalBytes)+'</b>'
+       +' · <b>'+__mokoHumanBytes(d.savedBytes)+'</b> 절약</div>'
+      :'')
+    +'<div class="mtd-status">'+status+'</div>'
+    +'<button type="button" class="mtd-code">코드 보기</button>';
+
+  let st=document.getElementById('mokoTistoryDiagStyle');
+  if(!st){
+    st=document.createElement('style'); st.id='mokoTistoryDiagStyle';
+    st.textContent=
+      '#mokoTistoryDiag{position:fixed;right:18px;bottom:18px;z-index:99999;width:min(360px,calc(100vw - 28px));'
+      +'background:#fff;color:#424448;border:1px solid #e3e3e6;border-radius:14px;padding:13px 14px 12px;'
+      +'box-shadow:0 10px 34px rgba(0,0,0,.18);font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;'
+      +'font-size:12px;line-height:1.55;animation:mtdIn .18s ease-out}'
+      +'#mokoTistoryDiag.good{border-left:4px solid #59a66f}#mokoTistoryDiag.mid{border-left:4px solid #d2a33d}'
+      +'#mokoTistoryDiag.warn{border-left:4px solid #d35c5c}'
+      +'#mokoTistoryDiag .mtd-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}'
+      +'#mokoTistoryDiag .mtd-head strong{font-size:13px}#mokoTistoryDiag .mtd-head button{border:0;background:transparent;'
+      +'font-size:18px;color:#999;cursor:pointer;padding:0 2px}'
+      +'#mokoTistoryDiag .mtd-total{font-size:13px;margin-bottom:5px}'
+      +'#mokoTistoryDiag .mtd-row{color:#666}#mokoTistoryDiag .mtd-saved{margin-top:6px;padding-top:6px;border-top:1px solid #eee}'
+      +'#mokoTistoryDiag .mtd-status{margin-top:7px;font-weight:700}'
+      +'#mokoTistoryDiag .mtd-code{margin-top:9px;width:100%;height:32px;border:1px solid #ddd;border-radius:8px;'
+      +'background:#f7f7f8;color:#424448;font-weight:700;cursor:pointer}'
+      +'@keyframes mtdIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}'
+      +'@media(max-width:520px){#mokoTistoryDiag{right:14px;bottom:14px}}';
+    document.head.appendChild(st);
+  }
+
+  document.body.appendChild(box);
+  const close=()=>{ try{ box.remove(); }catch(_){} };
+  box.querySelector('.mtd-head button').onclick=close;
+  box.querySelector('.mtd-code').onclick=()=>showCodeBox(html,true);
+  clearTimeout(window.__mokoTistoryDiagTimer);
+  window.__mokoTistoryDiagTimer=setTimeout(close,6500);
+}
+
 function showCodeBox(html,copied){
   const old=$('mokoCodeBox'); if(old) old.remove();
   const back=document.createElement('div'); back.id='mokoCodeBox';
@@ -14679,10 +14929,9 @@ window.copyHTMLCode=async function(){
     const html=buildEmbedHTML();
     if(!html){ alert('미리보기를 찾지 못했어요.'); return; }
     const ok=await toClipboard(html);
-    const kb=Math.round(html.length/1024);
-    if(ok) T('HTML 코드를 복사했어요 ('+kb+'KB) — 블로그의 HTML 모드에 붙여넣으세요',
-      {action:'코드 보기',onAction:()=>showCodeBox(html,true)});
-    else showCodeBox(html,false);
+    if(ok){
+      showTistoryDiagnostic(window.__lastTistoryEmbedDiag,html);
+    }else showCodeBox(html,false);
   }catch(err){
     console.error('HTML 코드 복사 실패',err);
     alert('HTML 코드를 만들지 못했어요.');
