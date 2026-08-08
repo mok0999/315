@@ -17949,6 +17949,14 @@ setTimeout(run,500); setTimeout(run,1200);
 #novelDebug b{color:#8ED0FF}
 #novelDebugBtn{position:fixed;right:10px;bottom:10px;z-index:2147483601;
   width:38px;height:38px;border-radius:50%;border:0;background:#424448;color:#fff;font-size:15px;display:none}
+#novelDebug .tbtns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+#novelDebug .tbtns button{flex:1 1 auto;padding:9px 8px;border:0;border-radius:8px;
+  background:#3A3C42;color:#fff;font-size:12px;font-weight:700}
+#novelDebug .tbtns button.on{background:#8ED0FF;color:#111}
+/* 시험 A — 어떤 블럭이든 단 경계에서 쪼개지도록 (말풍선 포함) */
+#chat.novel-mode.test-a>.pmsg{break-inside:auto!important;-webkit-column-break-inside:auto!important}
+/* 시험 B — 균등 배분 대신 위에서부터 채우기 */
+#chat.novel-mode.test-b{column-fill:auto!important}
 #novelDebugBtn.show{display:block}
 </style>
 <script id="novel-debug">
@@ -17959,6 +17967,18 @@ setTimeout(run,500); setTimeout(run,1200);
 const ST=()=>{ try{ return state; }catch(_){ return window.state||null; } };
 function el(id,tag){ let e=document.getElementById(id);
   if(!e){ e=document.createElement(tag||'div'); e.id=id; document.body.appendChild(e); } return e; }
+function applyTest(){
+  const ch=document.getElementById('chat'); if(!ch) return;
+  ch.classList.toggle('test-a',TEST==='a');
+  ch.classList.toggle('test-b',TEST==='b');
+}
+let TEST='';
+window.__novelTest=function(t){
+  TEST=(TEST===t)?'':t;
+  applyTest();
+  try{ if(window.__novelInvalidate) window.__novelInvalidate(); renderPreview(); }catch(_){}
+  dump();
+};
 function dump(){
   const s=ST(); const box=el('novelDebug'); const btn=el('novelDebugBtn','button');
   const on=!!(s&&s.novel&&s.novel.on);
@@ -17967,6 +17987,7 @@ function dump(){
   btn.textContent='🔍';
   btn.onclick=()=>{ box.classList.toggle('show'); dump(); };
   if(!box.classList.contains('show')) return;
+  applyTest();
   const ch=document.getElementById('chat'), cv=document.getElementById('canvas');
   const cs=getComputedStyle(ch);
   const win=document.getElementById('novelWindow');
@@ -17974,7 +17995,12 @@ function dump(){
   let maxBottom=0, chTop=ch.getBoundingClientRect().top;
   rows.forEach(r=>{ for(const b of r.getClientRects()) maxBottom=Math.max(maxBottom,b.bottom-chTop); });
   const supports=(p,v)=>{ try{ return CSS.supports(p,v); }catch(_){ return 'x'; } };
-  box.textContent=
+  const btns='<div class="tbtns">'
+    +'<button onclick="__novelTest(\'a\')" class="'+(TEST==='a'?'on':'')+'">A · 무조건 쪼개기</button>'
+    +'<button onclick="__novelTest(\'b\')" class="'+(TEST==='b'?'on':'')+'">B · 위부터 채우기</button>'
+    +'<button onclick="__novelTest(\'\')" class="'+(TEST===''?'on':'')+'">원래대로</button>'
+    +'</div>';
+  const info=
    '【화면】'+innerWidth+'x'+innerHeight+' dpr'+(devicePixelRatio||1)+'\n'+
    '【모드】'+(s.novel.mode)+'  single='+(s.novel.single?1:0)+'  gutter='+s.novel.gutter+'\n'+
    '【지정】cols='+ (ch.style.columnCount||'-') +'  width='+ch.style.width+'  height='+ch.style.height+'\n'+
@@ -17989,7 +18015,10 @@ function dump(){
         '  break-inside:avoid='+supports('break-inside','avoid')+
         '  -webkit-column-break-inside='+supports('-webkit-column-break-inside','avoid')+'\n'+
    '【블럭】'+rows.length+'개  break-inside(첫블럭)='+(rows[0]?getComputedStyle(rows[0]).breakInside:'-')+
-        '  -webkit='+(rows[0]?getComputedStyle(rows[0]).webkitColumnBreakInside:'-');
+        '  -webkit='+(rows[0]?getComputedStyle(rows[0]).webkitColumnBreakInside:'-')
+   +'\n【시험】'+(TEST?TEST.toUpperCase():'없음');
+  box.innerHTML=btns+'<span></span>';
+  box.lastChild.textContent=info;
 }
 window.__novelDump=dump;
 ['renderPreview','applyCanvas'].forEach(n=>{
