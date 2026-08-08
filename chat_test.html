@@ -17577,6 +17577,47 @@ document.addEventListener('click',function(e){
   try{ renderPreview(); }catch(_){}
 },true);
 
+/* ---- 단 수 계산 캐시 ----
+   확대·축소·터치 등으로 다시 그릴 때마다 높이를 새로 재는데, 폰트나 사진이
+   덜 불러와졌거나 배율 반올림이 어긋나면 잰 값이 몇 픽셀씩 달라진다.
+   그 몇 픽셀 때문에 단 수가 하나 줄면 넘칠 자리가 사라져 블럭이 안 쪼개지고 뭉쳤다.
+   → 글·글씨 설정이 실제로 바뀌었을 때만 다시 재고, 그 외에는 이전 값을 그대로 쓴다. */
+let colCache=null;           /* {sig, cols} */
+function hashStr(str){ let h=5381; for(let i=0;i<str.length;i++) h=((h<<5)+h+str.charCodeAt(i))|0; return h; }
+function layoutSig(){
+  const s=ST(); if(!s) return '';
+  const n=s.novel||{};
+  const msg=(s.messages||[]).map(m=>m?((m.type||'')+'|'+(m.content||'')+'|'+(m.senderId||'')
+    +'|'+(m.align||'')+'|'+(m.splitBefore?'1':'')+'|'+(m.img?'i':'')+'|'+(m.imgW||'')):'').join('\u0001');
+  return [
+    (s.messages||[]).length, hashStr(msg),
+    hashStr(JSON.stringify(s.layout||{})),
+    n.ratio, n.gutter, n.single?1:0, n.mode,
+    s.bubbleTheme||'', s.mode||'',
+    s.showProfile?1:0, s.showMyIdentity?1:0, s.hideNames?1:0,
+    s.stripSpeakerName?1:0, s.stripQuoteMarks?1:0, s.autoQuoteBubble?1:0,
+    s.quoteOn?1:0, s.parenOn?1:0,
+    hashStr(JSON.stringify(s.credit||{})), hashStr(JSON.stringify(s.pageNum||{})),
+    (s.members||[]).length,
+    (document.fonts&&document.fonts.status)||''
+  ].join('~');
+}
+window.__novelInvalidate=function(){ colCache=null; };
+
+/* 폰트·사진이 뒤늦게 준비되면 잰 값이 달라지므로 그때 한 번만 다시 계산한다 */
+try{
+  if(document.fonts&&document.fonts.ready){
+    document.fonts.ready.then(()=>{ colCache=null; try{ renderPreview(); }catch(_){} });
+  }
+}catch(_){}
+function watchImages(chat){
+  chat.querySelectorAll('img').forEach(img=>{
+    if(img.complete||img.__novelWatch) return;
+    img.__novelWatch=1;
+    img.addEventListener('load',()=>{ colCache=null; try{ renderPreview(); }catch(_){} },{once:true});
+  });
+}
+
 function markBreaks(){
   const s=ST(), chat=document.getElementById('chat');
   if(!s||!chat) return;
@@ -17662,17 +17703,28 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
     return ww;
   };
 
-  setCols(1); chat.style.height='auto';
-  const total=Math.ceil(Math.max(chat.offsetHeight,chat.scrollHeight));
+  watchImages(chat);
   const per=n.single?1:2;                          /* 한 번에 보여줄 쪽 수 */
-  let cols=Math.max(per,Math.ceil(total/textH));
-  /* 펼침이 반토막 나지 않게 짝수로 맞춘다 —
-     반드시 실제로 그리기 '전에' 정해야 한다. 나중에 숫자만 바꾸면
-     화면에 그려진 단 수와 계산이 어긋나 잘라내는 위치가 틀어진다. */
-  if(cols%per) cols+=per-(cols%per);
   const apply=(k)=>{ const ww=setCols(k); chat.style.height=textH+'px'; return ww; };
-  apply(cols);
+  const sig=layoutSig();
+  let cols;
+  if(colCache&&colCache.sig===sig){
+    /* 글도 설정도 그대로면 다시 재지 않는다 — 재면 잴 때마다 값이 흔들린다 */
+    cols=colCache.cols;
+    apply(cols);
+  }else{
+    setCols(1); chat.style.height='auto';
+    const total=Math.ceil(Math.max(chat.offsetHeight,chat.scrollHeight));
+    cols=Math.max(per,Math.ceil(total/textH));
+    /* 펼침이 반토막 나지 않게 짝수로 맞춘다 —
+       반드시 실제로 그리기 '전에' 정해야 한다. 나중에 숫자만 바꾸면
+       화면에 그려진 단 수와 계산이 어긋나 잘라내는 위치가 틀어진다. */
+    if(cols%per) cols+=per-(cols%per);
+    apply(cols);
+  }
+  /* 넘치면 늘리기만 한다 (줄이지 않는다 — 줄이는 순간 블럭이 뭉친다) */
   for(let i=0;i<24&&chat.scrollWidth>chat.clientWidth+2;i++){ cols+=per; apply(cols); }
+  colCache={sig:sig,cols:cols};
 
   const units=Math.max(1,Math.ceil(cols/per));
   n.__pages=units;
@@ -17700,7 +17752,8 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   const center=(autoGap-colGap)/2;
   chat.style.transform='translateX('+(-winL+center)+'px)';
   drawPapers(canvas,PAPER_W,paperH,PAPER_W,per,mgX);
-  drawFolios(canvas,colW2,colGap,cols,mgX,mgY,folioH,first,per);
+  /* 본문이 가운데로 움직인 만큼 쪽번호도 같이 움직여야 글 끝과 맞는다 */
+  drawFolios(canvas,colW2,colGap,cols,mgX+center,mgY,folioH,first,per);
   syncPager();
   return true;
 };
