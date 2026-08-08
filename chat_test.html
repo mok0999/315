@@ -17675,13 +17675,28 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
     chat.style.marginLeft=''; chat.style.marginRight='';
     canvas.classList.remove('novel-sheets');
     canvas.querySelectorAll('.novel-folio,.novel-paper').forEach(e=>e.remove());
+    /* 높이를 브라우저의 '균등 배분'에 맡기지 않는다.
+       사파리의 배분기가 쪼갤 자리만 잡아 두고 실제로 옮기지 않아 빈 자리가 생기기 때문에,
+       한 단 폭으로 전체 높이를 재서 단 수로 나눈 값을 직접 지정하고
+       위에서부터 채우게 한다(소설 비율 모드와 같은 방식). */
+    chat.classList.add('novel-fixed');
+    const kick2=()=>{ const d=chat.style.display; chat.style.display='none';
+                      void chat.offsetWidth; chat.style.display=d||''; void chat.offsetWidth; };
+    const over2=()=> (chat.scrollWidth>chat.clientWidth+2)||(chat.scrollHeight>chat.clientHeight+2);
+
+    setW(1); chat.style.height='auto';
+    const total2=Math.ceil(Math.max(chat.offsetHeight,chat.scrollHeight));
     const w=setW(n.cols);
-    chat.style.height='auto';
-    const h=Math.ceil(Math.max(chat.offsetHeight,chat.scrollHeight));
+    let h=Math.max(40,Math.ceil(total2/Math.max(1,n.cols)));
+    chat.style.height=h+'px';
+    kick2();
+    /* 잰 값과 실제가 조금 어긋나면 높이를 조금씩 늘려 맞춘다 */
+    for(let i=0;i<30&&over2();i++){ h=Math.ceil(h+Math.max(8,h*0.04)); chat.style.height=h+'px'; kick2(); }
     canvas.style.display='block';
     canvas.style.width=Math.ceil(w+2*hMargin)+'px';
     canvas.style.height=Math.ceil(h+2*vMargin)+'px';
     canvas.style.padding=vMargin+'px '+hMargin+'px';
+    reflowColumns(chat);
     return true;
   }
 
