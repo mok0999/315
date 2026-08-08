@@ -4099,7 +4099,112 @@ html,body{height:auto;min-height:100%;overflow:auto}body{background:${bodyBg};di
     flex:1 0 auto;
   }
 }
-</style></head><body>${node.outerHTML}</body></html>`;
+</style></head><body>${node.outerHTML}
+<!-- ===== iOS Safari multicol glyph-paint fix v5 (minimal / layout-safe) =====
+     v4에서 폭/position까지 덮어쓴 것이 기존 장평·본문폭 계산과 충돌해 레이아웃이 망가졌다.
+     이번 버전은 원본 기준으로, 실제 글자 레이어의 합성 힌트만 제거한다.
+     데스크탑/일반모드/폭/position/말풍선 계산은 건드리지 않는다. -->
+<style id="ios-novel-fragment-paint-fix-v5">
+@supports (-webkit-touch-callout:none){
+  /* will-change:transform 자체가 iOS WebKit에서 다단 fragment의 glyph를
+     별도 합성 레이어에 남겨 두는 원인이 될 수 있다.
+     이것만 제거하면 폭/줄바꿈/말풍선 위치 계산은 원본 그대로 유지된다. */
+  body.mobile-ui #chat.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
+    will-change:auto !important;
+    -webkit-backface-visibility:visible !important;
+    backface-visibility:visible !important;
+  }
+
+  /* 장평 100%일 때의 scaleX(1)은 시각적으로 아무 효과가 없으므로
+     iOS 여러 단 모드에서만 없앤다. width/display/margin/position은 절대 덮지 않는다. */
+  body.mobile-ui.ios-novel-glyph-100 #chat.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
+    -webkit-transform:none !important;
+    transform:none !important;
+  }
+
+  /* 원래 의도대로 글 블럭만 단 경계에서 분할 허용. */
+  body.mobile-ui #chat.novel-mode > .pmsg.t-block{
+    break-inside:auto !important;
+    -webkit-column-break-inside:auto !important;
+  }
+}
+</style>
+
+<script id="ios-novel-fragment-paint-fix-v5-script">
+(function(){
+  'use strict';
+
+  function isIOSWebKit(){
+    var ua=navigator.userAgent||'';
+    var ios=/iPad|iPhone|iPod/i.test(ua) ||
+      (/Macintosh/i.test(ua) && (navigator.maxTouchPoints||0)>1);
+    return !!(ios && /AppleWebKit/i.test(ua));
+  }
+
+  function novelColsOn(){
+    try{
+      return !!(state && state.novel && state.novel.on && state.novel.mode!=='ratio');
+    }catch(_){ return false; }
+  }
+
+  function syncClass(){
+    var on=isIOSWebKit() && document.body.classList.contains('mobile-ui') && novelColsOn();
+    var ws=100;
+    try{ ws=Number(state.layout && state.layout.widthScale); }catch(_){}
+    if(!isFinite(ws)) ws=100;
+    document.body.classList.toggle('ios-novel-glyph-100', on && Math.abs(ws-100)<0.001);
+    return on;
+  }
+
+  function repaint(){
+    if(!syncClass()) return;
+    var chat=document.getElementById('chat');
+    if(!chat || !chat.classList.contains('novel-mode')) return;
+
+    /* 기존 폭·높이·단 수는 그대로 둔 채 paint만 새로 시킨다.
+       display 토글은 레이아웃 값을 바꾸지 않아 다른 기능에 영향이 없다. */
+    var d=chat.style.display;
+    chat.style.display='none';
+    void chat.offsetWidth;
+    chat.style.display=d||'';
+    void chat.offsetWidth;
+  }
+
+  var prevRender=window.renderPreview;
+  if(typeof prevRender==='function'){
+    window.renderPreview=function(){
+      var r=prevRender.apply(this,arguments);
+      syncClass();
+      requestAnimationFrame(function(){
+        try{ repaint(); }catch(_){}
+      });
+      return r;
+    };
+  }
+
+  var prevSetNovel=window.setNovel;
+  if(typeof prevSetNovel==='function'){
+    window.setNovel=function(){
+      var r=prevSetNovel.apply(this,arguments);
+      syncClass();
+      requestAnimationFrame(function(){
+        try{ repaint(); }catch(_){}
+      });
+      return r;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    syncClass();
+    setTimeout(function(){ try{ repaint(); }catch(_){} },250);
+  });
+  window.addEventListener('orientationchange',function(){
+    setTimeout(function(){ try{ repaint(); }catch(_){} },180);
+  });
+})();
+</script>
+
+</body></html>`;
   const blob=new Blob([html],{type:'text/html'});
   const a=document.createElement('a');
   a.download=safeFilename(state.export.filename)+'.html'; a.href=URL.createObjectURL(blob); a.click();
@@ -18075,98 +18180,6 @@ window.__novelDump=dump;
 setTimeout(dump,800);
 })();
 </script>
-<!-- ===== iOS Safari multicol fragmented-text paint fix v4 =====
-     모바일 Safari에서 글 블럭의 '자리'는 다음 단에 생기는데 실제 glyph layer만
-     첫 단 좌표계에 남는 WebKit fragmentation/compositing 문제를 피한다.
-     여러 단 모드 + 모바일 WebKit에서만 적용. 단 계산/데스크탑/일반 모드는 그대로. -->
-<style id="ios-novel-fragment-paint-fix-v4">
-@supports (-webkit-touch-callout:none){
-  /* fragment가 되어야 하는 블럭 자신이 positioned box가 되지 않게 한다.
-     모바일 툴바는 이미 body fixed proxy를 사용하므로 원래 기능은 유지된다. */
-  body.mobile-ui #chat.novel-mode > .pmsg.t-block{
-    position:static !important;
-    z-index:auto !important;
-    transform:none !important;
-    -webkit-transform:none !important;
-    will-change:auto !important;
-    contain:none !important;
-    isolation:auto !important;
-    filter:none !important;
-    -webkit-filter:none !important;
-    perspective:none !important;
-  }
-
-  /* 실제 글자를 그리는 레이어가 stacking/compositing layer가 되면 WebKit이
-     두 번째 column fragment의 좌표를 첫 column 좌표로 그리는 경우가 있다.
-     장평 100%에서는 transform 자체가 시각적으로 아무 일도 하지 않으므로
-     해당 레이어를 완전히 평범한 flow로 되돌린다. */
-  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode > .pmsg.t-block > .t-inner,
-  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
-    position:static !important;
-    z-index:auto !important;
-    transform:none !important;
-    -webkit-transform:none !important;
-    transform-origin:initial !important;
-    -webkit-transform-origin:initial !important;
-    will-change:auto !important;
-    contain:none !important;
-    isolation:auto !important;
-    filter:none !important;
-    -webkit-filter:none !important;
-    perspective:none !important;
-    backface-visibility:visible !important;
-    -webkit-backface-visibility:visible !important;
-  }
-  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
-    display:block !important;
-    width:auto !important;
-    min-width:0 !important;
-    max-width:none !important;
-    margin-right:0 !important;
-  }
-
-  body.mobile-ui #chat.novel-mode > .pmsg.t-block{
-    break-inside:auto !important;
-    -webkit-column-break-inside:auto !important;
-  }
-}
-</style>
-<script id="ios-novel-fragment-paint-fix-v4-script">
-(function(){
-  'use strict';
-  function sync(){
-    var mobile=document.body.classList.contains('mobile-ui');
-    var novel=false, scale=100;
-    try{ novel=!!(state&&state.novel&&state.novel.on&&state.novel.mode!=='ratio'); }catch(_){}
-    try{ scale=Number(state&&state.layout&&state.layout.widthScale)||100; }catch(_){}
-    /* scaleX(1) + will-change:transform 만 제거하는 안전 경로.
-       장평을 실제로 바꾼 경우에는 장평 기능을 훼손하지 않도록 기존 렌더를 유지한다. */
-    document.body.classList.toggle('novel-glyph-fragment-safe', mobile&&novel&&Math.abs(scale-100)<0.001);
-  }
-  window.addEventListener('resize',sync,{passive:true});
-  document.addEventListener('DOMContentLoaded',sync);
-  document.addEventListener('click',function(){ requestAnimationFrame(sync); },true);
-  var prevRender=window.renderPreview;
-  if(typeof prevRender==='function'){
-    window.renderPreview=function(){
-      var r=prevRender.apply(this,arguments);
-      sync();
-      return r;
-    };
-  }
-  var prevNovel=window.setNovel;
-  if(typeof prevNovel==='function'){
-    window.setNovel=function(){
-      var r=prevNovel.apply(this,arguments);
-      sync();
-      return r;
-    };
-  }
-  setTimeout(sync,0); setTimeout(sync,400);
-})();
-</script>
-
-
 </body>
 
 
