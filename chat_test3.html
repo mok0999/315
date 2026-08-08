@@ -17439,6 +17439,18 @@ setTimeout(()=>{ bind(); apply(); },400);
 #chat.novel-mode>.pmsg{break-inside:avoid}
 /* 글 블럭은 단 경계에서 문장 중간이라도 이어지게 (소설 조판처럼) */
 #chat.novel-mode>.pmsg.t-block{break-inside:auto}
+/* ── 웹킷(아이폰) 대응 ──
+   웹킷은 자기 그림 레이어를 가진 상자(position:relative·transform 등)를
+   단에서 쪼갤 때 자리 계산만 다음 단으로 옮기고 글자는 첫 단에 통째로
+   그린다. 그래서 오른쪽 단에 빈 자리만 생기고 글은 왼쪽에 남아 넘쳤다.
+   글 블럭은 단 안에서만 static으로 두어 레이어 없이 본문 흐름으로 그리게
+   하고, ✂·수정 단추가 떠야 할 때(호버·탭)와 끌어 옮기는 중에만 잠깐
+   relative로 되돌린다 (단추는 블럭 모서리에 절대 배치라 기준이 필요하다). */
+#chat.novel-mode>.pmsg.t-block{position:static}
+body:not(.mobile-ui) #chat.novel-mode>.pmsg.t-block:hover,
+#chat.novel-mode>.pmsg.t-block.ctrl-open,
+#chat.novel-mode>.pmsg.t-block.drop-before,
+#chat.novel-mode>.pmsg.t-block.drop-after{position:relative}
 /* ✂ 를 찍은 자리 = 강제로 다음 단에서 시작 */
 #chat.novel-mode>.pmsg.col-break{break-before:column}
 /* 서명·페이지 번호는 단 전체를 가로지르는 한 줄로 맨 아래에 —
@@ -17640,9 +17652,14 @@ function markBreaks(){
    그 무의미한 transform 을 지워 쪼개기가 정상 동작하게 한다.
    (여러 단을 끄면 renderPreview 가 본문을 새로 그리므로 원래대로 돌아온다) */
 function stripIdentityScale(chat){
+  /* 진짜 웹킷(사파리)에서는 폭 조절 transform 이 남아 있으면 쪼개기 자체가
+     죽으므로, 여러 단 모드의 글 블럭에 한해 transform 을 포기한다.
+     (크로뮴·데스크탑은 정상이라 100% 아닌 값을 그대로 살린다) */
+  const webkit=/AppleWebKit/.test(navigator.userAgent)
+            &&!/Chrome|Chromium|CriOS|Edg\/|SamsungBrowser/.test(navigator.userAgent);
   chat.querySelectorAll(':scope > .pmsg.t-block .glyph-scale').forEach(el=>{
     const tf=(el.style.transform||'').trim();
-    if(/^scalex\(\s*1(\.0+)?\s*\)$/i.test(tf)) el.style.transform='none';
+    if(webkit||/^scalex\(\s*1(\.0+)?\s*\)$/i.test(tf)) el.style.transform='none';
   });
 }
 
