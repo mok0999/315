@@ -17941,6 +17941,65 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(run,80));
 setTimeout(run,500); setTimeout(run,1200);
 })();
 </script>
+<style id="novel-debug-style">
+#novelDebug{position:fixed;left:8px;right:8px;bottom:8px;z-index:2147483600;
+  background:rgba(20,20,24,.94);color:#fff;font:11px/1.5 ui-monospace,monospace;
+  padding:10px 12px;border-radius:10px;white-space:pre-wrap;word-break:break-all;display:none}
+#novelDebug.show{display:block}
+#novelDebug b{color:#8ED0FF}
+#novelDebugBtn{position:fixed;right:10px;bottom:10px;z-index:2147483601;
+  width:38px;height:38px;border-radius:50%;border:0;background:#424448;color:#fff;font-size:15px;display:none}
+#novelDebugBtn.show{display:block}
+</style>
+<script id="novel-debug">
+/* 사파리에서 다단이 왜 깨지는지 알아내기 위한 임시 진단 표시.
+   여러 단으로 붙이기가 켜져 있을 때만 나타난다. */
+(function(){
+'use strict';
+const ST=()=>{ try{ return state; }catch(_){ return window.state||null; } };
+function el(id,tag){ let e=document.getElementById(id);
+  if(!e){ e=document.createElement(tag||'div'); e.id=id; document.body.appendChild(e); } return e; }
+function dump(){
+  const s=ST(); const box=el('novelDebug'); const btn=el('novelDebugBtn','button');
+  const on=!!(s&&s.novel&&s.novel.on);
+  btn.classList.toggle('show',on);
+  if(!on){ box.classList.remove('show'); return; }
+  btn.textContent='🔍';
+  btn.onclick=()=>{ box.classList.toggle('show'); dump(); };
+  if(!box.classList.contains('show')) return;
+  const ch=document.getElementById('chat'), cv=document.getElementById('canvas');
+  const cs=getComputedStyle(ch);
+  const win=document.getElementById('novelWindow');
+  const rows=ch.querySelectorAll('.pmsg');
+  let maxBottom=0, chTop=ch.getBoundingClientRect().top;
+  rows.forEach(r=>{ for(const b of r.getClientRects()) maxBottom=Math.max(maxBottom,b.bottom-chTop); });
+  const supports=(p,v)=>{ try{ return CSS.supports(p,v); }catch(_){ return 'x'; } };
+  box.textContent=
+   '【화면】'+innerWidth+'x'+innerHeight+' dpr'+(devicePixelRatio||1)+'\n'+
+   '【모드】'+(s.novel.mode)+'  single='+(s.novel.single?1:0)+'  gutter='+s.novel.gutter+'\n'+
+   '【지정】cols='+ (ch.style.columnCount||'-') +'  width='+ch.style.width+'  height='+ch.style.height+'\n'+
+   '【계산】columnCount='+cs.columnCount+'  columnWidth='+cs.columnWidth+'  columnGap='+cs.columnGap+'\n'+
+   '     columnFill='+cs.columnFill+'  display='+cs.display+'  overflow='+cs.overflow+'\n'+
+   '【실측】chat박스='+Math.round(ch.getBoundingClientRect().width)+'x'+Math.round(ch.getBoundingClientRect().height)+
+        '  scroll='+ch.scrollWidth+'x'+ch.scrollHeight+'\n'+
+   '     글맨아래='+Math.round(maxBottom)+'  (지정높이 '+(parseFloat(ch.style.height)||0)+' 넘으면 넘침)\n'+
+   '【창】'+(win?(Math.round(win.getBoundingClientRect().width)+'x'+Math.round(win.getBoundingClientRect().height)+' overflow='+getComputedStyle(win).overflow):'없음')+'\n'+
+   '【캔버스】'+cv.style.width+'x'+cv.style.height+'  실제='+Math.round(cv.getBoundingClientRect().width)+'\n'+
+   '【지원】column-fill:auto='+supports('column-fill','auto')+
+        '  break-inside:avoid='+supports('break-inside','avoid')+
+        '  -webkit-column-break-inside='+supports('-webkit-column-break-inside','avoid')+'\n'+
+   '【블럭】'+rows.length+'개  break-inside(첫블럭)='+(rows[0]?getComputedStyle(rows[0]).breakInside:'-')+
+        '  -webkit='+(rows[0]?getComputedStyle(rows[0]).webkitColumnBreakInside:'-');
+}
+window.__novelDump=dump;
+['renderPreview','applyCanvas'].forEach(n=>{
+  const prev=window[n];
+  if(typeof prev!=='function') return;
+  window[n]=function(){ const r=prev.apply(this,arguments); try{ dump(); }catch(_){} return r; };
+});
+setTimeout(dump,800);
+})();
+</script>
 </body>
 
 
