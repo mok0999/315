@@ -159,6 +159,11 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 #hexPicker .hp-hex:focus{border-color:var(--accent,#424448);background:var(--panel,#fff)}
 #hexPicker .hp-ok{flex:0 0 auto;width:30px;height:30px;border:none;border-radius:8px;cursor:default;
   background:var(--accent,#424448);color:#fff;font-weight:700;font-size:13px}
+#hexPicker .hp-recent{display:none;flex-wrap:wrap;gap:4px;margin-top:10px;padding-top:10px;
+  border-top:1px solid var(--line,#E4E4E7)}
+#hexPicker .hp-recent.show{display:flex}
+#hexPicker .hp-recent i{width:20px;height:20px;border-radius:5px;flex:0 0 auto;cursor:pointer;
+  border:1px solid rgba(0,0,0,.12);box-sizing:border-box;font-style:normal}
 
 /* toggle */
 .toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -1957,10 +1962,44 @@ function refreshColorRows(){document.querySelectorAll('.colorrow').forEach(build
   const pop=document.createElement('div');pop.id='hexPicker';
   pop.innerHTML='<div class="hp-sv"><div class="hp-dot"></div></div>'+
     '<input class="hp-hue" type="range" min="0" max="360" step="1" value="0">'+
-    '<div class="hp-row"><span class="hp-prev"></span><input class="hp-hex" type="text" maxlength="7" spellcheck="false"><button class="hp-ok" type="button" title="닫기">✓</button></div>';
+    '<div class="hp-row"><span class="hp-prev"></span><input class="hp-hex" type="text" maxlength="7" spellcheck="false"><button class="hp-ok" type="button" title="닫기">✓</button></div>'+
+    '<div class="hp-recent"></div>';
   document.body.appendChild(pop);
   const sv=pop.querySelector('.hp-sv'),dot=pop.querySelector('.hp-dot'),hue=pop.querySelector('.hp-hue'),
-        prev=pop.querySelector('.hp-prev'),hexIn=pop.querySelector('.hp-hex'),ok=pop.querySelector('.hp-ok');
+        prev=pop.querySelector('.hp-prev'),hexIn=pop.querySelector('.hp-hex'),ok=pop.querySelector('.hp-ok'),
+        recentBox=pop.querySelector('.hp-recent');
+
+  /* ---- 최근 사용한 색 ----
+     드래그 중에는 push()가 rAF마다 호출되므로 여기서 기록하면 중간 색으로 도배된다.
+     피커가 닫히는 시점(closePicker)에 최종값 하나만 기록한다. */
+  const RECENT_KEY='moko.recentColors', RECENT_MAX=8;
+  let recent=[];
+  try{ const raw=localStorage.getItem(RECENT_KEY); if(raw) recent=(JSON.parse(raw)||[]).filter(c=>/^#[0-9A-F]{6}$/i.test(c)).slice(0,RECENT_MAX); }catch(_){}
+  function renderRecent(){
+    recentBox.innerHTML='';
+    recent.forEach(hex=>{
+      const b=document.createElement('i');
+      b.style.background=hex; b.title=hex; b.dataset.hex=hex;
+      recentBox.appendChild(b);
+    });
+    recentBox.classList.toggle('show',recent.length>0);
+  }
+  function pushRecent(hex){
+    if(!/^#[0-9A-F]{6}$/i.test(hex||'')) return;
+    hex=hex.toUpperCase();
+    recent=[hex].concat(recent.filter(c=>c!==hex)).slice(0,RECENT_MAX);
+    try{ localStorage.setItem(RECENT_KEY,JSON.stringify(recent)); }catch(_){}
+    renderRecent();
+  }
+  renderRecent();
+  /* 스와치 클릭: 값만 반영하고 팝업은 열어둔다(미세 조정 가능). */
+  recentBox.addEventListener('pointerdown',e=>{
+    const b=e.target&&e.target.closest?e.target.closest('i[data-hex]'):null;
+    if(!b) return;
+    e.preventDefault(); e.stopPropagation();
+    const hex=b.dataset.hex, p=hexToHsv(hex);
+    if(p){ hsv=p; paint(false); push(hex); }
+  },true);
   function hexToHsv(hex){
     const m=/^#?([0-9a-f]{6})$/i.exec((hex||'').trim());if(!m)return null;
     const n=parseInt(m[1],16),r=(n>>16)/255,g=((n>>8)&255)/255,b=(n&255)/255;
@@ -1982,9 +2021,10 @@ function refreshColorRows(){document.querySelectorAll('.colorrow').forEach(build
     hue.value=hsv.h;prev.style.background=hex;
     if(!fromHexInput)hexIn.value=hex;
   }
-  let pendingHex=null;
+  let pendingHex=null,lastPushed=null;
   function push(exactHex){
     if(!target)return;
+    lastPushed=(exactHex||hsvToHex(hsv.h,hsv.s,hsv.v)).toUpperCase();
     pendingHex=exactHex||null;
     if(raf)return;
     raf=requestAnimationFrame(()=>{
@@ -1995,7 +2035,10 @@ function refreshColorRows(){document.querySelectorAll('.colorrow').forEach(build
     });
   }
   function openPicker(input){
+    /* 닫지 않고 다른 색 프록시를 바로 누른 경우에도 직전 색을 기록한다. */
+    if(lastPushed) pushRecent(lastPushed);
     target=input;
+    lastPushed=null;
     hsv=hexToHsv(input.value)||{h:0,s:0,v:1};
     paint(false);
     pop.classList.add('show');
@@ -2005,7 +2048,11 @@ function refreshColorRows(){document.querySelectorAll('.colorrow').forEach(build
     if(y+ph>innerHeight-8)y=r.top-ph-8;if(y<8)y=8;
     pop.style.left=x+'px';pop.style.top=y+'px';
   }
-  function closePicker(){pop.classList.remove('show');target=null;}
+  function closePicker(){
+    if(lastPushed) pushRecent(lastPushed);
+    lastPushed=null;
+    pop.classList.remove('show');target=null;
+  }
   /* pointerdown 단계에서 기본 동작과 포커스를 막아 iOS의 시스템 컬러피커/키보드 및
      visual viewport 이동이 발생하지 않게 한다. */
   document.addEventListener('pointerdown',e=>{
