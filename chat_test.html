@@ -18879,6 +18879,28 @@ setTimeout(dump,800);
     break-inside:auto !important;
     -webkit-column-break-inside:auto !important;
   }
+
+  /* 장평이 100% 가 아니면 scaleX 를 지울 수 없다(장평 기능이 사라지므로).
+     그런데 화면이 깨지는 진짜 원인은 transform 자체가 아니라
+     will-change:transform 이 만드는 '합성 레이어'다.
+     레이어가 생기면 WebKit 은 그 레이어를 쪼개지 못하고 첫 단 좌표에 통째로
+     한 번만 칠해서, 계산은 맞는데 화면에서만 글이 단을 못 넘어간 것처럼 보인다.
+     (저장은 다시 그리므로 멀쩡했다.)
+     그래서 장평은 그대로 두고 레이어를 만드는 성질만 걷어낸다. */
+  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode > .pmsg.t-block > .t-inner,
+  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale,
+  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode > .pmsg.t-block .glyph-inline{
+    will-change:auto !important;
+    contain:none !important;
+    isolation:auto !important;
+    filter:none !important;
+    -webkit-filter:none !important;
+    perspective:none !important;
+    backface-visibility:visible !important;
+    -webkit-backface-visibility:visible !important;
+    position:static !important;
+    z-index:auto !important;
+  }
 }
 </style>
 <script id="ios-novel-fragment-paint-fix-v4-script">
@@ -18886,12 +18908,16 @@ setTimeout(dump,800);
   'use strict';
   function sync(){
     var mobile=document.body.classList.contains('mobile-ui');
-    var novel=false, scale=100;
+    var novel=false, novelAny=false, scale=100;
+    try{ novelAny=!!(state&&state.novel&&state.novel.on); }catch(_){}
     try{ novel=!!(state&&state.novel&&state.novel.on&&state.novel.mode!=='ratio'); }catch(_){}
     try{ scale=Number(state&&state.layout&&state.layout.widthScale)||100; }catch(_){}
     /* scaleX(1) + will-change:transform 만 제거하는 안전 경로.
        장평을 실제로 바꾼 경우에는 장평 기능을 훼손하지 않도록 기존 렌더를 유지한다. */
     document.body.classList.toggle('novel-glyph-fragment-safe', mobile&&novel&&Math.abs(scale-100)<0.001);
+    /* 장평을 바꿨든 아니든, 합성 레이어만 걷어내는 경로는 항상 켠다.
+       (여러 단·소설 비율 둘 다 글이 단 경계에서 쪼개지므로 같은 문제를 겪는다) */
+    document.body.classList.toggle('novel-glyph-layer-safe', mobile&&novelAny);
   }
   window.addEventListener('resize',sync,{passive:true});
   document.addEventListener('DOMContentLoaded',sync);
