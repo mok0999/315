@@ -1622,7 +1622,7 @@ html, body, #canvas, #chat, #canvas * {
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
 </div>
-<div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기<span>글이 단을 채우면 옆 단으로 이어져요</span></div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">글 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="400" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 페이지만 보기</div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div>
+<div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기<span>글이 단을 채우면 옆 단으로 이어져요</span></div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div>
 <div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
 <div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
@@ -1634,7 +1634,7 @@ html, body, #canvas, #chat, #canvas * {
 <div class="toggle compact" title="대사 앞 이름｜ 이름표만 지워요 ([ ]가 있어도 함께) · ( ) 해석은 그대로 남아요"><div class="t-lb">대사 앞 이름 삭제</div><label class="sw"><input id="stripNameTagOn" onchange="state.stripSpeakerName=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 </div>
 <div class="acc-panel" id="bubbleShadowPanel"><div class="acc-inner"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">번짐</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bubbleShadowX" max="12" min="-12" oninput="setShadowExtra('bubble','x',this.value)" step="1" type="range" value="0"/><span class="val" id="bubbleShadowXV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bubbleShadowY" max="12" min="-12" oninput="setShadowExtra('bubble','y',this.value)" step="1" type="range" value="3"/><span class="val" id="bubbleShadowYV">3px</span></div></div><div class="field" style="margin:0;grid-column:1/-1"><label class="lb">진하기</label><div class="rangewrap"><input id="bubbleShadowOpacity" max="100" min="0" oninput="setShadowExtra('bubble','opacity',this.value)" step="1" type="range" value="100"/><span class="val" id="bubbleShadowOpacityV">100%</span></div></div></div></div></div>
-</div></div><div class="flat-tool-section" id="bubbleThemeSection"><div class="flat-tool-title"><strong>말풍선 테마</strong></div><div class="flat-tool-body"><div class="btheme-grid" id="bubbleThemeGrid"><button type="button" class="btheme-btn on" data-theme="default"><span class="btheme-prev bt-default"></span>기본</button><button type="button" class="btheme-btn" data-theme="corner"><span class="btheme-prev bt-corner"></span>모서리</button><button type="button" class="btheme-btn" data-theme="card"><span class="btheme-prev bt-card"></span>카드</button></div><div class="field-help" id="bubbleThemeHelp">기본 말고는 꼬리가 없어요. 연달아 친 말풍선은 모두 둥글게 이어져요.</div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양</strong></div><div class="flat-tool-body"><div class="colorgrid">
+</div></div><div class="flat-tool-section" id="bubbleThemeSection"><div class="flat-tool-title"><strong>말풍선 테마</strong></div><div class="flat-tool-body"><div class="btheme-grid" id="bubbleThemeGrid"><button type="button" class="btheme-btn on" data-theme="default"><span class="btheme-prev bt-default"></span>기본</button><button type="button" class="btheme-btn" data-theme="corner"><span class="btheme-prev bt-corner"></span>모서리</button><button type="button" class="btheme-btn" data-theme="card"><span class="btheme-prev bt-card"></span>카드</button></div><div class="colorgrid" id="cardLineField" style="display:none;margin-top:12px"><div class="field" style="margin:0"><label class="lb">테두리 색</label><div class="colorrow" data-color="cardLine"></div></div><div class="field" style="margin:0"><label class="lb">테두리 두께</label><div class="rangewrap"><input id="lyCardLineW" max="6" min="0" step="1" oninput="setLayout('cardLineW',this.value)" type="range" value="1"/><span class="val" id="lyCardLineWV">1px</span></div></div></div><div class="field-help" id="bubbleThemeHelp">기본 말고는 꼬리가 없어요. 연달아 친 말풍선은 모두 둥글게 이어져요.</div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양</strong></div><div class="flat-tool-body"><div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
@@ -1889,12 +1889,13 @@ const state = {
     gradVia:'#DCE3F0',
     gradTo:'#C9D6EE',
     textShadow:'#000000',
-    bubbleShadow:'#000000'
+    bubbleShadow:'#000000',
+    cardLine:'#E6E6E6'
   },
   layout:{
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
-    gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, bubbleFs:null, nameSize:12, widthScale:100, letterSpacing:0, cjkScale:100,
+    gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, bubbleFs:null, nameSize:12, widthScale:100, letterSpacing:0, cjkScale:100, cardLineW:1,
     textShadowOn:false, textShadowBubblesOff:false, textShadowStrength:4, textShadowX:0, textShadowY:1, textShadowOpacity:100,
     bubbleShadowOn:false, bubbleShadowStrength:4, bubbleShadowX:0, bubbleShadowY:3, bubbleShadowOpacity:100,
     bubbleOpacity:100, bubbleTextOpacity:100,
@@ -2897,7 +2898,7 @@ let themeStorageOK=true;
 
 function defaultLayout(){
   return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,cjkScale:100,
-    radius:14,fs:16,lh:1.55,para:0,bubbleFs:null,nameSize:12,widthScale:100,letterSpacing:0,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,textShadowX:0,textShadowY:1,textShadowOpacity:100,bubbleShadowOn:false,bubbleShadowStrength:4,bubbleShadowX:0,bubbleShadowY:3,bubbleShadowOpacity:100,tailOn:true,tailSize:10,tailY:0,tailX:0,
+    radius:14,fs:16,lh:1.55,para:0,bubbleFs:null,nameSize:12,widthScale:100,letterSpacing:0,cardLineW:1,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,textShadowX:0,textShadowY:1,textShadowOpacity:100,bubbleShadowOn:false,bubbleShadowStrength:4,bubbleShadowX:0,bubbleShadowY:3,bubbleShadowOpacity:100,tailOn:true,tailSize:10,tailY:0,tailX:0,
     linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerWidth:100,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
@@ -3066,6 +3067,7 @@ function syncControlsFromState(){
   lyLh.value=L.lh; lyLhV.textContent=(+L.lh).toFixed(2);
   if(document.getElementById('lyWidthScale')){ lyWidthScale.value=L.widthScale??100; lyWidthScaleV.textContent=Math.round(L.widthScale??100)+'%'; }
   if(document.getElementById('lyLetterSpacing')){ lyLetterSpacing.value=L.letterSpacing??0; lyLetterSpacingV.textContent=(Math.round((L.letterSpacing??0)*10)/10)+'px'; }
+  if(document.getElementById('lyCardLineW')){ const cw=(L.cardLineW==null?1:L.cardLineW); lyCardLineW.value=cw; lyCardLineWV.textContent=Math.round(cw)+'px'; }
   // word break
   wbSeg.children[0].classList.toggle('on',L.wb==='word');
   wbSeg.children[1].classList.toggle('on',L.wb==='char');
@@ -3802,6 +3804,9 @@ function renderPreview(){
   chat.classList.toggle('bubble-translucent',__bop<100&&!bubbleBlendable());
   chat.style.setProperty('--bubble-opacity',String(__bop/100));
   chat.style.setProperty('--bubble-text-opacity',String(bubbleTextOpacityVal()/100));
+  /* 카드 테마의 테두리 — 색과 두께를 설정에서 바로 따라간다 */
+  chat.style.setProperty('--card-line',state.colors.cardLine||'#E6E6E6');
+  chat.style.setProperty('--card-line-w',(state.layout.cardLineW==null?1:(Number(state.layout.cardLineW)||0))+'px');
   chat.style.background=state.colors.bg;
   chat.style.fontFamily=state.layout.font;
   chat.style.width=state.layout.width+'px';
@@ -6944,22 +6949,37 @@ function hideToast(){const el=document.getElementById('upToast'); if(el) el.clas
 
 /* ---------- 프로젝트 스냅샷 (직렬화) ---------- */
 const SNAP_KEYS=['mode','shape','showProfile','hideNames','showMyIdentity','meId','parenOn','autoQuoteBubble','stripSpeakerName','stripQuoteMarks','members','messages',
-  'export','transparentBg','backgroundImage','credit','pageNum','gradient','colors','layout','stickers'];
+  'export','transparentBg','backgroundImage','credit','pageNum','gradient','colors','layout','stickers',
+  'bubbleTheme','novel'];
 function projectSnapshot(){
   const o={};
   SNAP_KEYS.forEach(k=>{ o[k]=state[k]; });
-  return JSON.parse(JSON.stringify(o));
+  const snap=JSON.parse(JSON.stringify(o));
+  /* 여러 단 설정 중 '__' 로 시작하는 것들은 그릴 때마다 다시 계산되는 중간값이다.
+     (특히 __msgCols 는 블럭 수만큼 커진다) 파일에 담지 않는다. */
+  if(snap.novel&&typeof snap.novel==='object'){
+    Object.keys(snap.novel).forEach(k=>{ if(k.indexOf('__')===0) delete snap.novel[k]; });
+  }
+  return snap;
 }
 function applyProject(d){
   if(!d||typeof d!=='object') return;
   if(Array.isArray(d.members)) state.members=d.members;
   if(Array.isArray(d.messages)) state.messages=d.messages;
   if(Array.isArray(d.stickers)) state.stickers=d.stickers;
-  ['mode','shape','meId'].forEach(k=>{ if(typeof d[k]==='string') state[k]=d[k]; });
+  ['mode','shape','meId','bubbleTheme'].forEach(k=>{ if(typeof d[k]==='string') state[k]=d[k]; });
   ['showProfile','hideNames','showMyIdentity','parenOn','transparentBg','autoQuoteBubble','stripSpeakerName','stripQuoteMarks'].forEach(k=>{ if(typeof d[k]==='boolean') state[k]=d[k]; });
   ['export','backgroundImage','credit','pageNum','gradient','colors','layout'].forEach(k=>{
     if(d[k]&&typeof d[k]==='object') Object.assign(state[k],JSON.parse(JSON.stringify(d[k])));
   });
+  /* 여러 단 설정 — 예전에 저장한 파일에는 이 칸이 없으므로, 있을 때만 덮어쓴다 */
+  if(d.novel&&typeof d.novel==='object'&&state.novel){
+    const nv=JSON.parse(JSON.stringify(d.novel));
+    Object.keys(nv).forEach(k=>{ if(k.indexOf('__')===0) delete nv[k]; });
+    Object.assign(state.novel,nv);
+  }
+  try{ if(typeof window.__syncNovel==='function') window.__syncNovel(); }catch(_){}
+  try{ if(typeof window.__applyBubbleTheme==='function') window.__applyBubbleTheme(); }catch(_){}
   try{ setMode(state.mode); }catch(_){}
   try{ syncControlsFromState(); }catch(_){}
   const sp=document.getElementById('showProfile'); if(sp) sp.checked=!!state.showProfile;
@@ -11527,10 +11547,12 @@ function wrapSaver(name){
   const prev=window[name];
   if(typeof prev!=='function') return;
   window[name]=function(){
-    const total=pageCount();
+    /* 여러 단으로 붙이면 '장'이 아니라 미리보기 화면이 곧 페이지다 */
+    const total=(typeof window.__pageCount==='function')?window.__pageCount():pageCount();
     if(total<2) return prev.apply(this,arguments);
+    const now=(typeof window.__currentPage==='function')?window.__currentPage():curPage;
     const orig=state.export.filename;
-    state.export.filename=(orig||'chat')+'_'+curPage;
+    state.export.filename=(orig||'chat')+'_'+now;
     const done=()=>{ state.export.filename=orig; };
     let out;
     try{ out=prev.apply(this,arguments); }
@@ -14341,7 +14363,11 @@ function saveActions(){
   list.push({key:'image',label:'↓ 이미지 저장',
     desc:total>1?('지금 보고 있는 '+total+'장 중 이 장'):'미리보기 그대로 PNG로',
     primary:true,run:()=>{ try{ window.saveImage(); }catch(_){} }});
-  if(total>1) list.push({key:'pages',label:'🗂 장별로 나눠 저장',
+  /* 여러 단으로 붙였을 때는 소설 비율에서만 내놓는다.
+     단 수 모드는 한 화면이 여러 단을 걸쳐 있어 한 장씩 나눠 담기 애매하다. */
+  const nv=(function(){ const s=ST(); return (s&&s.novel&&s.novel.on)?s.novel:null; })();
+  const canSplitSave=nv?(nv.mode==='ratio'):true;
+  if(total>1&&canSplitSave) list.push({key:'pages',label:'🗂 장별로 나눠 저장',
     desc:total+'장을 순서대로 한 장씩',run:()=>{ window.saveAllPages(); }});
   list.push({key:'copy',label:'⧉ 이미지 복사',
     desc:'클립보드로 바로',now:true,run:()=>{ try{ const p=window.copyImage&&window.copyImage(); if(p&&p.catch) p.catch(()=>{}); }catch(_){} }});
@@ -17738,7 +17764,7 @@ if(typeof __syncCtlImg==='function'){
 /* ---- 카드: 슬라이더의 1/4 만큼만 둥글게 (각진 느낌은 유지하되 반응은 한다) ---- */
 #chat.btheme-card .n-bubble,#chat.btheme-card .m-bubble{
   border-radius:calc(var(--bubble-radius,14px) * .25)!important;
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.10)}
+  box-shadow:inset 0 0 0 var(--card-line-w,1px) var(--card-line,#E6E6E6)}
 
 /* =====================================================================
    반투명(말풍선 투명도 100% 미만 + 배경 이미지·투명 캔버스)일 때
@@ -17769,7 +17795,7 @@ if(typeof __syncCtlImg==='function'){
 #chat.btheme-card .n-bubble>.bubble-bg,
 #chat.btheme-card .m-bubble>.bubble-bg{
   border-radius:calc(var(--bubble-radius,14px) * .25);
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.10)}
+  box-shadow:inset 0 0 0 var(--card-line-w,1px) var(--card-line,#E6E6E6)}
 #chat.btheme-card.bubble-translucent .n-bubble,
 #chat.btheme-card.bubble-translucent .m-bubble{box-shadow:none}
 
@@ -17796,6 +17822,9 @@ function apply(){
   chat.classList.toggle('no-tail-theme', t!=='default');
   const grid=document.getElementById('bubbleThemeGrid');
   if(grid) [].forEach.call(grid.querySelectorAll('.btheme-btn'),b=>b.classList.toggle('on',b.dataset.theme===t));
+  /* 카드 테마에서만 테두리 색·두께 칸을 내놓는다 */
+  const cf=document.getElementById('cardLineField');
+  if(cf) cf.style.display=(t==='card')?'':'none';
   /* 꼬리가 없는 테마에서는 '말풍선 꼬리' 토글이 의미가 없으니 흐리게 */
   const tail=document.getElementById('bubbleTailOn');
   if(tail){
@@ -17846,8 +17875,12 @@ setTimeout(()=>{ bind(); apply(); },400);
 #chat.novel-mode>.pmsg{break-inside:avoid}
 /* 글 블럭은 단 경계에서 문장 중간이라도 이어지게 (소설 조판처럼) */
 #chat.novel-mode>.pmsg.t-block{break-inside:auto}
-/* ✂ 를 찍은 자리 = 강제로 다음 단에서 시작 */
-#chat.novel-mode>.pmsg.col-break{break-before:column}
+/* ✂ 를 찍은 자리 = 강제로 다음 단에서 시작
+   (사파리는 표준 break-before 를 자주 흘려버려서 옛 -webkit- 이름도 같이 준다) */
+#chat.novel-mode>.pmsg.col-break{break-before:column;-webkit-column-break-before:always}
+/* 그래도 안 먹는 사파리에서 남은 자리를 대신 채워 다음 단으로 밀어내는 받침 */
+#chat.novel-mode>.col-break-filler{display:block;width:100%;margin:0;padding:0;border:0;
+  background:none;pointer-events:none;break-inside:auto;-webkit-column-break-inside:auto}
 /* 서명·페이지 번호는 단 전체를 가로지르는 한 줄로 맨 아래에 —
    전체를 한 쪽으로 보고 좌/가운데/우 정렬이 그대로 먹는다 */
 #chat.novel-mode>.credit{column-span:all;break-inside:avoid}
@@ -17880,6 +17913,8 @@ const ST=()=>{ try{ return state; }catch(_){ return window.state||null; } };
 const st0=ST();
 if(st0) st0.novel=Object.assign({on:false,mode:'cols',cols:2,gap:72,ratio:'210:297',single:false,page:0,gutter:null},st0.novel||{});
 function cfg(){ const s=ST(); return (s&&s.novel)||{on:false,mode:'cols',cols:2,gap:72,ratio:'210:297',single:false,page:0}; }
+/* 소설 비율의 기본 '글 사이 간격' — 두 쪽의 안쪽 여백이 맞붙은 폭(2 × 쪽 폭의 12.5%) */
+const AUTO_GUTTER=2*Math.round(720*0.125);
 window.__novelOn=function(){ return !!cfg().on; };
 
 window.setNovel=function(field,value){
@@ -17888,7 +17923,7 @@ window.setNovel=function(field,value){
   if(field==='on') n.on=!!value;
   else if(field==='mode'){ n.mode=(value==='ratio')?'ratio':'cols'; n.page=0; }
   else if(field==='single'){ n.single=!!value; n.page=0; }
-  else if(field==='gutter'){ n.gutter=Math.max(0,Math.min(400,parseInt(value,10)||0));
+  else if(field==='gutter'){ n.gutter=Math.max(0,Math.min(AUTO_GUTTER*2,parseInt(value,10)||0));
     const v=document.getElementById('novelGutterV'); if(v) v.textContent=n.gutter+'px'; }
   else if(field==='ratio') n.ratio=String(value||'210:297');
   else if(field==='cols'){ n.cols=Math.max(2,Math.min(8,parseInt(value,10)||2));
@@ -17914,6 +17949,25 @@ function syncNovel(){
   const rf=document.getElementById('novelRatioField');
   if(rf) rf.style.display=ratioMode?'':'none';
   const rs=document.getElementById('novelRatio'); if(rs) rs.value=n.ratio;
+  /* 소설 비율에서만 쓰는 두 칸 — 양쪽 본문 사이 간격, 한 쪽씩 보기 */
+  const vf=document.getElementById('novelViewField');
+  if(vf) vf.style.display=ratioMode?'':'none';
+  const sgl=document.getElementById('novelSingle'); if(sgl) sgl.checked=!!n.single;
+  const gf=document.getElementById('novelGutterField');
+  if(gf) gf.style.display=ratioMode?'':'none';
+  const gt=document.getElementById('novelGutter');
+  if(gt){
+    const cur=(n.gutter!=null)?n.gutter:AUTO_GUTTER;
+    gt.value=cur;
+    const gtv=document.getElementById('novelGutterV'); if(gtv) gtv.textContent=cur+'px';
+    /* 한 쪽씩 보기에는 맞붙일 상대 쪽이 없다. 이때는 기본 여백으로 돌아가므로 잠근다 */
+    gt.disabled=!!n.single;
+    const box=gt.closest('.field');
+    if(box){
+      box.style.opacity=n.single?'.45':'';
+      box.title=n.single?'한 쪽씩 보기에서는 기본 여백으로 고정돼요':'';
+    }
+  }
   /* 인쇄 비율 모드에서는 단 수를 글 양이 정하므로 슬라이더를 잠근다 */
   const colField=document.getElementById('novelCols');
   if(colField){
@@ -17936,7 +17990,7 @@ function syncNovel(){
   if(colBox){ const box=colBox.closest('.field'); if(box) box.style.display=ratioMode?'none':''; }
   const help=document.getElementById('novelHelp');
   if(help) help.innerHTML=ratioMode
-    ? '판형만 고르면 여백·본문 폭은 소설책 표준 비율로 <strong>자동 고정</strong>돼요. 글씨·자간·행간만 조절하면 됩니다. 화면은 <strong>펼침 한 장(2쪽)</strong>이고, 미리보기 아래 이동 바로 넘겨요. ✂ 를 찍은 자리는 강제로 다음 쪽에서 시작해요.'
+    ? '판형만 고르면 여백·본문 폭은 소설책 표준 비율로 <strong>자동 고정</strong>돼요. 종이 크기는 그대로 둔 채 <strong>양쪽 본문 사이 간격</strong>만 넓히거나 좁힐 수 있어요. <strong>한 쪽씩 보기</strong>를 켜면 펼침 대신 한 쪽씩 넘기며 낱쪽으로 저장되고, 이때는 사이 간격 대신 기본 여백(위아래끼리·양옆끼리 같은)으로 돌아가요. ✂ 를 찍은 자리는 강제로 다음 쪽에서 시작해요.'
     : '단 너비는 <strong>본문 너비</strong>를 따라가요. 쪽 길이는 글 양에 맞춰 자동으로 정해지고 단마다 고르게 나뉘어요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.';
 }
 window.__syncNovel=syncNovel;
@@ -18036,6 +18090,58 @@ function markBreaks(){
   });
 }
 
+/* =====================================================================
+   ✂ 강제 단 나눔 받침 — 사파리 대비
+   WebKit 은 다단 안에서 break-before:column 을 통째로 흘려버릴 때가 있다.
+   그러면 ✂ 를 찍어도 다음 단으로 넘어가지 않고 글이 그냥 이어져 버린다.
+   그래서 '진짜로 단 맨 위에서 시작했는지'를 직접 재 보고,
+   안 먹었을 때만 남은 자리만큼 빈 받침을 끼워 다음 단으로 밀어낸다.
+   (CSS 가 제대로 먹는 브라우저에서는 받침이 하나도 생기지 않는다) */
+function chatPadTop(chat){
+  try{ return Math.max(0,parseFloat(getComputedStyle(chat).paddingTop)||0); }
+  catch(_){ return 0; }
+}
+function clearBreakFillers(chat){
+  if(!chat) return;
+  chat.querySelectorAll(':scope > .col-break-filler').forEach(e=>e.remove());
+}
+function breaksHonored(chat,rows,padT){
+  let cr=null;
+  try{ cr=chat.getBoundingClientRect(); }catch(_){ return true; }
+  for(const row of rows){
+    let rs=null;
+    try{ rs=row.getClientRects(); }catch(_){}
+    if(!rs||!rs.length) continue;
+    if(rs[0].top-cr.top>padT+3) return false;   /* 단 중간에서 시작했다 = 안 먹었다 */
+  }
+  return true;
+}
+function fillToNextColumn(chat,rows,h,kick){
+  clearBreakFillers(chat);
+  const padT=chatPadTop(chat), padB=chatPadBottom(chat);
+  const bottom=h-padB;                          /* 단의 글 끝 지점 */
+  rows.forEach(row=>{
+    let sp=null;
+    for(let t=0;t<4;t++){
+      let cr=null,rs=null;
+      try{ cr=chat.getBoundingClientRect(); rs=row.getClientRects(); }catch(_){}
+      if(!cr||!rs||!rs.length) return;
+      const top=rs[0].top-cr.top;
+      if(top<=padT+3) return;                   /* 이미 단 맨 위 — 더 밀 필요 없다 */
+      const need=bottom-top;
+      if(need<=0) return;
+      if(!sp){
+        sp=document.createElement('div');
+        sp.className='col-break-filler';
+        sp.style.height='0px';
+        row.parentNode.insertBefore(sp,row);
+      }
+      sp.style.height=((parseFloat(sp.style.height)||0)+need)+'px';
+      if(typeof kick==='function') kick(); else void chat.offsetWidth;
+    }
+  });
+}
+
 /* 창 안에 들어가 있던 본문을 캔버스 직속으로 되돌린다 */
 function restoreChat(canvas,chat){
   const win=canvas.querySelector('#novelWindow');
@@ -18069,16 +18175,18 @@ function colsFooterBand(){
   const gap=Math.max(8,Number(c.gap!=null?c.gap:16)||16);
   return Math.round(size*1.25+gap);
 }
+/* 본문 아래(안쪽 여백 포함)에 실제로 필요한 높이를 재서 돌려준다.
+   일반 모드의 서명 줄과 똑같이 '서명 간격 + 서명 줄 높이'만 차지한다. */
 function drawColsFooter(canvas,left,width,bottom,page,total){
   canvas.querySelectorAll('.novel-cols-footer').forEach(e=>e.remove());
-  const s=ST(); if(!s) return;
+  const s=ST(); if(!s) return 0;
   const c=s.credit||{}, pn=s.pageNum||{};
   const sigParts=[];
   if(c.on){
     if(c.character&&c.character.trim()) sigParts.push(c.character.trim());
     if(c.maker&&c.maker.trim()) sigParts.push(c.maker.trim());
   }
-  if(!sigParts.length&&!pn.on) return;
+  if(!sigParts.length&&!pn.on) return 0;
 
   const row=document.createElement('div');
   row.className='novel-cols-footer credit credit-row';
@@ -18113,6 +18221,41 @@ function drawColsFooter(canvas,left,width,bottom,page,total){
     put(pn.align||'left',sp);
   }
   canvas.appendChild(row);
+  /* 서명 줄이 실제로 차지한 높이 + 본문과의 간격 = 아래에 비워 둘 띠 */
+  const gapC=Math.max(0,Number(c.gap!=null?c.gap:16)||0);
+  const rowH=Math.ceil(row.offsetHeight||0);
+  return rowH?(rowH+gapC):0;
+}
+
+/* #chat 의 아래쪽 안쪽 여백 — 서명 줄을 여기에 맞춰야 위 여백과 대칭이 된다 */
+function chatPadBottom(chat){
+  try{ return Math.max(0,parseFloat(getComputedStyle(chat).paddingBottom)||0); }
+  catch(_){ return 0; }
+}
+
+/* 지금 보이는 페이지의 단들 중 글이 가장 아래까지 닿은 지점.
+   ✂ 로 나누면 단마다 글 양이 제각각이라 계산해 둔 쪽 높이가 남아도는데,
+   그 남는 자리를 그대로 두면 아래가 텅 빈 채로 저장된다. */
+function usedHeightOnPage(chat,pitch,firstCol,perPage,padB){
+  let cr=null;
+  try{ cr=chat.getBoundingClientRect(); }catch(_){}
+  if(!cr) return 0;
+  let bottom=0, found=false;
+  chat.querySelectorAll(':scope > .pmsg').forEach(row=>{
+    if(row.style.display==='none') return;
+    let rects=[];
+    try{ const rs=row.getClientRects(); if(rs&&rs.length) rects=[].slice.call(rs); }catch(_){}
+    if(!rects.length){ try{ rects=[row.getBoundingClientRect()]; }catch(_){ rects=[]; } }
+    rects.forEach(rr=>{
+      if(!rr||(rr.width<=0&&rr.height<=0)) return;
+      const x=Math.max(0,rr.left-cr.left);
+      const col=Math.round(x/Math.max(1,pitch));
+      if(col<firstCol||col>=firstCol+perPage) return;
+      const b=rr.bottom-cr.top;
+      if(b>bottom){ bottom=b; found=true; }
+    });
+  });
+  return found?(bottom+padB):0;
 }
 function rememberColsPages(chat,colW,gap,per,totalCols){
   const s=ST(); if(!s) return;
@@ -18122,12 +18265,24 @@ function rememberColsPages(chat,colW,gap,per,totalCols){
   const map={};
   chat.querySelectorAll(':scope > .pmsg').forEach(row=>{
     const id=novelRowId(row); if(!id) return;
-    let rr=null;
-    try{ const rs=row.getClientRects(); if(rs&&rs.length) rr=rs[0]; }catch(_){}
-    if(!rr) rr=row.getBoundingClientRect();
-    const x=Math.max(0,(rr.left-cr.left));
-    const col=Math.max(0,Math.min(Math.max(0,totalCols-1),Math.round(x/Math.max(1,pitch))));
-    map[id]={col:col,page:Math.floor(col/Math.max(1,per))};
+    /* 긴 글 블럭은 단(=쪽) 경계를 넘어 여러 조각으로 흐른다.
+       조각을 모두 봐서 '걸쳐 있는 쪽'을 전부 기억해 둔다 —
+       한 조각만 보면 다른 쪽에서 지우거나 고를 때 빠져 버린다. */
+    let rects=[];
+    try{ const rs=row.getClientRects(); if(rs&&rs.length) rects=[].slice.call(rs); }catch(_){}
+    if(!rects.length){ try{ rects=[row.getBoundingClientRect()]; }catch(_){ rects=[]; } }
+    const cols=[], pages=[];
+    rects.forEach(rr=>{
+      if(!rr||(rr.width<=0&&rr.height<=0)) return;
+      const x=Math.max(0,(rr.left-cr.left));
+      const col=Math.max(0,Math.min(Math.max(0,totalCols-1),Math.round(x/Math.max(1,pitch))));
+      if(cols.indexOf(col)<0) cols.push(col);
+      const pg=Math.floor(col/Math.max(1,per));
+      if(pages.indexOf(pg)<0) pages.push(pg);
+    });
+    if(!cols.length) return;
+    cols.sort((a,b)=>a-b); pages.sort((a,b)=>a-b);
+    map[id]={col:cols[0],page:pages[0],cols:cols,pages:pages};
   });
   n.__msgCols=map;
 }
@@ -18145,6 +18300,7 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   const n=cfg();
   if(!n.on){
     restoreChat(canvas,chat);
+    clearBreakFillers(chat);
     chat.classList.remove('novel-mode','novel-fixed');
     chat.style.columnCount=''; chat.style.columnGap=''; chat.style.height=''; chat.style.transform='';
     chat.style.paddingLeft=''; chat.style.paddingRight='';
@@ -18190,6 +18346,7 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
     /* 먼저 ✂ 강제 단 나눔을 잠깐 빼고 '자연스럽게 n단에 딱 들어가는 높이'를 정한다.
        이렇게 해야 반올림 때문에 아무 가위도 없는데 1px짜리 다음 단이 생기는 일이 없다. */
     const forcedRows=[...chat.querySelectorAll(':scope > .pmsg.col-break')];
+    clearBreakFillers(chat);
     forcedRows.forEach(r=>r.classList.remove('col-break'));
     setW(1); chat.style.height='auto';
     const total2=Math.ceil(Math.max(chat.offsetHeight,chat.scrollHeight));
@@ -18210,6 +18367,15 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
       chat.style.height=h+'px'; kick2();
     }
 
+    /* CSS 강제 나눔이 먹었는지 직접 재 본다. 사파리에서 안 먹으면 받침으로 밀어낸다. */
+    const needFiller=forcedRows.length&&!breaksHonored(chat,forcedRows,chatPadTop(chat));
+    const refill=()=>{ if(needFiller){ fillToNextColumn(chat,forcedRows,h,kick2); kick2(); } };
+    refill();
+    for(let i=0;i<20&&vOver();i++){
+      h=Math.ceil(h+Math.max(8,h*0.04));
+      chat.style.height=h+'px'; kick2(); refill();
+    }
+
     /* 제한된 n.cols 폭 밖으로 WebKit이 만든 실제 overflow column 수를 읽는다. */
     let totalCols=Math.max(n.cols,Math.ceil((chat.scrollWidth+gap-1)/Math.max(1,pitch)));
     for(let i=0;i<12;i++){
@@ -18217,7 +18383,7 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
       const need=Math.max(totalCols,Math.ceil((chat.scrollWidth+gap-1)/Math.max(1,pitch)));
       if(need<=totalCols&&!vOver()) break;
       if(vOver()){
-        h=Math.ceil(h+Math.max(8,h*0.04)); chat.style.height=h+'px';
+        h=Math.ceil(h+Math.max(8,h*0.04)); chat.style.height=h+'px'; refill();
       }
       totalCols=Math.max(totalCols,need);
     }
@@ -18234,12 +18400,17 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
     const pageW=colW*n.cols+gap*(n.cols-1);
     const firstCol=(n.page||0)*n.cols;
     const winL=firstCol*pitch;
-    const footerH=colsFooterBand();
 
     canvas.style.display='block';
     canvas.style.width=Math.ceil(pageW+2*hMargin)+'px';
-    canvas.style.height=Math.ceil(h+2*vMargin+footerH)+'px';
     canvas.style.padding='0px';
+
+    /* 쪽 높이는 '지금 보이는 페이지에서 가장 긴 단'에 맞춘다.
+       ✂ 로 나누면 단마다 글 양이 달라 계산해 둔 h 가 남아도는데,
+       그대로 두면 아래가 텅 빈 채로 저장된다. (가위가 없으면 h 와 같아진다) */
+    const padB=chatPadBottom(chat);
+    let dispH=usedHeightOnPage(chat,pitch,firstCol,n.cols,padB);
+    dispH=(dispH>0)?Math.min(h,Math.max(40,Math.ceil(dispH))):h;
 
     chat.style.transform=''; chat.style.clipPath='';
     chat.style.marginRight='0px';
@@ -18247,11 +18418,14 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
     let win=canvas.querySelector('#novelWindow');
     if(!win){ win=document.createElement('div'); win.id='novelWindow'; }
     win.style.cssText='position:absolute;overflow:hidden;top:'+vMargin+'px;left:'+hMargin
-      +'px;width:'+pageW+'px;height:'+h+'px;z-index:1';
+      +'px;width:'+pageW+'px;height:'+dispH+'px;z-index:1';
     if(chat.parentElement!==win) win.appendChild(chat);
     if(win.parentElement!==canvas) canvas.appendChild(win);
 
-    if(footerH>0) drawColsFooter(canvas,hMargin,pageW,vMargin,(n.page||0)+1,pages);
+    /* 서명·쪽번호는 본문의 아래쪽 안쪽 여백 바깥에 앉힌다 —
+       그래야 아래 여백이 위 여백(캔버스 여백 + 안쪽 여백)과 같아진다. */
+    const footerH=drawColsFooter(canvas,hMargin,pageW,vMargin+padB,(n.page||0)+1,pages);
+    canvas.style.height=Math.ceil(dispH+2*vMargin+footerH)+'px';
     reflowColumns(chat);
     syncPager();
     return true;
@@ -18277,7 +18451,8 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
      기본값은 두 쪽의 안쪽 여백이 맞붙은 폭(2*mgX)이고, 줄이면 글이 가운데로 모인다.
      한 장 보기에서는 뜻이 없으므로 기본값으로 돌아간다. */
   const autoGap=2*mgX;
-  const colGap=(!n.single&&n.gutter!=null)?Math.max(0,n.gutter|0):autoGap;
+  /* 간격을 너무 벌리면 본문이 종이 밖으로 나가므로 바깥 여백이 0이 되는 지점에서 멈춘다 */
+  const colGap=(!n.single&&n.gutter!=null)?Math.max(0,Math.min(4*mgX,n.gutter|0)):autoGap;
   const setCols=(k)=>{
     const ww=colW2*k+colGap*(k-1);
     chat.style.width=ww+'px'; chat.style.minWidth=ww+'px'; chat.style.maxWidth=ww+'px';
@@ -18299,6 +18474,7 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
 
   const sig=layoutSig();
   let cols;
+  clearBreakFillers(chat);
   if(colCache&&colCache.sig===sig){
     /* 글도 설정도 그대로면 다시 재지 않는다 — 재면 잴 때마다 값이 흔들린다 */
     cols=colCache.cols;
@@ -18316,7 +18492,19 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   /* 넘치면 늘리기만 한다 (줄이지 않는다 — 줄이는 순간 블럭이 뭉친다) */
   kick();
   for(let i=0;i<24&&overflowing();i++){ cols+=per; apply(cols); kick(); }
+  /* 소설 비율에서도 사파리가 ✂ 를 흘려버리면 받침으로 다음 쪽에 밀어 넣는다 */
+  const forced2=[...chat.querySelectorAll(':scope > .pmsg.col-break')];
+  if(forced2.length&&!breaksHonored(chat,forced2,chatPadTop(chat))){
+    fillToNextColumn(chat,forced2,textH,kick); kick();
+    for(let i=0;i<24&&overflowing();i++){
+      cols+=per; apply(cols); kick();
+      fillToNextColumn(chat,forced2,textH,kick); kick();
+    }
+  }
   colCache={sig:sig,cols:cols};
+  /* 소설 비율에서도 '어느 블럭이 어느 펼침에 있나'를 기억해 둔다
+     (이 페이지 삭제·여러 개 선택·장별 저장이 이 표를 쓴다) */
+  rememberColsPages(chat,colW2,colGap,per,cols);
 
   const units=Math.max(1,Math.ceil(cols/per));
   n.__pages=units;
@@ -18442,6 +18630,56 @@ function drawFolios(canvas,colW,gap,cols,hMargin,vMargin,folioH,from,count){
     canvas.appendChild(d);
   }
 }
+
+/* =====================================================================
+   '페이지' 기준을 미리보기 화면과 하나로 맞춘다.
+   여러 단으로 붙일 때 ✂ 는 '새 장'이 아니라 '다음 단'이므로,
+   장 번호로 세던 기존 계산과 화면에 보이는 쪽이 서로 어긋나 있었다.
+   → 여러 단이 켜져 있으면 '미리보기에 보이는 한 화면 = 한 페이지'로 통일한다.
+     (이 페이지 삭제 · 여러 개 선택 · 장별 저장 · 스티커 쪽 지정이 모두 이걸 쓴다)
+   ===================================================================== */
+(function(){
+  const on=()=>{ const s=ST(); return !!(s&&s.novel&&s.novel.on); };
+  const N=()=>{ const s=ST(); return (s&&s.novel)||{}; };
+  const total=()=>Math.max(1,N().__pages||1);
+  const _count=window.__pageCount, _cur=window.__currentPage,
+        _ids=window.__idsOnCurrentPage, _goto=window.gotoPage, _of=window.__pageOfMsgId;
+
+  if(typeof _count==='function') window.__pageCount=function(){
+    return on()?total():_count.apply(this,arguments);
+  };
+  if(typeof _cur==='function') window.__currentPage=function(){
+    if(!on()) return _cur.apply(this,arguments);
+    return Math.max(1,Math.min(total(),(N().page||0)+1));
+  };
+  /* 경계를 걸쳐 흐르는 긴 블럭은 걸친 쪽 어디에서도 잡히게 한다 */
+  if(typeof _ids==='function') window.__idsOnCurrentPage=function(){
+    if(!on()) return _ids.apply(this,arguments);
+    const s=ST(), n=N(), map=n.__msgCols, ms=(s&&s.messages)||[];
+    if(!map||!Object.keys(map).length) return ms.map(m=>m&&m.id).filter(Boolean);
+    const cur=n.page||0, out=[];
+    ms.forEach(m=>{
+      if(!m) return;
+      const rec=map[m.id]; if(!rec) return;
+      const pgs=rec.pages||[rec.page||0];
+      if(pgs.indexOf(cur)>=0) out.push(m.id);
+    });
+    return out;
+  };
+  if(typeof _goto==='function') window.gotoPage=function(p){
+    if(!on()) return _goto.apply(this,arguments);
+    const n=N(), t=total();
+    n.page=Math.max(0,Math.min(t-1,(parseInt(p,10)||1)-1));
+    try{ renderPreview(); }catch(_){}
+    try{ if(typeof fitPreview==='function') fitPreview(); }catch(_){}
+  };
+  if(typeof _of==='function') window.__pageOfMsgId=function(id){
+    if(!on()) return _of.apply(this,arguments);
+    const n=N(), rec=n.__msgCols&&n.__msgCols[id];
+    if(rec){ const pgs=rec.pages||[rec.page||0]; return (pgs[0]||0)+1; }
+    return (n.page||0)+1;
+  };
+})();
 
 ['syncControlsFromState','applyThemeById'].forEach(name=>{
   const prev=window[name];
@@ -18686,6 +18924,28 @@ setTimeout(dump,800);
     break-inside:auto !important;
     -webkit-column-break-inside:auto !important;
   }
+
+  /* 장평이 100% 가 아니면 scaleX 를 지울 수 없다(장평 기능이 사라지므로).
+     그런데 화면이 깨지는 진짜 원인은 transform 자체가 아니라
+     will-change:transform 이 만드는 '합성 레이어'다.
+     레이어가 생기면 WebKit 은 그 레이어를 쪼개지 못하고 첫 단 좌표에 통째로
+     한 번만 칠해서, 계산은 맞는데 화면에서만 글이 단을 못 넘어간 것처럼 보인다.
+     (저장은 다시 그리므로 멀쩡했다.)
+     그래서 장평은 그대로 두고 레이어를 만드는 성질만 걷어낸다. */
+  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode > .pmsg.t-block > .t-inner,
+  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale,
+  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode > .pmsg.t-block .glyph-inline{
+    will-change:auto !important;
+    contain:none !important;
+    isolation:auto !important;
+    filter:none !important;
+    -webkit-filter:none !important;
+    perspective:none !important;
+    backface-visibility:visible !important;
+    -webkit-backface-visibility:visible !important;
+    position:static !important;
+    z-index:auto !important;
+  }
 }
 </style>
 <script id="ios-novel-fragment-paint-fix-v4-script">
@@ -18693,12 +18953,16 @@ setTimeout(dump,800);
   'use strict';
   function sync(){
     var mobile=document.body.classList.contains('mobile-ui');
-    var novel=false, scale=100;
+    var novel=false, novelAny=false, scale=100;
+    try{ novelAny=!!(state&&state.novel&&state.novel.on); }catch(_){}
     try{ novel=!!(state&&state.novel&&state.novel.on&&state.novel.mode!=='ratio'); }catch(_){}
     try{ scale=Number(state&&state.layout&&state.layout.widthScale)||100; }catch(_){}
     /* scaleX(1) + will-change:transform 만 제거하는 안전 경로.
        장평을 실제로 바꾼 경우에는 장평 기능을 훼손하지 않도록 기존 렌더를 유지한다. */
     document.body.classList.toggle('novel-glyph-fragment-safe', mobile&&novel&&Math.abs(scale-100)<0.001);
+    /* 장평을 바꿨든 아니든, 합성 레이어만 걷어내는 경로는 항상 켠다.
+       (여러 단·소설 비율 둘 다 글이 단 경계에서 쪼개지므로 같은 문제를 겪는다) */
+    document.body.classList.toggle('novel-glyph-layer-safe', mobile&&novelAny);
   }
   window.addEventListener('resize',sync,{passive:true});
   document.addEventListener('DOMContentLoaded',sync);
