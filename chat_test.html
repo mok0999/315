@@ -17852,8 +17852,12 @@ setTimeout(()=>{ bind(); apply(); },400);
 #chat.novel-mode>.pmsg{break-inside:avoid}
 /* 글 블럭은 단 경계에서 문장 중간이라도 이어지게 (소설 조판처럼) */
 #chat.novel-mode>.pmsg.t-block{break-inside:auto}
-/* ✂ 를 찍은 자리 = 강제로 다음 단에서 시작 */
-#chat.novel-mode>.pmsg.col-break{break-before:column}
+/* ✂ 를 찍은 자리 = 강제로 다음 단에서 시작
+   (사파리는 표준 break-before 를 자주 흘려버려서 옛 -webkit- 이름도 같이 준다) */
+#chat.novel-mode>.pmsg.col-break{break-before:column;-webkit-column-break-before:always}
+/* 그래도 안 먹는 사파리에서 남은 자리를 대신 채워 다음 단으로 밀어내는 받침 */
+#chat.novel-mode>.col-break-filler{display:block;width:100%;margin:0;padding:0;border:0;
+  background:none;pointer-events:none;break-inside:auto;-webkit-column-break-inside:auto}
 /* 서명·페이지 번호는 단 전체를 가로지르는 한 줄로 맨 아래에 —
    전체를 한 쪽으로 보고 좌/가운데/우 정렬이 그대로 먹는다 */
 #chat.novel-mode>.credit{column-span:all;break-inside:avoid}
@@ -18042,6 +18046,58 @@ function markBreaks(){
   });
 }
 
+/* =====================================================================
+   ✂ 강제 단 나눔 받침 — 사파리 대비
+   WebKit 은 다단 안에서 break-before:column 을 통째로 흘려버릴 때가 있다.
+   그러면 ✂ 를 찍어도 다음 단으로 넘어가지 않고 글이 그냥 이어져 버린다.
+   그래서 '진짜로 단 맨 위에서 시작했는지'를 직접 재 보고,
+   안 먹었을 때만 남은 자리만큼 빈 받침을 끼워 다음 단으로 밀어낸다.
+   (CSS 가 제대로 먹는 브라우저에서는 받침이 하나도 생기지 않는다) */
+function chatPadTop(chat){
+  try{ return Math.max(0,parseFloat(getComputedStyle(chat).paddingTop)||0); }
+  catch(_){ return 0; }
+}
+function clearBreakFillers(chat){
+  if(!chat) return;
+  chat.querySelectorAll(':scope > .col-break-filler').forEach(e=>e.remove());
+}
+function breaksHonored(chat,rows,padT){
+  let cr=null;
+  try{ cr=chat.getBoundingClientRect(); }catch(_){ return true; }
+  for(const row of rows){
+    let rs=null;
+    try{ rs=row.getClientRects(); }catch(_){}
+    if(!rs||!rs.length) continue;
+    if(rs[0].top-cr.top>padT+3) return false;   /* 단 중간에서 시작했다 = 안 먹었다 */
+  }
+  return true;
+}
+function fillToNextColumn(chat,rows,h,kick){
+  clearBreakFillers(chat);
+  const padT=chatPadTop(chat), padB=chatPadBottom(chat);
+  const bottom=h-padB;                          /* 단의 글 끝 지점 */
+  rows.forEach(row=>{
+    let sp=null;
+    for(let t=0;t<4;t++){
+      let cr=null,rs=null;
+      try{ cr=chat.getBoundingClientRect(); rs=row.getClientRects(); }catch(_){}
+      if(!cr||!rs||!rs.length) return;
+      const top=rs[0].top-cr.top;
+      if(top<=padT+3) return;                   /* 이미 단 맨 위 — 더 밀 필요 없다 */
+      const need=bottom-top;
+      if(need<=0) return;
+      if(!sp){
+        sp=document.createElement('div');
+        sp.className='col-break-filler';
+        sp.style.height='0px';
+        row.parentNode.insertBefore(sp,row);
+      }
+      sp.style.height=((parseFloat(sp.style.height)||0)+need)+'px';
+      if(typeof kick==='function') kick(); else void chat.offsetWidth;
+    }
+  });
+}
+
 /* 창 안에 들어가 있던 본문을 캔버스 직속으로 되돌린다 */
 function restoreChat(canvas,chat){
   const win=canvas.querySelector('#novelWindow');
@@ -18200,6 +18256,7 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   const n=cfg();
   if(!n.on){
     restoreChat(canvas,chat);
+    clearBreakFillers(chat);
     chat.classList.remove('novel-mode','novel-fixed');
     chat.style.columnCount=''; chat.style.columnGap=''; chat.style.height=''; chat.style.transform='';
     chat.style.paddingLeft=''; chat.style.paddingRight='';
@@ -18245,6 +18302,7 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
     /* 먼저 ✂ 강제 단 나눔을 잠깐 빼고 '자연스럽게 n단에 딱 들어가는 높이'를 정한다.
        이렇게 해야 반올림 때문에 아무 가위도 없는데 1px짜리 다음 단이 생기는 일이 없다. */
     const forcedRows=[...chat.querySelectorAll(':scope > .pmsg.col-break')];
+    clearBreakFillers(chat);
     forcedRows.forEach(r=>r.classList.remove('col-break'));
     setW(1); chat.style.height='auto';
     const total2=Math.ceil(Math.max(chat.offsetHeight,chat.scrollHeight));
@@ -18265,6 +18323,15 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
       chat.style.height=h+'px'; kick2();
     }
 
+    /* CSS 강제 나눔이 먹었는지 직접 재 본다. 사파리에서 안 먹으면 받침으로 밀어낸다. */
+    const needFiller=forcedRows.length&&!breaksHonored(chat,forcedRows,chatPadTop(chat));
+    const refill=()=>{ if(needFiller){ fillToNextColumn(chat,forcedRows,h,kick2); kick2(); } };
+    refill();
+    for(let i=0;i<20&&vOver();i++){
+      h=Math.ceil(h+Math.max(8,h*0.04));
+      chat.style.height=h+'px'; kick2(); refill();
+    }
+
     /* 제한된 n.cols 폭 밖으로 WebKit이 만든 실제 overflow column 수를 읽는다. */
     let totalCols=Math.max(n.cols,Math.ceil((chat.scrollWidth+gap-1)/Math.max(1,pitch)));
     for(let i=0;i<12;i++){
@@ -18272,7 +18339,7 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
       const need=Math.max(totalCols,Math.ceil((chat.scrollWidth+gap-1)/Math.max(1,pitch)));
       if(need<=totalCols&&!vOver()) break;
       if(vOver()){
-        h=Math.ceil(h+Math.max(8,h*0.04)); chat.style.height=h+'px';
+        h=Math.ceil(h+Math.max(8,h*0.04)); chat.style.height=h+'px'; refill();
       }
       totalCols=Math.max(totalCols,need);
     }
@@ -18362,6 +18429,7 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
 
   const sig=layoutSig();
   let cols;
+  clearBreakFillers(chat);
   if(colCache&&colCache.sig===sig){
     /* 글도 설정도 그대로면 다시 재지 않는다 — 재면 잴 때마다 값이 흔들린다 */
     cols=colCache.cols;
@@ -18379,6 +18447,15 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   /* 넘치면 늘리기만 한다 (줄이지 않는다 — 줄이는 순간 블럭이 뭉친다) */
   kick();
   for(let i=0;i<24&&overflowing();i++){ cols+=per; apply(cols); kick(); }
+  /* 소설 비율에서도 사파리가 ✂ 를 흘려버리면 받침으로 다음 쪽에 밀어 넣는다 */
+  const forced2=[...chat.querySelectorAll(':scope > .pmsg.col-break')];
+  if(forced2.length&&!breaksHonored(chat,forced2,chatPadTop(chat))){
+    fillToNextColumn(chat,forced2,textH,kick); kick();
+    for(let i=0;i<24&&overflowing();i++){
+      cols+=per; apply(cols); kick();
+      fillToNextColumn(chat,forced2,textH,kick); kick();
+    }
+  }
   colCache={sig:sig,cols:cols};
   /* 소설 비율에서도 '어느 블럭이 어느 펼침에 있나'를 기억해 둔다
      (이 페이지 삭제·여러 개 선택·장별 저장이 이 표를 쓴다) */
