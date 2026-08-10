@@ -1622,7 +1622,7 @@ html, body, #canvas, #chat, #canvas * {
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
 </div>
-<div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기<span>글이 단을 채우면 옆 단으로 이어져요</span></div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">글 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="400" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 페이지만 보기</div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div>
+<div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기<span>글이 단을 채우면 옆 단으로 이어져요</span></div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div>
 <div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
 <div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
@@ -17890,6 +17890,8 @@ const ST=()=>{ try{ return state; }catch(_){ return window.state||null; } };
 const st0=ST();
 if(st0) st0.novel=Object.assign({on:false,mode:'cols',cols:2,gap:72,ratio:'210:297',single:false,page:0,gutter:null},st0.novel||{});
 function cfg(){ const s=ST(); return (s&&s.novel)||{on:false,mode:'cols',cols:2,gap:72,ratio:'210:297',single:false,page:0}; }
+/* 소설 비율의 기본 '글 사이 간격' — 두 쪽의 안쪽 여백이 맞붙은 폭(2 × 쪽 폭의 12.5%) */
+const AUTO_GUTTER=2*Math.round(720*0.125);
 window.__novelOn=function(){ return !!cfg().on; };
 
 window.setNovel=function(field,value){
@@ -17898,7 +17900,7 @@ window.setNovel=function(field,value){
   if(field==='on') n.on=!!value;
   else if(field==='mode'){ n.mode=(value==='ratio')?'ratio':'cols'; n.page=0; }
   else if(field==='single'){ n.single=!!value; n.page=0; }
-  else if(field==='gutter'){ n.gutter=Math.max(0,Math.min(400,parseInt(value,10)||0));
+  else if(field==='gutter'){ n.gutter=Math.max(0,Math.min(AUTO_GUTTER*2,parseInt(value,10)||0));
     const v=document.getElementById('novelGutterV'); if(v) v.textContent=n.gutter+'px'; }
   else if(field==='ratio') n.ratio=String(value||'210:297');
   else if(field==='cols'){ n.cols=Math.max(2,Math.min(8,parseInt(value,10)||2));
@@ -17924,6 +17926,25 @@ function syncNovel(){
   const rf=document.getElementById('novelRatioField');
   if(rf) rf.style.display=ratioMode?'':'none';
   const rs=document.getElementById('novelRatio'); if(rs) rs.value=n.ratio;
+  /* 소설 비율에서만 쓰는 두 칸 — 양쪽 본문 사이 간격, 한 쪽씩 보기 */
+  const vf=document.getElementById('novelViewField');
+  if(vf) vf.style.display=ratioMode?'':'none';
+  const sgl=document.getElementById('novelSingle'); if(sgl) sgl.checked=!!n.single;
+  const gf=document.getElementById('novelGutterField');
+  if(gf) gf.style.display=ratioMode?'':'none';
+  const gt=document.getElementById('novelGutter');
+  if(gt){
+    const cur=(n.gutter!=null)?n.gutter:AUTO_GUTTER;
+    gt.value=cur;
+    const gtv=document.getElementById('novelGutterV'); if(gtv) gtv.textContent=cur+'px';
+    /* 한 쪽씩 보기에는 맞붙일 상대 쪽이 없다. 이때는 기본 여백으로 돌아가므로 잠근다 */
+    gt.disabled=!!n.single;
+    const box=gt.closest('.field');
+    if(box){
+      box.style.opacity=n.single?'.45':'';
+      box.title=n.single?'한 쪽씩 보기에서는 기본 여백으로 고정돼요':'';
+    }
+  }
   /* 인쇄 비율 모드에서는 단 수를 글 양이 정하므로 슬라이더를 잠근다 */
   const colField=document.getElementById('novelCols');
   if(colField){
@@ -17946,7 +17967,7 @@ function syncNovel(){
   if(colBox){ const box=colBox.closest('.field'); if(box) box.style.display=ratioMode?'none':''; }
   const help=document.getElementById('novelHelp');
   if(help) help.innerHTML=ratioMode
-    ? '판형만 고르면 여백·본문 폭은 소설책 표준 비율로 <strong>자동 고정</strong>돼요. 글씨·자간·행간만 조절하면 됩니다. 화면은 <strong>펼침 한 장(2쪽)</strong>이고, 미리보기 아래 이동 바로 넘겨요. ✂ 를 찍은 자리는 강제로 다음 쪽에서 시작해요.'
+    ? '판형만 고르면 여백·본문 폭은 소설책 표준 비율로 <strong>자동 고정</strong>돼요. 종이 크기는 그대로 둔 채 <strong>양쪽 본문 사이 간격</strong>만 넓히거나 좁힐 수 있어요. <strong>한 쪽씩 보기</strong>를 켜면 펼침 대신 한 쪽씩 넘기며 낱쪽으로 저장되고, 이때는 사이 간격 대신 기본 여백(위아래끼리·양옆끼리 같은)으로 돌아가요. ✂ 를 찍은 자리는 강제로 다음 쪽에서 시작해요.'
     : '단 너비는 <strong>본문 너비</strong>를 따라가요. 쪽 길이는 글 양에 맞춰 자동으로 정해지고 단마다 고르게 나뉘어요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.';
 }
 window.__syncNovel=syncNovel;
@@ -18407,7 +18428,8 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
      기본값은 두 쪽의 안쪽 여백이 맞붙은 폭(2*mgX)이고, 줄이면 글이 가운데로 모인다.
      한 장 보기에서는 뜻이 없으므로 기본값으로 돌아간다. */
   const autoGap=2*mgX;
-  const colGap=(!n.single&&n.gutter!=null)?Math.max(0,n.gutter|0):autoGap;
+  /* 간격을 너무 벌리면 본문이 종이 밖으로 나가므로 바깥 여백이 0이 되는 지점에서 멈춘다 */
+  const colGap=(!n.single&&n.gutter!=null)?Math.max(0,Math.min(4*mgX,n.gutter|0)):autoGap;
   const setCols=(k)=>{
     const ww=colW2*k+colGap*(k-1);
     chat.style.width=ww+'px'; chat.style.minWidth=ww+'px'; chat.style.maxWidth=ww+'px';
