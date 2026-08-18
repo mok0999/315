@@ -157,6 +157,12 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   background:var(--panel-2,#F7F7F8);color:var(--ink,#1A1B1F);font-size:13px;outline:none;
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;letter-spacing:.03em}
 #hexPicker .hp-hex:focus{border-color:var(--accent,#424448);background:var(--panel,#fff)}
+#hexPicker .hp-eye{flex:0 0 auto;width:30px;height:30px;border:1px solid var(--line,#E4E4E7);border-radius:8px;
+  background:var(--panel-2,#F7F7F8);color:var(--ink,#424448);display:flex;align-items:center;justify-content:center;
+  padding:0;cursor:pointer}
+#hexPicker .hp-eye:hover{background:var(--panel,#fff);border-color:var(--accent,#424448)}
+#hexPicker .hp-eye:disabled{opacity:.35;cursor:not-allowed}
+#hexPicker .hp-eye svg{width:15px;height:15px;display:block}
 #hexPicker .hp-ok{flex:0 0 auto;width:30px;height:30px;border:none;border-radius:8px;cursor:default;
   background:var(--accent,#424448);color:#fff;font-weight:700;font-size:13px}
 #hexPicker .hp-recent{display:none;flex-wrap:wrap;gap:4px;margin-top:10px;padding-top:10px;
@@ -1963,11 +1969,11 @@ function refreshColorRows(){document.querySelectorAll('.colorrow').forEach(build
   const pop=document.createElement('div');pop.id='hexPicker';
   pop.innerHTML='<div class="hp-sv"><div class="hp-dot"></div></div>'+
     '<input class="hp-hue" type="range" min="0" max="360" step="1" value="0">'+
-    '<div class="hp-row"><span class="hp-prev"></span><input class="hp-hex" type="text" maxlength="7" spellcheck="false"><button class="hp-ok" type="button" title="닫기">✓</button></div>'+
+    '<div class="hp-row"><span class="hp-prev"></span><input class="hp-hex" type="text" maxlength="7" spellcheck="false"><button class="hp-eye" type="button" title="화면에서 색 추출" aria-label="스포이드"><svg aria-hidden="true" viewBox="0 0 18 18" fill="none"><path d="M10.8 3.1l4.1 4.1-7.6 7.6-4.6.6.6-4.6 7.5-7.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9.4 4.5l4.1 4.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><button class="hp-ok" type="button" title="닫기">✓</button></div>'+
     '<div class="hp-recent"></div>';
   document.body.appendChild(pop);
   const sv=pop.querySelector('.hp-sv'),dot=pop.querySelector('.hp-dot'),hue=pop.querySelector('.hp-hue'),
-        prev=pop.querySelector('.hp-prev'),hexIn=pop.querySelector('.hp-hex'),ok=pop.querySelector('.hp-ok'),
+        prev=pop.querySelector('.hp-prev'),hexIn=pop.querySelector('.hp-hex'),eye=pop.querySelector('.hp-eye'),ok=pop.querySelector('.hp-ok'),
         recentBox=pop.querySelector('.hp-recent');
 
   /* ---- 최근 사용한 색 ----
@@ -2100,6 +2106,24 @@ function refreshColorRows(){document.querySelectorAll('.colorrow').forEach(build
     const p=hexToHsv(v);if(p){hsv=p;paint(true);push(v.toUpperCase());}
   });
   hexIn.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();closePicker();}});
+  if(!('EyeDropper' in window)){
+    eye.disabled=true;
+    eye.title='이 브라우저는 스포이드를 지원하지 않아요';
+  }else{
+    eye.addEventListener('click',async e=>{
+      e.preventDefault();e.stopPropagation();
+      if(!target)return;
+      try{
+        const picked=await new window.EyeDropper().open();
+        const hex=String(picked&&picked.sRGBHex||'').toUpperCase();
+        const p=hexToHsv(hex);
+        if(!p)return;
+        hsv=p;paint(false);push(hex);
+      }catch(err){
+        if(err&&err.name!=='AbortError') console.warn('스포이드 사용 실패',err);
+      }
+    });
+  }
   ok.addEventListener('click',()=>closePicker());
 })();
 function toggleDraftBubbleUse(on){
@@ -4555,17 +4579,60 @@ exportHTML=function(){
   const transparentCss=state.transparentBg?'html,body,#canvas,#chat{background:transparent!important}#canvasBgImage,#canvasBgOverlay{display:none!important}':'';
   const __htmlNovel=!!(state.novel&&state.novel.on);
   const __htmlFitW=Math.max(1,Math.round(document.getElementById('canvas').offsetWidth||state.layout.width||440));
-  const __htmlFluidCss=!__htmlNovel
+  const __htmlWidthMode=(window.__mokoHtmlWidthMode==='stretch')?'stretch':'fixed';
+  const __htmlHMargin=Math.max(0,Number(state.export&&state.export.hMargin)||0);
+  const __htmlHMarginFloor=Math.min(6,__htmlHMargin);
+  /* 스킨 너비 맞춤의 바깥 좌우 여백: 넓을 때는 설정값 그대로,
+     폭이 좁아질수록 부드럽게 줄여 휴대폰에서는 거의 가장자리까지 쓴다. */
+  const __htmlResponsiveHPad=__htmlHMargin>0
+    ?'clamp('+__htmlHMarginFloor+'px,calc(24% - 86px),'+__htmlHMargin+'px)'
+    :'0px';
+  const __htmlTextFs=Math.max(1,Number(state.layout&&state.layout.fs)||14);
+  const __htmlBubbleFs=Math.max(1,Number(state.layout&&state.layout.bubbleFs)||__htmlTextFs);
+  /* 모바일에서는 두 HTML 폭 모드 모두 '내용 글자'를 각 설정값에서 2pt 줄인다.
+     제목(span.text-heading)은 em 기반이라 부모 글자 크기를 따라 자연스럽게 같이 줄어든다. */
+  const __htmlMobileFontCss='@media(max-width:700px){'
+    +'.t-block{font-size:calc('+__htmlTextFs+'px - 2pt)!important;}'
+    +'.n-bubble,.n-plain,.m-bubble{font-size:calc('+__htmlBubbleFs+'px - 2pt)!important;}'
+    +'}';
+  if(__htmlWidthMode==='stretch'||__htmlWidthMode==='fixed'){
+    /* 저장 파일도 미리보기용 고정 geometry를 제거한다.
+       fixed는 max-width로 원본 크기를 보존하고, 더 좁은 창에서는 자연스럽게 줄어든다. */
+    ['width','min-width','max-width','height','min-height','max-height','position','left','top','right','bottom','flex'].forEach(p=>node.style.removeProperty(p));
+    const __htmlChat=node.querySelector('#chat');
+    if(__htmlChat) ['width','min-width','max-width','height','min-height','max-height','flex'].forEach(p=>__htmlChat.style.removeProperty(p));
+  }
+  const __htmlStretchDesktopFlowCss='@media(min-width:701px){'
+    +'.n-bubble,.m-bubble{width:auto!important;min-width:0!important;box-sizing:border-box!important;}'
+    +'.glyph-scale{display:block!important;width:auto!important;max-width:100%!important;min-width:0!important;margin-right:0!important;}'
+    +'}';
+  const __htmlFixedAdaptiveGlyphCss='@container (max-width: '+Math.max(1,__htmlFitW-1)+'px){.glyph-scale{display:block!important;width:auto!important;max-width:100%!important;min-width:0!important;margin-right:0!important;}}'
+    +'@media(max-width:'+__htmlFitW+'px){.glyph-scale{display:block!important;width:auto!important;max-width:100%!important;min-width:0!important;margin-right:0!important;}}';
+  const __htmlStretchMobileFixedCss='@media(max-width:700px){'
+    +'body{width:100%!important;min-width:0!important;display:flex!important;justify-content:center!important;align-items:flex-start!important;margin:0!important;padding:0!important;}'
+    +'#canvas{width:100%!important;min-width:0!important;max-width:'+__htmlFitW+'px!important;height:auto!important;min-height:0!important;max-height:none!important;position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0 auto!important;transform:none!important;zoom:1!important;padding-left:'+__htmlResponsiveHPad+'!important;padding-right:'+__htmlResponsiveHPad+'!important;container-type:inline-size;}'
+    +'#chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;transform:none!important;}'
+    +'}';
+  const __htmlFluidCss=__htmlWidthMode==='stretch'
     ? 'html,body{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;}'
       +'body{width:100%!important;max-width:none!important;display:block!important;margin:0!important;padding:0!important;background:'+bodyBg+';}'
-      +'#canvas{width:100%!important;max-width:'+__htmlFitW+'px!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;zoom:1!important;display:block!important;margin:0 auto!important;box-sizing:border-box!important;}'
-      +'#chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important;}'
-      +'img{max-width:100%!important;height:auto;}'
-    : 'html,body{height:auto;min-height:100%;overflow:auto}body{background:'+bodyBg+';display:flex;justify-content:center;padding:0;margin:0}';
+      +'#canvas{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;zoom:1!important;display:block!important;margin:0!important;box-sizing:border-box!important;position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;padding-left:'+__htmlResponsiveHPad+'!important;padding-right:'+__htmlResponsiveHPad+'!important;}'
+      +'#chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;margin:0!important;box-sizing:border-box!important;}'
+      +__htmlStretchDesktopFlowCss+__htmlStretchMobileFixedCss+__htmlFixedAdaptiveGlyphCss+__htmlMobileFontCss+'img{max-width:100%!important;height:auto;}'
+    : 'html,body{height:auto!important;min-height:100%!important;overflow:auto!important;}'
+      +'body{width:100%!important;min-width:0!important;display:flex!important;justify-content:center!important;align-items:flex-start!important;margin:0!important;padding:0!important;background:'+bodyBg+';}'
+      +'#canvas{width:100%!important;min-width:0!important;max-width:'+__htmlFitW+'px!important;flex:0 1 '+__htmlFitW+'px!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;zoom:1!important;display:block!important;margin:0 auto!important;box-sizing:border-box!important;position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;padding-left:'+__htmlResponsiveHPad+'!important;padding-right:'+__htmlResponsiveHPad+'!important;container-type:inline-size;}'
+      +'#chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;overflow:visible!important;transform:none!important;box-sizing:border-box!important;}'
+      +__htmlFixedAdaptiveGlyphCss+__htmlMobileFontCss+'img{max-width:100%!important;height:auto;}';
   const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>채팅 발췌</title><style>'+css+__htmlFluidCss+transparentCss+'</style></head><body>'+node.outerHTML+'</body></html>';
   const blob=new Blob([html],{type:'text/html'});
   const fname=safeFilename(state.export.filename)+'.html';
   window.__saveBlobAs(blob,fname,()=>{const a=document.createElement('a');a.download=fname;a.href=URL.createObjectURL(blob);a.click();});
+  try{
+    if(typeof window.toast==='function') window.toast(__htmlWidthMode==='stretch'
+      ?'HTML 저장: 스킨 너비 맞춤이 적용되었어요'
+      :'HTML 저장: 원본 너비 유지 · 중앙정렬이 적용되었어요');
+  }catch(_){}
 };
 
 initRichComposer();
@@ -14756,6 +14823,20 @@ function buildEmbedHTML(){
   const fitW=Math.max(1,Math.round(canvas.offsetWidth||(s0.layout&&s0.layout.width)||440));
   const fitH=Math.max(1,Math.round(canvas.offsetHeight||0));
   const isNovel=!!(s0.novel&&s0.novel.on);
+  const stretchHMargin=Math.max(0,Number(s0.export&&s0.export.hMargin)||0);
+  const stretchHMarginFloor=Math.min(6,stretchHMargin);
+  /* 스킨 너비 맞춤의 바깥 좌우 여백은 본문 폭에 따라 자동 축소한다.
+     예: 설정 58px 기준 약 600px 이상=58px, 414px≈13px, 390px≈8px, 더 좁으면 최소 6px. */
+  const stretchResponsiveHPad=stretchHMargin>0
+    ?'clamp('+stretchHMarginFloor+'px,calc(24% - 86px),'+stretchHMargin+'px)'
+    :'0px';
+  const stretchTextFs=Math.max(1,Number(s0.layout&&s0.layout.fs)||14);
+  const stretchBubbleFs=Math.max(1,Number(s0.layout&&s0.layout.bubbleFs)||stretchTextFs);
+  /* 모바일에서 내용 글자만 2pt 축소. 두 HTML 폭 모드 모두 동일하게 적용한다. */
+  const stretchMobileFontCss='@media(max-width:700px){'
+    +rootSel+' .t-block{font-size:calc('+stretchTextFs+'px - 2pt)!important;}'
+    +rootSel+' .n-bubble,'+rootSel+' .n-plain,'+rootSel+' .m-bubble{font-size:calc('+stretchBubbleFs+'px - 2pt)!important;}'
+    +'}\n';
 
   /* ---------------------------------------------------------------
      블로그용 HTML은 '축소된 고정 캔버스'가 아니라 진짜 반응형 레이아웃으로.
@@ -14773,7 +14854,39 @@ function buildEmbedHTML(){
      소설/여러 단은 '페이지 조판' 자체가 고정 폭·높이에 의존하므로
      기존 비율 축소 방식을 유지한다.
      --------------------------------------------------------------- */
-  const fluidCss=!isNovel
+  const widthMode=(window.__mokoHtmlWidthMode==='stretch')?'stretch':'fixed';
+  if(widthMode==='stretch'||widthMode==='fixed'){
+    /* 두 HTML 모드 모두 미리보기용 고정 geometry(position/width/height)는 복사본에서 걷어낸다.
+       stretch는 부모 폭을 끝까지 따라가고, fixed는 원본 폭을 최대치로만 삼아 더 좁은 부모에서 줄어든다. */
+    ['width','min-width','max-width','height','min-height','max-height','position','left','top','right','bottom','flex'].forEach(p=>node.style.removeProperty(p));
+    const fluidChat=node.querySelector('#chat');
+    if(fluidChat) ['width','min-width','max-width','height','min-height','max-height','flex'].forEach(p=>fluidChat.style.removeProperty(p));
+  }
+  /* 스킨 너비 맞춤 — 데스크톱에서만 본문 폭을 따라 reflow한다.
+     말풍선 자체는 100%로 강제하지 않는다: 일반 말풍선은 원래 shrink-to-fit/max-width 규칙,
+     메신저는 기존 max-width:78% 및 꼬리 여백 계산을 그대로 살린다. */
+  const stretchDesktopFlowCss='@media(min-width:701px){'
+    +rootSel+' .n-bubble,'+rootSel+' .m-bubble{width:auto!important;min-width:0!important;box-sizing:border-box!important;}\n'
+    +rootSel+' .glyph-scale{display:block!important;width:auto!important;max-width:100%!important;min-width:0!important;margin-right:0!important;}\n'
+    +'}\n';
+  /* fixed는 원본 폭일 때 장평 계산값을 그대로 보존하고, 실제 컨테이너가 원본보다 좁아질 때만
+     px 폭을 풀어 reflow한다. container query + viewport fallback을 함께 둔다. */
+  const fixedAdaptiveGlyphCss='@container (max-width: '+Math.max(1,fitW-1)+'px){'
+    +rootSel+' .glyph-scale{display:block!important;width:auto!important;max-width:100%!important;min-width:0!important;margin-right:0!important;}}\n'
+    +'@media(max-width:'+fitW+'px){'+rootSel+' .glyph-scale{display:block!important;width:auto!important;max-width:100%!important;min-width:0!important;margin-right:0!important;}}\n';
+  /* stretch를 골라도 모바일(<=700px)에서는 fixed/centered 모드와 같은 배치로 전환한다. */
+  const stretchMobileFixedCss='@media(max-width:700px){'
+    +rootSel+'{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;background:transparent!important;}'
+    +rootSel+' .moko-fit{width:100%!important;max-width:100%!important;min-width:0!important;display:flex!important;justify-content:center!important;align-items:flex-start!important;margin:0!important;padding:0!important;overflow:visible!important;}'
+    +rootSel+' .moko-fit-in{width:100%!important;min-width:0!important;max-width:'+fitW+'px!important;flex:0 1 '+fitW+'px!important;margin:0 auto!important;transform:none!important;}'
+    +rootSel+' #canvas{width:100%!important;min-width:0!important;max-width:'+fitW+'px!important;height:auto!important;min-height:0!important;max-height:none!important;position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;margin:0 auto!important;transform:none!important;zoom:1!important;padding-left:'+stretchResponsiveHPad+'!important;padding-right:'+stretchResponsiveHPad+'!important;container-type:inline-size;}'
+    +rootSel+' #chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;transform:none!important;}'
+    +'}\n';
+
+  /* HTML 백업 폭 모드
+     fixed   : 원본 너비를 최대치로 보존하고 가운데 배치. 부모가 더 좁으면 그 폭까지만 자연스럽게 축소
+     stretch : 데스크톱에서는 블로그 본문 폭을 사용하되 말풍선의 자연 폭/메신저 여백은 보존. 모바일에서는 fixed/centered로 전환 */
+  const fluidCss=widthMode==='stretch'
     ? rootSel+' .moko-fit,'+rootSel+' .moko-fit-in{'
         +'width:100%!important;max-width:100%!important;'
         +'height:auto!important;min-height:0!important;max-height:none!important;'
@@ -14783,24 +14896,38 @@ function buildEmbedHTML(){
         +'width:100%!important;max-width:100%!important;min-width:0!important;'
         +'height:auto!important;min-height:0!important;max-height:none!important;'
         +'overflow:visible!important;transform:none!important;zoom:1!important;'
-        +'display:block!important;margin:0 auto!important;box-sizing:border-box!important;}\n'
+        +'display:block!important;margin:0!important;box-sizing:border-box!important;'
+        +'position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;'
+        +'padding-left:'+stretchResponsiveHPad+'!important;padding-right:'+stretchResponsiveHPad+'!important;}\n'
       +rootSel+' #chat{'
         +'width:100%!important;max-width:100%!important;min-width:0!important;'
         +'height:auto!important;min-height:0!important;max-height:none!important;'
         +'overflow:visible!important;transform:none!important;'
-        +'margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important;}\n'
+        +'margin:0!important;box-sizing:border-box!important;}\n'
+      +stretchDesktopFlowCss
+      +stretchMobileFixedCss
+      +fixedAdaptiveGlyphCss
       +rootSel+' img{max-width:100%!important;height:auto;}\n'
-    : rootSel+' .moko-fit{width:100%;max-width:100%;overflow-x:hidden;-webkit-overflow-scrolling:touch}\n'
-      +rootSel+' .moko-fit-in{width:'+fitW+'px;transform-origin:top left}\n'
-      +'@supports (container-type:inline-size) and (width:tan(atan2(1px,1px))){'
-        +rootSel+' .moko-fit{container-type:inline-size;overflow:hidden;aspect-ratio:'+fitW+'/'+(fitH+2)+'}'
-        +rootSel+' .moko-fit-in{transform:scale(min(1,tan(atan2(100cqw,'+fitW+'px))))}'
-      +'}\n';
+    : rootSel+' .moko-fit{'
+        +'width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;'
+        +'overflow:visible!important;display:flex!important;justify-content:center!important;align-items:flex-start!important;margin:0!important;padding:0!important;}\n'
+      +rootSel+' .moko-fit-in{'
+        +'width:100%!important;min-width:0!important;max-width:'+fitW+'px!important;'
+        +'flex:0 1 '+fitW+'px!important;height:auto!important;overflow:visible!important;transform:none!important;margin:0 auto!important;}\n'
+      +rootSel+' #canvas{'
+        +'width:100%!important;min-width:0!important;max-width:'+fitW+'px!important;'
+        +'height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;zoom:1!important;'
+        +'display:block!important;margin:0 auto!important;box-sizing:border-box!important;position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;'
+        +'padding-left:'+stretchResponsiveHPad+'!important;padding-right:'+stretchResponsiveHPad+'!important;container-type:inline-size;}\n'
+      +rootSel+' #chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;overflow:visible!important;transform:none!important;box-sizing:border-box!important;}\n'
+      +fixedAdaptiveGlyphCss
+      +stretchMobileFontCss;
 
   const style=fontImports()
-    +rootSel+'{'+'display:block;width:100%;max-width:'+fitW+'px;margin:0 auto;'
-      +'height:auto;min-height:0;overflow:visible;'
-      +'background:'+bg+';box-sizing:border-box}\n'
+    +rootSel+'{'+'display:block;'
+      +(widthMode==='stretch'?'width:100%;max-width:100%;min-width:0;':'width:100%;max-width:100%;min-width:0;container-type:inline-size;')
+      +'margin:0;height:auto;min-height:0;overflow:visible;'
+      +'background:'+(widthMode==='stretch'?bg:'transparent')+';box-sizing:border-box}\n'
     +rootSel+' *{box-sizing:border-box}\n'
     +rootSel+' img{max-width:100%}\n'
     +fluidCss
@@ -14808,13 +14935,25 @@ function buildEmbedHTML(){
     /* 프로필 이미지 data URL은 여기 한 번만 들어간다.
        scoped 원본의 background shorthand보다 뒤에 두고 !important로 확정한다. */
     +avatarOpt.css
-    /* scoped 원본 CSS 안에 #canvas{overflow:hidden}, width/height 인라인 계산 등이
-       다시 나올 수 있으므로 fluid 보정은 scoped 뒤에서 한 번 더 확정한다. */
-    +(!isNovel
+    /* scoped 원본 CSS가 폭을 다시 덮지 못하게, 선택한 폭 모드를 맨 뒤에서 재확정한다. */
+    +(widthMode==='stretch'
       ?rootSel+' .moko-fit,'+rootSel+' .moko-fit-in{width:100%!important;max-width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;}\n'
-       +rootSel+' #canvas{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;zoom:1!important;display:block!important;}\n'
-       +rootSel+' #chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;}\n'
-      :'')
+       +rootSel+' #canvas,'+rootSel+' #chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;zoom:1!important;}\n'
+       /* #canvas에는 미리보기용 position:absolute/left/top 인라인 값이 남을 수 있다.
+          반드시 normal flow로 되돌려 moko-fit-in이 실제 콘텐츠 높이를 차지하게 한다. */
+       +rootSel+' #canvas{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;padding-left:'+stretchResponsiveHPad+'!important;padding-right:'+stretchResponsiveHPad+'!important;}\n'
+       +stretchDesktopFlowCss
+       +stretchMobileFixedCss
+       +fixedAdaptiveGlyphCss
+       +stretchMobileFontCss
+      :rootSel+'{width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;background:transparent!important;}\n'
+       +rootSel+' .moko-fit{width:100%!important;max-width:100%!important;min-width:0!important;display:flex!important;justify-content:center!important;align-items:flex-start!important;overflow:visible!important;margin:0!important;padding:0!important;}\n'
+       +rootSel+' .moko-fit-in{width:100%!important;min-width:0!important;max-width:'+fitW+'px!important;flex:0 1 '+fitW+'px!important;transform:none!important;zoom:1!important;margin:0 auto!important;}\n'
+       +rootSel+' #canvas{width:100%!important;min-width:0!important;max-width:'+fitW+'px!important;height:auto!important;min-height:0!important;max-height:none!important;position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;transform:none!important;zoom:1!important;margin:0 auto!important;padding-left:'+stretchResponsiveHPad+'!important;padding-right:'+stretchResponsiveHPad+'!important;container-type:inline-size;}\n'
+       +rootSel+' #chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;transform:none!important;}\n'
+       +fixedAdaptiveGlyphCss
+       +stretchMobileFontCss
+       +'@media(max-width:700px){'+rootSel+','+rootSel+' .moko-fit,'+rootSel+' .moko-fit-in,'+rootSel+' #canvas,'+rootSel+' #chat{min-width:0!important;}'+rootSel+' #canvas{width:100%!important;max-width:'+fitW+'px!important;}}\n')
     /* 지금 화면의 색 변수는 맨 마지막에 둬서 스코프된 :root 규칙을 덮어쓴다 */
     +rootSel+'{'+vars+'}\n'
     +(s0.transparentBg
@@ -14822,24 +14961,8 @@ function buildEmbedHTML(){
        +rootSel+' #canvasBgImage,'+rootSel+' #canvasBgOverlay,'+rootSel+' #canvasBgVideoLayer,'+rootSel+' #canvasBgVideo,'+rootSel+' #canvasBgVideoStill,'+rootSel+' #canvasBgVideoDim{display:none!important;background:none!important}\n'
       :'');
 
-  /* 일반/로그/메신저는 스크립트 없이도 완전히 유동적이어야 한다.
-     티스토리가 <script>를 제거해도 텍스트가 전부 보이고 별도 스크롤이 생기지 않는다.
-     소설/여러 단만 기존 페이지 비율 축소 스크립트를 사용한다. */
-  let fitJs='';
-  if(isNovel){
-    fitJs='(function(){var r=document.getElementById("'+root+'");if(!r)return;'
-      +'var f=r.querySelector(".moko-fit"),i=r.querySelector(".moko-fit-in"),W='+fitW+';'
-      +'function u(){var a=f.clientWidth||r.clientWidth||W;var s=Math.min(1,a/W);'
-      +'if(s<1){i.style.transform="scale("+s+")";f.style.overflow="hidden";'
-      +'f.style.height=Math.ceil(i.offsetHeight*s)+"px";}'
-      +'else{i.style.transform="none";f.style.overflow="";f.style.height="";}}'
-      +'u();if(window.ResizeObserver){try{new ResizeObserver(u).observe(f);}catch(e){}}'
-      +'window.addEventListener("resize",u);window.addEventListener("orientationchange",u);'
-      +'try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(u);}catch(e){}'
-      +'Array.prototype.forEach.call(r.querySelectorAll("img"),function(m){'
-      +'if(!m.complete){m.addEventListener("load",u);m.addEventListener("error",u);}});'
-      +'setTimeout(u,300);setTimeout(u,1200);setTimeout(u,3000);})();';
-  }
+  /* 선택한 폭은 CSS로 확정한다. fixed는 원본 폭을 최대치로 유지하되 부모가 더 좁으면 축소하고, stretch는 부모 폭을 그대로 따른다. */
+  const fitJs='';
 
   const result='<div id="'+root+'">\n<style>\n'+style+'</style>\n'
     +'<div class="moko-fit"><div class="moko-fit-in">\n'+node.outerHTML+'\n</div></div>\n'
@@ -14872,7 +14995,8 @@ function buildEmbedHTML(){
       dataProfileUnique:avatarOpt.dataProfileUnique||0,
       dedupRefs:avatarOpt.dedupRefs||0,
       dedupUnique:avatarOpt.dedupUnique||0,
-      profileBytes,insertedImageCount,insertedImageBytes,otherBytes
+      profileBytes,insertedImageCount,insertedImageBytes,otherBytes,
+      widthMode,widthPx:fitW
     };
   }catch(_){ window.__lastTistoryEmbedDiag=null; }
 
@@ -14903,7 +15027,7 @@ function __mokoHumanBytes(n){
   if(n<1024*1024) return (n/1024).toFixed(n<10240?1:0)+'KB';
   return (n/1024/1024).toFixed(n<10*1024*1024?2:1)+'MB';
 }
-function showTistoryDiagnostic(diag,html){
+function showTistoryDiagnostic(diag,html,copyOk=true){
   const old=document.getElementById('mokoTistoryDiag');
   if(old) old.remove();
 
@@ -14912,6 +15036,8 @@ function showTistoryDiagnostic(diag,html){
   let tone='good', status='✓ 비교적 가벼운 편이에요';
   if(mb>=3){ tone='warn'; status='⚠ 코드 용량이 큰 편이에요 — 티스토리 환경에 따라 저장에 실패할 수 있어요'; }
   else if(mb>=1){ tone='mid'; status='△ 코드가 조금 큰 편이에요'; }
+  if(copyOk===true) status+=' - 복사 완료!';
+  else if(copyOk===false) status='✕ 자동 복사 실패 - 직접 복사해 주세요';
 
   const box=document.createElement('div');
   box.id='mokoTistoryDiag';
@@ -14925,6 +15051,11 @@ function showTistoryDiagnostic(diag,html){
   box.innerHTML=
     '<div class="mtd-head"><strong>티스토리 백업 진단</strong><button type="button" aria-label="닫기">×</button></div>'
     +'<div class="mtd-total">최종 코드 <b>'+__mokoHumanBytes(d.finalBytes)+'</b></div>'
+    +'<div class="mtd-layout">'
+      +(d.widthMode==='stretch'
+        ?'<b>스킨 너비 맞춤</b>이 적용되었어요 — PC에서는 블로그 본문 폭을 따라 reflow하되 말풍선의 자연 폭과 메신저 여백을 유지해요. 모바일에서는 자동으로 원본 너비 유지 · 중앙정렬 방식으로 보여요.'
+        :'<b>원본 너비 유지 · 중앙정렬</b>이 적용되었어요 — 최대 너비는 <b>'+((d.widthPx||0)?(d.widthPx+'px'):'원본값')+'</b>로 유지하고 가운데 배치해요. 스킨이나 모바일 화면이 더 좁으면 그 폭에 맞춰 자동으로 줄어들어요.')
+      +'</div>'
     +'<div class="mtd-row">'+profileLine+'</div>'
     +'<div class="mtd-row">프로필 데이터 <b>'+__mokoHumanBytes(d.profileBytes)+'</b>'
       +' · 삽입 이미지 '+(d.insertedImageCount||0)+'개 <b>'+__mokoHumanBytes(d.insertedImageBytes)+'</b></div>'
@@ -14934,7 +15065,7 @@ function showTistoryDiagnostic(diag,html){
        +' → 후 <b>'+__mokoHumanBytes(d.finalBytes)+'</b>'
        +' · <b>'+__mokoHumanBytes(d.savedBytes)+'</b> 절약</div>'
       :'')
-    +'<div class="mtd-status">'+status+'</div>'
+    +'<div class="mtd-status '+(copyOk===false?'copy-fail':'copy-ok')+'">'+status+'</div>'
     +'<button type="button" class="mtd-code">코드 보기</button>';
 
   let st=document.getElementById('mokoTistoryDiagStyle');
@@ -14951,8 +15082,12 @@ function showTistoryDiagnostic(diag,html){
       +'#mokoTistoryDiag .mtd-head strong{font-size:13px}#mokoTistoryDiag .mtd-head button{border:0;background:transparent;'
       +'font-size:18px;color:#999;cursor:pointer;padding:0 2px}'
       +'#mokoTistoryDiag .mtd-total{font-size:13px;margin-bottom:5px}'
+      +'#mokoTistoryDiag .mtd-layout{margin:6px 0 8px;padding:8px 9px;border-radius:8px;background:#f4f4f6;color:#555;line-height:1.5}'
+      +'#mokoTistoryDiag .mtd-layout b{color:#424448}'
       +'#mokoTistoryDiag .mtd-row{color:#666}#mokoTistoryDiag .mtd-saved{margin-top:6px;padding-top:6px;border-top:1px solid #eee}'
       +'#mokoTistoryDiag .mtd-status{margin-top:7px;font-weight:700}'
+      +'#mokoTistoryDiag .mtd-status.copy-ok{color:#2F8F4E}'
+      +'#mokoTistoryDiag .mtd-status.copy-fail{color:#D14343}'
       +'#mokoTistoryDiag .mtd-code{margin-top:9px;width:100%;height:32px;border:1px solid #ddd;border-radius:8px;'
       +'background:#f7f7f8;color:#424448;font-weight:700;cursor:pointer}'
       +'@keyframes mtdIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}'
@@ -15004,8 +15139,11 @@ window.copyHTMLCode=async function(){
     if(!html){ alert('미리보기를 찾지 못했어요.'); return; }
     const ok=await toClipboard(html);
     if(ok){
-      showTistoryDiagnostic(window.__lastTistoryEmbedDiag,html);
-    }else showCodeBox(html,false);
+      showTistoryDiagnostic(window.__lastTistoryEmbedDiag,html,true);
+    }else{
+      showTistoryDiagnostic(window.__lastTistoryEmbedDiag,html,false);
+      showCodeBox(html,false);
+    }
   }catch(err){
     console.error('HTML 코드 복사 실패',err);
     alert('HTML 코드를 만들지 못했어요.');
@@ -19035,6 +19173,97 @@ setTimeout(dump,800);
 })();
 </script>
 
+
+
+<style id="html-width-choice-and-mobile-format-patch">
+/* ===== HTML 복사/저장 폭 선택 ===== */
+#mokoHtmlWidthChoice{position:fixed;inset:0;z-index:100500;background:rgba(28,29,33,.48);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:18px}
+#mokoHtmlWidthChoice .mhw-box{width:min(440px,100%);background:var(--panel,#fff);color:var(--ink,#424448);border:1px solid var(--line,#E4E4E7);border-radius:16px;padding:16px;box-shadow:0 22px 60px rgba(0,0,0,.24)}
+#mokoHtmlWidthChoice .mhw-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+#mokoHtmlWidthChoice .mhw-head strong{display:block;font-size:15px;line-height:1.35}
+#mokoHtmlWidthChoice .mhw-head span{display:block;margin-top:3px;font-size:11px;color:var(--muted,#8f9095);line-height:1.5}
+#mokoHtmlWidthChoice .mhw-x{flex:0 0 auto;width:30px;height:30px;border:1px solid var(--line,#E4E4E7);border-radius:8px;background:var(--panel-2,#F5F5F6);color:var(--muted,#8f9095);font-size:17px}
+#mokoHtmlWidthChoice .mhw-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#mokoHtmlWidthChoice .mhw-option{min-width:0;text-align:left;border:1px solid var(--line,#E4E4E7);border-radius:12px;background:var(--panel-2,#F7F7F8);color:inherit;padding:12px;cursor:pointer;transition:.15s}
+#mokoHtmlWidthChoice .mhw-option:hover{border-color:var(--accent,#424448);background:var(--panel,#fff);box-shadow:0 0 0 3px var(--accent-soft,#EDEDEE)}
+#mokoHtmlWidthChoice .mhw-option b{display:block;font-size:13px;margin-bottom:5px}
+#mokoHtmlWidthChoice .mhw-option small{display:block;font-size:10.5px;color:var(--muted,#8f9095);line-height:1.55;font-weight:500}
+@media(max-width:520px){#mokoHtmlWidthChoice .mhw-options{grid-template-columns:1fr}}
+
+/* ===== 모바일 서식 3행 =====
+   1행: 기존 종류 + 발신자(또는 정렬/글씨 크기)
+   2행: 나머지 기존 서식
+   3행: "" 안 색 / ( ) 안 색 — 작게 왼쪽 정렬 */
+#mPriorityFormatRow{display:none}
+@media(max-width:700px){
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow{display:flex;grid-column:1 / -1;grid-row:3;gap:8px;align-items:flex-end;justify-content:flex-start;justify-self:start;width:auto;max-width:100%;min-width:0}
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp{flex:0 0 auto!important;min-width:0;padding-top:13px;column-gap:4px}
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp::before{top:0;font-size:9px;letter-spacing:-.01em}
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair{display:inline-flex;width:auto!important;min-width:0;flex:0 0 auto!important}
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair>button{flex:0 0 34px!important;width:34px!important;min-width:34px!important;height:34px!important;padding:0!important;font-size:11.5px!important}
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair>.fmt-swatch{flex:0 0 20px!important;width:20px!important;height:34px!important;align-self:auto!important;border-radius:0!important}
+  .mobile-ui.m-tools-open #mDock .composer-type-field{grid-row:1}
+  .mobile-ui.m-tools-open #mDock #senderField,.mobile-ui.m-tools-open #mDock #alignField{grid-row:1}
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt{grid-row:2}
+}
+</style>
+<script id="html-width-choice-and-mobile-format-script">
+(function(){
+'use strict';
+function chooseHtmlWidthMode(action){
+  return new Promise(resolve=>{
+    const old=document.getElementById('mokoHtmlWidthChoice'); if(old) old.remove();
+    const back=document.createElement('div'); back.id='mokoHtmlWidthChoice';
+    const box=document.createElement('div'); box.className='mhw-box';
+    box.innerHTML='<div class="mhw-head"><div><strong>HTML '+(action==='copy'?'복사':'저장')+' 방식 선택</strong>'
+      +'<span>백업할 가로폭을 선택해 주세요. 선택한 즉시 '+(action==='copy'?'복사':'저장')+'돼요.</span></div>'
+      +'<button class="mhw-x" type="button" aria-label="취소">×</button></div>'
+      +'<div class="mhw-options">'
+      +'<button class="mhw-option" type="button" data-mode="fixed"><b>원본 너비 유지 · 중앙정렬</b><small>원본보다 넓어지지 않고 가운데에 배치돼요. 스킨이나 모바일 화면이 더 좁으면 그 폭에 맞춰 줄어들며, 모바일에서는 여백과 글씨도 함께 줄어요.</small></button>'
+      +'<button class="mhw-option" type="button" data-mode="stretch"><b>스킨 너비에 맞춤</b><small>PC에서는 블로그 본문 폭을 따라 유동적으로 맞추되 말풍선 고유 폭과 메신저 여백을 유지해요. 모바일에서는 원본 너비 유지 · 중앙정렬 방식으로 전환돼요.</small></button>'
+      +'</div>';
+    back.appendChild(box); document.body.appendChild(back);
+    let done=false;
+    const onKey=e=>{ if(e.key==='Escape') finish(null); };
+    const finish=mode=>{ if(done)return; done=true; document.removeEventListener('keydown',onKey); try{back.remove();}catch(_){} resolve(mode||null); };
+    box.querySelector('.mhw-x').onclick=()=>finish(null);
+    box.querySelectorAll('.mhw-option').forEach(btn=>btn.onclick=()=>finish(btn.dataset.mode));
+    back.addEventListener('click',e=>{ if(e.target===back) finish(null); });
+    document.addEventListener('keydown',onKey);
+  });
+}
+const rawCopy=window.copyHTMLCode;
+if(typeof rawCopy==='function') window.copyHTMLCode=async function(){const mode=await chooseHtmlWidthMode('copy');if(!mode)return;window.__mokoHtmlWidthMode=mode;return rawCopy.apply(this,arguments);};
+const rawExport=window.exportHTML;
+if(typeof rawExport==='function') window.exportHTML=async function(){const mode=await chooseHtmlWidthMode('save');if(!mode)return;window.__mokoHtmlWidthMode=mode;return rawExport.apply(this,arguments);};
+
+const ph={quote:null,paren:null};
+function movePriorityGroups(){
+  const mobile=document.body.classList.contains('mobile-ui');
+  const quote=document.querySelector('.fmt-grp-dquote');
+  const paren=document.getElementById('parenFmtBtn')&&document.getElementById('parenFmtBtn').closest('.fmt-grp');
+  const fmt=document.querySelector('#composerTextField .fmt, #mDock .composer-top-grid .fmt');
+  if(!quote||!paren||!fmt)return;
+  if(mobile){
+    const grid=document.querySelector('#mDock .composer-top-grid'); if(!grid)return;
+    let row=document.getElementById('mPriorityFormatRow'); if(!row){row=document.createElement('div');row.id='mPriorityFormatRow';row.setAttribute('aria-label','자동 색상 서식');}
+    if(!ph.quote&&quote.parentNode){ph.quote=document.createComment('mobile quote color');quote.parentNode.insertBefore(ph.quote,quote);}
+    if(!ph.paren&&paren.parentNode){ph.paren=document.createComment('mobile paren color');paren.parentNode.insertBefore(ph.paren,paren);}
+    row.append(quote,paren); if(row.parentNode!==grid) grid.insertBefore(row,grid.firstChild);
+  }else{
+    const row=document.getElementById('mPriorityFormatRow');
+    if(ph.quote&&ph.quote.parentNode) ph.quote.parentNode.replaceChild(quote,ph.quote); else if(quote.parentNode!==fmt) fmt.appendChild(quote);
+    if(ph.paren&&ph.paren.parentNode) ph.paren.parentNode.replaceChild(paren,ph.paren); else if(paren.parentNode!==fmt) fmt.appendChild(paren);
+    ph.quote=ph.paren=null; if(row) row.remove();
+  }
+}
+const mo=new MutationObserver(()=>requestAnimationFrame(movePriorityGroups));
+mo.observe(document.body,{attributes:true,attributeFilter:['class']});
+window.addEventListener('resize',()=>requestAnimationFrame(movePriorityGroups),{passive:true});
+document.addEventListener('DOMContentLoaded',()=>setTimeout(movePriorityGroups,80));
+setTimeout(movePriorityGroups,300);
+})();
+</script>
 
 </body>
 
