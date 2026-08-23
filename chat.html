@@ -8574,8 +8574,62 @@ stage.addEventListener('touchend',e=>{
       const chatEl=clone.querySelector('#chat');
       if(chatEl) chatEl.style.setProperty('background','transparent','important');
     }
-    if(!imgs.length&&!bg) return null;
-    return {imgs,bg};
+    /* iPhone/iPad WebKit은 foreignObject 안의 inset box-shadow를 간헐적으로
+       래스터에서 누락한다. 카드 테마 테두리는 원래 inset box-shadow라서
+       미리보기엔 보이는데 저장본에서만 사라질 수 있다.
+       iOS/iPadOS에서만 말풍선의 실제 미리보기 좌표를 기록해 두고,
+       최종 PNG 캔버스 위에 동일한 '안쪽 테두리'를 직접 그린다. */
+    const cardBorders=[];
+    const cardChat=clone.querySelector('#chat.btheme-card');
+    if(cardChat){
+      const ccs=getComputedStyle(cardChat);
+      const lineW=Math.max(0,parseFloat(ccs.getPropertyValue('--card-line-w'))||0);
+      const lineColor=(ccs.getPropertyValue('--card-line')||'#E6E6E6').trim()||'#E6E6E6';
+      if(lineW>0){
+        for(const bubble of cardChat.querySelectorAll('.n-bubble,.m-bubble')){
+          const rect=bubble.getBoundingClientRect();
+          if(!(rect.width>0&&rect.height>0)) continue;
+          const cs=getComputedStyle(bubble),w=rect.width,h=rect.height;
+          cardBorders.push({
+            x:rect.left-rootRect.left,y:rect.top-rootRect.top,w,h,lineW,color:lineColor,
+            radii:[
+              parseCornerRadius(cs.borderTopLeftRadius,w,h),
+              parseCornerRadius(cs.borderTopRightRadius,w,h),
+              parseCornerRadius(cs.borderBottomRightRadius,w,h),
+              parseCornerRadius(cs.borderBottomLeftRadius,w,h)
+            ]
+          });
+          /* SVG 쪽 그림자가 운 좋게 그려지는 기기에서도 이중선이 되지 않게
+             저장용 복제본에서만 기존 inset shadow를 끈다. */
+          bubble.style.setProperty('box-shadow','none','important');
+          const bgEl=bubble.querySelector(':scope > .bubble-bg');
+          if(bgEl) bgEl.style.setProperty('box-shadow','none','important');
+        }
+      }
+    }
+    if(!imgs.length&&!bg&&!cardBorders.length) return null;
+    return {imgs,bg,cardBorders};
+  }
+  function drawOverlayCardBorders(ctx,borders,scale){
+    if(!borders||!borders.length) return;
+    for(const item of borders){
+      const lw=Math.max(0,Number(item.lineW)||0)*scale;
+      if(!(lw>0)) continue;
+      const x=item.x*scale,y=item.y*scale,w=item.w*scale,h=item.h*scale;
+      /* Canvas stroke는 경로의 안팎으로 반씩 퍼지므로 경로를 반 두께만큼
+         안으로 넣어 기존 inset box-shadow와 같은 바깥 치수를 유지한다. */
+      const half=lw/2;
+      const iw=Math.max(0,w-lw),ih=Math.max(0,h-lw);
+      if(!(iw>0&&ih>0)) continue;
+      ctx.save();
+      try{
+        ctx.lineWidth=lw;
+        ctx.strokeStyle=item.color||'#E6E6E6';
+        ctx.lineJoin='round';
+        roundedPath(ctx,x+half,y+half,iw,ih,(item.radii||[0,0,0,0]).map(r=>Math.max(0,r*scale-half)));
+        ctx.stroke();
+      }finally{ctx.restore();}
+    }
   }
   async function drawOverlayBackground(ctx,bg,scale){
     let raster=null;
@@ -9140,6 +9194,7 @@ stage.addEventListener('touchend',e=>{
           await paint();
         }
         if(overlays&&overlays.imgs&&overlays.imgs.length) await drawOverlayImages(ctx,overlays.imgs,scale);
+        if(overlays&&overlays.cardBorders&&overlays.cardBorders.length) drawOverlayCardBorders(ctx,overlays.cardBorders,scale);
         const blob=await canvasBlob(canvas);
         canvas.width=1;canvas.height=1;
         return blob;
@@ -9204,6 +9259,7 @@ stage.addEventListener('touchend',e=>{
           if(overlays.bg) await drawOverlayBackground(octx,overlays.bg,scale);
           octx.drawImage(canvas,0,0);
           if(overlays.imgs&&overlays.imgs.length) await drawOverlayImages(octx,overlays.imgs,scale);
+          if(overlays.cardBorders&&overlays.cardBorders.length) drawOverlayCardBorders(octx,overlays.cardBorders,scale);
           canvas.width=1;canvas.height=1;
           canvas=out;
         }
