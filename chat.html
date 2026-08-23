@@ -348,6 +348,61 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .n-plain{max-width:100%}
 .n-plain .mimg{display:block;border-radius:8px}
 
+/* script mode — screenplay-like name column + quoted dialogue.
+   No avatar column is used; consecutive lines keep the dialogue start aligned. */
+.script-row{
+  display:grid;
+  grid-template-columns:min(var(--script-name-col,96px),38%) minmax(0,1fr);
+  column-gap:14px;
+  align-items:start;
+  position:relative;
+}
+.script-row .script-name{
+  min-width:0;
+  font-weight:var(--script-name-weight,700);
+  text-align:left;
+  /* 대본 이름은 의도적으로 넣은 <br>에서만 줄바꿈한다. */
+  white-space:nowrap;
+  overflow-wrap:normal;
+  word-break:keep-all;
+}
+.script-row .script-name.is-hidden{visibility:hidden}
+.script-row .script-dialogue{
+  min-width:0;
+  max-width:100%;
+  white-space:pre-wrap;
+  overflow-wrap:break-word;
+  word-break:break-word;
+}
+
+/* 대본 모드 전용 이름 스타일 설정 */
+#scriptNameStyleSection{display:none}
+#scriptNameStyleSection .script-highlight-box{margin-top:10px;border-top:1px solid var(--line-2);padding-top:10px}
+.script-highlight-toggle{width:100%;border:0;background:transparent;color:inherit;padding:4px 0;display:flex;align-items:center;gap:8px;text-align:left}
+.script-highlight-toggle>span:first-child{font-size:12px;font-weight:700}
+.script-highlight-toggle small{margin-left:auto;color:var(--muted);font-size:10.5px;font-weight:600}
+.script-highlight-toggle .script-highlight-caret{font-size:13px;color:var(--muted);transition:transform .16s ease}
+.script-highlight-toggle[aria-expanded="true"] .script-highlight-caret{transform:rotate(180deg)}
+.script-highlight-panel{display:none;padding-top:8px}
+.script-highlight-panel.open{display:block}
+.script-highlight-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto;padding-right:2px}
+.script-highlight-empty{padding:10px 4px;color:var(--muted);font-size:11px;text-align:center}
+.script-mark-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 8px;border:1px solid var(--line-2);border-radius:9px;background:var(--panel-2)}
+.script-mark-name{min-width:0;font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.script-mark-preview{background:var(--script-mark-preview);border-radius:0;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.script-mark-tools{display:flex;align-items:center;gap:6px;min-width:0}
+.script-mark-swatch{width:24px!important;height:24px!important;flex:0 0 24px;position:relative}
+.script-mark-swatch.is-off{background:repeating-conic-gradient(#ECECEF 0 25%,#fff 0 50%) 50%/8px 8px!important}
+.script-mark-swatch.is-off:after{content:'+';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#6F7178;font-size:14px;font-weight:700;pointer-events:none}
+.script-mark-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:var(--muted);min-width:54px;text-align:right}
+.script-mark-none{border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:7px;padding:4px 7px;font-size:10px;line-height:1.2}
+.script-mark-none:hover{border-color:var(--accent);color:var(--ink)}
+.script-name-mark{background:var(--script-name-mark);border-radius:0;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+@media(max-width:520px){
+  .script-mark-row{grid-template-columns:1fr;gap:6px}
+  .script-mark-tools{justify-content:flex-end}
+}
+
 /* messenger mode — no flex; align via text-align + absolute avatar */
 .m-msg{position:relative;padding-left:50px}
 .m-msg.mine{padding-left:0;text-align:right}
@@ -1310,6 +1365,7 @@ html, body, #canvas, #chat, #canvas * {
 <button class="on" id="modeNormal" onclick="setMode('normal')">일반</button>
 <button id="modeLog" onclick="setMode('log')">로그</button>
 <button id="modeMsgr" onclick="setMode('messenger')">메신저</button>
+<button id="modeScript" onclick="setMode('script')">대본</button>
 </div>
 </div>
 <div class="app-shell">
@@ -1368,7 +1424,7 @@ html, body, #canvas, #chat, #canvas * {
 <span class="fmt-grp" data-lb="형광펜"><span class="fmt-pair"><button class="hl" onclick="wrapFmt('==')" title="형광펜">✎</button>
 <span class="swatch fmt-swatch" style="background:#E4E4E6" title="형광펜 색 선택"><input id="highlightColor" class="color-proxy" oninput="setHighlightColor(this.value)" type="text" value="#E4E4E6" readonly inputmode="none" aria-label="형광펜 색 선택"/></span></span></span>
 <span class="fmt-grp fmt-grp-dquote" data-lb="&quot;&quot; 안 색"><span class="fmt-pair"><button class="paren-fmt-btn" id="quoteFmtBtn" onclick="toggleQuoteQuick()" title="따옴표 안 글자 자동 색칠 켜기/끄기">&quot;&quot;</button>
-<span class="swatch fmt-swatch quote-color-swatch" style="background:#5B7FA8" title="따옴표 안 글자 색 선택"><input id="quoteColor" class="color-proxy" oninput="setQuoteColor(this.value)" type="text" value="#5B7FA8" readonly inputmode="none" aria-label="따옴표 안 글자 색 선택"/></span></span></span>
+<span class="swatch fmt-swatch quote-color-swatch" style="background:#5B7FA8" title="따옴표 안 글자 색 선택"><input id="dquoteColor" class="color-proxy" oninput="setDQuoteColor(this.value)" type="text" value="#5B7FA8" readonly inputmode="none" aria-label="따옴표 안 글자 색 선택"/></span></span></span>
 <span class="fmt-grp" data-lb="( ) 안 색"><span class="fmt-pair"><button class="paren-fmt-btn" id="parenFmtBtn" onclick="toggleParenQuick()" title="괄호 ( ) 안 글자 자동 색칠 켜기/끄기">( )</button>
 <span class="swatch fmt-swatch paren-color-swatch" style="background:#8A8F98" title="괄호 안 글자 색 선택"><input id="parenColor" class="color-proxy" oninput="setParenColor(this.value)" type="text" value="#8A8F98" readonly inputmode="none" aria-label="괄호 안 글자 색 선택"/></span></span></span>
 <input hidden="" id="parenOn" onchange="setParen(this.checked)" type="checkbox"/>
@@ -1629,7 +1685,7 @@ html, body, #canvas, #chat, #canvas * {
 </select>
 </div>
 <div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기<span>글이 단을 채우면 옆 단으로 이어져요</span></div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="toggle compact" id="novelTrimField" style="margin-top:12px;display:none"><div class="t-lb">빈 마지막 쪽 빼기<span>마지막 펼침의 빈 쪽을 떼고 한 쪽만 저장해요</span></div><label class="sw"><input id="novelTrimLast" onchange="setNovel('trimLast',this.checked)" type="checkbox"/><span class="track"></span></label></div>
-<div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
+<div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="scriptNameStyleSection" style="display:none"><div class="flat-tool-title"><strong>대본 이름 스타일</strong></div><div class="flat-tool-body"><div class="toggle compact"><div class="t-lb">이름 굵게<span>대본 모드의 캐릭터 이름에만 적용돼요</span></div><label class="sw"><input checked id="scriptNameBoldOn" onchange="setScriptNameBold(this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="script-highlight-box"><button aria-expanded="false" class="script-highlight-toggle" id="scriptHighlightToggle" onclick="toggleScriptHighlightPanel()" type="button"><span>캐릭터별 형광펜</span><small id="scriptHighlightSummary">설정 없음</small><span class="script-highlight-caret">⌄</span></button><div class="script-highlight-panel" id="scriptHighlightPanel"><div class="script-highlight-list" id="scriptHighlightMemberList"></div></div></div></div></div><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
 <div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요"><div class="t-lb">프로필 사진</div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
@@ -1865,7 +1921,7 @@ const state = {
   quoteOn:false,
   composerType:'chat',   // 'chat' | 'text'
   draftAlign:'left',
-  members:[],   // {id,name,image,color}
+  members:[],   // {id,name,image,color,bubbleColor,scriptHighlight}
   messages:[],  // {id,type,senderId,content,...}  type: 'chat' | 'text'
   export:{ ratio:'auto', hMargin:24, vMargin:24, linkMargin:false, filename:'chat-발췌', scale:2.5 },
   transparentBg:false,
@@ -1907,6 +1963,7 @@ const state = {
     bubbleOpacity:100, bubbleTextOpacity:100,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
     textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
+    scriptNameBold:true, // 대본 모드 이름 굵게
     dividerMargin:8,   // 가름선 위·아래 여백
     dividerWidth:100,  // 선 가름선 길이(%)
     wb:'word',  // 'word' = keep-all, 'char' = break-all
@@ -2138,10 +2195,94 @@ function setMode(m){
   modeNormal.classList.toggle('on',m==='normal');
   modeLog.classList.toggle('on',m==='log');
   modeMsgr.classList.toggle('on',m==='messenger');
+  const scriptBtn=document.getElementById('modeScript');
+  if(scriptBtn) scriptBtn.classList.toggle('on',m==='script');
   document.querySelectorAll('.msgr-only').forEach(e=>e.style.display=(m==='messenger')?'':'none');
   document.querySelectorAll('.normal-only').forEach(e=>e.style.display=(m==='messenger')?'none':'');
+  syncScriptNameStyleVisibility();
   renderPreview();
 }
+let scriptHighlightPanelOpen=false;
+function normalizeScriptHighlight(v){
+  const m=/^#[0-9A-Fa-f]{6}$/.exec(String(v||'').trim());
+  return m?m[0].toUpperCase():null;
+}
+function scriptNameFontWeight(){
+  return state.layout&&state.layout.scriptNameBold===false?400:700;
+}
+function setScriptNameBold(on){
+  state.layout.scriptNameBold=!!on;
+  const cb=document.getElementById('scriptNameBoldOn'); if(cb) cb.checked=!!on;
+  renderPreview();
+}
+function toggleScriptHighlightPanel(force){
+  scriptHighlightPanelOpen=(typeof force==='boolean')?force:!scriptHighlightPanelOpen;
+  const panel=document.getElementById('scriptHighlightPanel');
+  const btn=document.getElementById('scriptHighlightToggle');
+  if(panel) panel.classList.toggle('open',scriptHighlightPanelOpen);
+  if(btn) btn.setAttribute('aria-expanded',scriptHighlightPanelOpen?'true':'false');
+}
+function setScriptMemberHighlight(id,value){
+  const m=state.members.find(x=>x.id===id); if(!m) return;
+  const col=normalizeScriptHighlight(value); if(!col) return;
+  m.scriptHighlight=col;
+  const input=document.querySelector('#scriptHighlightMemberList .color-proxy[data-script-member="'+id+'"]');
+  if(input){
+    input.value=col;
+    const sw=input.closest('.script-mark-swatch'); if(sw){ sw.classList.remove('is-off'); sw.style.background=col; }
+    const row=input.closest('.script-mark-row');
+    const code=row&&row.querySelector('.script-mark-code'); if(code) code.textContent=col;
+    const name=row&&row.querySelector('.script-mark-preview'); if(name) name.style.setProperty('--script-mark-preview',col);
+  }
+  updateScriptHighlightSummary();
+  renderPreview();
+}
+function clearScriptMemberHighlight(id){
+  const m=state.members.find(x=>x.id===id); if(!m) return;
+  m.scriptHighlight=null;
+  renderScriptNameStyle();
+  renderPreview();
+}
+function updateScriptHighlightSummary(){
+  const el=document.getElementById('scriptHighlightSummary'); if(!el) return;
+  const total=(state.members||[]).length;
+  const on=(state.members||[]).filter(m=>normalizeScriptHighlight(m&&m.scriptHighlight)).length;
+  el.textContent=total?(on?on+'/'+total+'명 적용':'설정 없음'):'멤버 없음';
+}
+function renderScriptNameStyle(){
+  const box=document.getElementById('scriptHighlightMemberList');
+  const cb=document.getElementById('scriptNameBoldOn');
+  if(cb) cb.checked=!(state.layout&&state.layout.scriptNameBold===false);
+  if(!box){ updateScriptHighlightSummary(); return; }
+  const members=state.members||[];
+  if(!members.length){
+    box.innerHTML='<div class="script-highlight-empty">멤버를 추가하면 여기에서 캐릭터별 색을 정할 수 있어요.</div>';
+    updateScriptHighlightSummary();
+    toggleScriptHighlightPanel(scriptHighlightPanelOpen);
+    return;
+  }
+  box.innerHTML=members.map(m=>{
+    const col=normalizeScriptHighlight(m.scriptHighlight);
+    const picker=col||'#FFE88A';
+    const preview=col?' style="--script-mark-preview:'+col+'"':'';
+    return '<div class="script-mark-row">'
+      +'<div class="script-mark-name"><span class="'+(col?'script-mark-preview':'')+'"'+preview+'>'+esc(m.name||'?')+'</span></div>'
+      +'<div class="script-mark-tools">'
+      +'<span class="swatch script-mark-swatch '+(col?'':'is-off')+'" style="'+(col?'background:'+col:'')+'" title="'+esc(m.name||'?')+' 형광펜 색 선택">'
+      +'<input class="color-proxy" data-script-member="'+m.id+'" oninput="setScriptMemberHighlight(\''+m.id+'\',this.value)" type="text" value="'+picker+'" readonly inputmode="none" aria-label="'+esc(m.name||'?')+' 형광펜 색 선택"></span>'
+      +'<span class="script-mark-code">'+(col||'없음')+'</span>'
+      +'<button class="script-mark-none" type="button" onclick="clearScriptMemberHighlight(\''+m.id+'\')">없음</button>'
+      +'</div></div>';
+  }).join('');
+  updateScriptHighlightSummary();
+  toggleScriptHighlightPanel(scriptHighlightPanelOpen);
+}
+function syncScriptNameStyleVisibility(){
+  const sec=document.getElementById('scriptNameStyleSection');
+  if(sec) sec.style.display=(state.mode==='script')?'block':'none';
+  if(state.mode==='script') renderScriptNameStyle();
+}
+
 function setShape(s){
   state.shape=s;
   const seg=shapeSeg.children;
@@ -2761,7 +2902,7 @@ function addOrUpdateMember(){
     if(draftAvatar) m.image=draftAvatar;
     editingMemberId=null; memberBtn.textContent='+ 멤버 추가';
   }else{
-    state.members.push({id:uid(),name,image:draftAvatar,color:state.colors.draftColor,bubbleColor:draftBubbleUse?state.colors.draftBubbleColor:null});
+    state.members.push({id:uid(),name,image:draftAvatar,color:state.colors.draftColor,bubbleColor:draftBubbleUse?state.colors.draftBubbleColor:null,scriptHighlight:null});
   }
   resetMemberForm();
   renderMembers(); renderSenders(); renderMeSelect(); renderPreview();
@@ -2802,6 +2943,7 @@ function avatarHTML(m,cls){
 function renderMembers(){
   memberCnt.textContent=state.members.length;
   const quickCnt=document.getElementById('memberQuickCnt'); if(quickCnt) quickCnt.textContent=state.members.length;
+  try{ renderScriptNameStyle(); }catch(_){}
   if(!state.members.length){memberList.innerHTML='<div class="empty">아직 멤버가 없어요</div>';return;}
   memberList.innerHTML=state.members.map(m=>{
     const av=m.image?`<img class="av" src="${m.image}">`
@@ -2832,7 +2974,7 @@ function renderMeSelect(){
 
 /* ================= member presets ================= */
 const PRESET_KEY='chatEditorMemberPresets_v1';
-let presets=[];        // {id,name,image,color}
+let presets=[];        // {id,name,image,color,bubbleColor,scriptHighlight}
 let storageOK=true;    // becomes false if localStorage is blocked
 
 function loadPresetsStore(){
@@ -2867,9 +3009,9 @@ function renderPresets(){
     : '이 환경에선 자동 저장이 안 돼요 — ↓ 내보내기로 프리셋을 파일로 백업해줘.';
   const cnt=document.getElementById('memberPresetCnt'); if(cnt) cnt.textContent=presets.length?String(presets.length):'';
 }
-function addPreset(name,image,color,bubbleColor){
+function addPreset(name,image,color,bubbleColor,scriptHighlight){
   if(!name){alert('먼저 이름을 입력해 주세요.');return;}
-  presets.push({id:uid(),name,image:image||null,color:color||'#424448',bubbleColor:bubbleColor||null});
+  presets.push({id:uid(),name,image:image||null,color:color||'#424448',bubbleColor:bubbleColor||null,scriptHighlight:normalizeScriptHighlight(scriptHighlight)});
   persistPresets(); renderPresets();
 }
 function savePresetFromForm(){
@@ -2877,13 +3019,13 @@ function savePresetFromForm(){
 }
 function savePresetFromMember(id){
   const m=state.members.find(x=>x.id===id); if(!m) return;
-  addPreset(m.name,m.image,m.color,m.bubbleColor);
+  addPreset(m.name,m.image,m.color,m.bubbleColor,m.scriptHighlight);
 }
 function usePreset(id){
   /* 프리셋 클릭 시 폼을 거치지 않고 곧바로 멤버로 등록한다. */
   const p=presets.find(x=>x.id===id); if(!p) return;
   editingMemberId=null; memberBtn.textContent='+ 멤버 추가';
-  state.members.push({id:uid(),name:p.name,image:p.image||null,color:p.color||'#424448',bubbleColor:p.bubbleColor||null});
+  state.members.push({id:uid(),name:p.name,image:p.image||null,color:p.color||'#424448',bubbleColor:p.bubbleColor||null,scriptHighlight:normalizeScriptHighlight(p.scriptHighlight)});
   renderMembers(); renderSenders(); renderMeSelect(); renderPreview();
 }
 function deletePreset(id){
@@ -2904,7 +3046,7 @@ function importPresets(e){
       if(!Array.isArray(arr)) throw 0;
       let added=0;
       arr.forEach(p=>{
-        if(p&&p.name){ presets.push({id:uid(),name:String(p.name),image:p.image||null,color:p.color||'#424448'}); added++; }
+        if(p&&p.name){ presets.push({id:uid(),name:String(p.name),image:p.image||null,color:p.color||'#424448',bubbleColor:p.bubbleColor||null,scriptHighlight:normalizeScriptHighlight(p.scriptHighlight)}); added++; }
       });
       persistPresets(); renderPresets();
       alert(added+'개의 프리셋을 불러왔어요.');
@@ -3835,6 +3977,8 @@ function renderPreview(){
   chat.style.fontFamily=state.layout.font;
   chat.style.width=state.layout.width+'px';
   chat.style.maxWidth='none';
+  if(state.mode==='script') chat.style.setProperty('--script-name-col',scriptNameColumnWidth()+'px');
+  else chat.style.removeProperty('--script-name-col');
   if(!state.messages.length){
     chat.style.padding='0';
     chat.innerHTML=`<div class="empty preview-guide" style="padding:42px 26px">
@@ -3876,8 +4020,8 @@ function renderPreview(){
     // Spacing inside a consecutive same-sender run stays fixed. The message-gap control
     // moves the whole run relative to surrounding items instead of stretching its bubbles.
     /* 같은 캐릭터가 연속으로 이어지는 하위 말풍선 간격을 모드별로 고정한다.
-       로그 모드는 3px, 기본·메신저 모드는 기존과 동일하게 6px. */
-    const continuationGap=(state.mode==='log')?3:6;
+       로그·대본 모드는 3px, 기본·메신저 모드는 기존과 동일하게 6px. */
+    const continuationGap=(state.mode==='log'||state.mode==='script')?3:6;
     // Spacing to the next item is governed by whichever element "owns" that seam, so the
     // bubble panel's spacing controls only affect bubble(+글) spacing — never 가름선/사진.
     // priority: 가름선 > 사진 > 글 > 말풍선
@@ -3897,6 +4041,7 @@ function renderPreview(){
     const mem=state.members.find(x=>x.id===m.senderId)||{};
     if(state.mode==='messenger') return msgrRow(m,mem,gap,continued);
     if(state.mode==='log') return logRow(m,mem,gap,continued);
+    if(state.mode==='script') return scriptRow(m,mem,gap,continued);
     return normalRow(m,mem,gap,continued);
   }).join('');
   html+=creditHTML();
@@ -3990,6 +4135,70 @@ function logRow(m,mem,gap,continued=false){
     </div>
   </div>`;
 }
+/* 대본 모드 이름은 본문 대사와 같은 크기를 기본으로 사용한다.
+   다른 모드의 '이름 크기' 설정은 그대로 유지한다. */
+function scriptNameFontSize(){
+  const L=state.layout||{};
+  return Math.max(9,Number(L.bubbleFs)||Number(L.fs)||16);
+}
+/* 이름에 공백이 있을 때 첫 단어가 2글자 이상이면 그 공백에서 한 번 줄바꿈한다.
+   예: 김 성호 -> 한 줄 / 겐도 아사히 -> 겐도\n아사히 */
+function scriptNameLines(name){
+  const clean=String(name==null?'?':name).trim().replace(/\s+/g,' ');
+  if(!clean) return ['?'];
+  const parts=clean.split(' ');
+  if(parts.length>=2&&Array.from(parts[0]).length>=2){
+    return [parts[0],parts.slice(1).join(' ')];
+  }
+  return [clean];
+}
+function scriptNameHTML(name,highlight){
+  const col=normalizeScriptHighlight(highlight);
+  return scriptNameLines(name).map(part=>{
+    const text=esc(part);
+    return col?'<span class="script-name-mark" style="--script-name-mark:'+col+'">'+text+'</span>':text;
+  }).join('<br>');
+}
+
+function scriptNameColumnWidth(){
+  const names=(state.members||[]).map(m=>String((m&&m.name)||'?')).filter(Boolean);
+  const fs=scriptNameFontSize();
+  let max=44;
+  try{
+    const cv=document.createElement('canvas'),ctx=cv.getContext('2d');
+    if(ctx){
+      ctx.font=`${scriptNameFontWeight()} ${fs}px ${state.layout.font||'sans-serif'}`;
+      names.forEach(n=>scriptNameLines(n).forEach(line=>{
+        max=Math.max(max,Math.ceil(ctx.measureText(line).width)+2);
+      }));
+    }
+  }catch(_){
+    names.forEach(n=>scriptNameLines(n).forEach(line=>{
+      max=Math.max(max,Math.ceil(Array.from(line).length*fs*.95)+2);
+    }));
+  }
+  return Math.max(44,Math.min(180,max));
+}
+function scriptDialogueInner(raw){
+  /* 대본 모드는 따옴표를 새로 만들지 않는다.
+     원문에 있으면 그대로 보이고, 공통 '"" 삭제'가 켜졌을 때만 bubbleViewMsg에서 제거된다. */
+  const text=String(raw==null?'':raw).trim();
+  return fmtText(text);
+}
+function scriptRow(m,mem,gap,continued=false){
+  const L=state.layout;
+  const nameHidden=continued||!!state.hideNames;
+  const scriptFs=scriptNameFontSize();
+  /* 이름과 대사의 font-size/line-height를 맞춰 첫 줄의 세로 위치와 baseline이 어긋나지 않게 한다. */
+  const name=`<div class="script-name ${nameHidden?'is-hidden':''}" style="color:${mem.color||'#424448'};font-size:${scriptFs}px;line-height:${L.lh};font-weight:${scriptNameFontWeight()}">${typeInline(scriptNameHTML(mem.name||'?',mem.scriptHighlight))}</div>`;
+  const plain=`color:${state.colors.nText};font-size:${scriptFs}px;line-height:${L.lh};${wbStyle()}`;
+  return `<div class="pmsg script-row ${continued?'continuation':''}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
+    ${ctrlHTML(m.id)}
+    ${name}
+    <div class="script-dialogue editable" data-id="${m.id}" style="${plain}">${typeWrap(scriptDialogueInner(m.content))}</div>
+  </div>`;
+}
+
 function msgrRow(m,mem,gap,continued=false){
   const mine=(m.senderId===state.meId);
   const showIdentity=!mine||!!state.showMyIdentity;
@@ -4591,9 +4800,16 @@ exportHTML=function(){
   const __htmlBubbleFs=Math.max(1,Number(state.layout&&state.layout.bubbleFs)||__htmlTextFs);
   /* 모바일에서는 두 HTML 폭 모드 모두 '내용 글자'를 각 설정값에서 2pt 줄인다.
      제목(span.text-heading)은 em 기반이라 부모 글자 크기를 따라 자연스럽게 같이 줄어든다. */
-  const __htmlMobileFontCss='@media(max-width:700px){'
-    +'.t-block{font-size:calc('+__htmlTextFs+'px - 2pt)!important;}'
-    +'.n-bubble,.n-plain,.m-bubble{font-size:calc('+__htmlBubbleFs+'px - 2pt)!important;}'
+  const __htmlMobileTextPx=Math.max(1,__htmlTextFs-(8/3));
+  const __htmlMobileBubblePx=Math.max(1,__htmlBubbleFs-(8/3));
+  /* 마지막에 한 번 더 강제 적용한다. 일부 모바일/Tistory 환경은 내부 글자 레이어나
+     저장된 스킨 CSS가 부모 font-size를 다시 지정할 수 있어, 실제 글자 레이어까지 inherit로 고정한다.
+     max-device-width는 모바일 브라우저가 넓은 layout viewport를 쓰는 경우의 보조 판정이다. */
+  const __htmlMobileFontCss='@media(max-width:700px),(max-device-width:700px){'
+    +'.t-block{font-size:'+__htmlMobileTextPx.toFixed(4)+'px!important;}'
+    +'.t-block>.t-inner,.t-block .glyph-scale{font-size:inherit!important;}'
+    +'.n-bubble,.n-plain,.m-bubble,.script-dialogue,.script-name{font-size:'+__htmlMobileBubblePx.toFixed(4)+'px!important;}'
+    +'.n-bubble>.glyph-scale,.n-plain>.glyph-scale,.m-bubble>.glyph-scale,.script-dialogue>.glyph-scale,.script-name>.glyph-inline{font-size:inherit!important;}'
     +'}';
   if(__htmlWidthMode==='stretch'||__htmlWidthMode==='fixed'){
     /* 저장 파일도 미리보기용 고정 geometry를 제거한다.
@@ -4624,7 +4840,8 @@ exportHTML=function(){
       +'#canvas{width:100%!important;min-width:0!important;max-width:'+__htmlFitW+'px!important;flex:0 1 '+__htmlFitW+'px!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;transform:none!important;zoom:1!important;display:block!important;margin:0 auto!important;box-sizing:border-box!important;position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;padding-left:'+__htmlResponsiveHPad+'!important;padding-right:'+__htmlResponsiveHPad+'!important;container-type:inline-size;}'
       +'#chat{width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;overflow:visible!important;transform:none!important;box-sizing:border-box!important;}'
       +__htmlFixedAdaptiveGlyphCss+__htmlMobileFontCss+'img{max-width:100%!important;height:auto;}';
-  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>채팅 발췌</title><style>'+css+__htmlFluidCss+transparentCss+'</style></head><body>'+node.outerHTML+'</body></html>';
+  /* 모바일 글자 축소 규칙은 모든 원본/스킨 CSS보다 뒤에 둬 최종 우선순위를 보장한다. */
+  const html='<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>채팅 발췌</title><style>'+css+__htmlFluidCss+transparentCss+__htmlMobileFontCss+'</style></head><body>'+node.outerHTML+'</body></html>';
   const blob=new Blob([html],{type:'text/html'});
   const fname=safeFilename(state.export.filename)+'.html';
   window.__saveBlobAs(blob,fname,()=>{const a=document.createElement('a');a.download=fname;a.href=URL.createObjectURL(blob);a.click();});
@@ -7053,6 +7270,7 @@ function applyProject(d){
   const sp=document.getElementById('showProfile'); if(sp) sp.checked=!!state.showProfile;
   const hn=document.getElementById('hideNames'); if(hn) hn.checked=!!state.hideNames;
   const smi=document.getElementById('showMyIdentity'); if(smi) smi.checked=!!state.showMyIdentity;
+  try{ syncScriptNameStyleVisibility(); }catch(_){}
   try{ renderMembers(); renderSenders(); renderMeSelect(); }catch(_){}
   if(typeof applyBackgroundLayers==='function'){ try{ applyBackgroundLayers(); }catch(_){} }
   renderPreview();
@@ -8521,15 +8739,26 @@ stage.addEventListener('touchend',e=>{
       const minHeight=Math.max(1,Math.min(a.bottom-a.top,b.bottom-b.top));
       return overlap>Math.max(1,minHeight*.18);
     }
+    /* 큰 제목(#/##)처럼 글자 높이가 섞이면 서로 다른 두 줄의 glyph rect가 세로로
+       겹칠 수 있다. 세로 겹침만 보면 새 줄을 같은 줄로 오판하므로, 실제 미리보기에서
+       x좌표가 왼쪽으로 되감기고 y좌표도 아래로 이동했는지를 함께 본다. */
+    function visualLineReset(a,b){
+      if(!a||!b) return false;
+      const yMoved=(b.top>a.top+1)||(b.bottom>a.bottom+1);
+      const xReset=b.left<a.right-1;
+      return yMoved&&xReset;
+    }
     function groupBands(rects){
       const bands=[];
       for(const rect of rects){
         if(!(rect.width>0&&rect.height>0)) continue;
         const last=bands[bands.length-1];
-        if(last&&sameLine(last,rect)){
+        if(last&&sameLine(last,rect)&&!visualLineReset(last,rect)){
           last.top=Math.min(last.top,rect.top);
           last.bottom=Math.max(last.bottom,rect.bottom);
-        }else bands.push({top:rect.top,bottom:rect.bottom});
+          last.left=Math.min(last.left,rect.left);
+          last.right=Math.max(last.right,rect.right);
+        }else bands.push({top:rect.top,bottom:rect.bottom,left:rect.left,right:rect.right});
       }
       return bands;
     }
@@ -8540,10 +8769,11 @@ stage.addEventListener('touchend',e=>{
       return result;
     }
     function bandIndex(rect,bands){
-      for(let i=0;i<bands.length;i++) if(sameLine(rect,bands[i])) return i;
+      /* overlap 우선 탐색은 큰 글자에서 앞 줄을 잘못 고를 수 있다.
+         미리보기에서 얻은 각 band의 top/bottom에 가장 가까운 줄을 고정한다. */
       let nearest=0,best=Infinity;
       for(let i=0;i<bands.length;i++){
-        const distance=Math.abs(rect.top-bands[i].top);
+        const distance=Math.abs(rect.top-bands[i].top)+Math.abs(rect.bottom-bands[i].bottom)*.25;
         if(distance<best){best=distance;nearest=i;}
       }
       return nearest;
@@ -8572,7 +8802,18 @@ stage.addEventListener('touchend',e=>{
       if(!bands.length) continue;
       const path=nodePath(run.node,root);
       if(!path) continue;
-      if(currentBand&&!sameLine(currentBand,bands[0])) points.push({path,offset:run.start});
+      if(currentBand&&(!sameLine(currentBand,bands[0])||visualLineReset(currentBand,bands[0]))){
+        /* 새 줄이 inline-block 제목의 시작이라면 <br>을 제목 '안'에 넣으면 안 된다.
+           그러면 저장본에서 빈 줄이 하나 생기거나 제목이 앞줄 끝에 붙어 넘친다.
+           미리보기에서 제목 자체가 다음 줄로 내려간 경우에는 제목 요소 앞에 고정한다. */
+        let heading=null;
+        try{ heading=run.node.parentElement&&run.node.parentElement.closest('.text-heading,[data-heading]'); }catch(_){}
+        if(heading&&root.contains(heading)&&run.start===0){
+          const elementPath=nodePath(heading,root);
+          if(elementPath) points.push({elementPath,beforeElement:true});
+          else points.push({path,offset:run.start});
+        }else points.push({path,offset:run.start});
+      }
       if(bands.length>1){
         const cuts=boundaries(run.node.nodeValue||'',run.start,run.end);
         for(let target=1;target<bands.length;target++){
@@ -8594,20 +8835,35 @@ stage.addEventListener('touchend',e=>{
   }
 
   function insertLockedBreaks(cloneRoot,points){
-    const resolved=[];
+    const textResolved=[];
+    const elementResolved=[];
     for(const point of points){
+      if(point&&point.beforeElement&&point.elementPath){
+        const el=nodeAtPath(cloneRoot,point.elementPath);
+        if(el&&el.nodeType===Node.ELEMENT_NODE) elementResolved.push(el);
+        continue;
+      }
       const node=nodeAtPath(cloneRoot,point.path);
-      if(node&&node.nodeType===Node.TEXT_NODE) resolved.push({node,offset:point.offset});
+      if(node&&node.nodeType===Node.TEXT_NODE) textResolved.push({node,offset:point.offset});
+    }
+    /* inline-block 제목이 실제 미리보기에서 새 줄로 시작했다면 제목 요소 바깥에 br을 둔다. */
+    const seenElements=new Set();
+    for(const el of elementResolved){
+      if(seenElements.has(el)||!el.parentNode) continue;
+      seenElements.add(el);
+      const br=document.createElement('br');
+      br.dataset.previewLockedBreak='1';
+      el.parentNode.insertBefore(br,el);
     }
     const order=new Map();
     let seq=0;
-    resolved.forEach(item=>{if(!order.has(item.node)) order.set(item.node,seq++);});
-    resolved.sort((a,b)=>{
+    textResolved.forEach(item=>{if(!order.has(item.node)) order.set(item.node,seq++);});
+    textResolved.sort((a,b)=>{
       const nodeOrder=(order.get(b.node)||0)-(order.get(a.node)||0);
       return nodeOrder||b.offset-a.offset;
     });
     const seen=new Set();
-    for(const point of resolved){
+    for(const point of textResolved){
       const key=(order.get(point.node)||0)+':'+point.offset;
       if(seen.has(key)) continue;
       seen.add(key);
@@ -8649,6 +8905,12 @@ stage.addEventListener('touchend',e=>{
       to.style.wordBreak=cs.wordBreak;
       to.style.overflowWrap=cs.overflowWrap;
       to.style.hyphens=cs.hyphens;
+      if(from.matches&&from.matches('.text-heading,[data-heading]')){
+        /* 제목 span은 저장용 foreignObject에서 inline-block/baseline이 재계산되지 않게
+           미리보기의 최종 계산값을 그대로 고정한다. */
+        to.style.display=cs.display;
+        to.style.verticalAlign=cs.verticalAlign;
+      }
     }
   }
 
@@ -14654,19 +14916,48 @@ const EMBED_FONT_CSS={
   'paperlogy':'https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css',
   'mona12':'https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/mona.css'
 };
+/* HTML 복사/저장에서도 자동 한자·가나 폰트를 실제로 불러온다.
+   본문에 해당 언어가 있을 때만, 현재 한글 글꼴의 serif/sans 성격에 맞는 짝만 추가한다. */
+const EMBED_CJK_FONT_CSS={
+  'noto sans sc':'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap',
+  'noto sans jp':'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap',
+  'noto serif sc':'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700;800&display=swap',
+  'noto serif jp':'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;800&display=swap'
+};
 function fontImports(){
   const s0=ST();
-  const stack=String((s0&&s0.layout&&s0.layout.font)||'').toLowerCase();
+  const rawStack=String((s0&&s0.layout&&s0.layout.font)||'');
+  const stack=rawStack.toLowerCase();
   const urls=[EMBED_FONT_CSS['pretendard']];
   Object.keys(EMBED_FONT_CSS).forEach(k=>{
     if(k!=='pretendard'&&stack.indexOf(k)>=0) urls.push(EMBED_FONT_CSS[k]);
   });
-  let out=urls.map(u=>"@import url('"+u+"');").join('\n')+'\n';
-  /* 굴림은 CDN 주소가 없고 이 파일 안에 base64 로 들어 있으므로,
-     블로그에 붙일 코드에도 @font-face 를 통째로 실어 보낸다.
-     (그래야 맥·아이폰처럼 굴림이 안 깔린 기기에서도 같은 모양으로 보인다) */
+
+  /* 자동 CJK span이 실제로 있을 때만 필요한 JP/SC 웹폰트를 백업 HTML에 싣는다. */
+  let serif=false;
+  try{
+    serif=(typeof window.__cjkIsSerifStack==='function')
+      ?!!window.__cjkIsSerifStack(rawStack)
+      :/myeongjo|myungjo|batang|mincho|songti|song ti|\bsong\b|serif|chosunsm|조선신명조/i.test(rawStack.replace(/sans-serif/ig,' '));
+  }catch(_){}
+  try{
+    if(document.querySelector('#canvas .cjk-auto[data-cjk-lang="ja"]')){
+      urls.push(EMBED_CJK_FONT_CSS[serif?'noto serif jp':'noto sans jp']);
+    }
+    if(document.querySelector('#canvas .cjk-auto[data-cjk-lang="zh"]')){
+      urls.push(EMBED_CJK_FONT_CSS[serif?'noto serif sc':'noto sans sc']);
+    }
+  }catch(_){}
+
+  let out=[...new Set(urls)].map(u=>"@import url('"+u+"');").join('\n')+'\n';
+
+  /* 굴림·조선신명조는 CDN 주소가 아니라 이 파일 안의 @font-face(base64)를 사용한다.
+     HTML 복사/저장에도 규칙을 그대로 실어 보내야 다른 기기에서도 같은 글꼴이 나온다. */
   if(stack.indexOf('gulim')>=0||stack.indexOf('굴림')>=0){
     try{ if(typeof __documentFontFaceCSS==='function') out+=__documentFontFaceCSS('Gulim')+'\n'; }catch(_){}
+  }
+  if(stack.indexOf('chosunsm')>=0||stack.indexOf('조선신명조')>=0){
+    try{ if(typeof __documentFontFaceCSS==='function') out+=__documentFontFaceCSS('ChosunSm')+'\n'; }catch(_){}
   }
   return out;
 }
@@ -14833,9 +15124,13 @@ function buildEmbedHTML(){
   const stretchTextFs=Math.max(1,Number(s0.layout&&s0.layout.fs)||14);
   const stretchBubbleFs=Math.max(1,Number(s0.layout&&s0.layout.bubbleFs)||stretchTextFs);
   /* 모바일에서 내용 글자만 2pt 축소. 두 HTML 폭 모드 모두 동일하게 적용한다. */
-  const stretchMobileFontCss='@media(max-width:700px){'
-    +rootSel+' .t-block{font-size:calc('+stretchTextFs+'px - 2pt)!important;}'
-    +rootSel+' .n-bubble,'+rootSel+' .n-plain,'+rootSel+' .m-bubble{font-size:calc('+stretchBubbleFs+'px - 2pt)!important;}'
+  const stretchMobileTextPx=Math.max(1,stretchTextFs-(8/3));
+  const stretchMobileBubblePx=Math.max(1,stretchBubbleFs-(8/3));
+  const stretchMobileFontCss='@media(max-width:700px),(max-device-width:700px){'
+    +rootSel+' .t-block{font-size:'+stretchMobileTextPx.toFixed(4)+'px!important;}'
+    +rootSel+' .t-block>.t-inner,'+rootSel+' .t-block .glyph-scale{font-size:inherit!important;}'
+    +rootSel+' .n-bubble,'+rootSel+' .n-plain,'+rootSel+' .m-bubble,'+rootSel+' .script-dialogue,'+rootSel+' .script-name{font-size:'+stretchMobileBubblePx.toFixed(4)+'px!important;}'
+    +rootSel+' .n-bubble>.glyph-scale,'+rootSel+' .n-plain>.glyph-scale,'+rootSel+' .m-bubble>.glyph-scale,'+rootSel+' .script-dialogue>.glyph-scale,'+rootSel+' .script-name>.glyph-inline{font-size:inherit!important;}'
     +'}\n';
 
   /* ---------------------------------------------------------------
@@ -14959,7 +15254,9 @@ function buildEmbedHTML(){
     +(s0.transparentBg
       ?rootSel+','+rootSel+' .moko-fit,'+rootSel+' .moko-fit-in,'+rootSel+' #canvas,'+rootSel+' #chat{background:transparent!important;background-color:transparent!important;background-image:none!important}\n'
        +rootSel+' #canvasBgImage,'+rootSel+' #canvasBgOverlay,'+rootSel+' #canvasBgVideoLayer,'+rootSel+' #canvasBgVideo,'+rootSel+' #canvasBgVideoStill,'+rootSel+' #canvasBgVideoDim{display:none!important;background:none!important}\n'
-      :'');
+      :'')
+    /* 복사 HTML에서도 모바일 글자 규칙을 진짜 마지막에 재확정한다. */
+    +stretchMobileFontCss;
 
   /* 선택한 폭은 CSS로 확정한다. fixed는 원본 폭을 최대치로 유지하되 부모가 더 좁으면 축소하고, stretch는 부모 폭을 그대로 따른다. */
   const fitJs='';
@@ -18908,7 +19205,7 @@ function updateQuoteButton(){
   }
   const sw=document.querySelector('.quote-color-swatch');
   if(sw) sw.style.background=s.colors.dquote||'#5B7FA8';
-  const inp=document.getElementById('quoteColor');
+  const inp=document.getElementById('dquoteColor');
   if(inp) inp.value=s.colors.dquote||'#5B7FA8';
 }
 window.__updateQuoteButton=updateQuoteButton;
@@ -18919,7 +19216,7 @@ window.toggleQuoteQuick=function(){
   updateQuoteButton();
   try{ renderPreview(); }catch(_){}
 };
-window.setQuoteColor=function(v){
+window.setDQuoteColor=function(v){
   const s=ST(); if(!s) return;
   s.colors.dquote=String(v||'').toUpperCase();
   updateQuoteButton();
