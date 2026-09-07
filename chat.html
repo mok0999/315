@@ -1608,6 +1608,7 @@ html, body, #canvas, #chat, #canvas * {
 <option value="'Pretendard',-apple-system,'Malgun Gothic',sans-serif">프리텐다드</option>
 <option value="'Noto Sans KR',sans-serif">본고딕 (Noto)</option>
 <option value="'Nanum Myeongjo',serif">나눔명조</option>
+<option value="'KoPub Batang',serif">KoPub 바탕체</option>
 <option value="'Gowun Dodum',sans-serif">고운돋움</option>
 <option value="'Freesentation',sans-serif">프리젠테이션</option>
 <option value="'Paperlogy',sans-serif">페이퍼로지</option>
@@ -4279,7 +4280,7 @@ function __usedEmbedFamily(){
   const stack=(state.layout.font||'').toLowerCase();
   // families actually loaded as webfonts (Pretendard via @font-face,
   // Noto/Nanum/Gowun via the Google <link>). Order = preference, so a real font wins over its fallback.
-  const loaded=['Pretendard','Gowun Dodum','Nanum Myeongjo','Noto Sans KR'];
+  const loaded=['Pretendard','Gowun Dodum','Nanum Myeongjo','KoPub Batang','Noto Sans KR'];
   for(const f of loaded){ if(stack.includes(f.toLowerCase())) return f; }
   return null; // pure system stack → nothing to embed
 }
@@ -4892,6 +4893,7 @@ function __loadHtmlToImage(){
 const __RUNTIME_FONT_CONFIG={
   'Noto Sans KR':{css:'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap',weights:[400,700]},
   'Nanum Myeongjo':{css:'https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap',weights:[400,700]},
+  'KoPub Batang':{css:'https://cdn.jsdelivr.net/npm/font-kopub@1.0/kopubbatang.min.css',weights:[300,400,700]},
   'Gowun Dodum':{css:'https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap',weights:[400]},
   'Freesentation':{css:'https://cdn.jsdelivr.net/gh/fonts-archive/Freesentation/Freesentation.css',weights:[400,700]},
   'Paperlogy':{css:'https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css',weights:[400,700]},
@@ -12200,7 +12202,7 @@ try{ if(typeof enhanceRange==='function') enhanceRange('lyCjkScale','lyCjkScaleV
 /* ---------- 글꼴이 실제로 도착했는지 확인 ---------- */
 const FONT_LABEL={
   'Freesentation':'프리젠테이션','Paperlogy':'페이퍼로지','Noto Sans KR':'본고딕',
-  'Nanum Myeongjo':'나눔명조','Gowun Dodum':'고운돋움','Mona12':'Mona12','Pretendard':'프리텐다드'
+  'Nanum Myeongjo':'나눔명조','KoPub Batang':'KoPub 바탕체','Gowun Dodum':'고운돋움','Mona12':'Mona12','Pretendard':'프리텐다드'
 };
 async function reportFontState(){
   const el=document.getElementById('fontLoadState'); if(!el) return;
@@ -14967,6 +14969,7 @@ const EMBED_FONT_CSS={
   'pretendard':'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css',
   'noto sans kr':'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap',
   'nanum myeongjo':'https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap',
+  'kopub batang':'https://cdn.jsdelivr.net/npm/font-kopub@1.0/kopubbatang.min.css',
   'gowun dodum':'https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap',
   'freesentation':'https://cdn.jsdelivr.net/gh/fonts-archive/Freesentation/Freesentation.css',
   'paperlogy':'https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css',
