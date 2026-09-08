@@ -1437,16 +1437,10 @@ html, body, #canvas, #chat, #canvas * {
 <div aria-multiline="true" class="rich-composer" contenteditable="true" data-placeholder="내용을 입력하세요" id="msgContent" role="textbox" spellcheck="false"></div>
 </div>
 <div class="field" id="dividerOpts" style="display:none">
-<div class="divider-opts-grid">
-<div class="dv-cell"><label class="lb">가름선 길이 (선)</label>
-<div class="rangewrap"><input id="lyDividerWidth" max="100" min="10" oninput="setDividerWidth(this.value)" type="range" value="100"/><span class="val" id="lyDividerWidthV">100%</span></div></div>
-<div class="dv-cell"><label class="lb">가름선 두께</label>
-<div class="rangewrap"><input id="lyDividerThick" max="12" min="0.5" step="0.5" oninput="setDividerThick(this.value)" type="range" value="1"/><span class="val" id="lyDividerThickV">1px</span></div></div>
-<div class="dv-cell"><label class="lb">가름선 여백 위</label>
-<div class="rangewrap"><input id="lyDividerMarginT" max="60" min="0" oninput="setDividerMarginTop(this.value)" type="range" value="8"/><span class="val" id="lyDividerMarginTV">8px</span></div></div>
-<div class="dv-cell"><label class="lb">가름선 여백 아래</label>
-<div class="rangewrap"><input id="lyDividerMarginB" max="60" min="0" oninput="setDividerMarginBottom(this.value)" type="range" value="8"/><span class="val" id="lyDividerMarginBV">8px</span></div></div>
-</div>
+<label class="lb">가름선 길이 (선)</label>
+<div class="rangewrap"><input id="lyDividerWidth" max="100" min="10" oninput="setDividerWidth(this.value)" type="range" value="100"/><span class="val" id="lyDividerWidthV">100%</span></div>
+<label class="lb" style="margin-top:9px">가름선 위·아래 여백</label>
+<div class="rangewrap"><input id="lyDividerMargin" max="60" min="0" oninput="setDividerMargin(this.value)" type="range" value="8"/><span class="val" id="lyDividerMarginV">8px</span></div>
 </div>
 <div class="msg-img-editor" id="msgImgEditor" hidden="">
 <input accept="image/*" hidden="" id="msgImgFile" onchange="onMsgImg(event)" type="file"/>
@@ -1971,10 +1965,7 @@ const state = {
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
     textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
     scriptNameBold:true, // 대본 모드 이름 굵게
-    dividerMargin:8,   // 가름선 위·아래 여백 (예전 값 — 위/아래가 없을 때의 기본)
-    dividerMarginTop:8,    // 가름선 위 여백
-    dividerMarginBottom:8, // 가름선 아래 여백
-    dividerThick:1,    // 가름선 두께(px)
+    dividerMargin:8,   // 가름선 위·아래 여백
     dividerWidth:100,  // 선 가름선 길이(%)
     wb:'word',  // 'word' = keep-all, 'char' = break-all
     font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"
@@ -3075,7 +3066,7 @@ let themeStorageOK=true;
 function defaultLayout(){
   return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,cjkScale:100,
     radius:14,fs:16,lh:1.55,para:0,bubbleFs:null,nameSize:12,widthScale:100,letterSpacing:0,cardLineW:1,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,textShadowX:0,textShadowY:1,textShadowOpacity:100,bubbleShadowOn:false,bubbleShadowStrength:4,bubbleShadowX:0,bubbleShadowY:3,bubbleShadowOpacity:100,tailOn:true,tailSize:10,tailY:0,tailX:0,
-    linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerMarginTop:8,dividerMarginBottom:8,dividerThick:1,dividerWidth:100,
+    linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerWidth:100,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
 function defaultExport(){ return {ratio:'auto',hMargin:24,vMargin:24,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
@@ -3261,7 +3252,6 @@ function syncControlsFromState(){
   if(dmEl){ dmEl.value=L.dividerMargin??8; if(dmV) dmV.textContent=(L.dividerMargin??8)+'px'; }
   const dwEl=document.getElementById('lyDividerWidth'), dwV=document.getElementById('lyDividerWidthV');
   if(dwEl){ dwEl.value=L.dividerWidth??100; if(dwV) dwV.textContent=(L.dividerWidth??100)+'%'; }
-  if(typeof syncDividerFields==='function') syncDividerFields();
   // export canvas (ratio / outer margins / transparency)
   ratioSel.value=state.export.ratio;
   syncExportMarginInputs();
@@ -3621,42 +3611,8 @@ function addDivider(){
 function setDividerMargin(v){
   v=Math.max(0,parseInt(v)||0);
   state.layout.dividerMargin=v;
-  state.layout.dividerMarginTop=v;
-  state.layout.dividerMarginBottom=v;
   const e=document.getElementById('lyDividerMarginV'); if(e) e.textContent=v+'px';
-  syncDividerFields();
   renderPreview();
-}
-function setDividerMarginTop(v){
-  v=Math.max(0,Math.min(60,parseInt(v)||0));
-  state.layout.dividerMarginTop=v;
-  const e=document.getElementById('lyDividerMarginTV'); if(e) e.textContent=v+'px';
-  renderPreview();
-}
-function setDividerMarginBottom(v){
-  v=Math.max(0,Math.min(60,parseInt(v)||0));
-  state.layout.dividerMarginBottom=v;
-  const e=document.getElementById('lyDividerMarginBV'); if(e) e.textContent=v+'px';
-  renderPreview();
-}
-function setDividerThick(v){
-  v=Math.max(0.5,Math.min(12,parseFloat(v)||1));
-  state.layout.dividerThick=v;
-  const e=document.getElementById('lyDividerThickV'); if(e) e.textContent=v+'px';
-  renderPreview();
-}
-/* 슬라이더·숫자칸을 현재 값에 맞춘다 (불러오기·테마·되돌리기 뒤) */
-function syncDividerFields(){
-  const L=state.layout||{}, old=(L.dividerMargin!=null)?L.dividerMargin:8;
-  const put=(id,vid,val,suffix)=>{
-    const el=document.getElementById(id); if(el) el.value=val;
-    const v=document.getElementById(vid); if(v) v.textContent=val+suffix;
-    const n=document.querySelector('.stepper input[data-stepper-for="'+id+'"]'); if(n) n.value=val;
-  };
-  put('lyDividerWidth','lyDividerWidthV',(L.dividerWidth!=null?L.dividerWidth:100),'%');
-  put('lyDividerThick','lyDividerThickV',(L.dividerThick!=null?L.dividerThick:1),'px');
-  put('lyDividerMarginT','lyDividerMarginTV',(L.dividerMarginTop!=null?L.dividerMarginTop:old),'px');
-  put('lyDividerMarginB','lyDividerMarginBV',(L.dividerMarginBottom!=null?L.dividerMarginBottom:old),'px');
 }
 function setDividerWidth(v){
   v=Math.max(10,Math.min(100,parseInt(v)||100));
@@ -4074,13 +4030,7 @@ function renderPreview(){
     if(next){
       const a=m.type, b=next.type;
       if(nextContinued) gap=continuationGap;
-      else if(a==='divider'||b==='divider'){
-        /* 가름선 여백은 위·아래를 따로 쓴다. 예전 프로젝트(dividerMargin만 있음)는 그대로 이어받는다. */
-        const _dl=state.layout, _dOld=Number(_dl.dividerMargin)||0;
-        const _dT=(_dl.dividerMarginTop!=null)?(Number(_dl.dividerMarginTop)||0):_dOld;
-        const _dB=(_dl.dividerMarginBottom!=null)?(Number(_dl.dividerMarginBottom)||0):_dOld;
-        gap=(a==='divider'&&b==='divider')?Math.max(_dT,_dB):(a==='divider'?_dB:_dT);
-      }
+      else if(a==='divider'||b==='divider') gap=Number(state.layout.dividerMargin)||0;
       else if(a==='image'||b==='image') gap=(a==='image'?(m.imgMargin!=null?m.imgMargin:6):(next.imgMargin!=null?next.imgMargin:6));
       else if(a==='text'&&b==='text') gap=(state.layout.blockGap!=null?Number(state.layout.blockGap):state.layout.textGap);
       else if(a==='text'||b==='text') gap=state.layout.textGap;
@@ -4115,34 +4065,20 @@ function creditHTML(){
     font-size:${c.size}px;margin-top:${(c.gap!=null?c.gap:16)}px;${subFontCss(c.font)}
     letter-spacing:.02em;opacity:.95">${parts.join('<span style="opacity:.5"> '+(c.sep==='bar'?'|':'\u00B7')+' </span>')}</div>`;
 }
-/* 고른 색 위에서 읽히는 글자색 (밝으면 어둡게, 어두우면 밝게) */
-function pickInkOn(hex){
-  const m=/^#?([0-9a-f]{6})$/i.exec(String(hex||''));
-  if(!m) return 'rgba(0,0,0,.55)';
-  const n=parseInt(m[1],16), r=(n>>16)&255, g=(n>>8)&255, b=n&255;
-  return ((r*299+g*587+b*114)/1000>150)?'rgba(0,0,0,.62)':'#FFFFFF';
-}
 function dividerRow(m,gap){
   const L=state.layout;
   const txt=(m.content||'').trim();
   const wrapStyle=`margin-bottom:${gap}px`;
-  /* 가름선 색 — 가름선마다 따로 (고르지 않으면 원래 기본색 그대로) */
-  const dcol=(m&&typeof m.dividerColor==='string'&&/^#[0-9a-f]{6}$/i.test(m.dividerColor))?m.dividerColor:'';
   if(!txt){
     const w=Math.max(10,Math.min(100,Number(L.dividerWidth)||100));
-    const th=Math.max(0.5,Math.min(20,Number(L.dividerThick!=null?L.dividerThick:1)||1));
-    const lineStyle=`width:${w}%;border-top-style:solid;border-top-width:${th}px;`
-      +(dcol?`border-top-color:${dcol};`:'');
     return `<div class="pmsg divider-row line-only" style="${wrapStyle}">
       ${ctrlHTML(m.id)}
-      <span class="divider-line" data-id="${m.id}" style="${lineStyle}"></span>
+      <span class="divider-line" data-id="${m.id}" style="width:${w}%"></span>
     </div>`;
   }
-  const pillStyle=`font-size:${Math.max(10,L.fs-2)}px;`
-    +(dcol?`background:${dcol};color:${pickInkOn(dcol)};`:'');
   return `<div class="pmsg divider-row" style="${wrapStyle}">
     ${ctrlHTML(m.id)}
-    <span class="divider-pill" data-id="${m.id}" style="${pillStyle}">${esc(txt)}</span>
+    <span class="divider-pill" data-id="${m.id}" style="font-size:${Math.max(10,L.fs-2)}px">${esc(txt)}</span>
   </div>`;
 }
 function textRow(t,gap){
@@ -7323,17 +7259,6 @@ function applyProject(d){
   ['export','backgroundImage','credit','pageNum','gradient','colors','layout'].forEach(k=>{
     if(d[k]&&typeof d[k]==='object') Object.assign(state[k],JSON.parse(JSON.stringify(d[k])));
   });
-  /* 예전 파일 이어받기 — '가름선 위·아래 여백' 하나만 있던 시절의 값을 위·아래 양쪽에 넣고,
-     두께 칸이 없던 파일은 원래 굵기(1px)로 되돌린다. 그래야 예전 결과와 똑같이 보인다. */
-  if(d.layout&&typeof d.layout==='object'){
-    const _dl=d.layout;
-    if(_dl.dividerMarginTop==null&&_dl.dividerMarginBottom==null&&_dl.dividerMargin!=null){
-      const _v=Number(_dl.dividerMargin)||0;
-      state.layout.dividerMarginTop=_v; state.layout.dividerMarginBottom=_v;
-    }
-    if(_dl.dividerThick==null) state.layout.dividerThick=1;
-    try{ if(typeof syncDividerFields==='function') syncDividerFields(); }catch(_){}
-  }
   /* 여러 단 설정 — 예전에 저장한 파일에는 이 칸이 없으므로, 있을 때만 덮어쓴다 */
   if(d.novel&&typeof d.novel==='object'&&state.novel){
     const nv=JSON.parse(JSON.stringify(d.novel));
@@ -19386,9 +19311,7 @@ setTimeout(updateQuoteButton,400);
 function run(){
   if(typeof enhanceRange!=='function') return;
   [['lyDividerWidth','lyDividerWidthV',{nudge:1,suffix:'%'}],
-   ['lyDividerThick','lyDividerThickV',{nudge:0.5,suffix:'px'}],
-   ['lyDividerMarginT','lyDividerMarginTV',{nudge:1,suffix:'px'}],
-   ['lyDividerMarginB','lyDividerMarginBV',{nudge:1,suffix:'px'}],
+   ['lyDividerMargin','lyDividerMarginV',{nudge:1,suffix:'px'}],
    ['bgvSpeed','bgvSpeedV',{nudge:0.05}],
    ['novelCols','novelColsV',{nudge:1}],
    ['novelGap','novelGapV',{nudge:2}],
@@ -19695,244 +19618,6 @@ mo.observe(document.body,{attributes:true,attributeFilter:['class']});
 window.addEventListener('resize',()=>requestAnimationFrame(movePriorityGroups),{passive:true});
 document.addEventListener('DOMContentLoaded',()=>setTimeout(movePriorityGroups,80));
 setTimeout(movePriorityGroups,300);
-})();
-</script>
-
-<style id="divider-extras-styles">
-/* =====================================================================
-   가름선 추가 조절 — 두께 · 위/아래 여백 분리 · 가름선 색
-   1행: 가름선 길이 | 가름선 두께
-   2행: 가름선 여백 위 | 가름선 여백 아래
-   ===================================================================== */
-#dividerOpts .divider-opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px}
-#dividerOpts .dv-cell{min-width:0}
-#dividerOpts .dv-cell .lb{display:block;margin:0 0 4px}
-#dividerOpts .rangewrap{min-width:0;max-width:100%}
-#dividerOpts .rangewrap input[type=range]{min-width:0;width:100%}
-#dividerOpts .rangewrap.has-stepper{display:grid;grid-template-columns:minmax(38px,1fr) auto;gap:8px;align-items:center}
-#dividerOpts .stepper{gap:3px}
-#dividerOpts .stepper button{width:25px;height:26px;border-radius:6px}
-#dividerOpts .stepper input{width:46px;height:26px;font-size:11px}
-@media(max-width:430px){
-  #dividerOpts .divider-opts-grid{gap:8px 8px}
-  #dividerOpts .rangewrap.has-stepper{gap:6px}
-  #dividerOpts .stepper{gap:2px}
-  #dividerOpts .stepper button{width:22px;height:25px}
-  #dividerOpts .stepper input{width:38px;height:25px}
-}
-
-/* ---- 가름선 색 (가름선 정렬 옆) ---- */
-#dvColorCol,#dvColorDiv{display:none}
-#alignField.divider-align #dvColorCol{display:flex}
-#alignField.divider-align #dvColorDiv{display:block}
-#dvColorCol .dv-color-row{display:flex;align-items:center;gap:5px}
-#dvColorCol .dv-color-reset{height:31px;padding:0 8px;border:1px solid var(--line);
-  background:var(--panel-2,#F4F4F5);color:var(--muted,#909096);border-radius:7px;
-  font:700 11px/1 inherit;cursor:pointer;flex:0 0 auto}
-#dvColorCol .dv-color-reset:hover{border-color:var(--accent,#424448);color:var(--ink,#424448)}
-#dvColorCol .swatch{box-shadow:inset 0 0 0 2px #fff}
-.mobile-ui #mDock #dvColorCol .dv-color-reset{height:40px}
-.mobile-ui #mDock #dvColorCol .swatch{width:40px;height:40px}
-</style>
-<script id="divider-extras-script">
-(function(){
-'use strict';
-const ST=()=>{ try{ return state; }catch(_){ return window.state||null; } };
-const DEF='#D6D6D8';                      /* 기본 가름선 색과 비슷한 회색 (스와치 표시용) */
-const isHex=v=>/^#[0-9A-F]{6}$/i.test(String(v||''));
-
-try{ if(ST()&&ST().draftDividerColor===undefined) ST().draftDividerColor=''; }catch(_){}
-
-function dividerMode(){ try{ return ST().composerType==='divider'; }catch(_){ return false; } }
-
-/* ---- 정렬 칸 옆에 색 고르기 칸을 붙인다 ---- */
-function mountColorCol(){
-  const row=document.querySelector('#alignField .text-format-row');
-  if(!row||document.getElementById('dvColorCol')) return;
-  const div=document.createElement('span');
-  div.className='fmt-div tfr-div'; div.id='dvColorDiv';
-  const col=document.createElement('div');
-  col.className='tfr-col'; col.id='dvColorCol';
-  col.innerHTML='<label class="lb">\uAC00\uB984\uC120 \uC0C9</label>'
-    +'<div class="dv-color-row">'
-    +'<span class="swatch fmt-swatch" id="dvColorSwatch" style="background:'+DEF+'" title="\uAC00\uB984\uC120 \uC0C9 \uC120\uD0DD">'
-    +'<input id="dividerColor" class="color-proxy" oninput="setDividerColor(this.value)" type="text" value="'+DEF+'" readonly inputmode="none" aria-label="\uAC00\uB984\uC120 \uC0C9 \uC120\uD0DD"></span>'
-    +'<button type="button" class="dv-color-reset" id="dvColorReset" onclick="resetDividerColor()" title="\uAE30\uBCF8 \uC0C9\uC73C\uB85C \uB418\uB3CC\uB9AC\uAE30">\uAE30\uBCF8</button>'
-    +'</div>';
-  const anchor=row.querySelector('.tfr-col');
-  if(anchor&&anchor.nextSibling) row.insertBefore(div,anchor.nextSibling), row.insertBefore(col,div.nextSibling);
-  else row.append(div,col);
-  syncColorSwatch();
-}
-
-function syncColorSwatch(){
-  const s=ST(); if(!s) return;
-  const c=isHex(s.draftDividerColor)?s.draftDividerColor:DEF;
-  const sw=document.getElementById('dvColorSwatch'); if(sw) sw.style.background=c;
-  const inp=document.getElementById('dividerColor'); if(inp) inp.value=c;
-  const rs=document.getElementById('dvColorReset');
-  if(rs) rs.style.opacity=isHex(s.draftDividerColor)?'1':'.5';
-}
-
-/* 지금 고치는 중인 가름선 · 여러 개 선택한 가름선에 바로 얹는다 */
-function applyColorNow(val){
-  const s=ST(); if(!s) return;
-  let hit=false;
-  try{
-    const S=window.__bulkSelection;
-    if(S&&S.active&&S.active()){
-      const set=new Set(S.ids()||[]);
-      const ms=(s.messages||[]).filter(m=>m&&set.has(m.id)&&m.type==='divider');
-      if(ms.length){
-        ms.forEach(m=>{ if(val) m.dividerColor=val; else delete m.dividerColor; });
-        hit=true;
-        try{ S.refresh(); }catch(_){}
-      }
-    }
-  }catch(_){}
-  try{
-    if(typeof composerEditId!=='undefined'&&composerEditId){
-      const m=(s.messages||[]).find(x=>x&&x.id===composerEditId);
-      if(m&&m.type==='divider'){ if(val) m.dividerColor=val; else delete m.dividerColor; hit=true; }
-    }
-  }catch(_){}
-  if(hit){ try{ renderPreview(); }catch(_){} }
-}
-
-window.setDividerColor=function(v){
-  const s=ST(); if(!s) return;
-  s.draftDividerColor=isHex(v)?String(v).toUpperCase():'';
-  syncColorSwatch();
-  applyColorNow(s.draftDividerColor);
-};
-window.resetDividerColor=function(){
-  const s=ST(); if(!s) return;
-  s.draftDividerColor='';
-  syncColorSwatch();
-  applyColorNow('');
-};
-
-/* ---- 새 가름선을 만들 때 지금 고른 색을 얹는다 ---- */
-const __addDiv=window.addDivider;
-if(typeof __addDiv==='function'){
-  window.addDivider=function(){
-    const before=(ST().messages||[]).length;
-    const r=__addDiv.apply(this,arguments);
-    try{
-      const list=ST().messages||[];
-      if(list.length>before){
-        const m=list[list.length-1];
-        if(m&&m.type==='divider'&&isHex(ST().draftDividerColor)){
-          m.dividerColor=ST().draftDividerColor;
-          renderPreview();
-        }
-      }
-    }catch(_){}
-    return r;
-  };
-}
-
-/* ---- 수정 시작 · 수정 저장 ---- */
-const __begin=window.beginComposerEdit;
-if(typeof __begin==='function'){
-  window.beginComposerEdit=function(id){
-    const r=__begin.apply(this,arguments);
-    try{
-      const m=(ST().messages||[]).find(x=>x&&x.id===id);
-      if(m&&m.type==='divider'){ ST().draftDividerColor=isHex(m.dividerColor)?m.dividerColor:''; syncColorSwatch(); }
-    }catch(_){}
-    return r;
-  };
-}
-const __commit=window.commitComposerEdit;
-if(typeof __commit==='function'){
-  window.commitComposerEdit=function(){
-    const id=(typeof composerEditId!=='undefined')?composerEditId:null;
-    const wasDiv=dividerMode(), want=ST()?ST().draftDividerColor:'';
-    const r=__commit.apply(this,arguments);
-    try{
-      if(id&&wasDiv){
-        const m=(ST().messages||[]).find(x=>x&&x.id===id);
-        if(m&&m.type==='divider'){
-          if(isHex(want)) m.dividerColor=want; else delete m.dividerColor;
-          renderPreview();
-        }
-      }
-    }catch(_){}
-    return r;
-  };
-}
-
-/* ---- 작성창 종류가 바뀌면 색 칸도 같이 켜고 끈다 ---- */
-const __setType=window.setMsgType;
-if(typeof __setType==='function'){
-  window.setMsgType=function(t){
-    const r=__setType.apply(this,arguments);
-    try{ mountColorCol(); if(t==='divider') syncColorSwatch(); }catch(_){}
-    return r;
-  };
-}
-
-/* ---- 새 조절 바에 −/+ 칸 붙이기 + 값 맞추기 ---- */
-function boot(){
-  try{ mountColorCol(); }catch(_){}
-  try{
-    if(typeof enhanceRange==='function'){
-      enhanceRange('lyDividerThick','lyDividerThickV',{nudge:0.5});
-      enhanceRange('lyDividerMarginT','lyDividerMarginTV',{nudge:1});
-      enhanceRange('lyDividerMarginB','lyDividerMarginBV',{nudge:1});
-    }
-  }catch(_){}
-  try{ if(typeof syncDividerFields==='function') syncDividerFields(); }catch(_){}
-  try{ if(dividerMode()) syncColorSwatch(); }catch(_){}
-}
-boot();
-document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,80));
-setTimeout(boot,400); setTimeout(boot,1200);
-
-/* 불러오기·되돌리기·테마 뒤에도 값이 어긋나지 않게 */
-const __sync=window.syncControlsFromState;
-if(typeof __sync==='function'){
-  window.syncControlsFromState=function(){
-    const r=__sync.apply(this,arguments);
-    try{ if(typeof syncDividerFields==='function') syncDividerFields(); }catch(_){}
-    try{ if(dividerMode()) syncColorSwatch(); }catch(_){}
-    return r;
-  };
-}
-/* ---- 예전 프로젝트·테마 이어받기 ----
-   위/아래 여백과 두께가 없던 시절의 파일은 '위·아래 여백' 하나만 갖고 있다.
-   불러올 때 그 값을 위·아래 양쪽에 그대로 넣어 예전 결과와 똑같이 보이게 한다. */
-function inherit(src){
-  const s=ST(); if(!s||!src||typeof src!=='object') return;
-  const L=s.layout;
-  if(src.dividerMarginTop==null&&src.dividerMarginBottom==null&&src.dividerMargin!=null){
-    const v=Number(src.dividerMargin)||0;
-    L.dividerMarginTop=v; L.dividerMarginBottom=v;
-  }
-  if(src.dividerThick==null) L.dividerThick=1;
-  try{ if(typeof syncDividerFields==='function') syncDividerFields(); }catch(_){}
-  try{ renderPreview(); }catch(_){}
-}
-/* (프로젝트 불러오기 쪽은 applyProject 안에서 바로 처리한다) */
-const __applyTheme=window.applyThemeById;
-if(typeof __applyTheme==='function'){
-  window.applyThemeById=function(id){
-    const r=__applyTheme.apply(this,arguments);
-    try{
-      const list=(typeof themes!=='undefined'&&Array.isArray(themes))?themes:[];
-      const t=list.find(x=>x&&x.id===id);
-      if(t&&t.layout) inherit(t.layout);
-    }catch(_){}
-    return r;
-  };
-}
-
-/* 작성창이 모바일 독으로 옮겨 다녀도 색 칸을 다시 찾아 붙인다 */
-try{
-  new MutationObserver(()=>{ try{ mountColorCol(); }catch(_){} })
-    .observe(document.body,{childList:true,subtree:true});
-}catch(_){}
 })();
 </script>
 
