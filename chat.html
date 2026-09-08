@@ -19671,12 +19671,9 @@ function movePriorityGroups(){
     parkNode(quote,'quote','mobile quote color');
     parkNode(paren,'paren','mobile paren color');
     row.append(quote,paren);
-    if(isDivider&&divColor){
-      parkNode(divColor,'dividerColor','mobile divider color');
-      row.append(divColor);
-    }else if(divColor){
-      restoreNode(divColor,'dividerColor',alignSlot);
-    }
+    /* 가름선 색은 모바일에서도 정렬 행에 고정한다.
+       이전 버전처럼 3행으로 옮기지 않아 3행을 숨겨도 컬러피커가 사라지지 않는다. */
+    if(divColor) restoreNode(divColor,'dividerColor',alignSlot);
     if(row.parentNode!==grid) grid.insertBefore(row,grid.firstChild);
   }else{
     const row=document.getElementById('mPriorityFormatRow');
@@ -19863,6 +19860,501 @@ ensureDividerColorPicker();
 document.addEventListener('DOMContentLoaded',ensureDividerColorPicker,{once:true});
 })();
 </script>
+<style id="mobile-format-row-polish-v5">
+/* ===== 모바일 작성창 서식 정리 v5 =====
+   데스크톱은 그대로 두고, mobile-ui + 도구 펼침 상태에서만 적용한다.
+   2행: 글서식/인용구/형광펜/글자색/블러 ........ 지우기
+   3행: "" 안 색 / ( ) 안 색 */
+@media(max-width:700px){
+  /* 2·3행의 세로 기준을 동일하게: 라벨 13px + 컨트롤 34px */
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt,
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow{
+    min-height:47px!important;
+    align-items:flex-end!important;
+  }
+
+  /* 2행 — 기존의 과도한 축소 규칙을 모바일에서만 되돌린다. */
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt{
+    gap:4px!important;
+    width:100%!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp{
+    flex:0 0 auto!important;
+    min-width:0!important;
+    padding-top:13px!important;
+    column-gap:2px!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp:first-child{
+    flex:0 0 auto!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp::before,
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp::before{
+    top:0!important;
+    font-size:9px!important;
+    line-height:1!important;
+    letter-spacing:-.02em!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp>button,
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp>button{
+    flex:0 0 34px!important;
+    width:34px!important;
+    min-width:34px!important;
+    max-width:34px!important;
+    height:34px!important;
+    min-height:34px!important;
+    max-height:34px!important;
+    padding:0!important;
+    border-radius:7px!important;
+    font-size:12px!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-pair,
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair{
+    display:inline-flex!important;
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:0!important;
+    height:34px!important;
+    border-radius:7px!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-pair>button,
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair>button{
+    flex:0 0 34px!important;
+    width:34px!important;
+    min-width:34px!important;
+    max-width:34px!important;
+    height:34px!important;
+    min-height:34px!important;
+    max-height:34px!important;
+    padding:0!important;
+    font-size:12px!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-pair>.fmt-swatch,
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair>.fmt-swatch{
+    flex:0 0 20px!important;
+    width:20px!important;
+    min-width:20px!important;
+    max-width:20px!important;
+    height:34px!important;
+    min-height:34px!important;
+    max-height:34px!important;
+    align-self:auto!important;
+    border-radius:0!important;
+  }
+
+  /* 3행은 자동 따옴표/괄호 색 전용. */
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow{
+    display:flex!important;
+    width:100%!important;
+    max-width:100%!important;
+    justify-self:stretch!important;
+    justify-content:flex-start!important;
+    gap:8px!important;
+  }
+  /* 지우기는 모바일에서 글/말풍선 공통 2행의 맨 오른쪽. */
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp-clear{
+    margin-left:auto!important;
+    padding-top:13px!important;
+    flex:0 0 auto!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp-clear>button.clearfmt{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex:0 0 34px!important;
+    width:34px!important;
+    min-width:34px!important;
+    max-width:34px!important;
+    height:34px!important;
+    min-height:34px!important;
+    max-height:34px!important;
+    border-radius:7px!important;
+  }
+
+  /* 가름선 색도 같은 34px 기준으로 맞춘다. */
+  .mobile-ui.m-tools-open #mDock .composer-card.divider-mode #mPriorityFormatRow #dividerColorCol{
+    flex:0 0 34px!important;
+    width:34px!important;
+    min-width:34px!important;
+    max-width:34px!important;
+    height:47px!important;
+    padding-top:13px!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card.divider-mode #mPriorityFormatRow #dividerColorCol .divider-color-row,
+  .mobile-ui.m-tools-open #mDock .composer-card.divider-mode #mPriorityFormatRow #dividerColorCol .divider-color-row .swatch{
+    flex:0 0 34px!important;
+    width:34px!important;
+    min-width:34px!important;
+    max-width:34px!important;
+    height:34px!important;
+    min-height:34px!important;
+    max-height:34px!important;
+    border-radius:7px!important;
+  }
+}
+
+/* 아주 좁은 아이폰에서도 같은 '높이'와 비율은 유지하고 가로폭만 조금 압축한다. */
+@media(max-width:380px){
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt{gap:3px!important}
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp{column-gap:1px!important}
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp>button,
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp>button,
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-pair>button,
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair>button,
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp-clear>button.clearfmt{
+    flex-basis:30px!important;width:30px!important;min-width:30px!important;max-width:30px!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-pair>.fmt-swatch,
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair>.fmt-swatch{
+    flex-basis:18px!important;width:18px!important;min-width:18px!important;max-width:18px!important;
+  }
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow{gap:6px!important}
+}
+</style>
+<script id="mobile-format-row-polish-v9-script">
+(function(){
+'use strict';
+/* 모바일에서는 지우기를 글/말풍선 공통 2행 맨 오른쪽에 둔다.
+   가름선/사진에서는 2행 자체가 숨겨지므로 지우기도 함께 숨겨진다.
+   데스크톱으로 돌아가면 원래 DOM 위치로 복귀한다. */
+let clearPlaceholder=null;
+let scheduled=0;
+function isMobile(){ return document.body.classList.contains('mobile-ui'); }
+function syncClearPosition(){
+  scheduled=0;
+  const clear=document.querySelector('.fmt-grp-clear');
+  const fmt=document.querySelector('#composerTextField .fmt, #mDock .composer-top-grid .fmt');
+  if(!clear||!fmt) return;
+  if(isMobile()){
+    if(!clearPlaceholder&&clear.parentNode){
+      clearPlaceholder=document.createComment('mobile clear format');
+      clear.parentNode.insertBefore(clearPlaceholder,clear);
+    }
+    /* 2행의 마지막 자식으로 두면 글/말풍선 모두 맨 오른쪽에 보인다. */
+    if(clear.parentNode!==fmt||fmt.lastElementChild!==clear) fmt.appendChild(clear);
+  }else{
+    if(clearPlaceholder&&clearPlaceholder.parentNode){
+      clearPlaceholder.parentNode.replaceChild(clear,clearPlaceholder);
+      clearPlaceholder=null;
+    }else if(clear.parentNode!==fmt){
+      fmt.appendChild(clear);
+    }
+  }
+}
+function queueSync(){ if(!scheduled) scheduled=requestAnimationFrame(syncClearPosition); }
+
+const grid=document.querySelector('.composer-top-grid');
+if(grid){
+  const mo=new MutationObserver(queueSync);
+  mo.observe(grid,{childList:true,subtree:true});
+}
+const bodyMo=new MutationObserver(queueSync);
+bodyMo.observe(document.body,{attributes:true,attributeFilter:['class']});
+window.addEventListener('resize',queueSync,{passive:true});
+
+const prevSetMsgType=window.setMsgType;
+if(typeof prevSetMsgType==='function'){
+  window.setMsgType=function(){
+    const r=prevSetMsgType.apply(this,arguments);
+    requestAnimationFrame(()=>{
+      try{ if(typeof window.__movePriorityGroups==='function') window.__movePriorityGroups(); }catch(_){}
+      queueSync();
+    });
+    return r;
+  };
+}
+queueSync();
+document.addEventListener('DOMContentLoaded',queueSync,{once:true});
+setTimeout(queueSync,250);
+})();
+</script>
+<script id="mobile-color-auto-apply-v5">
+(function(){
+'use strict';
+/* 모바일에서 글자를 드래그해 둔 채 형광펜/글자색 피커를 움직이면
+   첫 색 변화 때 선택 영역에 바로 서식을 만들고, 같은 피커 세션의 이후 변화는
+   그 요소의 색만 갱신한다. 따라서 별도의 ✎ / A 버튼을 다시 누를 필요가 없다. */
+const session={highlight:null,color:null,activeKind:null};
+function mobile(){ return document.body.classList.contains('mobile-ui'); }
+function root(){ return document.getElementById('msgContent'); }
+function closestFrom(node,selector,ed){
+  let el=node&&node.nodeType===1?node:node&&node.parentElement;
+  while(el&&el!==ed){ if(el.matches&&el.matches(selector)) return el; el=el.parentElement; }
+  return null;
+}
+function selectedRange(){
+  const ed=root(); if(!ed) return null;
+  let sel=window.getSelection&&window.getSelection();
+  let range=sel&&sel.rangeCount?sel.getRangeAt(0):null;
+  let ok=!!(range&&!range.collapsed&&ed.contains(range.startContainer)&&ed.contains(range.endContainer));
+  if(!ok&&typeof window.__restoreComposerSelection==='function'){
+    try{ window.__restoreComposerSelection(); }catch(_){}
+    sel=window.getSelection&&window.getSelection();
+    range=sel&&sel.rangeCount?sel.getRangeAt(0):null;
+    ok=!!(range&&!range.collapsed&&ed.contains(range.startContainer)&&ed.contains(range.endContainer));
+  }
+  return ok?{ed,sel,range}:null;
+}
+function updateTarget(kind,el,color){
+  if(!el||!el.isConnected) return false;
+  if(kind==='highlight'){
+    el.style.background=color; el.style.color='inherit'; el.style.padding='0 2px'; el.style.borderRadius='0';
+  }else{
+    if(el.tagName==='FONT') el.setAttribute('color',color);
+    else el.style.color=color;
+  }
+  return true;
+}
+function applyToSelection(kind,color){
+  if(!mobile()) return;
+  let target=session[kind];
+  if(updateTarget(kind,target,color)) return;
+
+  const found=selectedRange(); if(!found) return;
+  const {ed,sel,range}=found;
+  const selector=kind==='highlight'?'mark':'font[color],span[style*="color"]';
+  const start=closestFrom(range.startContainer,selector,ed);
+  const end=closestFrom(range.endContainer,selector,ed);
+  if(start&&start===end){
+    session[kind]=start; updateTarget(kind,start,color); return;
+  }
+
+  const el=document.createElement(kind==='highlight'?'mark':'span');
+  if(kind==='highlight'){
+    el.style.background=color; el.style.color='inherit'; el.style.padding='0 2px'; el.style.borderRadius='0';
+  }else el.style.color=color;
+  try{
+    el.appendChild(range.extractContents());
+    range.insertNode(el);
+    const nr=document.createRange(); nr.selectNodeContents(el);
+    sel.removeAllRanges(); sel.addRange(nr);
+    session[kind]=el;
+  }catch(_){ return; }
+}
+function resetForProxy(input){
+  if(!mobile()||!input) return;
+  if(input.id==='highlightColor'){ session.highlight=null; session.activeKind='highlight'; }
+  else if(input.id==='partialColor'){ session.color=null; session.activeKind='color'; }
+  else session.activeKind=null;
+}
+/* 피커가 열리는 순간 새 선택 영역용 세션으로 시작. capture 단계라 iOS에서도 선택을 놓치지 않는다. */
+document.addEventListener('pointerdown',e=>{
+  const input=e.target&&e.target.closest?e.target.closest('.color-proxy'):null;
+  if(input) resetForProxy(input);
+},true);
+document.addEventListener('click',e=>{
+  const input=e.target&&e.target.closest?e.target.closest('.color-proxy'):null;
+  if(input) resetForProxy(input);
+  /* 색을 움직이지 않고 현재 색 그대로 OK만 눌러도 선택 영역에 적용. */
+  if(mobile()&&e.target&&e.target.closest&&e.target.closest('#hexPicker .hp-ok')){
+    if(session.activeKind==='highlight') applyToSelection('highlight',String((window.state||state).colors.highlight||'#E4E4E6').toUpperCase());
+    if(session.activeKind==='color') applyToSelection('color',String((window.state||state).colors.partial||'#D14343').toUpperCase());
+  }
+},true);
+
+const prevHighlight=window.setHighlightColor;
+if(typeof prevHighlight==='function'){
+  window.setHighlightColor=function(v){
+    const r=prevHighlight.apply(this,arguments);
+    if(mobile()) applyToSelection('highlight',String(v||'').toUpperCase());
+    return r;
+  };
+}
+const prevPartial=window.setPartialColor;
+if(typeof prevPartial==='function'){
+  window.setPartialColor=function(v){
+    const r=prevPartial.apply(this,arguments);
+    if(mobile()) applyToSelection('color',String(v||'').toUpperCase());
+    return r;
+  };
+}
+})();
+</script>
+
+
+<style id="mobile-type-visibility-divider-color-v7">
+/* ===== 모바일 종류별 행 노출 + 가름선 색 정렬행 복귀 v7 =====
+   PC 레이아웃은 그대로 유지한다.
+   말풍선: 1행 + 2행만
+   글:     1행 + 2행 + 3행
+   가름선: 정렬행(+가름선 색)만, 글 서식 2·3행 숨김
+   사진:   정렬행만, 글 서식 2·3행 숨김 */
+@media(max-width:700px){
+  /* 말풍선: 자동 따옴표/괄호 색 행(3행) 숨김 */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="chat"] #mPriorityFormatRow{
+    display:none!important;
+  }
+
+  /* 가름선·사진: 글 서식 2행 + 자동색 3행 모두 숨김 */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] .composer-top-grid>.fmt,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #mPriorityFormatRow,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] .composer-top-grid>.fmt,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #mPriorityFormatRow{
+    display:none!important;
+  }
+
+  /* 글: 1·2·3행 전부 보임 */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="text"] .composer-top-grid>.fmt{
+    display:flex!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="text"] #mPriorityFormatRow{
+    display:flex!important;
+  }
+
+  /* 가름선 색은 다시 정렬 오른쪽으로. 사진 정렬과 같은 40px 컨트롤 높이에 맞춘다. */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align .text-format-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 40px!important;
+    gap:6px!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:54px!important;
+    align-items:end!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol{
+    display:flex!important;
+    position:relative!important;
+    flex:0 0 40px!important;
+    width:40px!important;
+    min-width:40px!important;
+    max-width:40px!important;
+    height:54px!important;
+    padding:0!important;
+    margin:0!important;
+    flex-direction:column!important;
+    justify-content:flex-end!important;
+    align-items:flex-start!important;
+    align-self:stretch!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .lb{
+    display:block!important;
+    position:absolute!important;
+    top:0!important;
+    left:0!important;
+    margin:0!important;
+    font-size:9px!important;
+    line-height:1!important;
+    font-weight:600!important;
+    color:var(--muted)!important;
+    letter-spacing:-.03em!important;
+    white-space:nowrap!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .divider-color-row,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .divider-color-row .swatch{
+    display:flex!important;
+    flex:0 0 40px!important;
+    width:40px!important;
+    min-width:40px!important;
+    max-width:40px!important;
+    height:40px!important;
+    min-height:40px!important;
+    max-height:40px!important;
+    border-radius:8px!important;
+  }
+}
+
+@media(max-width:360px){
+  /* 아주 좁은 아이폰만 색 칩을 36px로 살짝 압축. 행 높이는 그대로 유지. */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align .text-format-row{
+    grid-template-columns:minmax(0,1fr) 36px!important;
+    gap:5px!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol{
+    flex-basis:36px!important;width:36px!important;min-width:36px!important;max-width:36px!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .divider-color-row,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .divider-color-row .swatch{
+    flex-basis:36px!important;width:36px!important;min-width:36px!important;max-width:36px!important;
+  }
+}
+</style>
+<script id="mobile-type-visibility-divider-color-v7-script">
+(function(){
+'use strict';
+let raf=0;
+function mobile(){ return document.body.classList.contains('mobile-ui'); }
+function currentType(){
+  /* state 는 전역 lexical binding이라 window.state 로 검사하면 항상 chat으로 떨어질 수 있다. */
+  try{
+    if(typeof state!=='undefined'&&state&&state.composerType) return String(state.composerType);
+  }catch(_){}
+  /* 혹시 모를 초기화 타이밍에는 현재 선택된 종류 버튼으로 보정 */
+  const seg=document.getElementById('msgTypeSeg');
+  const on=seg&&seg.querySelector('button.on');
+  if(on){
+    const btns=[].slice.call(seg.children), i=btns.indexOf(on);
+    return ['text','chat','divider','image'][i]||'chat';
+  }
+  return 'chat';
+}
+function syncNow(){
+  raf=0;
+  const card=document.querySelector('.composer-card');
+  if(!card) return;
+  const t=currentType();
+  card.setAttribute('data-mobile-composer-type',t);
+
+  /* 예전 모바일 배치 코드가 가름선 색을 3행으로 옮겨도,
+     가름선 모드에서는 반드시 정렬행으로 되돌린다. */
+  const color=document.getElementById('dividerColorCol');
+  const alignSlot=document.querySelector('#alignField .text-format-row');
+  if(color&&alignSlot&&(!mobile() || t==='divider' || color.parentNode!==alignSlot)){
+    if(color.parentNode!==alignSlot) alignSlot.appendChild(color);
+  }
+}
+function sync(){ if(!raf) raf=requestAnimationFrame(syncNow); }
+
+/* 종류 변경 체인의 마지막에서 한 번 더 맞춘다. */
+const prevSetMsgType=window.setMsgType;
+if(typeof prevSetMsgType==='function'){
+  window.setMsgType=function(t){
+    const r=prevSetMsgType.apply(this,arguments);
+    sync();
+    setTimeout(sync,0);
+    return r;
+  };
+}
+
+/* 기존 이동 스크립트가 window 함수를 통해 호출될 때도 마지막에 복귀. */
+const prevMove=window.__movePriorityGroups;
+if(typeof prevMove==='function'){
+  window.__movePriorityGroups=function(){
+    const r=prevMove.apply(this,arguments);
+    sync();
+    return r;
+  };
+}
+
+/* 기존 스크립트의 내부 MutationObserver/resize 콜백이 다시 3행으로 옮기는 경우까지 방어. */
+const grid=document.querySelector('.composer-top-grid');
+if(grid){
+  const mo=new MutationObserver(sync);
+  mo.observe(grid,{childList:true,subtree:true});
+}
+const bodyMo=new MutationObserver(sync);
+bodyMo.observe(document.body,{attributes:true,attributeFilter:['class']});
+window.addEventListener('resize',sync,{passive:true});
+document.addEventListener('DOMContentLoaded',sync,{once:true});
+sync();
+setTimeout(sync,120);
+setTimeout(sync,350);
+})();
+</script>
+
+<style id="mobile-type-visibility-v8-guard">
+@media(max-width:700px){
+  /* 가름선 색상은 가름선 모드에서 정렬 오른쪽에 항상 보이게 최종 보정 */
+  .mobile-ui.m-tools-open #mDock .composer-card.divider-mode #alignField.divider-align #dividerColorCol{
+    display:flex!important;
+  }
+  /* 글 모드의 3행은 반드시 표시 */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="text"] #mPriorityFormatRow{
+    display:flex!important;
+  }
+}
+</style>
 </body>
 
 
