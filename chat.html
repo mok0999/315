@@ -20011,27 +20011,31 @@ document.addEventListener('DOMContentLoaded',ensureDividerColorPicker,{once:true
   .mobile-ui.m-tools-open #mDock #mPriorityFormatRow{gap:6px!important}
 }
 </style>
-<script id="mobile-format-row-polish-v9-script">
+<script id="mobile-format-row-polish-v10-script">
 (function(){
 'use strict';
-/* 모바일에서는 지우기를 글/말풍선 공통 2행 맨 오른쪽에 둔다.
-   가름선/사진에서는 2행 자체가 숨겨지므로 지우기도 함께 숨겨진다.
-   데스크톱으로 돌아가면 원래 DOM 위치로 복귀한다. */
+/* 모바일에서는 지우기를 3행 맨 오른쪽에 둔다.
+   글/말풍선에서 3행을 함께 쓰고, 가름선/사진에서는 3행 자체가 숨겨진다.
+   데스크톱으로 돌아가면 지우기는 원래 서식 행 위치로 복귀한다. */
 let clearPlaceholder=null;
 let scheduled=0;
 function isMobile(){ return document.body.classList.contains('mobile-ui'); }
+function rememberOriginal(clear){
+  if(!clearPlaceholder&&clear&&clear.parentNode){
+    clearPlaceholder=document.createComment('mobile clear format original');
+    clear.parentNode.insertBefore(clearPlaceholder,clear);
+  }
+}
 function syncClearPosition(){
   scheduled=0;
   const clear=document.querySelector('.fmt-grp-clear');
   const fmt=document.querySelector('#composerTextField .fmt, #mDock .composer-top-grid .fmt');
   if(!clear||!fmt) return;
   if(isMobile()){
-    if(!clearPlaceholder&&clear.parentNode){
-      clearPlaceholder=document.createComment('mobile clear format');
-      clear.parentNode.insertBefore(clearPlaceholder,clear);
-    }
-    /* 2행의 마지막 자식으로 두면 글/말풍선 모두 맨 오른쪽에 보인다. */
-    if(clear.parentNode!==fmt||fmt.lastElementChild!==clear) fmt.appendChild(clear);
+    rememberOriginal(clear);
+    const row=document.getElementById('mPriorityFormatRow');
+    if(!row) return;
+    if(clear.parentNode!==row||row.lastElementChild!==clear) row.appendChild(clear);
   }else{
     if(clearPlaceholder&&clearPlaceholder.parentNode){
       clearPlaceholder.parentNode.replaceChild(clear,clearPlaceholder);
@@ -20042,6 +20046,16 @@ function syncClearPosition(){
   }
 }
 function queueSync(){ if(!scheduled) scheduled=requestAnimationFrame(syncClearPosition); }
+
+/* 자동색 3행을 만드는 기존 이동 함수의 실행 직후 지우기도 같은 행에 붙인다. */
+const prevMove=window.__movePriorityGroups;
+if(typeof prevMove==='function'){
+  window.__movePriorityGroups=function(){
+    const r=prevMove.apply(this,arguments);
+    syncClearPosition();
+    return r;
+  };
+}
 
 const grid=document.querySelector('.composer-top-grid');
 if(grid){
@@ -20064,8 +20078,14 @@ if(typeof prevSetMsgType==='function'){
   };
 }
 queueSync();
-document.addEventListener('DOMContentLoaded',queueSync,{once:true});
-setTimeout(queueSync,250);
+document.addEventListener('DOMContentLoaded',()=>{
+  try{ if(typeof window.__movePriorityGroups==='function') window.__movePriorityGroups(); }catch(_){}
+  queueSync();
+},{once:true});
+setTimeout(()=>{
+  try{ if(typeof window.__movePriorityGroups==='function') window.__movePriorityGroups(); }catch(_){}
+  queueSync();
+},250);
 })();
 </script>
 <script id="mobile-color-auto-apply-v5">
@@ -20352,6 +20372,129 @@ setTimeout(sync,350);
   /* 글 모드의 3행은 반드시 표시 */
   .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="text"] #mPriorityFormatRow{
     display:flex!important;
+  }
+}
+</style>
+
+<style id="mobile-format-row-v10-final">
+/* ===== 모바일 서식 행 최종 보정 v10 =====
+   - 2행은 화면 폭에 따라 버튼/색칩/간격이 같은 비율로 축소되어 잘리지 않는다.
+   - 3행은 글/말풍선에서 모두 표시하며, 지우기는 맨 오른쪽에 둔다.
+   - 가름선/사진에서는 기존 요청대로 2·3행을 숨긴다. */
+@media(max-width:700px){
+  /* 2행: 한 행 전체를 뷰포트에 맞춰 비례 축소 */
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt{
+    --mfmt-btn:clamp(27px,8.2vw,34px);
+    --mfmt-swatch:clamp(15px,4.8vw,20px);
+    --mfmt-gap:clamp(1px,.8vw,4px);
+    --mfmt-inner-gap:clamp(0px,.28vw,2px);
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    gap:var(--mfmt-gap)!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+    align-items:flex-end!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp{
+    flex:0 0 auto!important;
+    min-width:0!important;
+    padding-top:13px!important;
+    column-gap:var(--mfmt-inner-gap)!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp:first-child{
+    flex:0 0 auto!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp>button,
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-pair>button{
+    flex:0 0 var(--mfmt-btn)!important;
+    width:var(--mfmt-btn)!important;
+    min-width:var(--mfmt-btn)!important;
+    max-width:var(--mfmt-btn)!important;
+    height:var(--mfmt-btn)!important;
+    min-height:var(--mfmt-btn)!important;
+    max-height:var(--mfmt-btn)!important;
+    padding:0!important;
+    font-size:clamp(10px,3vw,12px)!important;
+    border-radius:clamp(6px,1.8vw,7px)!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-pair{
+    display:inline-flex!important;
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:0!important;
+    height:var(--mfmt-btn)!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-pair>.fmt-swatch{
+    flex:0 0 var(--mfmt-swatch)!important;
+    width:var(--mfmt-swatch)!important;
+    min-width:var(--mfmt-swatch)!important;
+    max-width:var(--mfmt-swatch)!important;
+    height:var(--mfmt-btn)!important;
+    min-height:var(--mfmt-btn)!important;
+    max-height:var(--mfmt-btn)!important;
+    border-radius:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp::before{
+    font-size:clamp(7.5px,2.35vw,9px)!important;
+    letter-spacing:-.04em!important;
+    white-space:nowrap!important;
+  }
+
+  /* 지우기는 2행에서 완전히 제외. */
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.fmt .fmt-grp-clear{display:none!important}
+
+  /* 3행: 글과 말풍선 모두 표시. 자동색 왼쪽 + 지우기 오른쪽. */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="text"] #mPriorityFormatRow,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="chat"] #mPriorityFormatRow{
+    display:flex!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    justify-content:flex-start!important;
+    align-items:flex-end!important;
+    gap:8px!important;
+  }
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp-clear{
+    display:flex!important;
+    flex:0 0 auto!important;
+    margin-left:auto!important;
+    padding-top:13px!important;
+  }
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp-clear>button.clearfmt{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex:0 0 34px!important;
+    width:34px!important;
+    min-width:34px!important;
+    max-width:34px!important;
+    height:34px!important;
+    min-height:34px!important;
+    max-height:34px!important;
+    padding:0!important;
+    border-radius:7px!important;
+  }
+
+  /* 가름선/사진은 기존대로 서식 2·3행 숨김. */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] .composer-top-grid>.fmt,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #mPriorityFormatRow,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] .composer-top-grid>.fmt,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #mPriorityFormatRow{
+    display:none!important;
+  }
+}
+
+/* 아주 작은 화면에서는 3행도 같은 감각으로 살짝 압축한다. */
+@media(max-width:360px){
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow{gap:5px!important}
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair>button,
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp-clear>button.clearfmt{
+    flex-basis:30px!important;width:30px!important;min-width:30px!important;max-width:30px!important;height:30px!important;min-height:30px!important;max-height:30px!important;
+  }
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair>.fmt-swatch{
+    flex-basis:18px!important;width:18px!important;min-width:18px!important;max-width:18px!important;height:30px!important;min-height:30px!important;max-height:30px!important;
   }
 }
 </style>
