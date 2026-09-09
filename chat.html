@@ -21598,6 +21598,470 @@ setTimeout(sync,350);
   }
 }
 </style>
+
+<style id="mobile-toprow-final-align-v18">
+/* ===== 모바일 1행 최종 정렬 v18 =====
+   1) 글: 종류|정렬 선과 정렬|글씨크기 선의 높이를 동일하게
+   2) 가름선: 정렬 버튼과 컬러칩 윗면/높이를 동일하게
+   3) 사진: 정렬 버튼과 종류 버튼의 윗면/높이를 동일하게
+   4) 사진: 정렬 오른쪽의 불필요한 세로선 제거 */
+@media(max-width:700px){
+  /* ---------- 글 탭: 두 세로선 완전히 같은 규격 ---------- */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="text"] #alignField{
+    position:relative!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="text"] #alignField::before,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="text"] #alignField #alignHeadingDiv{
+    width:1px!important;
+    min-width:1px!important;
+    max-width:1px!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    margin:0!important;
+    padding:0!important;
+    background:var(--line)!important;
+    box-sizing:border-box!important;
+    transform:none!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="text"] #alignField::before{
+    display:block!important;
+    position:absolute!important;
+    left:0!important;
+    top:auto!important;
+    bottom:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="text"] #alignField #alignHeadingDiv{
+    display:block!important;
+    position:static!important;
+    align-self:end!important;
+  }
+
+  /* ---------- 가름선 탭: 라벨+컨트롤을 같은 2행 그리드에 고정 ---------- */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align .text-format-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 1px var(--m-top-control-h)!important;
+    column-gap:4px!important;
+    row-gap:0!important;
+    height:var(--m-top-row-h)!important;
+    min-height:var(--m-top-row-h)!important;
+    max-height:var(--m-top-row-h)!important;
+    align-items:stretch!important;
+    overflow:hidden!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align .tfr-col:first-child,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol{
+    display:grid!important;
+    grid-template-rows:var(--m-top-label-h) var(--m-top-control-h)!important;
+    row-gap:var(--m-top-label-gap)!important;
+    align-content:start!important;
+    align-items:stretch!important;
+    height:var(--m-top-row-h)!important;
+    min-height:var(--m-top-row-h)!important;
+    max-height:var(--m-top-row-h)!important;
+    padding:0!important;
+    margin:0!important;
+    overflow:hidden!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align .tfr-col:first-child>.lb,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol>.lb{
+    grid-row:1!important;
+    align-self:start!important;
+    height:var(--m-top-label-h)!important;
+    min-height:var(--m-top-label-h)!important;
+    max-height:var(--m-top-label-h)!important;
+    line-height:var(--m-top-label-h)!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #alignSeg,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .divider-color-row{
+    grid-row:2!important;
+    align-self:start!important;
+    margin:0!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #alignSeg{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:var(--m-top-inner-gap)!important;
+    width:100%!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #alignSeg button,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .divider-color-row,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .divider-color-row .swatch{
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    box-sizing:border-box!important;
+    margin:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .divider-color-row,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .divider-color-row .swatch{
+    width:var(--m-top-control-h)!important;
+    min-width:var(--m-top-control-h)!important;
+    max-width:var(--m-top-control-h)!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #alignHeadingDiv{
+    display:block!important;
+    width:1px!important;
+    min-width:1px!important;
+    max-width:1px!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    align-self:end!important;
+    margin:0!important;
+    padding:0!important;
+    background:var(--line)!important;
+  }
+
+  /* ---------- 사진 탭: 종류 버튼과 정렬 버튼의 윗면/높이를 동일하게 ---------- */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align{
+    position:relative!important;
+    height:var(--m-top-row-h)!important;
+    min-height:var(--m-top-row-h)!important;
+    max-height:var(--m-top-row-h)!important;
+    overflow:hidden!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align .text-format-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:0!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:var(--m-top-row-h)!important;
+    min-height:var(--m-top-row-h)!important;
+    max-height:var(--m-top-row-h)!important;
+    align-items:stretch!important;
+    overflow:hidden!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align .tfr-col:first-child{
+    display:grid!important;
+    grid-template-rows:var(--m-top-label-h) var(--m-top-control-h)!important;
+    row-gap:var(--m-top-label-gap)!important;
+    align-content:start!important;
+    align-items:stretch!important;
+    height:var(--m-top-row-h)!important;
+    min-height:var(--m-top-row-h)!important;
+    max-height:var(--m-top-row-h)!important;
+    padding:0!important;
+    margin:0!important;
+    min-width:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align .tfr-col:first-child>.lb{
+    grid-row:1!important;
+    align-self:start!important;
+    height:var(--m-top-label-h)!important;
+    min-height:var(--m-top-label-h)!important;
+    max-height:var(--m-top-label-h)!important;
+    line-height:var(--m-top-label-h)!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align #alignSeg{
+    grid-row:2!important;
+    align-self:start!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:var(--m-top-inner-gap)!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    margin:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align #alignSeg button{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    margin:0!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+  }
+
+  /* 사진에서는 정렬 오른쪽 요소/가름선을 완전히 제거한다. */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align #alignHeadingDiv,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align #textHeadingCol,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align #dividerColorCol{
+    display:none!important;
+  }
+  /* 종류 ↔ 사진 정렬 사이의 왼쪽 구분선은 유지하고 높이만 통일. */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align::before{
+    display:block!important;
+    position:absolute!important;
+    left:0!important;
+    top:auto!important;
+    bottom:0!important;
+    width:1px!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    background:var(--line)!important;
+  }
+}
+</style>
+
+<style id="mobile-left-flow-unified-v19">
+/* ===== 모바일 1행: 왼쪽부터 고정 규격으로 차례대로 배치 =====
+   가름선: 종류 | 정렬 3개 | 색 1개
+   사진:   종류 | 정렬 3개
+   정렬/색 버튼은 종류 버튼과 같은 정사각형 규격을 사용하고,
+   남은 가로폭을 늘려 먹지 않는다. */
+@media(max-width:700px){
+  .mobile-ui.m-tools-open #mDock .composer-card{
+    /* 종류 4개가 정확히 같은 정사각형 버튼이 되도록 그룹폭도 다시 계산 */
+    --m-top-four:calc(var(--m-top-control-h) + var(--m-top-control-h) + var(--m-top-control-h) + var(--m-top-control-h) + var(--m-top-inner-gap) + var(--m-top-inner-gap) + var(--m-top-inner-gap));
+  }
+
+  /* 종류 버튼도 정렬/색과 동일한 정사각형 크기. */
+  .mobile-ui.m-tools-open #mDock #msgTypeSeg{
+    width:var(--m-top-four)!important;
+    min-width:var(--m-top-four)!important;
+    max-width:var(--m-top-four)!important;
+  }
+  .mobile-ui.m-tools-open #mDock #msgTypeSeg button{
+    width:var(--m-top-control-h)!important;
+    min-width:var(--m-top-control-h)!important;
+    max-width:var(--m-top-control-h)!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    padding:0!important;
+  }
+
+  /* ---------- 가름선 ---------- */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align{
+    grid-column:2!important;
+    justify-self:start!important;
+    width:max-content!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:var(--m-top-row-h)!important;
+    padding-left:var(--m-top-section-gap)!important;
+    margin:0!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align .text-format-row{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    align-items:flex-end!important;
+    justify-content:flex-start!important;
+    gap:4px!important;
+    width:max-content!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:var(--m-top-row-h)!important;
+    min-height:var(--m-top-row-h)!important;
+    max-height:var(--m-top-row-h)!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align .tfr-col:first-child{
+    display:flex!important;
+    flex-direction:column!important;
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:var(--m-top-row-h)!important;
+    padding:0!important;
+    margin:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #alignSeg{
+    display:flex!important;
+    flex:0 0 auto!important;
+    gap:var(--m-top-inner-gap)!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:var(--m-top-control-h)!important;
+    margin:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #alignSeg button{
+    flex:0 0 var(--m-top-control-h)!important;
+    width:var(--m-top-control-h)!important;
+    min-width:var(--m-top-control-h)!important;
+    max-width:var(--m-top-control-h)!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    padding:0!important;
+    margin:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #alignHeadingDiv{
+    display:block!important;
+    flex:0 0 1px!important;
+    width:1px!important;
+    min-width:1px!important;
+    max-width:1px!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    align-self:flex-end!important;
+    margin:0!important;
+    padding:0!important;
+    background:var(--line)!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol{
+    display:flex!important;
+    flex-direction:column!important;
+    flex:0 0 var(--m-top-control-h)!important;
+    width:var(--m-top-control-h)!important;
+    min-width:var(--m-top-control-h)!important;
+    max-width:var(--m-top-control-h)!important;
+    height:var(--m-top-row-h)!important;
+    min-height:var(--m-top-row-h)!important;
+    max-height:var(--m-top-row-h)!important;
+    justify-content:flex-start!important;
+    align-items:stretch!important;
+    padding:0!important;
+    margin:0!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol>.lb{
+    height:var(--m-top-label-h)!important;
+    min-height:var(--m-top-label-h)!important;
+    max-height:var(--m-top-label-h)!important;
+    line-height:var(--m-top-label-h)!important;
+    margin:0 0 var(--m-top-label-gap) 0!important;
+    padding:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .divider-color-row,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #dividerColorCol .divider-color-row .swatch{
+    flex:0 0 var(--m-top-control-h)!important;
+    width:var(--m-top-control-h)!important;
+    min-width:var(--m-top-control-h)!important;
+    max-width:var(--m-top-control-h)!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align #textHeadingCol{display:none!important}
+
+  /* ---------- 사진 ---------- */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align{
+    grid-column:2!important;
+    justify-self:start!important;
+    width:max-content!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:var(--m-top-row-h)!important;
+    padding-left:var(--m-top-section-gap)!important;
+    margin:0!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align .text-format-row{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    align-items:flex-end!important;
+    justify-content:flex-start!important;
+    gap:0!important;
+    width:max-content!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:var(--m-top-row-h)!important;
+    min-height:var(--m-top-row-h)!important;
+    max-height:var(--m-top-row-h)!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align .tfr-col:first-child{
+    display:flex!important;
+    flex-direction:column!important;
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:var(--m-top-row-h)!important;
+    padding:0!important;
+    margin:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align #alignSeg{
+    display:flex!important;
+    flex:0 0 auto!important;
+    gap:var(--m-top-inner-gap)!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:var(--m-top-control-h)!important;
+    margin:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align #alignSeg button{
+    flex:0 0 var(--m-top-control-h)!important;
+    width:var(--m-top-control-h)!important;
+    min-width:var(--m-top-control-h)!important;
+    max-width:var(--m-top-control-h)!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    padding:0!important;
+    margin:0!important;
+  }
+  /* 사진 정렬 오른쪽에는 아무 요소도 남기지 않는다. */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align #alignHeadingDiv,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align #textHeadingCol,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align #dividerColorCol{
+    display:none!important;
+  }
+
+  /* 종류 ↔ 정렬 사이의 왼쪽 세로선만 유지. */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align::before,
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="image"] #alignField.image-align::before{
+    display:block!important;
+    position:absolute!important;
+    left:0!important;
+    bottom:0!important;
+    width:1px!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    background:var(--line)!important;
+  }
+}
+
+@media(max-width:370px){
+  .mobile-ui.m-tools-open #mDock .composer-card{
+    --m-top-control-h:34px;
+  }
+}
+</style>
+
+
+<style id="mobile-divider-align-textbox-v20">
+/* ===== 모바일 가름선 탭 미세 보정 v20 =====
+   1) 가름선 색 컬러피커는 크기를 건드리지 않고 윗면 위치만 정렬 아이콘과 맞춘다.
+   2) 가름선 입력창은 별도 80px 강제값을 해제하고 글 탭과 같은 모바일 입력창 규격을 쓴다. */
+@media(max-width:700px){
+  /* 크기/가로폭/높이는 v19 값을 그대로 유지. 위치만 위로 5px 보정. */
+  .mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"]
+  #alignField.divider-align #dividerColorCol .divider-color-row{
+    position:relative!important;
+    top:-5px!important;
+  }
+
+  /* 가름선 모드에만 있던 80px 강제 입력창 규격을 모바일에서는 제거.
+     글 탭과 동일한 모바일 입력창 규격(2줄 placeholder가 들어가는 높이)을 그대로 사용한다. */
+  .mobile-ui #mDock .composer-card.divider-mode #msgContent{
+    flex:0 1 auto!important;
+    height:auto!important;
+    min-height:42px!important;
+    max-height:110px!important;
+    padding:10px 15px!important;
+    overflow-y:auto!important;
+    resize:none!important;
+  }
+}
+</style>
 </body>
 
 
