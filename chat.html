@@ -1244,21 +1244,24 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 
 
 <style id="text-heading-and-long-canvas-fixes">
-/* 글 모드: 정렬 버튼 옆에 부분 제목 크기 버튼 두 개 */
+/* 글 모드: 정렬 버튼 옆에 부분 글자 크기 버튼 세 개 */
 .text-format-row{display:flex;align-items:center;gap:6px;width:100%;min-width:0}
 #textHeadingSeg{display:flex!important;flex:0 0 auto!important;gap:3px!important;margin-left:auto}
-#textHeadingSeg button{flex:0 0 auto!important;width:34px!important;height:34px!important;padding:0!important;
+#textHeadingSeg button{flex:0 0 auto!important;width:27px!important;height:34px!important;padding:0!important;
   display:flex!important;align-items:center;justify-content:center;font-size:12px!important;font-weight:800!important;line-height:1!important}
+#textHeadingSeg .text-size-small-btn{font-size:10px!important;font-weight:700!important;letter-spacing:-.04em}
 #textHeadingSeg button:first-child{font-size:15px!important}
 /* 제목 크기 span을 독립된 인라인 상자로 두어 큰 글자의 행 높이가
    바로 앞 일반 문장의 line box까지 끌어올리지 않도록 한다. */
 .text-heading{display:inline-block;vertical-align:baseline;margin:0;padding:0;letter-spacing:-.02em}
 .text-heading-1{font-size:1.55em;line-height:1.22;font-weight:700}
 .text-heading-2{font-size:1.28em;line-height:1.28;font-weight:500}
+.text-heading-3{font-size:.82em;line-height:1.35;font-weight:inherit;letter-spacing:inherit}
 .rich-composer .text-heading-1{font-weight:700}
 .rich-composer .text-heading-2{font-weight:500}
+.rich-composer .text-heading-3{font-weight:inherit}
 @media(max-width:1160px) and (min-width:861px){
-  #textHeadingSeg button{width:30px!important}
+  #textHeadingSeg button{width:27px!important}
   .text-format-row{gap:4px}
 }
 </style>
@@ -1405,9 +1408,15 @@ html, body, #canvas, #chat, #canvas * {
 <span class="fmt-div tfr-div" id="alignHeadingDiv"></span>
 <div class="tfr-col" id="textHeadingCol">
 <label class="lb">글씨 크기</label>
-<div class="seg" id="textHeadingSeg" aria-label="부분 글자 크기">
-<button type="button" title="선택한 글자를 큰 제목으로" onclick="wrapTextHeading(1)">#</button>
-<button type="button" title="선택한 글자를 작은 제목으로" onclick="wrapTextHeading(2)">##</button>
+<div id="textSizePtControl" class="text-size-pt-control" aria-label="선택한 글씨 크기">
+<input id="partialFontSizePt" type="text" value="12" inputmode="decimal" autocomplete="off" enterkeyhint="done" aria-label="글씨 크기" placeholder="—" title="글자를 드래그하면 현재 크기가 표시돼요. 숫자를 직접 입력한 뒤 Enter를 누르거나 입력을 마치면 선택한 부분에 적용돼요" onpointerdown="preparePartialFontSizePt(this)" onfocus="preparePartialFontSizePt(this)" oninput="handlePartialFontSizePtInput(this)" onkeydown="handlePartialFontSizePtKey(event,this)" onblur="commitPartialFontSizePtOnBlur(event,this)"/>
+<button id="partialFontSizePresetBtn" class="text-size-preset-toggle" type="button" aria-label="글씨 크기 프리셋" aria-haspopup="menu" aria-expanded="false" title="글씨 크기 프리셋" onpointerdown="event.preventDefault();preparePartialFontSizePt(document.getElementById('partialFontSizePt'))" onclick="togglePartialFontSizePreset(event)">▾</button>
+<div id="textSizePtPresetMenu" class="text-size-pt-preset-menu" role="menu" hidden>
+<button type="button" role="menuitem" data-font-size-preset="h1" onpointerdown="event.preventDefault()" onclick="applyPartialFontSizePresetKind('h1')"><b>#</b><span>18.5 pt</span></button>
+<button type="button" role="menuitem" data-font-size-preset="h2" onpointerdown="event.preventDefault()" onclick="applyPartialFontSizePresetKind('h2')"><b>##</b><span>15.5 pt</span></button>
+<button type="button" role="menuitem" data-font-size-preset="base" onpointerdown="event.preventDefault()" onclick="applyPartialFontSizePresetKind('base')"><b>기본</b><span>12 pt</span></button>
+<button type="button" role="menuitem" data-font-size-preset="small" onpointerdown="event.preventDefault()" onclick="applyPartialFontSizePresetKind('small')"><b>A</b><span>10 pt</span></button>
+</div>
 </div>
 </div>
 <div class="tfr-col" id="dividerColorCol">
@@ -3742,8 +3751,19 @@ function htmlToMarkup(node){
     if(tag==='br'){ out+='\n'; return; }
     if(ch.classList&&ch.classList.contains('mimg')) return; // skip images
     const inner=htmlToMarkup(ch);
+    let __sizePt='';
+    try{
+      __sizePt=(ch.dataset&&ch.dataset.fontSizePt)||'';
+      if(!__sizePt&&style){ const sm=style.match(/(?:^|;)\s*font-size:\s*([0-9]+(?:\.[0-9]+)?)pt\b/i); if(sm) __sizePt=sm[1]; }
+    }catch(_){}
+    if(__sizePt){
+      const n=Math.max(6,Math.min(72,Number(__sizePt)||12));
+      const clean=(Math.round(n*2)/2).toString().replace(/\.0$/,'');
+      out+='[size='+clean+']'+inner+'[/size]'; return;
+    }
     if((ch.dataset&&ch.dataset.heading==='1')||(ch.classList&&ch.classList.contains('text-heading-1'))){ out+='[#]'+inner+'[/#]'; return; }
     if((ch.dataset&&ch.dataset.heading==='2')||(ch.classList&&ch.classList.contains('text-heading-2'))){ out+='[##]'+inner+'[/##]'; return; }
+    if((ch.dataset&&ch.dataset.heading==='3')||(ch.classList&&ch.classList.contains('text-heading-3'))){ out+='[small]'+inner+'[/small]'; return; }
     if(tag==='b'||tag==='strong'||/font-weight:\s*(bold|[6-9]00)/.test(style)){ out+='**'+inner+'**'; return; }
     if(tag==='i'||tag==='em'||/font-style:\s*italic/.test(style)){ out+='*'+inner+'*'; return; }
     if(tag==='s'||tag==='strike'||tag==='del'||/text-decoration[^;]*line-through/.test(style)){ out+='~~'+inner+'~~'; return; }
@@ -3971,6 +3991,8 @@ function fmtText(raw,edit){
   // partial text color: [#RRGGBB]text[/]
   t=t.replace(/\[#([0-9A-Fa-f]{6})\]([\s\S]*?)\[\/\]/g,'<span style="color:#$1">$2</span>');
   // partial title sizing, used only by the inserted-text composer buttons.
+  t=t.replace(/\[size=([0-9]+(?:\.[0-9]+)?)\]([\s\S]*?)\[\/size\]/g,(w,n,body)=>{ const pt=Math.max(6,Math.min(72,Number(n)||12)); return '<span class="text-size-pt" data-font-size-pt="'+pt+'" style="font-size:'+pt+'pt">'+body+'</span>'; });
+  t=t.replace(/\[small\]([\s\S]*?)\[\/small\]/g,'<span class="text-heading text-heading-3" data-heading="3">$1</span>');
   t=t.replace(/\[##\]([\s\S]*?)\[\/##\]/g,'<span class="text-heading text-heading-2" data-heading="2">$1</span>');
   t=t.replace(/\[#\]([\s\S]*?)\[\/#\]/g,'<span class="text-heading text-heading-1" data-heading="1">$1</span>');
   // 가림(블러): [bar]…[/bar] 네모로 덮기 · [blur]…[/blur] 흐리게
@@ -4691,8 +4713,8 @@ wrapFmt=function(mark){
 };
 wrapColor=function(){wrapRichSelection('span','color:'+state.colors.partial);};
 function wrapTextHeading(level){
-  const lv=Number(level)===1?1:2;
-  const cls=lv===1?'text-heading text-heading-1':'text-heading text-heading-2';
+  const n=Number(level), lv=n===1?1:(n===2?2:3);
+  const cls='text-heading text-heading-'+lv;
   wrapRichSelection('span','',cls,{heading:String(lv)});
 }
 
@@ -6236,7 +6258,8 @@ else setTimeout(__idleLoadRenderer,1200);
   const FORMAT_QUERY=[
     'strong','b','em','i','s','strike','del','u','mark','font[color]','span.quote-fmt',
     'span.blur-fmt',
-    'span[data-heading]','span.text-heading-1','span.text-heading-2','span[style*="color"]'
+    'span[data-heading]','span.text-heading-1','span.text-heading-2','span.text-heading-3',
+    'span[data-font-size-pt]','span.text-size-pt','span[style*="font-size"]','span[style*="color"]'
   ].join(',');
 
   function editorRoot(fallback){
@@ -6291,8 +6314,9 @@ else setTimeout(__idleLoadRenderer,1200);
     if(tag==='S'||tag==='STRIKE'||tag==='DEL') return 'strike';
     if(tag==='U') return 'underline';
     if(tag==='MARK') return 'highlight';
+    if((el.dataset&&el.dataset.fontSizePt)||(el.classList&&el.classList.contains('text-size-pt'))||(tag==='SPAN'&&el.style&&el.style.fontSize)) return 'fontsize';
     if(el.dataset&&el.dataset.heading) return 'heading';
-    if(el.classList&&(el.classList.contains('text-heading-1')||el.classList.contains('text-heading-2'))) return 'heading';
+    if(el.classList&&(el.classList.contains('text-heading-1')||el.classList.contains('text-heading-2')||el.classList.contains('text-heading-3'))) return 'heading';
     if(el.classList&&el.classList.contains('quote-fmt')) return 'quote';
     if(el.classList&&el.classList.contains('blur-bar')) return 'blurbar';
     if(el.classList&&el.classList.contains('blur-gauss')) return 'blurgauss';
@@ -6397,9 +6421,15 @@ else setTimeout(__idleLoadRenderer,1200);
       el.className='blur-fmt '+(type==='blurbar'?'blur-bar':'blur-gauss');
     }else if(type==='color'){
       el=document.createElement('span');el.style.color=options.color;
+    }else if(type==='fontsize'){
+      el=document.createElement('span');
+      const pt=Math.max(6,Math.min(72,Number(options.pt)||12));
+      el.className='text-size-pt';
+      el.dataset.fontSizePt=String(pt);
+      el.style.fontSize=pt+'pt';
     }else if(type==='heading'){
       el=document.createElement('span');
-      const level=Number(options.level)===1?1:2;
+      const n=Number(options.level), level=n===1?1:(n===2?2:3);
       el.dataset.heading=String(level);
       el.className='text-heading text-heading-'+level;
     }
@@ -6511,28 +6541,401 @@ else setTimeout(__idleLoadRenderer,1200);
     wrapCurrentSelection(root,type,{color});
   }
   function applyHeadingFormat(root,level){
-    level=Number(level)===1?1:2;
+    level=Number(level); level=level===1?1:(level===2?2:3);
     const found=ensureEditorSelection(root),range=found.sel.getRangeAt(0);
     const active=commonFormat(range,root,'heading');
     if(active){
-      const current=Number(active.dataset.heading||(active.classList.contains('text-heading-1')?1:2));
+      const current=Number(active.dataset.heading||(active.classList.contains('text-heading-1')?1:(active.classList.contains('text-heading-2')?2:3)));
       if(current===level) transformKeepingSelection(root,()=>unwrapElement(active));
       else{
         active.dataset.heading=String(level);
-        active.classList.remove('text-heading-1','text-heading-2');
+        active.classList.remove('text-heading-1','text-heading-2','text-heading-3');
         active.classList.add('text-heading','text-heading-'+level);
       }
       root.focus();return;
     }
     const hits=range.collapsed?[]:intersectingFormats(range,root,'heading');
     if(hits.length){
-      const allSame=hits.every(el=>Number(el.dataset.heading||(el.classList.contains('text-heading-1')?1:2))===level);
+      const allSame=hits.every(el=>Number(el.dataset.heading||(el.classList.contains('text-heading-1')?1:(el.classList.contains('text-heading-2')?2:3)))===level);
       transformKeepingSelection(root,()=>hits.forEach(unwrapElement));
       if(allSame){root.focus();return;}
     }
     wrapCurrentSelection(root,'heading',{level});
   }
 
+  /* 선택한 글자에 임의 pt 크기를 적용한다.
+     - 숫자 칸은 자유롭게 타이핑 가능하며 Enter/blur 때만 확정한다.
+     - 입력칸에 포커스가 가도 실제 편집 selection을 억지로 되돌리지 않고,
+       잠가 둔 Range + CSS Highlight로 선택 영역을 계속 보여 준다.
+     - 작성창에서 새로 드래그하면 그 영역의 현재 크기를 숫자 칸에 표시한다.
+     - 프리셋 # / ## / 기본 / A 는 텍스트 패널의 전체 글자 크기(fs)를 기준으로
+       기존 em 비율(1.55 / 1.28 / 1 / .82)을 그대로 따라간다. */
+  let __activeFontSizeSpan=null;
+  let __fontSizeLockedRange=null;
+  let __fontSizeSessionActive=false;
+  let __fontSizeInputDirty=false;
+  let __fontSizeSelectionRaf=0;
+
+  function normalizeFontSizePt(v){
+    if(v==null||String(v).trim()==='') return null;
+    let n=Number(String(v).trim().replace(',','.')); if(!Number.isFinite(n)) return null;
+    n=Math.max(6,Math.min(72,n)); return Math.round(n*2)/2;
+  }
+  function prettyFontSizePt(v){
+    const n=normalizeFontSizePt(v); if(n==null) return '';
+    return String(n).replace(/\.0$/,'');
+  }
+  function baseTextFontSizePt(){
+    let px=16;
+    try{ px=Number(state&&state.layout&&state.layout.fs)||16; }catch(_){}
+    return normalizeFontSizePt(px*.75)||12;
+  }
+  function presetFontSizePt(kind){
+    const base=baseTextFontSizePt();
+    const mul=kind==='h1'?1.55:(kind==='h2'?1.28:(kind==='small'?.82:1));
+    return normalizeFontSizePt(base*mul)||base;
+  }
+  function syncFontSizePresetLabels(){
+    const menu=document.getElementById('textSizePtPresetMenu'); if(!menu) return;
+    menu.querySelectorAll('[data-font-size-preset]').forEach(btn=>{
+      const pt=presetFontSizePt(btn.dataset.fontSizePreset||'base');
+      const span=btn.querySelector('span'); if(span) span.textContent=prettyFontSizePt(pt)+' pt';
+      btn.dataset.sizePt=String(pt);
+    });
+  }
+  window.__syncFontSizePresetLabels=syncFontSizePresetLabels;
+
+  function fontSizePtOf(el){
+    if(!el) return null;
+    let n=Number((el.dataset&&el.dataset.fontSizePt)||'');
+    if(!Number.isFinite(n)||!n){
+      const fs=String(el.style&&el.style.fontSize||'').trim();
+      let m=fs.match(/^([0-9]+(?:\.[0-9]+)?)pt$/i); if(m) n=Number(m[1]);
+      else{ m=fs.match(/^([0-9]+(?:\.[0-9]+)?)px$/i); if(m) n=Number(m[1])*.75; }
+    }
+    return Number.isFinite(n)&&n?normalizeFontSizePt(n):null;
+  }
+  function headingScaleOf(el){
+    if(!el) return 1;
+    const d=String((el.dataset&&el.dataset.heading)||'');
+    if(d==='1'||(el.classList&&el.classList.contains('text-heading-1'))) return 1.55;
+    if(d==='2'||(el.classList&&el.classList.contains('text-heading-2'))) return 1.28;
+    if(d==='3'||(el.classList&&el.classList.contains('text-heading-3'))) return .82;
+    return 1;
+  }
+  function effectiveFontSizePtAtNode(node,root){
+    let el=node&&node.nodeType===1?node:node&&node.parentElement;
+    const path=[];
+    while(el&&el!==root){ path.push(el); el=el.parentElement; }
+    path.reverse();
+    let size=baseTextFontSizePt();
+    path.forEach(x=>{
+      if(matchesFormat(x,'fontsize')){
+        const n=fontSizePtOf(x); if(n!=null) size=n;
+      }else if(matchesFormat(x,'heading')){
+        size=size*headingScaleOf(x);
+      }
+    });
+    return normalizeFontSizePt(size)||baseTextFontSizePt();
+  }
+  function rangeFontSizeInfo(range,root){
+    if(!range||!root||range.collapsed) return {pt:null,mixed:false};
+    const values=[];
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    let n;
+    while((n=walker.nextNode())){
+      if(!n.nodeValue||!n.nodeValue.length) continue;
+      let hit=false;
+      try{ hit=range.intersectsNode(n); }catch(_){ hit=false; }
+      if(!hit) continue;
+      const pt=effectiveFontSizePtAtNode(n,root);
+      if(pt!=null) values.push(pt);
+    }
+    if(!values.length){
+      const pt=effectiveFontSizePtAtNode(range.startContainer,root);
+      return {pt,mixed:false};
+    }
+    const first=values[0];
+    const mixed=values.some(v=>Math.abs(v-first)>.24);
+    return {pt:mixed?null:first,mixed};
+  }
+  function setFontSizeInputFromRange(range,root,force){
+    const input=document.getElementById('partialFontSizePt'); if(!input||!range||!root) return;
+    if(!force&&document.activeElement===input&&__fontSizeInputDirty) return;
+    const info=rangeFontSizeInfo(range,root);
+    if(info.mixed){ input.value=''; input.placeholder='—'; input.dataset.mixed='1'; }
+    else if(info.pt!=null){ input.value=prettyFontSizePt(info.pt); input.placeholder='—'; delete input.dataset.mixed; }
+  }
+  function syncFontSizeInputFromCurrentSelection(force){
+    const root=editorRoot(); if(!root) return;
+    let range=null;
+    if(__fontSizeSessionActive&&fontSizeRangeUsable(root)) range=__fontSizeLockedRange.cloneRange();
+    else{
+      const found=selectionInside(root);
+      if(found&&found.range&&!found.range.collapsed) range=found.range.cloneRange();
+    }
+    if(range) setFontSizeInputFromRange(range,root,!!force);
+  }
+
+  function fontSizeRangeUsable(root){
+    const r=__fontSizeLockedRange;
+    if(!root||!r||r.collapsed) return false;
+    try{return root.contains(r.startContainer)&&root.contains(r.endContainer);}catch(_){return false;}
+  }
+  function paintFontSizeSelection(){
+    try{
+      if(!(window.CSS&&CSS.highlights&&typeof Highlight==='function')) return;
+      CSS.highlights.delete('partial-font-size-selection');
+      if(__fontSizeSessionActive&&__fontSizeLockedRange&&!__fontSizeLockedRange.collapsed){
+        CSS.highlights.set('partial-font-size-selection',new Highlight(__fontSizeLockedRange.cloneRange()));
+      }
+    }catch(_){}
+  }
+  function captureFontSizeSelection(root){
+    if(!root) return false;
+    let found=selectionInside(root);
+    if((!found||found.range.collapsed)&&typeof window.__restoreComposerSelection==='function'&&root.id==='msgContent'){
+      try{ if(window.__restoreComposerSelection()) found=selectionInside(root); }catch(_){}
+    }
+    if(found&&found.range&&!found.range.collapsed){
+      try{
+        __fontSizeLockedRange=found.range.cloneRange();
+        __fontSizeSessionActive=true;
+        __activeFontSizeSpan=null;
+        paintFontSizeSelection();
+        setFontSizeInputFromRange(__fontSizeLockedRange,root,true);
+        return true;
+      }catch(_){}
+    }
+    return fontSizeRangeUsable(root);
+  }
+  function restoreFontSizeSelection(root){
+    if(!fontSizeRangeUsable(root)) return false;
+    try{
+      const sel=window.getSelection();
+      sel.removeAllRanges();sel.addRange(__fontSizeLockedRange.cloneRange());
+      paintFontSizeSelection();
+      return true;
+    }catch(_){return false;}
+  }
+  function setLockedRangeToElement(el){
+    if(!el) return;
+    try{
+      const r=document.createRange(); r.selectNodeContents(el);
+      __fontSizeLockedRange=r;
+      __fontSizeSessionActive=true;
+      paintFontSizeSelection();
+    }catch(_){}
+  }
+  function clearFontSizeSelectionSession(){
+    __activeFontSizeSpan=null;
+    __fontSizeLockedRange=null;
+    __fontSizeSessionActive=false;
+    __fontSizeInputDirty=false;
+    try{if(window.CSS&&CSS.highlights) CSS.highlights.delete('partial-font-size-selection');}catch(_){}
+  }
+  function splitLiftSizeNode(node,root){
+    let guard=0;
+    while(node&&node.parentElement&&node.parentElement!==root&&matchesFormat(node.parentElement,'fontsize')&&guard++<20){
+      const p=node.parentElement,g=p.parentNode; if(!g) break;
+      const before=p.cloneNode(false),after=p.cloneNode(false);
+      while(p.firstChild&&p.firstChild!==node) before.appendChild(p.firstChild);
+      p.removeChild(node);
+      while(p.firstChild) after.appendChild(p.firstChild);
+      if(before.childNodes.length) g.insertBefore(before,p);
+      g.insertBefore(node,p);
+      if(after.childNodes.length) g.insertBefore(after,p);
+      g.removeChild(p);
+    }
+  }
+  function applyPartialFontSizePt(root,pt){
+    if(!fontSizeRangeUsable(root) && !captureFontSizeSelection(root)) return null;
+    if(!fontSizeRangeUsable(root)) return null;
+    const range=__fontSizeLockedRange.cloneRange();
+    const el=makeFormatElement('fontsize',{pt}); if(!el) return null;
+    try{
+      const frag=range.extractContents();
+      el.appendChild(frag);
+      /* 새 크기가 선택 영역 전체를 지배하도록 안쪽의 기존 크기 span은 제거한다. */
+      for(let pass=0;pass<8;pass++){
+        const hits=[...el.querySelectorAll('span[data-font-size-pt],span.text-size-pt,span[style*="font-size"]')]
+          .filter(x=>matchesFormat(x,'fontsize')).sort((a,b)=>nodeDepth(b)-nodeDepth(a));
+        if(!hits.length) break;
+        hits.forEach(unwrapElement);
+      }
+      range.insertNode(el);
+      splitLiftSizeNode(el,root);
+      setLockedRangeToElement(el);
+      return el;
+    }catch(_){ return null; }
+  }
+  function updateActiveFontSizeSpan(root,pt){
+    if(!__activeFontSizeSpan||!__activeFontSizeSpan.isConnected) return false;
+    __activeFontSizeSpan.dataset.fontSizePt=String(pt);
+    __activeFontSizeSpan.style.fontSize=pt+'pt';
+    setLockedRangeToElement(__activeFontSizeSpan);
+    return true;
+  }
+  function commitFontSizeValue(input,force){
+    if(!input) input=document.getElementById('partialFontSizePt');
+    if(!input) return false;
+    if(!force&&!__fontSizeInputDirty) return false;
+    const pt=normalizeFontSizePt(input.value);
+    if(pt==null) return false;
+    input.value=prettyFontSizePt(pt);
+    const root=editorRoot(); if(!root) return false;
+    if(!fontSizeRangeUsable(root) && !captureFontSizeSelection(root)) return false;
+    if(!updateActiveFontSizeSpan(root,pt)) __activeFontSizeSpan=applyPartialFontSizePt(root,pt);
+    if(!__activeFontSizeSpan) return false;
+    __fontSizeInputDirty=false;
+    delete input.dataset.mixed;
+    paintFontSizeSelection();
+    return true;
+  }
+
+  window.preparePartialFontSizePt=function(input){
+    const root=editorRoot(); if(!root) return;
+    syncFontSizePresetLabels();
+    if(!__fontSizeSessionActive){
+      __activeFontSizeSpan=null;
+      captureFontSizeSelection(root);
+    }else{
+      paintFontSizeSelection();
+      if(fontSizeRangeUsable(root)) setFontSizeInputFromRange(__fontSizeLockedRange,root,!__fontSizeInputDirty);
+    }
+    /* 중요: 여기서 native selection을 다시 얹지 않는다.
+       number/text input의 포커스와 모바일 키보드를 빼앗는 원인이었음. */
+  };
+  window.handlePartialFontSizePtInput=function(input){
+    __fontSizeInputDirty=true;
+    if(input){
+      /* 숫자, 소수점만 느슨하게 허용. 타이핑 중에는 절대 크기를 적용하지 않는다. */
+      const cleaned=String(input.value||'').replace(/[^0-9.,]/g,'');
+      if(cleaned!==input.value) input.value=cleaned;
+    }
+    paintFontSizeSelection();
+  };
+  window.handlePartialFontSizePtKey=function(e,input){
+    if(!e) return;
+    if(e.key==='Enter'){
+      e.preventDefault();
+      commitFontSizeValue(input,true);
+      closePartialFontSizePreset();
+      try{ input.select(); }catch(_){}
+    }else if(e.key==='Escape'){
+      closePartialFontSizePreset();
+      __fontSizeInputDirty=false;
+      if(fontSizeRangeUsable(editorRoot())) setFontSizeInputFromRange(__fontSizeLockedRange,editorRoot(),true);
+      paintFontSizeSelection();
+    }
+  };
+  window.commitPartialFontSizePtOnBlur=function(e,input){
+    const to=e&&e.relatedTarget;
+    if(to&&to.closest&&(to.closest('#textSizePtControl')||to.closest('#textSizePtPresetMenu'))) return;
+    commitFontSizeValue(input,false);
+    paintFontSizeSelection();
+  };
+  /* 구버전 호출 호환 */
+  window.setPartialFontSizePt=function(v){
+    const input=document.getElementById('partialFontSizePt');
+    if(input) input.value=String(v);
+    __fontSizeInputDirty=true;
+    commitFontSizeValue(input,true);
+  };
+  window.finishPartialFontSizePt=function(){ paintFontSizeSelection(); };
+
+  window.closePartialFontSizePreset=function(){
+    const menu=document.getElementById('textSizePtPresetMenu');
+    const btn=document.getElementById('partialFontSizePresetBtn');
+    if(menu) menu.hidden=true;
+    if(btn) btn.setAttribute('aria-expanded','false');
+  };
+  window.togglePartialFontSizePreset=function(e){
+    if(e){e.preventDefault();e.stopPropagation();}
+    const menu=document.getElementById('textSizePtPresetMenu');
+    const btn=document.getElementById('partialFontSizePresetBtn');
+    const input=document.getElementById('partialFontSizePt');
+    if(!menu||!btn) return;
+    preparePartialFontSizePt(input);
+    syncFontSizePresetLabels();
+    const open=menu.hidden;
+    menu.hidden=!open;
+    btn.setAttribute('aria-expanded',open?'true':'false');
+    paintFontSizeSelection();
+  };
+  window.applyPartialFontSizePresetKind=function(kind){
+    const input=document.getElementById('partialFontSizePt'); if(!input) return;
+    preparePartialFontSizePt(input);
+    const pt=presetFontSizePt(kind||'base');
+    input.value=prettyFontSizePt(pt);
+    __fontSizeInputDirty=true;
+    commitFontSizeValue(input,true);
+    closePartialFontSizePreset();
+    paintFontSizeSelection();
+  };
+  window.applyPartialFontSizePreset=function(pt){
+    const input=document.getElementById('partialFontSizePt'); if(!input) return;
+    preparePartialFontSizePt(input);
+    input.value=prettyFontSizePt(pt);
+    __fontSizeInputDirty=true;
+    commitFontSizeValue(input,true);
+    closePartialFontSizePreset();
+    paintFontSizeSelection();
+  };
+
+  /* 선택 유지 세션은 작성창을 다시 직접 누를 때만 종료한다. */
+  document.addEventListener('pointerdown',e=>{
+    const root=editorRoot(); if(!root) return;
+    const control=e.target&&e.target.closest?e.target.closest('#textSizePtControl,#textSizePtPresetMenu'):null;
+    if(control) return;
+    if(root.contains(e.target)){
+      const input=document.getElementById('partialFontSizePt');
+      if(__fontSizeInputDirty) commitFontSizeValue(input,true);
+      closePartialFontSizePreset();
+      /* 새 드래그를 받을 수 있도록 기존 잠금은 pointerdown 직후 해제 */
+      setTimeout(clearFontSizeSelectionSession,0);
+    }else{
+      closePartialFontSizePreset();
+    }
+  },true);
+
+  /* 작성창에서 드래그한 부분의 현재 크기를 숫자 칸에 즉시 반영한다.
+     크기가 섞인 선택은 단일 수치가 없으므로 빈칸(—)으로 둔다. */
+  document.addEventListener('selectionchange',()=>{
+    if(__fontSizeSelectionRaf) cancelAnimationFrame(__fontSizeSelectionRaf);
+    __fontSizeSelectionRaf=requestAnimationFrame(()=>{
+      __fontSizeSelectionRaf=0;
+      const root=editorRoot(); if(!root) return;
+      if(__fontSizeSessionActive){ paintFontSizeSelection(); return; }
+      const found=selectionInside(root);
+      if(found&&found.range&&!found.range.collapsed){
+        setFontSizeInputFromRange(found.range,root,true);
+      }
+    });
+  });
+
+  /* 전체 글자 크기가 바뀌면 '기본'뿐 아니라 # / ## / A도 기존 em 비율대로 유동 갱신한다. */
+  const __setLayoutFontSizePt=window.setLayout;
+  if(typeof __setLayoutFontSizePt==='function'){
+    window.setLayout=function(key,val){
+      const r=__setLayoutFontSizePt.apply(this,arguments);
+      if(key==='fs'){
+        syncFontSizePresetLabels();
+        if(!__fontSizeInputDirty) syncFontSizeInputFromCurrentSelection(true);
+      }
+      return r;
+    };
+  }
+  const __syncControlsFontSizePt=window.syncControlsFromState;
+  if(typeof __syncControlsFontSizePt==='function'){
+    window.syncControlsFromState=function(){
+      const r=__syncControlsFontSizePt.apply(this,arguments);
+      syncFontSizePresetLabels();
+      if(!__fontSizeInputDirty) syncFontSizeInputFromCurrentSelection(true);
+      return r;
+    };
+  }
+  syncFontSizePresetLabels();
   function typeFromMark(mark){
     return {'**':'bold','*':'italic','~~':'strike','++':'underline','==':'highlight','%%':'quote',
             '[bar]':'blurbar','[blur]':'blurgauss'}[mark]||'bold';
@@ -8325,7 +8728,7 @@ stage.addEventListener('touchend',e=>{
   }
   .mobile-ui.m-tools-open #mDock #textHeadingSeg{
     display:grid!important;
-    grid-template-columns:repeat(2,minmax(31px,1fr))!important;
+    grid-template-columns:repeat(3,minmax(24px,1fr))!important;
     gap:3px!important;
     width:100%!important;
     min-width:0!important;
@@ -8333,7 +8736,7 @@ stage.addEventListener('touchend',e=>{
   }
   .mobile-ui.m-tools-open #mDock #textHeadingSeg button{
     width:100%!important;
-    min-width:31px!important;
+    min-width:24px!important;
     max-width:none!important;
     flex:none!important;
   }
@@ -10636,6 +11039,8 @@ window.fmtText=function(raw,edit){
     slots.push('<span data-hard-color="1" style="color:#'+hex.toUpperCase()+'">'+body+'</span>');
     return '\u0001'+(slots.length-1)+'\u0001';
   });
+  t=t.replace(/\[size=([0-9]+(?:\.[0-9]+)?)\]([\s\S]*?)\[\/size\]/g,(w,n,body)=>{ const pt=Math.max(6,Math.min(72,Number(n)||12)); return '<span class="text-size-pt" data-font-size-pt="'+pt+'" style="font-size:'+pt+'pt">'+body+'</span>'; });
+  t=t.replace(/\[small\]([\s\S]*?)\[\/small\]/g,'<span class="text-heading text-heading-3" data-heading="3">$1</span>');
   t=t.replace(/\[##\]([\s\S]*?)\[\/##\]/g,'<span class="text-heading text-heading-2" data-heading="2">$1</span>');
   t=t.replace(/\[#\]([\s\S]*?)\[\/#\]/g,'<span class="text-heading text-heading-1" data-heading="1">$1</span>');
   if(!edit&&state.parenOn){
@@ -11551,6 +11956,8 @@ window.fmtText=function(raw,edit){
      아래 applyParenColor 가 data-hard-color 안쪽을 알아서 건너뛴다 */
   t=t.replace(/\[#([0-9A-Fa-f]{6})\]([\s\S]*?)\[\/\]/g,(w,hex,body)=>
     '<span data-hard-color="1" style="color:#'+hex.toUpperCase()+'">'+body+'</span>');
+  t=t.replace(/\[size=([0-9]+(?:\.[0-9]+)?)\]([\s\S]*?)\[\/size\]/g,(w,n,body)=>{ const pt=Math.max(6,Math.min(72,Number(n)||12)); return '<span class="text-size-pt" data-font-size-pt="'+pt+'" style="font-size:'+pt+'pt">'+body+'</span>'; });
+  t=t.replace(/\[small\]([\s\S]*?)\[\/small\]/g,'<span class="text-heading text-heading-3" data-heading="3">$1</span>');
   t=t.replace(/\[##\]([\s\S]*?)\[\/##\]/g,'<span class="text-heading text-heading-2" data-heading="2">$1</span>');
   t=t.replace(/\[#\]([\s\S]*?)\[\/#\]/g,'<span class="text-heading text-heading-1" data-heading="1">$1</span>');
   /* 가림(블러) — 미리보기·내보내기에서만 tabindex 를 달아 '눌러서 잠깐 보기'가 되게 한다 */
@@ -12604,7 +13011,7 @@ document.addEventListener('DOMContentLoaded',()=>{ try{ syncBubbleFs(); }catch(_
 </script>
 
 <style id="heading-in-chat-styles">
-/* ===== 말풍선 모드에서도 '글씨 크기(# ##)'를 같은 자리에 =====
+/* ===== 말풍선 모드에서도 '글씨 크기(pt)'를 같은 자리에 =====
    발신자 칸을 글 모드의 '정렬 | 글씨 크기' 줄과 같은 구조로 만들고,
    글씨 크기 컬럼만 모드에 따라 옮겨 붙인다(요소를 복제하지 않아 스타일이 그대로 유지됨). */
 #senderField .text-format-row{display:flex;align-items:flex-end;gap:6px;
@@ -12620,7 +13027,7 @@ document.addEventListener('DOMContentLoaded',()=>{ try{ syncBubbleFs(); }catch(_
 (function(){
 'use strict';
 
-/* 글씨 크기(# ##) 컬럼을 종류에 따라 알맞은 줄로 이동시킨다.
+/* 글씨 크기(pt) 컬럼을 종류에 따라 알맞은 줄로 이동시킨다.
    - 글 모드   : 글 정렬 옆 (원래 자리)
    - 말풍선 모드: 발신자 옆
    같은 DOM 요소를 옮기는 방식이라 #textHeadingSeg 에 걸린 기존 스타일이
@@ -13267,6 +13674,12 @@ const KIND={
     e.className='text-heading text-heading-2';
     e.setAttribute('data-heading','2');
     return e;
+  }},
+  h3:{name:'작은 글씨',sel:'.text-heading',make:()=>{
+    const e=document.createElement('span');
+    e.className='text-heading text-heading-3';
+    e.setAttribute('data-heading','3');
+    return e;
   }}
 };
 
@@ -13276,6 +13689,7 @@ function matchesKind(el,k){
   if(K.filter&&!K.filter(el)) return false;
   if(k==='h1') return el.getAttribute('data-heading')==='1'||el.classList.contains('text-heading-1');
   if(k==='h2') return el.getAttribute('data-heading')==='2'||el.classList.contains('text-heading-2');
+  if(k==='h3') return el.getAttribute('data-heading')==='3'||el.classList.contains('text-heading-3');
   return true;
 }
 function unwrap(el){
@@ -13418,7 +13832,8 @@ window.wrapColor=function(){
 };
 const _wrapTextHeading=window.wrapTextHeading;
 window.wrapTextHeading=function(level){
-  if(bulkFormat(Number(level)===1?'h1':'h2')) return;
+  const n=Number(level), kind=n===1?'h1':(n===2?'h2':'h3');
+  if(bulkFormat(kind)) return;
   return _wrapTextHeading?_wrapTextHeading.apply(this,arguments):undefined;
 };
 const _clearFmt=window.clearFmt;
@@ -17931,7 +18346,7 @@ try{ if(typeof window.renderPreview==='function') window.renderPreview(); }catch
 const ED=()=>document.getElementById('msgContent');
 let saved=null;
 
-const TOOL_SEL='.fmt, #selToolbar, .blur-kind-menu, #hexPicker, .fmt-swatch, .fmt-pair';
+const TOOL_SEL='.fmt, #selToolbar, .blur-kind-menu, #hexPicker, .fmt-swatch, .fmt-pair, #textSizePtControl, #textSizePtPresetMenu';
 
 function snapshot(){
   const ed=ED(); if(!ed) return;
@@ -20496,6 +20911,65 @@ setTimeout(sync,350);
   .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair>.fmt-swatch{
     flex-basis:18px!important;width:18px!important;min-width:18px!important;max-width:18px!important;height:30px!important;min-height:30px!important;max-height:30px!important;
   }
+}
+</style>
+
+<style id="partial-font-size-pt-v14-style">
+/* ===== 선택 글씨 크기: 숫자 직접 입력 + 동적 프리셋 ===== */
+::highlight(partial-font-size-selection){background:rgba(90,174,255,.28);color:inherit}
+#textSizePtControl{
+  position:relative;z-index:15;
+  display:grid!important;grid-template-columns:minmax(46px,1fr) 22px!important;
+  width:72px!important;height:31px!important;min-height:31px!important;max-height:31px!important;
+  border:1px solid var(--line)!important;border-radius:7px!important;overflow:visible!important;
+  background:var(--panel-2)!important;box-sizing:border-box!important;
+}
+#textSizePtControl input{
+  width:100%!important;min-width:0!important;height:29px!important;margin:0!important;padding:0 5px!important;
+  border:0!important;border-radius:7px 0 0 7px!important;outline:0!important;box-shadow:none!important;
+  background:transparent!important;color:var(--ink)!important;text-align:center!important;
+  font:700 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace!important;
+  appearance:none!important;-webkit-appearance:none!important;-moz-appearance:textfield!important;
+}
+#textSizePtControl input:focus{background:var(--panel)!important}
+#textSizePtControl input[data-mixed="1"]{color:var(--muted)!important}
+#textSizePtControl .text-size-preset-toggle{
+  width:22px!important;min-width:22px!important;max-width:22px!important;height:29px!important;min-height:29px!important;max-height:29px!important;
+  margin:0!important;padding:0!important;border:0!important;border-left:1px solid var(--line)!important;border-radius:0 7px 7px 0!important;
+  background:transparent!important;color:var(--muted)!important;font-size:9px!important;font-weight:800!important;line-height:1!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important
+}
+#textSizePtControl .text-size-preset-toggle:hover,#textSizePtControl .text-size-preset-toggle[aria-expanded="true"]{background:var(--panel)!important;color:var(--ink)!important}
+#textSizePtPresetMenu{
+  position:absolute;right:0;top:calc(100% + 5px);z-index:120;width:132px;padding:4px;
+  border:1px solid var(--line);border-radius:9px;background:var(--panel);box-shadow:0 10px 26px rgba(66,68,72,.17)
+}
+#textSizePtPresetMenu[hidden]{display:none!important}
+#textSizePtPresetMenu button{
+  width:100%;height:32px;padding:0 8px;border:0;border-radius:6px;background:transparent;color:var(--ink);
+  display:flex;align-items:center;gap:8px;text-align:left;cursor:pointer
+}
+#textSizePtPresetMenu button:hover{background:var(--panel-2)}
+#textSizePtPresetMenu button b{width:30px;flex:0 0 30px;font-size:12px;text-align:center;white-space:nowrap}
+#textSizePtPresetMenu button[data-font-size-preset="base"] b{font-size:10px;letter-spacing:-.04em}
+#textSizePtPresetMenu button span{margin-left:auto;color:var(--muted);font:700 9.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap}
+.text-size-pt{font-size:inherit}
+
+@media(max-width:700px){
+  .mobile-ui.m-tools-open #mDock #textSizePtControl{
+    width:70px!important;height:40px!important;min-height:40px!important;max-height:40px!important;
+    grid-template-columns:minmax(46px,1fr) 22px!important;border-radius:8px!important
+  }
+  .mobile-ui.m-tools-open #mDock #textSizePtControl input,
+  .mobile-ui.m-tools-open #mDock #textSizePtControl .text-size-preset-toggle{height:38px!important;min-height:38px!important;max-height:38px!important}
+  .mobile-ui.m-tools-open #mDock #textSizePtControl input{font-size:12px!important}
+  .mobile-ui.m-tools-open #mDock #textSizePtPresetMenu{top:calc(100% + 4px);width:128px}
+  .mobile-ui.m-tools-open #mDock #textSizePtPresetMenu button{height:34px}
+}
+@media(max-width:360px){
+  .mobile-ui.m-tools-open #mDock #textSizePtControl{width:64px!important;grid-template-columns:minmax(42px,1fr) 20px!important}
+  .mobile-ui.m-tools-open #mDock #textSizePtControl .text-size-preset-toggle{width:20px!important;min-width:20px!important;max-width:20px!important}
+  .mobile-ui.m-tools-open #mDock #textSizePtPresetMenu{width:122px}
 }
 </style>
 </body>
