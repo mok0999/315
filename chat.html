@@ -1673,7 +1673,7 @@ html, body, #canvas, #chat, #canvas * {
 <div class="acc-panel" id="textShadowPanel"><div class="acc-inner"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="textShadow"></div></div><div class="field" style="margin:0"><label class="lb">번짐</label><div class="rangewrap"><input id="textShadowStrength" max="20" min="0" oninput="setTextShadow('strength',this.value)" type="range" value="4"/><span class="val" id="textShadowStrengthV">4px</span></div></div></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">가로 위치</label><div class="rangewrap"><input id="textShadowX" max="12" min="-12" oninput="setShadowExtra('text','x',this.value)" step="1" type="range" value="0"/><span class="val" id="textShadowXV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">세로 위치</label><div class="rangewrap"><input id="textShadowY" max="12" min="-12" oninput="setShadowExtra('text','y',this.value)" step="1" type="range" value="1"/><span class="val" id="textShadowYV">1px</span></div></div><div class="field" style="margin:0;grid-column:1/-1"><label class="lb">진하기</label><div class="rangewrap"><input id="textShadowOpacity" max="100" min="0" oninput="setShadowExtra('text','opacity',this.value)" step="1" type="range" value="100"/><span class="val" id="textShadowOpacityV">100%</span></div></div></div></div></div>
 </div>
 </div>
-</div></div></section><section class="tool-panel" id="panel-layout"><div class="tool-panel-head"><div><strong>여백</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accMargin">
+</div></div></section><section class="tool-panel" id="panel-layout"><div class="tool-panel-head"><div><strong>여백</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="scriptNarrationPositionSection" style="display:none"><div class="flat-tool-title"><strong>대본 위치</strong></div><div class="flat-tool-body"><div class="toggle compact"><div class="t-lb">지문 · 대사 위치 바꾸기<span>지문 시작 위치를 대사 시작 위치에 맞춰요</span></div><label class="sw"><input id="scriptNarrationIndentOn" onchange="setScriptNarrationIndent(this.checked)" type="checkbox"/><span class="track"></span></label></div></div></div><div class="flat-tool-section" id="accMargin">
 <div class="flat-tool-title"><strong>바깥 여백</strong></div>
 <div class="flat-tool-body">
 <div class="field">
@@ -1701,7 +1701,7 @@ html, body, #canvas, #chat, #canvas * {
 </select>
 </div>
 <div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기<span>글이 단을 채우면 옆 단으로 이어져요</span></div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="toggle compact" id="novelTrimField" style="margin-top:12px;display:none"><div class="t-lb">빈 마지막 쪽 빼기<span>마지막 펼침의 빈 쪽을 떼고 한 쪽만 저장해요</span></div><label class="sw"><input id="novelTrimLast" onchange="setNovel('trimLast',this.checked)" type="checkbox"/><span class="track"></span></label></div>
-<div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="scriptNameStyleSection" style="display:none"><div class="flat-tool-title"><strong>대본 이름 스타일</strong></div><div class="flat-tool-body"><div class="toggle compact"><div class="t-lb">이름 굵게<span>대본 모드의 캐릭터 이름에만 적용돼요</span></div><label class="sw"><input checked id="scriptNameBoldOn" onchange="setScriptNameBold(this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="script-highlight-box"><button aria-expanded="false" class="script-highlight-toggle" id="scriptHighlightToggle" onclick="toggleScriptHighlightPanel()" type="button"><span>캐릭터별 형광펜</span><small id="scriptHighlightSummary">설정 없음</small><span class="script-highlight-caret">⌄</span></button><div class="script-highlight-panel" id="scriptHighlightPanel"><div class="script-highlight-list" id="scriptHighlightMemberList"></div></div></div></div></div><div class="flat-tool-section"><div class="flat-tool-body"><div class="toggle-grid">
+<div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="scriptNameStyleSection" style="display:none"><div class="flat-tool-title"><strong>대본 이름 스타일</strong></div><div class="flat-tool-body"><div class="toggle compact"><div class="t-lb">이름 굵게<span>대본 모드의 캐릭터 이름에만 적용돼요</span></div><label class="sw"><input checked id="scriptNameBoldOn" onchange="setScriptNameBold(this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="script-highlight-box"><button aria-expanded="false" class="script-highlight-toggle" id="scriptHighlightToggle" onclick="toggleScriptHighlightPanel()" type="button"><span class="script-highlight-caret">▾</span><span class="script-highlight-title">캐릭터별 '이름' 형광펜</span><small id="scriptHighlightSummary">설정 없음</small></button><div class="script-highlight-panel" id="scriptHighlightPanel"><div class="script-highlight-list" id="scriptHighlightMemberList"></div></div></div></div></div><div class="flat-tool-section" id="bubbleQuickToggleSection"><div class="flat-tool-body"><div class="toggle-grid">
 <div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요"><div class="t-lb">프로필 사진</div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
@@ -1981,6 +1981,7 @@ const state = {
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
     textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
     scriptNameBold:true, // 대본 모드 이름 굵게
+    scriptNarrationIndent:false, // 대본 모드에서 지문 시작점을 대사 시작점에 맞춤
     dividerMargin:8,   // 가름선 위 여백 (구버전의 위·아래 공용값과 호환)
     dividerMarginBottom:null, // null이면 dividerMargin 값을 따라감
     dividerWidth:100,  // 선 가름선 길이(%)
@@ -2219,6 +2220,7 @@ function setMode(m){
   document.querySelectorAll('.msgr-only').forEach(e=>e.style.display=(m==='messenger')?'':'none');
   document.querySelectorAll('.normal-only').forEach(e=>e.style.display=(m==='messenger')?'none':'');
   syncScriptNameStyleVisibility();
+  syncScriptNarrationPositionVisibility();
   renderPreview();
 }
 let scriptHighlightPanelOpen=false;
@@ -2300,6 +2302,18 @@ function syncScriptNameStyleVisibility(){
   const sec=document.getElementById('scriptNameStyleSection');
   if(sec) sec.style.display=(state.mode==='script')?'block':'none';
   if(state.mode==='script') renderScriptNameStyle();
+}
+function setScriptNarrationIndent(on){
+  state.layout.scriptNarrationIndent=!!on;
+  const cb=document.getElementById('scriptNarrationIndentOn');
+  if(cb) cb.checked=!!on;
+  renderPreview();
+}
+function syncScriptNarrationPositionVisibility(){
+  const sec=document.getElementById('scriptNarrationPositionSection');
+  const cb=document.getElementById('scriptNarrationIndentOn');
+  if(sec) sec.style.display=(state.mode==='script')?'block':'none';
+  if(cb) cb.checked=!!(state.layout&&state.layout.scriptNarrationIndent);
 }
 
 function setShape(s){
@@ -3084,7 +3098,7 @@ let themeStorageOK=true;
 function defaultLayout(){
   return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,cjkScale:100,
     radius:14,fs:16,lh:1.55,para:0,bubbleFs:null,nameSize:12,widthScale:100,letterSpacing:0,cardLineW:1,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,textShadowX:0,textShadowY:1,textShadowOpacity:100,bubbleShadowOn:false,bubbleShadowStrength:4,bubbleShadowX:0,bubbleShadowY:3,bubbleShadowOpacity:100,tailOn:true,tailSize:10,tailY:0,tailX:0,
-    linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',dividerMargin:8,dividerMarginBottom:null,dividerWidth:100,dividerThickness:1,
+    linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',scriptNameBold:true,scriptNarrationIndent:false,dividerMargin:8,dividerMarginBottom:null,dividerWidth:100,dividerThickness:1,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
 function defaultExport(){ return {ratio:'auto',hMargin:24,vMargin:24,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
@@ -3263,6 +3277,7 @@ function syncControlsFromState(){
   // 글 좌우 여백 + 연결 버튼
   if(typeof syncTextPadInputs==='function') syncTextPadInputs();
   if(typeof syncBubbleAlignControls==='function') syncBubbleAlignControls();
+  if(typeof syncScriptNarrationPositionVisibility==='function') syncScriptNarrationPositionVisibility();
   const tpBtn=document.getElementById('textPadLinkBtn');
   if(tpBtn){ tpBtn.classList.toggle('on',L.linkTextPad!==false); tpBtn.setAttribute('aria-pressed',L.linkTextPad!==false?'true':'false'); }
   // 가름선 길이 · 두께 · 위/아래 여백
@@ -4148,9 +4163,14 @@ function dividerRow(m,gap){
 }
 function textRow(t,gap){
   const L=state.layout;
+  /* 대본 모드 옵션: 지문도 이름 칼럼 + 대사 간격만큼 들여써서
+     대사 텍스트의 실제 시작선과 정확히 맞춘다. */
+  const scriptNarrationIndent=(state.mode==='script'&&L.scriptNarrationIndent)
+    ?`padding-left:calc(var(--script-name-col,96px) + 14px + ${Math.max(0,Number(L.textPadL)||0)}px);box-sizing:border-box;`
+    :'';
   const st=`text-align:${t.align||'left'};color:${state.colors.nText};`
-    +`font-size:${L.fs}px;line-height:${L.lh};margin-bottom:${gap}px;${wbStyle()}`;
-  return `<div class="pmsg t-block" style="${st}">
+    +`font-size:${L.fs}px;line-height:${L.lh};margin-bottom:${gap}px;${scriptNarrationIndent}${wbStyle()}`;
+  return `<div class="pmsg t-block ${scriptNarrationIndent?'script-narration-aligned':''}" style="${st}">
     ${ctrlHTML(t.id)}
     <div class="t-inner editable" data-id="${t.id}">${typeWrap(fmtText(t.content),t.align||'left')}</div>
   </div>`;
@@ -22061,6 +22081,82 @@ setTimeout(sync,350);
     resize:none!important;
   }
 }
+</style>
+
+<style id="script-tools-accordion-and-narration-v21">
+/* ===== 대본 모드: 이름 형광펜을 '자주 쓰는 치환' 카드형 아코디언으로 ===== */
+#scriptNameStyleSection .script-highlight-box{
+  margin-top:14px!important;
+  padding:0!important;
+  border:1px solid var(--line)!important;
+  border-radius:12px!important;
+  background:var(--panel)!important;
+  overflow:hidden!important;
+}
+#scriptNameStyleSection .script-highlight-toggle{
+  width:100%!important;
+  min-height:38px!important;
+  padding:9px 10px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  border:0!important;
+  background:transparent!important;
+  color:inherit!important;
+  text-align:left!important;
+  cursor:pointer!important;
+  user-select:none!important;
+}
+#scriptNameStyleSection .script-highlight-title{
+  flex:1 1 auto!important;
+  min-width:0!important;
+  font-size:12px!important;
+  font-weight:700!important;
+  letter-spacing:-.02em!important;
+}
+#scriptNameStyleSection .script-highlight-caret{
+  flex:0 0 12px!important;
+  width:12px!important;
+  height:12px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:var(--muted)!important;
+  font-size:10px!important;
+  line-height:1!important;
+  transition:transform .18s!important;
+}
+#scriptNameStyleSection .script-highlight-toggle[aria-expanded="false"] .script-highlight-caret{
+  transform:rotate(-90deg)!important;
+}
+#scriptNameStyleSection #scriptHighlightSummary{
+  flex:0 0 auto!important;
+  margin:0!important;
+  padding:2px 8px!important;
+  border-radius:99px!important;
+  background:var(--panel-2)!important;
+  color:var(--muted)!important;
+  font:700 10.5px ui-monospace,SFMono-Regular,Menlo,monospace!important;
+  line-height:1.35!important;
+  white-space:nowrap!important;
+}
+#scriptNameStyleSection .script-highlight-panel{
+  display:none!important;
+  padding:0 10px 10px!important;
+}
+#scriptNameStyleSection .script-highlight-panel.open{display:block!important}
+
+/* 대본 이름 스타일과 자동 말풍선/삭제 토글 묶음 사이를 조금 더 분리. */
+#scriptNameStyleSection{padding-bottom:7px!important}
+#scriptNameStyleSection + #bubbleQuickToggleSection{
+  padding-top:9px!important;
+  border-top:1px solid var(--line-2)!important;
+}
+#bubbleQuickToggleSection>.flat-tool-body{padding-top:5px!important}
+
+/* 여백 패널의 대본 전용 위치 토글 — 이름 굵게와 동일한 compact toggle 규격. */
+#scriptNarrationPositionSection>.flat-tool-body{padding-top:2px!important;padding-bottom:14px!important}
+#scriptNarrationPositionSection .toggle.compact{margin:0!important}
 </style>
 </body>
 
