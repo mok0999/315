@@ -20972,6 +20972,349 @@ setTimeout(sync,350);
   .mobile-ui.m-tools-open #mDock #textSizePtPresetMenu{width:122px}
 }
 </style>
+
+
+<style id="mobile-row-unify-v15">
+/* ===== 모바일 작성 도구 정렬 통일 v15 =====
+   1행: 종류 | 글 정렬 | 글씨 크기 의 라벨·버튼·가름선 높이와 여백을 통일
+   3행: 2행보다 과하게 커 보이지 않도록 자동색/지우기 아이콘과 간격을 축소
+   데스크톱에는 영향 없음. */
+@media(max-width:700px){
+  .mobile-ui.m-tools-open #mDock .composer-card{
+    --m-top-four:clamp(136px,39vw,153px);
+    --m-top-control-h:clamp(34px,9vw,37px);
+    --m-top-inner-gap:clamp(2px,.75vw,3px);
+    --m-top-section-gap:clamp(5px,1.45vw,7px);
+    --m-top-label-h:12px;
+  }
+
+  /* ---------- 1행 전체 ---------- */
+  .mobile-ui.m-tools-open #mDock .composer-top-grid{
+    grid-template-columns:var(--m-top-four) minmax(0,1fr)!important;
+    column-gap:var(--m-top-section-gap)!important;
+    row-gap:6px!important;
+    align-items:end!important;
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid>.field{
+    align-self:end!important;
+  }
+
+  /* 세 제목의 높이/아래 여백을 완전히 같은 규격으로. */
+  .mobile-ui.m-tools-open #mDock .composer-type-field>.lb,
+  .mobile-ui.m-tools-open #mDock #alignField .tfr-col>.lb{
+    display:block!important;
+    height:var(--m-top-label-h)!important;
+    min-height:var(--m-top-label-h)!important;
+    margin:0 0 4px 2px!important;
+    padding:0!important;
+    font-size:10.5px!important;
+    line-height:var(--m-top-label-h)!important;
+    font-weight:600!important;
+    white-space:nowrap!important;
+  }
+
+  /* 종류: 정렬 버튼 네 칸과 정확히 같은 그룹 폭/간격 감각. */
+  .mobile-ui.m-tools-open #mDock .composer-type-field{
+    grid-column:1!important;
+    width:var(--m-top-four)!important;
+    min-width:var(--m-top-four)!important;
+    max-width:var(--m-top-four)!important;
+    margin:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock #msgTypeSeg{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:var(--m-top-inner-gap)!important;
+    width:var(--m-top-four)!important;
+    min-width:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock #msgTypeSeg button{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    padding:0 1px!important;
+    border-radius:8px!important;
+    font-size:clamp(10.5px,2.85vw,12px)!important;
+    line-height:1!important;
+  }
+
+  /* 글 정렬 | 글씨 크기. 정렬 네 칸은 종류 네 칸과 같은 폭. */
+  .mobile-ui.m-tools-open #mDock #alignField{
+    grid-column:2!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    padding-left:var(--m-top-section-gap)!important;
+    margin:0!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignField .text-format-row{
+    display:grid!important;
+    grid-template-columns:var(--m-top-four) 1px minmax(0,1fr)!important;
+    gap:4px!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:calc(var(--m-top-label-h) + 4px + var(--m-top-control-h))!important;
+    align-items:end!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignField .tfr-col{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    align-self:stretch!important;
+    justify-content:flex-end!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignSeg{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:var(--m-top-inner-gap)!important;
+    width:var(--m-top-four)!important;
+    min-width:0!important;
+    height:var(--m-top-control-h)!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignSeg button{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    padding:0!important;
+    border-radius:8px!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignSeg button svg{
+    width:16px!important;
+    height:12px!important;
+  }
+
+  /* 종류↔정렬 / 정렬↔글씨크기 가름선을 같은 높이와 기준선에 맞춘다. */
+  .mobile-ui.m-tools-open #mDock #alignField::before{
+    display:block!important;
+    left:0!important;
+    bottom:0!important;
+    width:1px!important;
+    height:var(--m-top-control-h)!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignField #alignHeadingDiv{
+    display:block!important;
+    width:1px!important;
+    min-width:1px!important;
+    max-width:1px!important;
+    height:var(--m-top-control-h)!important;
+    margin:0!important;
+    align-self:end!important;
+    background:var(--line)!important;
+  }
+
+  /* 글씨 크기: 남은 한 칸을 꽉 쓰고, 내부 최소폭 때문에 잘리지 않게 한다. */
+  .mobile-ui.m-tools-open #mDock #alignField #textHeadingCol{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignField #textSizePtControl{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    grid-template-columns:minmax(0,1fr) clamp(18px,5vw,21px)!important;
+    border-radius:8px!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignField #textSizePtControl input{
+    min-width:0!important;
+    width:100%!important;
+    height:calc(var(--m-top-control-h) - 2px)!important;
+    min-height:calc(var(--m-top-control-h) - 2px)!important;
+    max-height:calc(var(--m-top-control-h) - 2px)!important;
+    padding:0 2px!important;
+    font-size:clamp(11px,3.15vw,12px)!important;
+  }
+  .mobile-ui.m-tools-open #mDock #alignField #textSizePtControl .text-size-preset-toggle{
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:calc(var(--m-top-control-h) - 2px)!important;
+    min-height:calc(var(--m-top-control-h) - 2px)!important;
+    max-height:calc(var(--m-top-control-h) - 2px)!important;
+    font-size:8px!important;
+  }
+
+  /* ---------- 3행 ----------
+     따옴표/괄호 자동색과 지우기를 2행의 컴팩트한 리듬에 맞춘다.
+     지우기는 요청대로 맨 오른쪽 유지. */
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow{
+    --m3-btn:clamp(27px,7.35vw,30px);
+    --m3-swatch:clamp(14px,4vw,17px);
+    display:flex!important;
+    gap:clamp(2px,.7vw,3px)!important;
+    min-height:43px!important;
+    align-items:flex-end!important;
+  }
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp{
+    padding-top:12px!important;
+    column-gap:2px!important;
+  }
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp::before{
+    top:0!important;
+    font-size:8.5px!important;
+    line-height:1!important;
+  }
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair{
+    height:var(--m3-btn)!important;
+    min-height:var(--m3-btn)!important;
+  }
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair>button,
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp-clear>button.clearfmt{
+    flex:0 0 var(--m3-btn)!important;
+    width:var(--m3-btn)!important;
+    min-width:var(--m3-btn)!important;
+    max-width:var(--m3-btn)!important;
+    height:var(--m3-btn)!important;
+    min-height:var(--m3-btn)!important;
+    max-height:var(--m3-btn)!important;
+    padding:0!important;
+    border-radius:7px!important;
+    font-size:10.5px!important;
+  }
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-pair>.fmt-swatch{
+    flex:0 0 var(--m3-swatch)!important;
+    width:var(--m3-swatch)!important;
+    min-width:var(--m3-swatch)!important;
+    max-width:var(--m3-swatch)!important;
+    height:var(--m3-btn)!important;
+    min-height:var(--m3-btn)!important;
+    max-height:var(--m3-btn)!important;
+  }
+  .mobile-ui.m-tools-open #mDock #mPriorityFormatRow .fmt-grp-clear{
+    margin-left:auto!important;
+    padding-top:12px!important;
+  }
+}
+
+/* 초소형 폭에서도 1행의 비율을 유지한 채 전체만 한 단계 더 압축한다. */
+@media(max-width:370px){
+  .mobile-ui.m-tools-open #mDock .composer-card{
+    --m-top-four:136px;
+    --m-top-control-h:34px;
+    --m-top-section-gap:5px;
+  }
+  .mobile-ui.m-tools-open #mDock #alignField .text-format-row{gap:3px!important}
+  .mobile-ui.m-tools-open #mDock #alignField #textSizePtControl{
+    grid-template-columns:minmax(0,1fr) 18px!important;
+  }
+}
+</style>
+
+<style id="mobile-chat-toprow-align-v16">
+@media(max-width:700px){
+  /* 말풍선 1행도 글 1행과 같은 그리드/높이/여백 규격으로 맞춘다. */
+  .mobile-ui.m-tools-open #mDock #senderField{
+    grid-column:2!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    padding-left:var(--m-top-section-gap)!important;
+    margin:0!important;
+    align-self:end!important;
+  }
+  .mobile-ui.m-tools-open #mDock #senderField .text-format-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr)!important;
+    gap:4px!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:calc(var(--m-top-label-h) + 4px + var(--m-top-control-h))!important;
+    align-items:end!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock #senderField .tfr-col{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    align-self:stretch!important;
+    justify-content:flex-end!important;
+  }
+  .mobile-ui.m-tools-open #mDock #senderField .tfr-col>.lb{
+    display:block!important;
+    height:var(--m-top-label-h)!important;
+    min-height:var(--m-top-label-h)!important;
+    margin:0 0 4px 2px!important;
+    padding:0!important;
+    font-size:10.5px!important;
+    line-height:var(--m-top-label-h)!important;
+    font-weight:600!important;
+    white-space:nowrap!important;
+  }
+  .mobile-ui.m-tools-open #mDock #senderField .tfr-col.sender-col select{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    padding:0 10px!important;
+    border-radius:8px!important;
+    font-size:clamp(11px,3.05vw,12px)!important;
+  }
+  .mobile-ui.m-tools-open #mDock #senderField.has-heading #senderHeadingDiv{
+    display:block!important;
+    width:1px!important;
+    min-width:1px!important;
+    max-width:1px!important;
+    height:var(--m-top-control-h)!important;
+    margin:0!important;
+    align-self:end!important;
+    background:var(--line)!important;
+  }
+  .mobile-ui.m-tools-open #mDock #senderField #textHeadingCol{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .mobile-ui.m-tools-open #mDock #senderField #textSizePtControl{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:var(--m-top-control-h)!important;
+    min-height:var(--m-top-control-h)!important;
+    max-height:var(--m-top-control-h)!important;
+    grid-template-columns:minmax(0,1fr) clamp(18px,5vw,21px)!important;
+    border-radius:8px!important;
+    overflow:visible!important;
+  }
+  .mobile-ui.m-tools-open #mDock #senderField #textSizePtControl input{
+    min-width:0!important;
+    width:100%!important;
+    height:calc(var(--m-top-control-h) - 2px)!important;
+    min-height:calc(var(--m-top-control-h) - 2px)!important;
+    max-height:calc(var(--m-top-control-h) - 2px)!important;
+    padding:0 2px!important;
+    font-size:clamp(11px,3.15vw,12px)!important;
+  }
+  .mobile-ui.m-tools-open #mDock #senderField #textSizePtControl .text-size-preset-toggle{
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    height:calc(var(--m-top-control-h) - 2px)!important;
+    min-height:calc(var(--m-top-control-h) - 2px)!important;
+    max-height:calc(var(--m-top-control-h) - 2px)!important;
+    font-size:8px!important;
+  }
+}
+@media(max-width:370px){
+  .mobile-ui.m-tools-open #mDock #senderField .text-format-row{gap:3px!important}
+  .mobile-ui.m-tools-open #mDock #senderField .tfr-col>.lb{font-size:9.5px!important}
+  .mobile-ui.m-tools-open #mDock #senderField #textSizePtControl{grid-template-columns:minmax(0,1fr) 18px!important}
+}
+</style>
 </body>
 
 
