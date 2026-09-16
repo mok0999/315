@@ -1552,13 +1552,12 @@ html, body, #canvas, #chat, #canvas * {
 </div>
 <div class="preset-chips" id="themeChips"></div>
 <div class="preset-hint" id="themeHint"></div>
-</div></div></details><div class="flat-tool-section" id="accAppearance"><div class="flat-tool-title"><strong>색상 · 프로필</strong></div><div class="flat-tool-body"><div class="field">
-<label class="lb">아바타 모양</label>
-<div class="seg" id="shapeSeg">
-<button class="on" onclick="setShape('circle')">● 원형</button>
-<button onclick="setShape('rounded')">▢ 라운드 사각</button>
+</div></div></details><div class="field" style="margin-top:2px;margin-bottom:0">
+<div class="toggle">
+<div class="t-lb">배경 투명화<span>PNG · HTML 저장 시 배경 없이 로그만 남아요</span></div>
+<label class="sw"><input id="transparentOn" onchange="setTransparent(this.checked)" type="checkbox"/><span class="track"></span></label>
 </div>
-</div><div class="field">
+</div><div class="flat-tool-section" id="accAppearance"><div class="flat-tool-title"><strong>색상 · 프로필</strong></div><div class="flat-tool-body"><div class="field">
 <label class="lb">배경 색상</label>
 <div class="colorrow" data-color="bg"></div>
 </div><div class="colorgrid normal-only">
@@ -1634,6 +1633,12 @@ html, body, #canvas, #chat, #canvas * {
 </select>
 <div class="field-help">중국어·일본어 문자는 자동 감지해 Noto Sans SC / JP로 보완하고, 이미지 저장에도 함께 포함해요. 한글 글꼴로 <b>명조</b>를 고르면 한자·가나도 Noto Serif SC / JP(명조)로 함께 바뀌어요.</div>
 <div class="field-help" id="fontLoadState" style="margin-top:6px"></div>
+</div>
+<div class="field">
+<div class="toggle">
+<div class="t-lb">들여쓰기<span>글 블록의 첫 줄을 한 글자만큼 띄워요</span></div>
+<label class="sw"><input id="textIndentOn" onchange="setTextIndent(this.checked)" type="checkbox"/><span class="track"></span></label>
+</div>
 </div>
 <div class="field">
 <label class="lb">한자·가나 크기 보정</label>
@@ -1712,7 +1717,12 @@ html, body, #canvas, #chat, #canvas * {
 <div class="toggle compact" title="대사 앞 이름｜ 이름표만 지워요 ([ ]가 있어도 함께) · ( ) 해석은 그대로 남아요"><div class="t-lb">대사 앞 이름 삭제</div><label class="sw"><input id="stripNameTagOn" onchange="state.stripSpeakerName=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 </div>
 <div class="acc-panel" id="bubbleShadowPanel"><div class="acc-inner"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">번짐</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bubbleShadowX" max="12" min="-12" oninput="setShadowExtra('bubble','x',this.value)" step="1" type="range" value="0"/><span class="val" id="bubbleShadowXV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bubbleShadowY" max="12" min="-12" oninput="setShadowExtra('bubble','y',this.value)" step="1" type="range" value="3"/><span class="val" id="bubbleShadowYV">3px</span></div></div><div class="field" style="margin:0;grid-column:1/-1"><label class="lb">진하기</label><div class="rangewrap"><input id="bubbleShadowOpacity" max="100" min="0" oninput="setShadowExtra('bubble','opacity',this.value)" step="1" type="range" value="100"/><span class="val" id="bubbleShadowOpacityV">100%</span></div></div></div></div></div>
-</div></div><div class="flat-tool-section" id="bubbleThemeSection"><div class="flat-tool-title"><strong>말풍선 테마</strong></div><div class="flat-tool-body"><div class="btheme-grid" id="bubbleThemeGrid"><button type="button" class="btheme-btn on" data-theme="default"><span class="btheme-prev bt-default"></span>기본</button><button type="button" class="btheme-btn" data-theme="corner"><span class="btheme-prev bt-corner"></span>모서리</button><button type="button" class="btheme-btn" data-theme="card"><span class="btheme-prev bt-card"></span>카드</button></div><div class="colorgrid" id="cardLineField" style="display:none;margin-top:12px"><div class="field" style="margin:0"><label class="lb">테두리 색</label><div class="colorrow" data-color="cardLine"></div></div><div class="field" style="margin:0"><label class="lb">테두리 두께</label><div class="rangewrap"><input id="lyCardLineW" max="6" min="0" step="1" oninput="setLayout('cardLineW',this.value)" type="range" value="1"/><span class="val" id="lyCardLineWV">1px</span></div></div></div><div class="field-help" id="bubbleThemeHelp">기본 말고는 꼬리가 없어요. 연달아 친 말풍선은 모두 둥글게 이어져요.</div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양</strong></div><div class="flat-tool-body"><div class="colorgrid">
+</div></div><div class="flat-tool-section" id="bubbleTextAlignSection"><div class="flat-tool-title"><strong>말풍선 정렬</strong></div><div class="flat-tool-body"><div class="field" style="margin:0"><div class="seg" id="bubbleTextAlignSeg"><button onclick="setBubbleTextAlign('justify')" type="button">양쪽</button><button class="on" onclick="setBubbleTextAlign('left')" type="button">왼쪽</button><button onclick="setBubbleTextAlign('center')" type="button">가운데</button><button onclick="setBubbleTextAlign('right')" type="button">오른쪽</button></div><div class="field-help" style="margin-top:6px">말풍선의 위치나 좌우 여백은 그대로 두고, 말풍선 안의 글자 정렬만 바꿔요.</div></div></div></div><div class="flat-tool-section" id="bubbleThemeSection"><div class="flat-tool-title"><strong>말풍선 테마</strong></div><div class="flat-tool-body"><div class="btheme-grid" id="bubbleThemeGrid"><button type="button" class="btheme-btn on" data-theme="default"><span class="btheme-prev bt-default"></span>기본</button><button type="button" class="btheme-btn" data-theme="corner"><span class="btheme-prev bt-corner"></span>모서리</button><button type="button" class="btheme-btn" data-theme="card"><span class="btheme-prev bt-card"></span>카드</button></div><div class="colorgrid" id="cardLineField" style="display:none;margin-top:12px"><div class="field" style="margin:0"><label class="lb">테두리 색</label><div class="colorrow" data-color="cardLine"></div></div><div class="field" style="margin:0"><label class="lb">테두리 두께</label><div class="rangewrap"><input id="lyCardLineW" max="6" min="0" step="1" oninput="setLayout('cardLineW',this.value)" type="range" value="1"/><span class="val" id="lyCardLineWV">1px</span></div></div></div><div class="field-help" id="bubbleThemeHelp">기본 말고는 꼬리가 없어요. 연달아 친 말풍선은 모두 둥글게 이어져요.</div></div></div><div class="flat-tool-section" id="profileShapeSection" style="margin-top:10px"><div class="flat-tool-title"><strong>프로필 사진 모양</strong></div><div class="flat-tool-body"><div class="field" style="margin:0">
+<div class="seg" id="shapeSeg">
+<button class="on" onclick="setShape('circle')">● 원형</button>
+<button onclick="setShape('rounded')">▢ 라운드 사각</button>
+</div>
+</div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양</strong></div><div class="flat-tool-body"><div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
@@ -1738,12 +1748,7 @@ html, body, #canvas, #chat, #canvas * {
 <div class="save-scale-help">배율이 높을수록 저장 시간이 더 걸릴 수 있어요.</div>
 </div>
 </div>
-<div class="field" style="margin-top:2px;margin-bottom:0">
-<div class="toggle">
-<div class="t-lb">배경 투명화<span>PNG · HTML 저장 시 배경 없이 로그만 남아요</span></div>
-<label class="sw"><input id="transparentOn" onchange="setTransparent(this.checked)" type="checkbox"/><span class="track"></span></label>
-</div>
-</div>
+
 <div class="field" style="margin-top:8px;margin-bottom:0">
 <div class="toggle">
 <div class="t-lb">저장 위치 직접 선택<span>저장할 때마다 폴더와 파일명을 고르는 창을 띄워요 (Chrome·Edge)</span></div>
@@ -1939,7 +1944,7 @@ const state = {
   draftAlign:'left',
   members:[],   // {id,name,image,color,bubbleColor,scriptHighlight}
   messages:[],  // {id,type,senderId,content,...}  type: 'chat' | 'text'
-  export:{ ratio:'auto', hMargin:24, vMargin:24, linkMargin:false, filename:'chat-발췌', scale:2.5 },
+  export:{ ratio:'auto', hMargin:75, vMargin:37, linkMargin:false, filename:'chat-발췌', scale:2.5 },
   transparentBg:false,
   previewZoom:1,
   backgroundImage:{src:'',size:100,rotation:0,x:50,y:50,blur:0,overlayOpacity:0},
@@ -1947,12 +1952,12 @@ const state = {
   gradient:{ on:false, angle:180, mid:50, useVia:false },
   pageNum:{ on:false, align:'left', size:12, format:'slash', font:'' },
   colors:{
-    bg:'#EDEDEE',
-    nBubble:'#FFFFFF', nText:'#424448',
+    bg:'#FFFFFF',
+    nBubble:'#F2F2F3', nText:'#424448',
     myBubble:'#424448', myText:'#FFFFFF',
     otBubble:'#FFFFFF', otText:'#424448',
     draftColor:'#424448',
-    draftBubbleColor:'#FFFFFF',
+    draftBubbleColor:'#F2F2F3',
     draftTextColor:'#424448',
     draftParenColor:'#8A8F98',
     highlight:'#E4E4E6',
@@ -1974,12 +1979,12 @@ const state = {
   layout:{
     width:440,
     margin:{t:18,r:16,b:18,l:16}, marginMode:'auto', // auto | lock | each
-    gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, bubbleFs:null, nameSize:12, widthScale:100, letterSpacing:0, cjkScale:100, cardLineW:1,
+    gap:12, textGap:25, blockGap:16, continuationGap:6, bpy:9, bpx:13, radius:14, fs:16, lh:1.55, para:0, bubbleFs:null, nameSize:12, widthScale:98, letterSpacing:-0.5, cjkScale:100, cardLineW:1,
     textShadowOn:false, textShadowBubblesOff:false, textShadowStrength:4, textShadowX:0, textShadowY:1, textShadowOpacity:100,
     bubbleShadowOn:false, bubbleShadowStrength:4, bubbleShadowX:0, bubbleShadowY:3, bubbleShadowOpacity:100,
     bubbleOpacity:100, bubbleTextOpacity:100,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
-    textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left',   // 말풍선 행 좌우 여백 · 정렬
+    textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left', bubbleTextAlign:'left', textIndent:false,   // 말풍선 행 좌우 여백 · 정렬 / 말풍선 텍스트 정렬 / 글 들여쓰기
     scriptNameBold:true, // 대본 모드 이름 굵게
     scriptNarrationIndent:false, // 대본 모드에서 지문 시작점을 대사 시작점에 맞춤
     dividerMargin:8,   // 가름선 위 여백 (구버전의 위·아래 공용값과 호환)
@@ -2702,6 +2707,30 @@ function setBubbleAlign(align){
 function bubbleAlignClass(){
   return 'bubble-align-'+normalizeBubbleAlign(state.layout.bubbleAlign);
 }
+function normalizeBubbleTextAlign(value){
+  return ['justify','left','center','right'].includes(value)?value:'left';
+}
+function syncBubbleTextAlignControls(){
+  const seg=document.getElementById('bubbleTextAlignSeg');
+  if(!seg) return;
+  const align=normalizeBubbleTextAlign(state.layout.bubbleTextAlign);
+  state.layout.bubbleTextAlign=align;
+  const order=['justify','left','center','right'];
+  [...seg.children].forEach((button,index)=>button.classList.toggle('on',order[index]===align));
+}
+function setBubbleTextAlign(align){
+  state.layout.bubbleTextAlign=normalizeBubbleTextAlign(align);
+  syncBubbleTextAlignControls();
+  renderPreview();
+}
+function bubbleTextAlignStyle(){
+  return `text-align:${normalizeBubbleTextAlign(state.layout.bubbleTextAlign)};`;
+}
+function setTextIndent(on){
+  state.layout.textIndent=!!on;
+  const el=document.getElementById('textIndentOn'); if(el) el.checked=!!state.layout.textIndent;
+  renderPreview();
+}
 function wbStyle(){
   return state.layout.wb==='char'
     ? 'word-break:break-all;overflow-wrap:normal'
@@ -2761,7 +2790,7 @@ function bubbleStyle(bg,color,tailCorner){
   /* Radius 22+ also retracts the outward tip slightly toward the bubble. */
   const tailInwardDelta=Math.max(0,r-22);
   return `background:${bg};--bubble-bg:${bg};--bubble-radius:${r}px;--bubble-tail-radius-base:${tailRadiusBase}px;--bubble-tail-radius-delta:${tailRadiusDelta}px;--bubble-tail-inward-delta:${tailInwardDelta}px;color:${color};padding:${L.bpy}px ${L.bpx}px;`
-    +`border-radius:${r}px;font-size:${(Number(L.bubbleFs)||L.fs)}px;line-height:${L.lh};${wbStyle()}`;
+    +`border-radius:${r}px;font-size:${(Number(L.bubbleFs)||L.fs)}px;line-height:${L.lh};${bubbleTextAlignStyle()}${wbStyle()}`;
 }
 function typographyStyle(align='left'){
   const L=state.layout;
@@ -3097,14 +3126,18 @@ let themeStorageOK=true;
 
 function defaultLayout(){
   return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,cjkScale:100,
-    radius:14,fs:16,lh:1.55,para:0,bubbleFs:null,nameSize:12,widthScale:100,letterSpacing:0,cardLineW:1,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,textShadowX:0,textShadowY:1,textShadowOpacity:100,bubbleShadowOn:false,bubbleShadowStrength:4,bubbleShadowX:0,bubbleShadowY:3,bubbleShadowOpacity:100,tailOn:true,tailSize:10,tailY:0,tailX:0,
-    linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',scriptNameBold:true,scriptNarrationIndent:false,dividerMargin:8,dividerMarginBottom:null,dividerWidth:100,dividerThickness:1,
+    radius:14,fs:16,lh:1.55,para:0,bubbleFs:null,nameSize:12,widthScale:98,letterSpacing:-0.5,cardLineW:1,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,textShadowX:0,textShadowY:1,textShadowOpacity:100,bubbleShadowOn:false,bubbleShadowStrength:4,bubbleShadowX:0,bubbleShadowY:3,bubbleShadowOpacity:100,tailOn:true,tailSize:10,tailY:0,tailX:0,
+    linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',bubbleTextAlign:'left',textIndent:false,scriptNameBold:true,scriptNarrationIndent:false,dividerMargin:8,dividerMarginBottom:null,dividerWidth:100,dividerThickness:1,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
-function defaultExport(){ return {ratio:'auto',hMargin:24,vMargin:24,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
+function defaultExport(){ return {ratio:'auto',hMargin:75,vMargin:37,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
 function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16,sep:'dot',font:''}; }
 function seedThemes(){
   return [
+    {id:uid(),name:'이전 버전',shape:'circle',parenOn:false,transparentBg:false,
+     colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#FFFFFF',
+       otBubble:'#FFFFFF',otText:'#424448',highlight:'#E4E4E6',partial:'#D14343',paren:'#8A8F98',credit:'#8A8F98'},
+     layout:{...defaultLayout(),widthScale:100,letterSpacing:0},export:{...defaultExport(),hMargin:24,vMargin:24},credit:defaultCredit()},
     {id:uid(),name:'무채색',shape:'circle',parenOn:false,transparentBg:false,
      colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#FFFFFF',
        otBubble:'#FFFFFF',otText:'#424448',highlight:'#E4E4E6',partial:'#D14343',paren:'#8A8F98',credit:'#8A8F98'},
@@ -3157,6 +3190,19 @@ function loadThemesStore(){
       builtinThemesV2().forEach(t=>{ if(!names.has(t.name)) themes.push(t); });
       persistThemes();
       localStorage.setItem(THEME_SEED_VER_KEY,'3');
+    }
+  }catch(e){}
+  /* v4: 새 기본값으로 바뀌기 전 값을 '이전 버전' 프리셋으로 한 번만 추가 */
+  try{
+    const ver=Number(localStorage.getItem(THEME_SEED_VER_KEY))||1;
+    if(ver<4){
+      if(!themes.some(t=>t&&t.name==='이전 버전')){
+        themes.unshift({id:uid(),name:'이전 버전',shape:'circle',parenOn:false,transparentBg:false,
+          colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#FFFFFF',otBubble:'#FFFFFF',otText:'#424448',highlight:'#E4E4E6',partial:'#D14343',paren:'#8A8F98',credit:'#8A8F98'},
+          layout:{...defaultLayout(),widthScale:100,letterSpacing:0},export:{...defaultExport(),hMargin:24,vMargin:24},credit:defaultCredit()});
+      }
+      persistThemes();
+      localStorage.setItem(THEME_SEED_VER_KEY,'4');
     }
   }catch(e){}
 }
@@ -3277,6 +3323,8 @@ function syncControlsFromState(){
   // 글 좌우 여백 + 연결 버튼
   if(typeof syncTextPadInputs==='function') syncTextPadInputs();
   if(typeof syncBubbleAlignControls==='function') syncBubbleAlignControls();
+  if(typeof syncBubbleTextAlignControls==='function') syncBubbleTextAlignControls();
+  const textIndentEl=document.getElementById('textIndentOn'); if(textIndentEl) textIndentEl.checked=!!L.textIndent;
   if(typeof syncScriptNarrationPositionVisibility==='function') syncScriptNarrationPositionVisibility();
   const tpBtn=document.getElementById('textPadLinkBtn');
   if(tpBtn){ tpBtn.classList.toggle('on',L.linkTextPad!==false); tpBtn.setAttribute('aria-pressed',L.linkTextPad!==false?'true':'false'); }
@@ -4172,7 +4220,7 @@ function textRow(t,gap){
     +`font-size:${L.fs}px;line-height:${L.lh};margin-bottom:${gap}px;${scriptNarrationIndent}${wbStyle()}`;
   return `<div class="pmsg t-block ${scriptNarrationIndent?'script-narration-aligned':''}" style="${st}">
     ${ctrlHTML(t.id)}
-    <div class="t-inner editable" data-id="${t.id}">${typeWrap(fmtText(t.content),t.align||'left')}</div>
+    <div class="t-inner editable" data-id="${t.id}" style="${L.textIndent?'text-indent:1em;':''}">${typeWrap(fmtText(t.content),t.align||'left')}</div>
   </div>`;
 }
 /* 말풍선 좌우 여백 — 전체 바깥 여백과 별개로 말풍선 행만 안쪽으로 */
@@ -4208,7 +4256,7 @@ function logRow(m,mem,gap,continued=false){
   const mine=(m.senderId===state.meId);
   const showIdentity=!mine||!!state.showMyIdentity;
   const hasAvatarColumn=!!state.showProfile&&showIdentity;
-  const plain=`color:${state.colors.nText};font-size:${(Number(L.bubbleFs)||L.fs)}px;line-height:${L.lh};${wbStyle()}`;
+  const plain=`color:${state.colors.nText};font-size:${(Number(L.bubbleFs)||L.fs)}px;line-height:${L.lh};${bubbleTextAlignStyle()}${wbStyle()}`;
   const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
   const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
   const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>`:'';
@@ -9449,14 +9497,116 @@ stage.addEventListener('touchend',e=>{
     });
   }
 
+  /* 양쪽 정렬은 저장용 SVG에서 글꼴 폭이 아주 조금만 달라져도 줄이 다시 갈릴 수 있다.
+     일반 정렬처럼 <br>만 박으면 justify의 줄 끝 처리까지 달라지므로,
+     미리보기에서 확인한 각 줄을 독립된 한 줄 상자로 복제한다.
+     - 자동 줄바꿈 줄: text-align-last:justify 로 미리보기의 양쪽 정렬 유지
+     - 직접 Enter로 끊은 줄/마지막 줄: 마지막 줄답게 왼쪽 정렬 유지
+     이 처리는 저장용 clone에만 적용되므로 실제 편집 DOM/여백/말풍선 폭은 건드리지 않는다. */
+  function freezeJustifiedFlow(cloneRoot,softPoints){
+    if(!cloneRoot) return;
+
+    function posRange(pos){
+      const r=document.createRange();
+      r.setStart(pos.node,pos.offset);
+      r.collapse(true);
+      return r;
+    }
+    function cmpPos(a,b){
+      try{return posRange(a).compareBoundaryPoints(Range.START_TO_START,posRange(b));}
+      catch(_){return 0;}
+    }
+    function samePos(a,b){ return cmpPos(a,b)===0; }
+    function childIndex(node){
+      if(!node||!node.parentNode) return -1;
+      return Array.prototype.indexOf.call(node.parentNode.childNodes,node);
+    }
+    function makeRange(a,b){
+      const r=document.createRange();
+      r.setStart(a.node,a.offset);
+      r.setEnd(b.node,b.offset);
+      return r;
+    }
+
+    const cuts=[];
+    (softPoints||[]).forEach(point=>{
+      const node=nodeAtPath(cloneRoot,point.path);
+      if(node&&node.nodeType===Node.TEXT_NODE&&point.offset>=0&&point.offset<=node.length){
+        cuts.push({kind:'soft',before:{node,offset:point.offset},after:{node,offset:point.offset}});
+      }
+    });
+    cloneRoot.querySelectorAll('br').forEach(br=>{
+      const idx=childIndex(br);
+      if(idx<0) return;
+      cuts.push({kind:'hard',before:{node:br.parentNode,offset:idx},after:{node:br.parentNode,offset:idx+1}});
+    });
+    cuts.sort((a,b)=>{
+      const c=cmpPos(a.before,b.before);
+      if(c) return c;
+      return a.kind==='hard'?-1:1;
+    });
+
+    const start={node:cloneRoot,offset:0};
+    const finish={node:cloneRoot,offset:cloneRoot.childNodes.length};
+    let cursor=start;
+    const lines=[];
+
+    for(const cut of cuts){
+      if(cmpPos(cut.before,cursor)<0) continue;
+      try{
+        const range=makeRange(cursor,cut.before);
+        const frag=range.cloneContents();
+        /* hard break는 빈 줄도 실제 한 줄이므로 보존한다. soft break 중 빈 조각은 중복 경계라 건너뛴다. */
+        if(cut.kind==='hard'||frag.childNodes.length||String(frag.textContent||'').length){
+          lines.push({frag,soft:cut.kind==='soft'});
+        }
+      }catch(_){}
+      cursor=cut.after;
+    }
+    if(cmpPos(cursor,finish)<=0&&!samePos(cursor,finish)){
+      try{
+        const range=makeRange(cursor,finish);
+        const frag=range.cloneContents();
+        if(frag.childNodes.length||String(frag.textContent||'').length) lines.push({frag,soft:false});
+      }catch(_){}
+    }
+    if(!lines.length) return;
+
+    while(cloneRoot.firstChild) cloneRoot.removeChild(cloneRoot.firstChild);
+    cloneRoot.style.setProperty('white-space','normal','important');
+    cloneRoot.style.setProperty('overflow','visible','important');
+
+    lines.forEach(line=>{
+      const row=document.createElement('span');
+      row.setAttribute('data-preview-locked-line','1');
+      row.style.setProperty('display','block','important');
+      row.style.setProperty('box-sizing','border-box','important');
+      row.style.setProperty('width','100%','important');
+      row.style.setProperty('min-width','0','important');
+      row.style.setProperty('max-width','none','important');
+      row.style.setProperty('white-space','nowrap','important');
+      row.style.setProperty('line-height','inherit','important');
+      row.style.setProperty('text-align','justify','important');
+      row.style.setProperty('text-align-last',line.soft?'justify':'left','important');
+      row.style.setProperty('-moz-text-align-last',line.soft?'justify':'left','important');
+      if(line.frag&&line.frag.childNodes.length) row.appendChild(line.frag);
+      else row.appendChild(document.createElement('br'));
+      cloneRoot.appendChild(row);
+    });
+  }
+
   async function makeSnapshot(source){
     const width=Math.max(1,Math.ceil(source.offsetWidth));
     const height=Math.max(1,Math.ceil(source.offsetHeight));
     const sourceFlows=[...source.querySelectorAll('.glyph-scale')];
     const breakSets=[];
+    const justifySets=[];
     for(let i=0;i<sourceFlows.length;i++){
       const flow=sourceFlows[i];
-      breakSets.push(getComputedStyle(flow).textAlign==='justify'?[]:measuredSoftBreaks(flow));
+      const justify=getComputedStyle(flow).textAlign==='justify';
+      justifySets.push(justify);
+      /* 양쪽 정렬도 실제 미리보기의 자동 줄바꿈 위치를 먼저 잰다. */
+      breakSets.push(measuredSoftBreaks(flow));
       if(i&&i%20===0) await yieldThread();
     }
 
@@ -9467,6 +9617,13 @@ stage.addEventListener('touchend',e=>{
        그대로 박아 상자 기하 전체를 미리보기와 1:1로 고정한다.
        (미리보기가 transform/zoom으로 축소된 상태여도 CSS px로 환산해 측정) */
     const BUBBLE_PIN_SEL='.n-bubble,.m-bubble,.n-plain';
+    /* 안드로이드/갤럭시 계열에서는 미리보기 캔버스가 transform으로 축소돼 있을 때
+       getBoundingClientRect()가 말풍선과 내부 글줄에서 서로 다른 반올림 오차를 낼 수 있다.
+       그 값을 다시 전역 geomScale로 되돌리면 저장본 말풍선 폭이 몇 px~수십 px 커져,
+       live 화면보다 저장본이 옆으로 퍼져 보이는 현상이 생긴다.
+       말풍선 고정값은 '보이는 크기'가 아니라 authored layout의 실제 박스 크기면 충분하므로,
+       조상 transform·브라우저 확대와 무관한 offsetWidth/offsetHeight를 1순위로 쓴다.
+       (0이 나오는 예외 상황에서만 rect 기반 값을 보조로 사용) */
     const srcCanvasRect=source.getBoundingClientRect();
     const geomScale=(source.offsetWidth&&srcCanvasRect.width)?srcCanvasRect.width/source.offsetWidth:1;
     const safeGeomScale=(Number.isFinite(geomScale)&&geomScale>0)?geomScale:1;
@@ -9477,9 +9634,12 @@ stage.addEventListener('touchend',e=>{
       const rect=b.getBoundingClientRect();
       const flow=b.querySelector(':scope > .glyph-scale');
       const flowRect=flow&&flow.getBoundingClientRect();
-      const w=rect.width/safeGeomScale;
-      const h=rect.height/safeGeomScale;
-      const flowH=flowRect?flowRect.height/safeGeomScale:0;
+      const ow=Number(b.offsetWidth)||0;
+      const oh=Number(b.offsetHeight)||0;
+      const fh=flow?(Number(flow.offsetHeight)||Number(flow.scrollHeight)||0):0;
+      const w=ow>0?ow:(rect.width/safeGeomScale);
+      const h=oh>0?oh:(rect.height/safeGeomScale);
+      const flowH=fh>0?fh:(flowRect?flowRect.height/safeGeomScale:0);
       return {
         w:(Number.isFinite(w)&&w>0)?w:0,
         h:(Number.isFinite(h)&&h>0)?h:0,
@@ -9518,6 +9678,11 @@ stage.addEventListener('touchend',e=>{
 
     const cloneFlows=[...clone.querySelectorAll('.glyph-scale')];
     for(let i=0;i<Math.min(cloneFlows.length,breakSets.length);i++){
+      if(justifySets[i]){
+        /* justify는 강제 <br>가 들어가면 줄 끝 정렬 규칙이 바뀌므로 줄 상자로 고정한다. */
+        freezeJustifiedFlow(cloneFlows[i],breakSets[i]);
+        continue;
+      }
       if(!breakSets[i].length) continue;
       insertLockedBreaks(cloneFlows[i],breakSets[i]);
       cloneFlows[i].style.setProperty('white-space','nowrap','important');
