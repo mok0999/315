@@ -22881,7 +22881,7 @@ $('textIndentOn').closest('.field').after(md);
 function sync(){defaults();$('scriptNameGap').value=state.layout.scriptNameGap??14;$('scriptNameGapV').textContent=(state.layout.scriptNameGap??14)+'px';$('scriptNameGapMode').value=state.layout.scriptNameGapMode||'column';$('scriptNameFont').value=state.layout.scriptNameFont||'';syncStepperBoxes();syncScriptNameSizeControl();syncDivider();}
 const oldSync=syncControlsFromState;syncControlsFromState=function(){defaults();const r=oldSync.apply(this,arguments);sync();return r;};
 for(const name of ['setMsgType','beginComposerEdit','endComposerEdit']){const fn=window[name];window[name]=function(){const r=fn.apply(this,arguments);syncDivider();return r;};}
-const add=window.addMessage;window.addMessage=function(){const before=state.messages.length, text=$('msgContent').value;const r=add.apply(this,arguments);syncDivider();if(state.messages.length>before&&text.includes('세르네이'))toast('좋은 하루 되세요');return r;};
+const add=window.addMessage;window.addMessage=function(){const before=state.messages.length, text=$('msgContent').value;const r=add.apply(this,arguments);syncDivider();if(state.messages.length>before&&text.includes('세르네이')){toast('좋은 하루 되세요');if(window.__serneiHearts)window.__serneiHearts();}return r;};
 const baseFmt=fmtText;
 function cells(line){return line.trim().replace(/^\|/,'').replace(/(?<!\\)\|$/,'').split(/(?<!\\)\|/).map(x=>x.trim().replace(/\\\|/g,'|'));}
 function inline(text){
@@ -22979,6 +22979,45 @@ sync();
   window.__syncColumnExtras=sync;sync();
 })();
 </script>
+
+<style id="sernei-hearts-style">
+.sernei-hearts{position:fixed;inset:0;overflow:hidden;pointer-events:none!important;z-index:2147483000;contain:strict}
+.sernei-heart{position:absolute;left:var(--heart-x);bottom:-48px;color:var(--heart-color);font-family:Arial,sans-serif;font-size:var(--heart-size);line-height:1;opacity:0;pointer-events:none!important;user-select:none;animation:sernei-heart-rise var(--heart-time) ease-out var(--heart-delay) both}
+@keyframes sernei-heart-rise{
+  0%{opacity:0;transform:translate3d(0,0,0) scale(.35) rotate(-12deg)}
+  12%{opacity:.9;transform:translate3d(0,-12vh,0) scale(1.12) rotate(8deg)}
+  55%{opacity:.8;transform:translate3d(var(--heart-drift),-55vh,0) scale(.95) rotate(-8deg)}
+  100%{opacity:0;transform:translate3d(var(--heart-drift),-110vh,0) scale(.65) rotate(14deg)}
+}
+@media(prefers-reduced-motion:reduce){
+  .sernei-heart{bottom:24px;animation-name:sernei-heart-soft;animation-duration:.8s!important}
+  @keyframes sernei-heart-soft{0%,100%{opacity:0}40%{opacity:.8}}
+}
+</style>
+<script id="sernei-hearts-script">
+(function(){
+  let cleanup=0;
+  window.__serneiHearts=function(){
+    clearTimeout(cleanup);
+    document.querySelectorAll('.sernei-hearts').forEach(el=>el.remove());
+    const layer=document.createElement('div');layer.className='sernei-hearts';layer.setAttribute('aria-hidden','true');
+    const colors=['#FF749F','#F45D8E','#FF9DBB','#E94E85'];
+    for(let i=0;i<18;i++){
+      const heart=document.createElement('span');heart.className='sernei-heart';heart.textContent='♥';
+      heart.style.setProperty('--heart-x',(5+Math.random()*90)+'%');
+      heart.style.setProperty('--heart-color',colors[i%colors.length]);
+      heart.style.setProperty('--heart-size',(18+Math.random()*18)+'px');
+      heart.style.setProperty('--heart-drift',(-45+Math.random()*90)+'px');
+      heart.style.setProperty('--heart-time',(2.5+Math.random()*.9)+'s');
+      heart.style.setProperty('--heart-delay',(i*.075)+'s');
+      layer.appendChild(heart);
+    }
+    document.body.appendChild(layer);
+    cleanup=setTimeout(()=>{layer.remove();cleanup=0;},5000);
+  };
+})();
+</script>
+
 </body>
 
 
