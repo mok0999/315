@@ -1636,8 +1636,13 @@ html, body, #canvas, #chat, #canvas * {
 <option value="'Mona12',sans-serif">Mona12 (픽셀 · 12px 권장)</option>
 <option value="-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif">시스템 기본</option>
 </select>
-<div class="field-help">중국어·일본어 문자는 자동 감지해 Noto Sans SC / JP로 보완하고, 이미지 저장에도 함께 포함해요. 한글 글꼴로 <b>명조</b>를 고르면 한자·가나도 Noto Serif SC / JP(명조)로 함께 바뀌어요.</div>
+<div class="field-help">중국어·일본어 본문은 자동 감지하며, 아래에서 언어별 글꼴을 따로 고를 수 있어요. 자동 선택은 본문 글꼴의 고딕·명조를 따라가요. 이름은 자동 변환에서 제외돼요.</div>
 <div class="field-help" id="fontLoadState" style="margin-top:6px"></div>
+</div>
+
+<div class="colorgrid" id="cjkFontControls">
+<div class="field"><label class="lb" for="cjkFontJa">일본어 글씨체</label><select id="cjkFontJa" onchange="setCjkFont('Ja',this.value)"><option value="">자동 (본문 글꼴에 맞춤)</option><option value="Noto Sans JP">Noto Sans JP · 본고딕</option><option value="Noto Serif JP">Noto Serif JP · 본명조</option><option value="DotGothic16">DotGothic16 · 도트</option><option value="Zen Maru Gothic">Zen Maru Gothic · 둥근 고딕 · 본문용</option><option value="Zen Kaku Gothic New">Zen Kaku Gothic New · 차분한 돋움 · 중간 굵기</option><option value="Shippori Mincho">차분한 명조 (Shippori Mincho)</option></select></div>
+<div class="field"><label class="lb" for="cjkFontZh">중국어 글씨체</label><select id="cjkFontZh" onchange="setCjkFont('Zh',this.value)"><option value="">자동 (본문 글꼴에 맞춤)</option><option value="Noto Sans SC">Noto Sans SC · 본고딕</option><option value="Noto Serif SC">Noto Serif SC · 본명조</option><option value="LXGW WenKai TC">LXGW WenKai TC · 손글씨 · 번체 중심</option><option value="Huninn">Huninn · 둥근 고딕 · 번체 중심</option><option value="ZCOOL KuaiLe">ZCOOL KuaiLe · 발랄한 손글씨 · 간체</option><option value="Fusion Pixel 12px Proportional SC">퓨전 도트 · 12px · 간체 (Fusion Pixel 12px Proportional SC)</option><option value="Ark Pixel 12px Proportional SC">아크 도트 · 12px · 간체 (Ark Pixel 12px Proportional SC)</option><option value="Iansui">또박또박 손글씨 · 번체 중심 (Iansui)</option></select></div>
 </div>
 <div class="field">
 <div class="toggle">
@@ -1722,19 +1727,19 @@ html, body, #canvas, #chat, #canvas * {
 <div class="toggle compact" title="대사 앞 이름｜ 이름표만 지워요 ([ ]가 있어도 함께) · ( ) 해석은 그대로 남아요"><div class="t-lb">대사 앞 이름 삭제</div><label class="sw"><input id="stripNameTagOn" onchange="state.stripSpeakerName=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 </div>
 <div class="acc-panel" id="bubbleShadowPanel"><div class="acc-inner"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">번짐</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bubbleShadowX" max="12" min="-12" oninput="setShadowExtra('bubble','x',this.value)" step="1" type="range" value="0"/><span class="val" id="bubbleShadowXV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bubbleShadowY" max="12" min="-12" oninput="setShadowExtra('bubble','y',this.value)" step="1" type="range" value="3"/><span class="val" id="bubbleShadowYV">3px</span></div></div><div class="field" style="margin:0;grid-column:1/-1"><label class="lb">진하기</label><div class="rangewrap"><input id="bubbleShadowOpacity" max="100" min="0" oninput="setShadowExtra('bubble','opacity',this.value)" step="1" type="range" value="100"/><span class="val" id="bubbleShadowOpacityV">100%</span></div></div></div></div></div>
-</div></div><div class="flat-tool-section" id="bubbleTextAlignSection"><div class="flat-tool-title"><strong>말풍선 정렬</strong></div><div class="flat-tool-body"><div class="field" style="margin:0"><div class="seg" id="bubbleTextAlignSeg"><button onclick="setBubbleTextAlign('justify')" type="button">양쪽</button><button class="on" onclick="setBubbleTextAlign('left')" type="button">왼쪽</button><button onclick="setBubbleTextAlign('center')" type="button">가운데</button><button onclick="setBubbleTextAlign('right')" type="button">오른쪽</button></div><div class="field-help" style="margin-top:6px">말풍선의 위치나 좌우 여백은 그대로 두고, 말풍선 안의 글자 정렬만 바꿔요.</div></div></div></div><div class="flat-tool-section" id="bubbleThemeSection"><div class="flat-tool-title"><strong>말풍선 테마</strong></div><div class="flat-tool-body"><div class="btheme-grid" id="bubbleThemeGrid"><button type="button" class="btheme-btn on" data-theme="default"><span class="btheme-prev bt-default"></span>기본</button><button type="button" class="btheme-btn" data-theme="corner"><span class="btheme-prev bt-corner"></span>모서리</button><button type="button" class="btheme-btn" data-theme="card"><span class="btheme-prev bt-card"></span>카드</button></div><div class="colorgrid" id="cardLineField" style="display:none;margin-top:12px"><div class="field" style="margin:0"><label class="lb">테두리 색</label><div class="colorrow" data-color="cardLine"></div></div><div class="field" style="margin:0"><label class="lb">테두리 두께</label><div class="rangewrap"><input id="lyCardLineW" max="6" min="0" step="1" oninput="setLayout('cardLineW',this.value)" type="range" value="1"/><span class="val" id="lyCardLineWV">1px</span></div></div></div><div class="field-help" id="bubbleThemeHelp">기본 말고는 꼬리가 없어요. 연달아 친 말풍선은 모두 둥글게 이어져요.</div></div></div><div class="flat-tool-section" id="profileShapeSection" style="margin-top:10px"><div class="flat-tool-title"><strong>프로필 사진 모양</strong></div><div class="flat-tool-body"><div class="field" style="margin:0">
+</div></div><div class="flat-tool-section" id="bubbleTextAlignSection"><div class="flat-tool-title"><strong>말풍선 내부 텍스트 정렬</strong></div><div class="flat-tool-body"><div class="field" style="margin:0"><div class="seg" id="bubbleTextAlignSeg"><button onclick="setBubbleTextAlign('justify')" type="button">양쪽</button><button class="on" onclick="setBubbleTextAlign('left')" type="button">왼쪽</button><button onclick="setBubbleTextAlign('center')" type="button">가운데</button><button onclick="setBubbleTextAlign('right')" type="button">오른쪽</button></div><div class="field-help" style="margin-top:6px">말풍선 안의 글자 정렬을 바꿔요. 대본에서는 이름 너비와 이름·대사 간격을 제외한 대사 영역 안에서 정렬해요.</div></div></div></div><div class="flat-tool-section" id="bubblePositionAlignSection"><div class="flat-tool-title"><strong>말풍선 위치 정렬</strong></div><div class="flat-tool-body"><div class="field" style="margin:0"><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div><div class="field-help bubble-align-help">가운데 정렬은 프로필이 있으면 프로필 중심부터 말풍선 끝까지, 프로필이 없으면 말풍선 자체의 양 끝을 기준으로 맞춰요. 메신저 모드는 발신자 기준 정렬을 유지해요.</div></div></div></div><div class="flat-tool-section" id="bubbleThemeSection"><div class="flat-tool-title"><strong>말풍선 테마</strong></div><div class="flat-tool-body"><div class="btheme-grid" id="bubbleThemeGrid"><button type="button" class="btheme-btn on" data-theme="default"><span class="btheme-prev bt-default"></span>기본</button><button type="button" class="btheme-btn" data-theme="corner"><span class="btheme-prev bt-corner"></span>모서리</button><button type="button" class="btheme-btn" data-theme="card"><span class="btheme-prev bt-card"></span>카드</button></div><div class="colorgrid" id="cardLineField" style="display:none;margin-top:12px"><div class="field" style="margin:0"><label class="lb">테두리 색</label><div class="colorrow" data-color="cardLine"></div></div><div class="field" style="margin:0"><label class="lb">테두리 두께</label><div class="rangewrap"><input id="lyCardLineW" max="6" min="0" step="1" oninput="setLayout('cardLineW',this.value)" type="range" value="1"/><span class="val" id="lyCardLineWV">1px</span></div></div></div><div class="field-help" id="bubbleThemeHelp">기본 말고는 꼬리가 없어요. 연달아 친 말풍선은 모두 둥글게 이어져요.</div></div></div><div class="flat-tool-section" id="profileShapeSection" style="margin-top:10px"><div class="flat-tool-title"><strong>프로필 사진 모양</strong></div><div class="flat-tool-body"><div class="field" style="margin:0">
 <div class="seg" id="shapeSeg">
 <button class="on" onclick="setShape('circle')">● 원형</button>
 <button onclick="setShape('rounded')">▢ 라운드 사각</button>
 </div>
 </div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양</strong></div><div class="flat-tool-body"><div class="colorgrid">
+<div class="field" style="margin-bottom:14px"><label class="lb">이름 크기</label><div class="rangewrap"><input id="lyNameSize" max="24" min="9" oninput="setLayout('nameSize',this.value)" type="range" value="12"/><span class="val" id="lyNameSizeV">12px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
-<div class="field" style="margin-bottom:14px"><label class="lb">이름 크기</label><div class="rangewrap"><input id="lyNameSize" max="24" min="9" oninput="setLayout('nameSize',this.value)" type="range" value="12"/><span class="val" id="lyNameSizeV">12px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">말풍선 투명도</label><div class="rangewrap"><input id="bubbleOpacity" max="100" min="0" oninput="setBubbleOpacity(this.value)" type="range" value="100"/><span class="val" id="bubbleOpacityV">100%</span></div></div>
 <div class="field" style="margin:0"><label class="lb">말풍선 글씨 투명도</label><div class="rangewrap"><input id="bubbleTextOpacity" max="100" min="0" oninput="setBubbleTextOpacity(this.value)" type="range" value="100"/><span class="val" id="bubbleTextOpacityV">100%</span></div></div>
-<div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div><div class="field bubble-align-field"><label class="lb">말풍선 정렬</label><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div><div class="field-help bubble-align-help">가운데 정렬은 프로필이 있으면 프로필 중심부터 말풍선 끝까지, 프로필이 없으면 말풍선 자체의 양 끝을 기준으로 맞춰요. 메신저 모드는 발신자 기준 정렬을 유지해요.</div></div></div>
+<div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div></div>
 </div></div></div><div class="messenger-settings" id="messengerSettings"><div class="messenger-settings-head"><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></div><div class="messenger-settings-body"><div class="field">
 <label class="lb">내 계정 (오른쪽 정렬)</label>
 <select id="meSelect" onchange="state.meId=this.value; renderPreview()"></select>
@@ -4355,6 +4360,11 @@ function scriptNameBaselineOffset(nameSize,dialogueSize){
   const font=L.scriptNameFont||L.font;
   return centre(nameSize,font,scriptNameFontWeight())-centre(dialogueSize,font,scriptNameFontWeight());
 }
+function scriptAlignmentStyle(){
+  const L=state.layout,align=normalizeBubbleAlign(L.bubbleAlign);
+  const name=L.scriptNameGapMode==='end'?'max-content':'min(var(--script-name-col,96px),38%)';
+  return 'grid-template-columns:'+name+' minmax(0,'+(align==='left'?'1fr':'max-content')+');justify-content:'+(align==='right'?'end':align==='center'?'center':'start')+';';
+}
 function scriptRow(m,mem,gap,continued=false){
   const L=state.layout;
   const nameHidden=continued||!!state.hideNames;
@@ -4363,11 +4373,11 @@ function scriptRow(m,mem,gap,continued=false){
   const dialogueFs=Number(L.bubbleFs)||Number(L.fs)||16;
   const nameOffset=scriptNameBaselineOffset(scriptFs,dialogueFs);
   const name=`<div class="script-name ${nameHidden?'is-hidden':''}" style="color:${mem.color||'#424448'};font-size:${scriptFs}px;line-height:${L.lh};position:relative;top:${nameOffset}px;font-weight:${scriptNameFontWeight()};${subFontCss(L.scriptNameFont)}">${typeInline(scriptNameHTML(mem.name||'?',mem.scriptHighlight))}</div>`;
-  const plain=`color:${state.colors.nText};font-size:${Number(L.bubbleFs)||L.fs}px;line-height:${L.lh};${wbStyle()}`;
-  return `<div class="pmsg script-row ${continued?'continuation':''}" style="margin-bottom:${gap}px;column-gap:${L.scriptNameGap??14}px;${L.scriptNameGapMode==='end'?'grid-template-columns:max-content minmax(0,1fr);':''}${bubblePadStyle()}">
+  const plain=`color:${state.colors.nText};font-size:${Number(L.bubbleFs)||L.fs}px;line-height:${L.lh};${bubbleTextAlignStyle()}${wbStyle()}`;
+  return `<div class="pmsg script-row ${continued?'continuation':''}" style="margin-bottom:${gap}px;column-gap:${L.scriptNameGap??14}px;${scriptAlignmentStyle()}${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
     ${name}
-    <div class="script-dialogue editable" data-id="${m.id}" style="${plain}">${typeWrap(scriptDialogueInner(m.content))}</div>
+    <div class="script-dialogue editable" data-id="${m.id}" style="${plain}">${typeWrap(scriptDialogueInner(m.content),normalizeBubbleTextAlign(L.bubbleTextAlign))}</div>
   </div>`;
 }
 
@@ -4691,8 +4701,11 @@ function syncPreviewScrollbar(){
   __previewOverflowFrame=requestAnimationFrame(()=>{
     /* The wrapper stores the transformed preview dimensions, which is more
        reliable than stage.scrollWidth while the stage is a flex container. */
-    const needsX=fit.offsetWidth>stage.clientWidth+2;
-    const needsY=fit.offsetHeight>stage.clientHeight+2;
+    const cs=getComputedStyle(stage);
+    const padX=(parseFloat(cs.paddingLeft)||0)+(parseFloat(cs.paddingRight)||0);
+    const padY=(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0);
+    const needsX=fit.offsetWidth+padX>stage.clientWidth+1;
+    const needsY=fit.offsetHeight+padY>stage.clientHeight+1;
     stage.classList.toggle('preview-scroll-x',needsX);
     stage.classList.toggle('preview-scroll-y',needsY);
     if(!needsX) stage.scrollLeft=0;
@@ -5682,6 +5695,30 @@ else setTimeout(__idleLoadRenderer,1200);
     __RUNTIME_FONT_CONFIG['Noto Serif JP']={css:'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;800&display=swap',weights:[400,500,600,700,800]};
   }
 
+
+  // Language-only choices: keep these out of the main and name font menus.
+  for(const family of ['DotGothic16','LXGW WenKai TC','Zen Maru Gothic','Huninn','ZCOOL KuaiLe']){
+    __RUNTIME_FONT_CONFIG[family]={css:'https://fonts.googleapis.com/css2?family='+family.replace(/ /g,'+')+'&display=swap',weights:[400]};
+  }
+
+  __RUNTIME_FONT_CONFIG['Zen Kaku Gothic New']={css:'https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&display=swap',weights:[500,700]};
+
+  __RUNTIME_FONT_CONFIG['Zen Maru Gothic']={css:'https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap',weights:[400,700]};
+
+  Object.assign(__RUNTIME_FONT_CONFIG,{"Fusion Pixel 12px Proportional SC": {"css": "https://cdn.jsdelivr.net/npm/@fontsource/fusion-pixel-12px-proportional-sc/index.css", "weights": [400]}, "Iansui": {"css": "https://fonts.googleapis.com/css2?family=Iansui&display=swap", "weights": [400]}, "Shippori Mincho": {"css": "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700&display=swap", "weights": [400, 700]}, "Ark Pixel 12px Proportional SC": {"css": "data:text/css;base64,QGZvbnQtZmFjZXtmb250LWZhbWlseTonQXJrIFBpeGVsIDEycHggUHJvcG9ydGlvbmFsIFNDJztmb250LXN0eWxlOm5vcm1hbDtmb250LXdlaWdodDo0MDA7Zm9udC1kaXNwbGF5OnN3YXA7c3JjOnVybCgnaHR0cHM6Ly9hcmstcGl4ZWwtZm9udC50YWt3b2xmLmNvbS9hcmstcGl4ZWwtMTJweC1wcm9wb3J0aW9uYWwtemhfaGFucy5vdGYud29mZjInKSBmb3JtYXQoJ3dvZmYyJyk7fQ==", "weights": [400]}});
+  window.__migrateRetiredCjkFonts=function(){
+    const aliases={"Mochiy Pop One": "Zen Kaku Gothic New","Ma Shan Zheng": "Iansui", "ZCOOL XiaoWei": "Fusion Pixel 12px Proportional SC", "ZCOOL QingKe HuangYou": "Ark Pixel 12px Proportional SC", "Klee One": "Shippori Mincho", "Yomogi": "Zen Maru Gothic", "Hachi Maru Pop": "Zen Kaku Gothic New"};
+    const L=state.layout;
+    for(const key of ['cjkFontJa','cjkFontZh'])if(aliases[L[key]])L[key]=aliases[L[key]];
+    const name=String(L.scriptNameFont||'');
+    for(const [old,fresh] of Object.entries(aliases)){
+      if(name.includes("'"+old+"'")||name.includes('"'+old+'"')){
+        L.scriptNameFont=name.replace(old,fresh);break;
+      }
+    }
+  };
+  window.__migrateRetiredCjkFonts();
+
   /* 고른 한글 글꼴이 명조 계열이면 한자·가나도 명조로 맞춘다.
      'sans-serif' 를 먼저 걷어내고 나서 serif / 명조 계열 이름을 찾는다. */
   window.__cjkIsSerifStack=function(stack){
@@ -5689,12 +5726,26 @@ else setTimeout(__idleLoadRenderer,1200);
     return /myeongjo|myungjo|batang|bataang|mincho|songti|song ti|\bsong\b|serif/.test(s.replace(/sans-serif/g,' ').replace(/sans serif/g,' '));
   };
   window.__cjkFamilyFor=function(lang){
+    const choice=state.layout[lang==='zh'?'cjkFontZh':'cjkFontJa'];
+    if(choice&&__RUNTIME_FONT_CONFIG[choice])return choice;
     const serif=window.__cjkIsSerifStack();
     if(lang==='zh') return serif?'Noto Serif SC':'Noto Sans SC';
     return serif?'Noto Serif JP':'Noto Sans JP';
   };
-  function isZhFamily(f){ return f==='Noto Sans SC'||f==='Noto Serif SC'; }
-  function isJaFamily(f){ return f==='Noto Sans JP'||f==='Noto Serif JP'; }
+  window.setCjkFont=function(lang,value){
+    state.layout['cjkFont'+lang]=value;
+    renderPreview();
+    __ensureCurrentFontLoaded().then(()=>renderPreview()).catch(()=>{});
+  };
+  const previousSyncCjkFonts=syncControlsFromState;
+  syncControlsFromState=function(){
+    window.__migrateRetiredCjkFonts();
+    const result=previousSyncCjkFonts.apply(this,arguments);
+    ['Ja','Zh'].forEach(lang=>{const el=document.getElementById('cjkFont'+lang);if(el)el.value=state.layout['cjkFont'+lang]||'';});
+    return result;
+  };
+  function isZhFamily(f){ return ['Noto Sans SC','Noto Serif SC','LXGW WenKai TC','Huninn','ZCOOL KuaiLe','Fusion Pixel 12px Proportional SC','Ark Pixel 12px Proportional SC','Iansui'].includes(f); }
+  function isJaFamily(f){ return ['Noto Sans JP','Noto Serif JP','DotGothic16','Zen Maru Gothic','Zen Kaku Gothic New','Shippori Mincho'].includes(f); }
 
   function cpOf(ch){return ch.codePointAt(0);}
   function isHan(ch){
@@ -5736,7 +5787,7 @@ else setTimeout(__idleLoadRenderer,1200);
       if(!buf)return;
       if(kind){
         const span=document.createElement('span');
-        span.className='cjk-auto';span.dataset.cjkLang=kind;span.lang=kind==='ja'?'ja':'zh-CN';span.textContent=buf;frag.appendChild(span);
+        span.className='cjk-auto';span.dataset.cjkLang=kind;span.style.fontFamily='"'+window.__cjkFamilyFor(kind)+'",'+(kind==='ja'?'"Noto Sans JP"':'"Noto Sans SC"')+',sans-serif';span.lang=kind==='ja'?'ja':'zh-CN';span.textContent=buf;frag.appendChild(span);
       }else frag.appendChild(document.createTextNode(buf));
       buf='';
     };
@@ -5760,7 +5811,7 @@ else setTimeout(__idleLoadRenderer,1200);
       acceptNode(node){
         const p=node.parentElement, value=node.nodeValue||'';
         if(!p||!value.trim())return NodeFilter.FILTER_REJECT;
-        if(p.closest('.ctrl,.cjk-auto,script,style,textarea,select,option'))return NodeFilter.FILTER_REJECT;
+        if(p.closest('.script-name,.n-name,.m-name,.ctrl,.cjk-auto,script,style,textarea,select,option'))return NodeFilter.FILTER_REJECT;
         return cjkQuickRe.test(value)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
       }
     });
@@ -5780,8 +5831,8 @@ else setTimeout(__idleLoadRenderer,1200);
   }
   function sampleForFamily(node,family){
     if(!node)return 'ABC123';
-    if(isZhFamily(family))return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="zh"]')].map(x=>x.textContent).join(''))||'中文';
-    if(isJaFamily(family))return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="ja"]')].map(x=>x.textContent).join(''))||'日本語';
+    if(isZhFamily(family))return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="zh"],.script-name')].filter(x=>x.matches('.cjk-auto')||String(getComputedStyle(x).fontFamily).includes(family)).map(x=>x.textContent).join(''))||'中文';
+    if(isJaFamily(family))return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="ja"],.script-name')].filter(x=>x.matches('.cjk-auto')||String(getComputedStyle(x).fontFamily).includes(family)).map(x=>x.textContent).join(''))||'日本語';
     const clone=node.cloneNode(true);clone.querySelectorAll&&clone.querySelectorAll('.cjk-auto').forEach(x=>x.remove());
     return uniqueChars(clone.textContent)||'가나다ABC123';
   }
@@ -5790,6 +5841,7 @@ else setTimeout(__idleLoadRenderer,1200);
     if(isZhFamily(family))elements=[...node.querySelectorAll('.cjk-auto[data-cjk-lang="zh"]')];
     else if(isJaFamily(family))elements=[...node.querySelectorAll('.cjk-auto[data-cjk-lang="ja"]')];
     else elements=[node,...node.querySelectorAll('*')].filter(el=>el.textContent&&el.textContent.trim()&&String(getComputedStyle(el).fontFamily||'').toLowerCase().includes(family.toLowerCase()));
+    node.querySelectorAll('.script-name').forEach(el=>{if(String(getComputedStyle(el).fontFamily).includes(family))elements.push(el);});
     elements.forEach(el=>set.add(normalizedWeight(getComputedStyle(el).fontWeight)));if(!set.size)set.add(400);
     return [...set].sort((a,b)=>a-b);
   }
@@ -5799,7 +5851,7 @@ else setTimeout(__idleLoadRenderer,1200);
     /* 서명·페이지 번호에만 따로 지정한 글꼴도 저장 결과에 들어가야 한다.
        빠뜨리면 미리보기와 저장본의 글꼴이 달라진다. */
     try{
-      [ (state.credit&&state.credit.font), (state.pageNum&&state.pageNum.font) ].forEach(stack=>{
+      [ (state.mode==='script'&&state.layout.scriptNameFont), (state.credit&&state.credit.font), (state.pageNum&&state.pageNum.font) ].forEach(stack=>{
         if(!stack||typeof __selectedWebFont!=='function') return;
         const f=__selectedWebFont(stack);
         if(f&&!list.includes(f)) list.push(f);
@@ -5834,7 +5886,10 @@ else setTimeout(__idleLoadRenderer,1200);
     /* 굴림처럼 이 파일 안에 base64 로 박혀 있는 글꼴은 문서의 @font-face 를 그대로 쓴다 */
     if(cfg&&cfg.inlineCss){ try{ return __documentFontFaceCSS(family); }catch(_){ return ''; } }
     if(!cfg||!cfg.css)return '';
-    const sample=sampleForFamily(node,family),cps=Array.from(sample,ch=>ch.codePointAt(0)),wanted=weightsForFamily(node,family);
+    const sample=sampleForFamily(node,family),cps=Array.from(sample,ch=>ch.codePointAt(0));
+    // Embed a real available face when the browser synthesizes bold (e.g. Gowun Dodum).
+    const available=cfg.weights||[400];
+    const wanted=weightsForFamily(node,family).map(w=>available.includes(w)?w:available.reduce((a,b)=>Math.abs(b-w)<Math.abs(a-w)?b:a));
     const css=await fetchFontCSS(cfg.css),blocks=css.match(/@font-face\s*\{[\s\S]*?\}/gi)||[];
     const selected=blocks.filter(block=>{
       const fam=(block.match(/font-family\s*:\s*(['"]?)([^;'"}]+)\1\s*;/i)||[])[2]||'';
@@ -5883,6 +5938,12 @@ else setTimeout(__idleLoadRenderer,1200);
 <style id="fixed-ratio-crisp-zoom-hand-pan-v3">
 /* Fixed-ratio preview: keep the authored text width/wrapping intact. */
 #canvas{image-rendering:auto}
+/* Persistent glyph compositor layers cache low-resolution text, and very tall
+   layers can lose their lower tiles. Normal paint lets the browser tile/raster
+   at the current preview scale while retaining intentional character width. */
+#canvas .glyph-scale,#canvas .glyph-inline{will-change:auto!important}
+
+@media(min-width:861px){#stageEl{scrollbar-gutter:stable}}
 #stageEl.preview-pan-ready{cursor:grab}
 #stageEl.preview-pan-ready.is-panning,
 #stageEl.preview-pan-ready.is-panning *{cursor:grabbing!important}
@@ -5980,9 +6041,8 @@ else setTimeout(__idleLoadRenderer,1200);
     fitPreview();
   };
 
-  /* CSS zoom triggers a real browser repaint instead of enlarging one cached
-     transform layer. Text, borders and vector UI therefore remain much sharper
-     while the actual export canvas and save scale stay unchanged. */
+  /* Measure authored geometry at 1x. Preview scale never changes text metrics;
+     text is painted at the current visual scale without cached glyph layers. */
   fitPreview=function(){
     const stage=document.getElementById('stageEl');
     const wrap=document.getElementById('canvasFit');
@@ -6033,7 +6093,7 @@ else setTimeout(__idleLoadRenderer,1200);
     const stageCS=window.getComputedStyle?getComputedStyle(stage):null;
     const stagePadX=stageCS?((parseFloat(stageCS.paddingLeft)||0)+(parseFloat(stageCS.paddingRight)||0)):0;
     const stagePadY=stageCS?((parseFloat(stageCS.paddingTop)||0)+(parseFloat(stageCS.paddingBottom)||0)):0;
-    const availW=Math.max(40,stage.clientWidth-(mobileTransformOnly?stagePadX:8));
+    const availW=Math.max(40,stage.clientWidth-stagePadX);
     const desktop=window.matchMedia&&window.matchMedia('(min-width:861px)').matches;
     const ratioLocked=state.export&&state.export.ratio!=='auto';
     const availH=(desktop&&ratioLocked)?Math.max(40,stage.clientHeight-stagePadY):Infinity;
@@ -6041,45 +6101,54 @@ else setTimeout(__idleLoadRenderer,1200);
     const zoom=(typeof normalizedPreviewZoom==='function')?normalizedPreviewZoom(state.previewZoom):1;
     const scale=Math.max(0.002,Math.min(8,fitScale*zoom));
 
-    /* Mobile WebKit can treat CSS zoom as real layout width and reflow long
-       text when a fixed-ratio canvas reaches the viewport edge. Mobile therefore
-       always uses a visual transform. The wrapper alone owns the scaled layout
-       size, while the full-size export canvas is removed from normal flow so it
-       cannot widen the page or change wrapping. Desktop keeps CSS zoom for crisp
-       inspection where the browser handles it safely. */
-    const canZoom=!mobileTransformOnly&&window.CSS&&CSS.supports&&CSS.supports('zoom','1');
-    const scaledW=Math.max(1,Math.round(cw*scale));
-    const scaledH=Math.max(1,Math.round(ch*scale));
-
+    // Reserve the full preview area independently of the rendering method.
+    // Rounding upward preserves the last fractional pixel of long canvases.
+    const scaledW=Math.max(1,Math.ceil(cw*scale));
+    const scaledH=Math.max(1,Math.ceil(ch*scale));
     wrap.style.width=scaledW+'px';
     wrap.style.height=scaledH+'px';
-
-    if(canZoom){
-      canvas.style.position='relative';
-      canvas.style.zoom=String(scale);
-      canvas.style.transform='none';
-    }else{
-      /* Size containment prevents the unscaled child box from participating in
-         flex/min-content calculations. Absolute positioning keeps the authored
-         canvas width intact; only transform changes what the user sees. */
-      wrap.style.contain='layout size style';
-      wrap.style.overflow='visible';
-      canvas.style.position='absolute';
-      canvas.style.left='0';
-      canvas.style.top='0';
-      canvas.style.zoom='1';
-      canvas.style.transform=Math.abs(scale-1)>0.0001?'scale('+scale+')':'none';
-    }
+    wrap.style.contain='layout size style';
+    // The unscaled absolute child must not enlarge the scrollable overflow area.
+    wrap.style.overflow=CSS.supports('overflow','clip')?'clip':'hidden';
+    canvas.style.position='absolute';
+    canvas.style.left='0';
+    canvas.style.top='0';
+    // Native zoom changes text metrics at fractional sizes. Use a visual scale
+    // on every platform and let text repaint without persistent glyph layers.
+    canvas.style.zoom='1';
+    canvas.style.transform=Math.abs(scale-1)>0.0001?'scale('+scale+')':'none';
     if(typeof updatePreviewZoomLabel==='function') updatePreviewZoomLabel();
     if(typeof syncPreviewScrollbar==='function') syncPreviewScrollbar();
     requestAnimationFrame(updatePanAvailability);
   };
 
+  let previewGeometryFrame=0;
+  function observePreviewContent(){
+    const chat=document.getElementById('chat');
+    if(!chat||!window.ResizeObserver)return;
+    let last='';
+    new ResizeObserver(()=>{
+      if(previewCaptureMode||(state.novel&&state.novel.on))return;
+      const signature=chat.offsetWidth+':'+Math.max(chat.offsetHeight,chat.scrollHeight);
+      if(signature===last)return;
+      last=signature;
+      cancelAnimationFrame(previewGeometryFrame);
+      previewGeometryFrame=requestAnimationFrame(()=>{
+        if(!previewCaptureMode&&!(state.novel&&state.novel.on))applyCanvas();
+      });
+    }).observe(chat);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observePreviewContent,{once:true});
+  else observePreviewContent();
+
   function updatePanAvailability(){
     const stage=document.getElementById('stageEl');
     const fit=document.getElementById('canvasFit');
     if(!stage||!fit) return;
-    const canPan=fit.offsetWidth>stage.clientWidth+2||fit.offsetHeight>stage.clientHeight+2;
+    const cs=getComputedStyle(stage);
+    const padX=(parseFloat(cs.paddingLeft)||0)+(parseFloat(cs.paddingRight)||0);
+    const padY=(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0);
+    const canPan=fit.offsetWidth+padX>stage.clientWidth+1||fit.offsetHeight+padY>stage.clientHeight+1;
     stage.classList.toggle('preview-pan-ready',canPan);
     if(!canPan) stage.classList.remove('is-panning');
   }
@@ -8000,10 +8069,12 @@ window.dupMsg=function(id){
 
 /* ---------- 메시지 컨트롤 버튼 확장 (⠿ 드래그 · ⧉ 복제 추가) ---------- */
 window.ctrlHTML=function(id){
+  const sidePhoto=state.messages.find(m=>m.id===id&&m.type==='image'&&m.columnPlacement);
   return '<div class="ctrl">'
     +'<button type="button" class="drag-handle" data-mid="'+id+'" title="드래그로 순서 이동" onclick="return false">⠿</button>'
     +'<button type="button" title="위로" onclick="moveMsg(\''+id+'\',-1)">▲</button>'
     +'<button type="button" title="아래로" onclick="moveMsg(\''+id+'\',1)">▼</button>'
+    +(sidePhoto?'<button type="button" title="사진 가운데로 복구" onclick="returnImageToFlow(\''+id+'\')">↩</button>':'')
     +'<button type="button" title="복제" onclick="dupMsg(\''+id+'\')">⧉</button>'
     +'<button type="button" class="edit-btn" title="수정" onclick="editMsgPrompt(\''+id+'\')">✎</button>'
     +'<button type="button" class="del" title="삭제" onclick="delMsg(\''+id+'\')">×</button>'
@@ -8065,12 +8136,39 @@ window.ctrlHTML=function(id){
     const from=state.messages.findIndex(m=>m.id===d.id);let to=state.messages.findIndex(m=>m.id===tid);
     if(from<0||to<0)return;if(d.pos==='after')to++;if(to>from)to--;
     if(to===from&&!state.messages[from].columnPlacement)return;
-    pushUndo('순서 이동');const it=state.messages.splice(from,1)[0];delete it.columnPlacement;state.messages.splice(to,0,it);renderPreview();
+    pushUndo('순서 이동');const it=state.messages.splice(from,1)[0];releaseImageColumn(it);state.messages.splice(to,0,it);syncControlsFromState();if(window.__syncNovel)window.__syncNovel();renderPreview();
   }
   document.addEventListener('pointerup',finish);document.addEventListener('pointercancel',finish);
   window.addEventListener('blur',()=>{if(drag)finish({type:'pointercancel',pointerId:drag.pointer});});
 })();
 
+function releaseImageColumn(image){
+  if(!image||!image.columnPlacement)return false;
+  const old=Number(image.columnPlacement.column),n=state.novel;
+  delete image.columnPlacement;
+  if(!n||!n.on||n.mode==='ratio'||!Number.isInteger(old)||old<0||old>=n.cols)return true;
+  if(n.__msgCols)delete n.__msgCols[image.id];
+  const occupied=state.messages.some(m=>{
+    if(m===image)return false;
+    if(m.columnPlacement)return Number(m.columnPlacement.column)===old;
+    const rec=n.__msgCols&&n.__msgCols[m.id];
+    return rec&&(rec.cols||[rec.col]).some(c=>Number(c)%n.cols===old);
+  });
+  if(occupied)return true;
+  const drop=map=>Object.fromEntries(Object.entries(map||{}).filter(([k])=>Number(k)!==old).map(([k,v])=>[Number(k)>old?Number(k)-1:k,v]));
+  n.columnWidths=drop(n.columnWidths);n.columnAlign=drop(n.columnAlign);
+  state.messages.forEach(m=>{if(m.columnPlacement&&Number(m.columnPlacement.column)>old)m.columnPlacement.column--;});
+  n.cols=Math.max(1,n.cols-1);n.page=0;delete n.__msgCols;
+  if(n.cols===1){n.on=false;n.cols=2;}
+  return true;
+}
+function returnImageToFlow(id){
+  const image=state.messages.find(m=>m.id===id);
+  if(!image||!image.columnPlacement)return;
+  pushUndo('사진 가운데로 복구');
+  releaseImageColumn(image);image.align='center';
+  syncControlsFromState();if(window.__syncNovel)window.__syncNovel();renderPreview();
+}
 function placeImageBeside(id,targetId,side,targetRow){
   const image=state.messages.find(m=>m.id===id),target=state.messages.find(m=>m.id===targetId);
   if(!image||image.type!=='image'||!target||id===targetId)return;
@@ -15783,8 +15881,10 @@ const EMBED_CJK_FONT_CSS={
 function fontImports(){
   const s0=ST();
   const rawStack=String((s0&&s0.layout&&s0.layout.font)||'');
-  const stack=rawStack.toLowerCase();
+  const stack=(rawStack+' '+((s0&&s0.mode==='script'&&s0.layout.scriptNameFont)||'')).toLowerCase();
   const urls=[EMBED_FONT_CSS['pretendard']];
+  const nameFamily=s0&&s0.mode==='script'&&__selectedWebFont(s0.layout.scriptNameFont||'');
+  if(nameFamily&&__RUNTIME_FONT_CONFIG[nameFamily].css)urls.push(__RUNTIME_FONT_CONFIG[nameFamily].css);
   Object.keys(EMBED_FONT_CSS).forEach(k=>{
     if(k!=='pretendard'&&stack.indexOf(k)>=0) urls.push(EMBED_FONT_CSS[k]);
   });
@@ -15798,10 +15898,12 @@ function fontImports(){
   }catch(_){}
   try{
     if(document.querySelector('#canvas .cjk-auto[data-cjk-lang="ja"]')){
-      urls.push(EMBED_CJK_FONT_CSS[serif?'noto serif jp':'noto sans jp']);
+      const family=window.__cjkFamilyFor('ja');
+      urls.push((__RUNTIME_FONT_CONFIG[family]||{}).css||EMBED_CJK_FONT_CSS[serif?'noto serif jp':'noto sans jp']);
     }
     if(document.querySelector('#canvas .cjk-auto[data-cjk-lang="zh"]')){
-      urls.push(EMBED_CJK_FONT_CSS[serif?'noto serif sc':'noto sans sc']);
+      const family=window.__cjkFamilyFor('zh');
+      urls.push((__RUNTIME_FONT_CONFIG[family]||{}).css||EMBED_CJK_FONT_CSS[serif?'noto serif sc':'noto sans sc']);
     }
   }catch(_){}
 
@@ -17400,41 +17502,90 @@ async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
 }
 
 
-/* 일부 갤럭시 갤러리는 fragmented MP4의 실제 조각 길이보다 moov 안의 짧은
-   duration 값만 읽어 3초 영상처럼 표시한다. 실제 재생 데이터는 건드리지 않고
-   mvhd/tkhd/mdhd/mehd의 전체 길이를 완성된 영상 길이에 맞춘다. */
-/* Safari fragmented MP4: finalize durations without retiming media samples. */
+/* Safari: prefer the recorder's own timeline. Never replace an empty fragment
+   initialization duration with wall time: it is not a second media segment.
+   Encoded samples, decode/composition timestamps and edit lists stay intact. */
 async function finalizeSafariMp4(blob,seconds,info){
+  info=info||{};
   try{
     if(!Number.isFinite(seconds)||seconds<=0)throw new Error('invalid recording duration');
     const buf=await blob.arrayBuffer(),v=new DataView(buf),bytes=new Uint8Array(buf);
-    const u32=p=>v.getUint32(p,false),u64=p=>u32(p)*4294967296+u32(p+4);
-    const put=(p,n,wide)=>{n=Math.max(0,Math.round(n));if(!Number.isSafeInteger(n)||(!wide&&n>4294967294))throw new Error('duration overflow');if(wide){v.setUint32(p,Math.floor(n/4294967296));v.setUint32(p+4,n%4294967296);}else v.setUint32(p,n);};
-    function boxes(a,b){const out=[];for(let p=a;p<b;){if(p+8>b)throw new Error('truncated MP4');let z=u32(p),head=8;if(z===1){if(p+16>b)throw new Error('truncated extended box');z=u64(p+8);head=16;}if(!z)z=b-p;if(z<head||p+z>b)throw new Error('invalid box size');out.push({p,end:p+z,d:p+head,type:String.fromCharCode(...bytes.slice(p+4,p+8))});p+=z;}return out;}
+    const need=(p,n,end=bytes.length)=>{if(p<0||p+n>end)throw new Error('truncated MP4 field');};
+    const u32=p=>{need(p,4);return v.getUint32(p,false);};
+    const u64=p=>{const n=u32(p)*4294967296+u32(p+4);if(!Number.isSafeInteger(n))throw new Error('MP4 integer overflow');return n;};
+    function boxes(a,b){const out=[];for(let p=a;p<b;){need(p,8,b);let z=u32(p),head=8;if(z===1){need(p,16,b);z=u64(p+8);head=16;}if(!z)z=b-p;if(z<head||p+z>b)throw new Error('invalid box size');out.push({p,end:p+z,d:p+head,type:String.fromCharCode(...bytes.slice(p+4,p+8))});p+=z;}return out;}
     const kids=b=>boxes(b.d,b.end),top=boxes(0,bytes.length),moov=top.find(b=>b.type==='moov');if(!moov)throw new Error('moov missing');
     const children=kids(moov),mvhd=children.find(b=>b.type==='mvhd');if(!mvhd)throw new Error('mvhd missing');
-    function clock(b){const version=bytes[b.d];if(version>1)throw new Error('unsupported version');const scaleAt=b.d+(version?20:12),durAt=b.d+(version?24:16);if(durAt+(version?8:4)>b.end)throw new Error('short clock box');return {scale:u32(scaleAt),at:durAt,wide:!!version};}
-    const movie=clock(mvhd);if(!movie.scale)throw new Error('zero movie timescale');put(movie.at,seconds*movie.scale,movie.wide);
-    const tracks=[];
+    function clock(b){const version=bytes[b.d];if(version>1)throw new Error('unsupported clock version');const scaleAt=b.d+(version?20:12),at=b.d+(version?24:16),size=version?8:4;need(at,size,b.end);const scale=u32(scaleAt);if(!scale)throw new Error('zero timescale');return {scale,at,size};}
+    const movie=clock(mvhd),tracks=new Map(),clear=[movie];
+    let emptyInit=true;
     for(const trak of children.filter(b=>b.type==='trak')){
       const tk=kids(trak),tkhd=tk.find(b=>b.type==='tkhd'),mdia=tk.find(b=>b.type==='mdia');
-      if(tkhd){const wide=bytes[tkhd.d]===1,at=tkhd.d+(wide?28:20);if(at+(wide?8:4)>tkhd.end)throw new Error('short tkhd');put(at,seconds*movie.scale,wide);}
-      if(mdia){const mdhd=kids(mdia).find(b=>b.type==='mdhd');if(mdhd){const c=clock(mdhd);if(!c.scale)throw new Error('zero media timescale');put(c.at,seconds*c.scale,c.wide);tracks.push(c.scale);}}
-      const edts=tk.find(b=>b.type==='edts');if(!edts)continue;
-      for(const elst of kids(edts).filter(b=>b.type==='elst')){
-        const wide=bytes[elst.d]===1,count=u32(elst.d+4),stride=wide?20:12,entries=[];
-        if(elst.d+8+count*stride>elst.end)throw new Error('short edit list');
-        for(let i=0;i<count;i++){const at=elst.d+8+i*stride,mt=at+(wide?8:4),empty=wide?u32(mt)===4294967295&&u32(mt+4)===4294967295:v.getInt32(mt)===-1;entries.push({at,empty,duration:wide?u64(at):u32(at)});}
-        let remaining=Math.round(seconds*movie.scale);const real=entries.find(e=>!e.empty);
-        if(!real)throw new Error('no media edit');
-        for(const e of entries){if(e.empty){const keep=e.duration<remaining?e.duration:0;put(e.at,keep,wide);remaining-=keep;}}
-        let done=false;for(const e of entries){if(e.empty)continue;put(e.at,done?0:remaining,wide);done=true;/* Preserve media_time (AAC priming / video offset) and media_rate. */}
+      if(!tkhd||!mdia)throw new Error('track header missing');
+      const version=bytes[tkhd.d];if(version>1)throw new Error('unsupported track version');
+      const id=u32(tkhd.d+(version?20:12)),at=tkhd.d+(version?28:20),size=version?8:4;need(at,size,tkhd.end);clear.push({at,size});
+      const md=kids(mdia),mdhd=md.find(b=>b.type==='mdhd'),hdlr=md.find(b=>b.type==='hdlr'),minf=md.find(b=>b.type==='minf');
+      if(!mdhd||!hdlr||!minf)throw new Error('media header missing');
+      const c=clock(mdhd);clear.push(c);need(hdlr.d+8,4,hdlr.end);
+      const type=String.fromCharCode(...bytes.slice(hdlr.d+8,hdlr.d+12));
+      tracks.set(id,{id,type,scale:c.scale,count:0,ticks:0,start:Infinity,end:0,next:0,defaultDuration:0});
+      const stbl=kids(minf).find(b=>b.type==='stbl');if(!stbl)throw new Error('sample table missing');
+      const tables=kids(stbl),stts=tables.find(b=>b.type==='stts'),stsz=tables.find(b=>b.type==='stsz'),stz2=tables.find(b=>b.type==='stz2');
+      // Only an initialization segment with no regular samples may be cleared.
+      if(!stts||(!stsz&&!stz2))emptyInit=false;
+      if(stts){need(stts.d+4,4,stts.end);if(u32(stts.d+4))emptyInit=false;}
+      for(const b of [stsz,stz2].filter(Boolean)){need(b.d+8,4,b.end);if(u32(b.d+8))emptyInit=false;}
+    }
+    const mvex=children.find(b=>b.type==='mvex');
+    if(mvex)for(const b of kids(mvex).filter(b=>b.type==='trex')){need(b.d,24,b.end);const t=tracks.get(u32(b.d+4));if(t)t.defaultDuration=u32(b.d+12);}
+    const fragments=top.filter(b=>b.type==='moof');
+    for(const moof of fragments)for(const traf of kids(moof).filter(b=>b.type==='traf')){
+      const k=kids(traf),tfhd=k.find(b=>b.type==='tfhd');if(!tfhd)throw new Error('tfhd missing');need(tfhd.d,8,tfhd.end);
+      const t=tracks.get(u32(tfhd.d+4));if(!t)throw new Error('unknown fragment track');
+      const flags=u32(tfhd.d)&0xffffff;let p=tfhd.d+8,dd=t.defaultDuration;
+      if(flags&1)p+=8;if(flags&2)p+=4;
+      if(flags&8){need(p,4,tfhd.end);dd=u32(p);p+=4;}
+      if(flags&16)p+=4;if(flags&32)p+=4;need(p,0,tfhd.end);
+      const tfdt=k.find(b=>b.type==='tfdt');let dts=t.next;
+      if(tfdt){const ver=bytes[tfdt.d];if(ver>1)throw new Error('unsupported tfdt');need(tfdt.d+4,ver?8:4,tfdt.end);dts=ver?u64(tfdt.d+4):u32(tfdt.d+4);}
+      for(const trun of k.filter(b=>b.type==='trun')){
+        need(trun.d,8,trun.end);const f=u32(trun.d)&0xffffff,count=u32(trun.d+4);let q=trun.d+8;
+        if(f&1)q+=4;if(f&4)q+=4;
+        const stride=((f&256?1:0)+(f&512?1:0)+(f&1024?1:0)+(f&2048?1:0))*4;
+        need(q,count*stride,trun.end);if(count>10000000)throw new Error('too many samples');
+        for(let i=0;i<count;i++){
+          let duration=dd;if(f&256){duration=u32(q);q+=4;}
+          if(f&512)q+=4;if(f&1024)q+=4;
+          let cto=0;if(f&2048){cto=bytes[trun.d]===1?v.getInt32(q,false):u32(q);q+=4;}
+          if(!duration)throw new Error('sample duration missing');
+          t.start=Math.min(t.start,dts+cto);t.end=Math.max(t.end,dts+cto+duration);
+          t.ticks+=duration;t.count++;dts+=duration;
+        }
+      }
+      t.next=dts;
+    }
+    const all=[...tracks.values()],video=all.find(t=>t.type==='vide');
+    Object.assign(info,{applied:true,metadataOnly:true,seconds,timescale:movie.scale,fragments:fragments.length,
+      samples:video?video.count:0,fps:video&&video.ticks?video.count/(video.ticks/video.scale):null,
+      tracks:all.map(t=>t.id+' '+t.type+' ts'+t.scale+' · '+t.count+'개 · 간격합 '+(t.ticks/t.scale).toFixed(3)+'초 · 표시구간 '+(t.count?((t.end-t.start)/t.scale).toFixed(3):'?')+'초').join(' / '),
+      top:top.map(b=>b.type).join(' '),mode:'녹화 원본 유지',rawDuration:await probeBlobDuration(blob)});
+    const close=d=>Number.isFinite(d)&&d>0&&Math.abs(d-seconds)<=Math.max(.5,seconds*.15);
+    // Healthy native output is returned byte-for-byte, including AAC priming edits.
+    if(close(info.rawDuration)){info.measured=info.rawDuration;return blob;}
+    if(fragments.length&&mvex&&emptyInit){
+      let changed=false;
+      for(const c of clear)for(let i=0;i<c.size;i++){if(bytes[c.at+i])changed=true;bytes[c.at+i]=0;}
+      if(changed){
+        const candidate=new Blob([buf],{type:blob.type||'video/mp4'});
+        info.candidateDuration=await probeBlobDuration(candidate);
+        if(close(info.candidateDuration)){info.mode='빈 초기화 구간의 중복 길이 제거';info.measured=info.candidateDuration;return candidate;}
       }
     }
-    const mvex=children.find(b=>b.type==='mvex');if(mvex)for(const b of kids(mvex).filter(b=>b.type==='mehd')){const wide=bytes[b.d]===1;if(b.d+4+(wide?8:4)>b.end)throw new Error('short mehd');put(b.d+4,seconds*movie.scale,wide);}
-    if(info)Object.assign(info,{applied:true,metadataOnly:true,seconds,timescale:movie.scale,fragments:top.filter(b=>b.type==='moof').length,tracks:tracks.join('/'),top:top.map(b=>b.type).join(' ')});
-    return new Blob([buf],{type:blob.type||'video/mp4'});
-  }catch(e){if(info)info.bail=String(e.message||e);return blob;}
+    // Do not guess a new frame rate or overwrite audio timing to hide a mismatch.
+    info.measured=info.rawDuration;
+    if(info.rawDuration!=null&&!close(info.rawDuration))info.bail='녹화 원본 길이가 예상과 다름';
+    return blob;
+  }catch(e){info.applied=false;info.bail=String(e.message||e);return blob;}
 }
 
 async function normalizeMp4DurationMetadata(blob,durationSeconds){
@@ -18002,7 +18153,7 @@ window.exportBackgroundVideo=async function(opt){
     const outMime=String(chunkMime||(rec&&rec.mimeType)||mime||'video/webm').split(';')[0];
     let blob=new Blob(chunks,{type:outMime});
     if(!blob.size) throw new Error('empty recording');
-    /* Safari keeps sample timestamps; only finalize container duration/edit metadata. */
+    /* Safari validates native output before considering an empty-init metadata repair. */
     const rawSave=/iP(hone|ad|od)/i.test(navigator.userAgent||'')
       ||(/Safari/i.test(navigator.userAgent||'')&&!/Chrome|Chromium|CriOS|Edg|OPR|Whale/i.test(navigator.userAgent||''));
     if(rawSave) window.__lastMp4Timeline=null;
@@ -18010,7 +18161,7 @@ window.exportBackgroundVideo=async function(opt){
     if(/mp4/i.test(outMime)&&rawSave){
       const timeline={applied:false,metadataOnly:true,bail:''};
       blob=await finalizeSafariMp4(blob,targetSeconds,timeline);
-      mp4Fixed=!!timeline.applied;window.__lastMp4Timeline=timeline;
+      mp4Fixed=!!timeline.applied;mp4Samples=timeline.samples||0;window.__lastMp4Timeline=timeline;
       if(!timeline.applied)throw new Error('MP4 길이 정보를 마무리하지 못했어요: '+timeline.bail);
     }
     if(/mp4/i.test(outMime)&&!rawSave){
@@ -18043,10 +18194,11 @@ window.exportBackgroundVideo=async function(opt){
         +' · rVFC='+(useFrameCb?frameHits:'없음')+' · pixel='+(sigOk?'ok':'없음'),
       '벽시계: 전체 '+round(wallTotal)+'초 / 내용 '+round(wallContent)+'초',
       '계산: target '+round(targetSeconds)+'초 · span '+round(spanSeconds)+'초 · 적은 길이 '+round(declared)+'초',
-      (tl.metadataOnly?'MP4 길이 정보 보정: ':'MP4 시간표 수정: ')+(mp4Fixed?'적용됨':'실패')+(tl.bail?(' ('+tl.bail+')'):'')
+      (tl.metadataOnly?'MP4 길이 검사: ':'MP4 시간표 수정: ')+(mp4Fixed?'적용됨':'실패')+(tl.bail?(' ('+tl.bail+')'):'')
         +' · 샘플 '+(mp4Samples||tl.samples||0)+'개 · 조각 '+(tl.fragments||0)
         +' · timescale '+(tl.timescale||0)+' · 계산fps '+round(tl.fps),
-      '후처리: '+(rawSave?'길이 정보만 보정 · 영상/오디오 샘플 원본 유지':'적용'),
+      '후처리: '+(rawSave?((tl.mode||'원본 유지')+' · 영상/오디오 샘플 및 편집 목록 원본 유지'):'적용'),
+      ...(rawSave?['보정 전 원본 측정: '+(tl.rawDuration==null?'측정 불가':round(tl.rawDuration)+'초')+' · 초기화 보정 후보: '+(tl.candidateDuration==null?'측정값 없음':round(tl.candidateDuration)+'초')]:[]),
       '트랙별(계산값): '+(tl.tracks||'없음'),
       '파일 구조: '+(tl.top||'-'),
       '--- 저장된 파일 실제 내용 ---',
@@ -18066,8 +18218,8 @@ window.exportBackgroundVideo=async function(opt){
     console.log(report);
     const expected=declared||targetSeconds;
     const wayOff=(measured!=null)&&(measured>expected*1.25+0.5||measured<expected*0.75-0.5);
-    if(wayOff) setTimeout(()=>{ try{ showVideoReport(report); }catch(_){} },900);
-    if(measured!=null&&(!Number.isFinite(measured)||measured>expected*4+5))throw new Error('저장 파일의 재생 길이가 비정상이라 다운로드를 중단했어요. 영상 길이 진단을 확인해 주세요.');
+    if(wayOff||(rawSave&&tl.bail)) setTimeout(()=>{ try{ showVideoReport(report); }catch(_){} },900);
+    if((rawSave&&((tl.bail&&tl.applied)||wayOff))||(measured!=null&&(!Number.isFinite(measured)||measured>expected*4+5)))throw new Error('저장 파일의 재생 길이가 비정상이라 다운로드를 중단했어요. 영상 길이 진단을 확인해 주세요.');
     const ext=extOf(outMime,rec);
     const name=((typeof safeFilename==='function')?safeFilename(s.export.filename):'chat')+'.'+ext;
     const fallback=()=>{
@@ -18935,7 +19087,9 @@ window.setAlign=function(a){
   try{
     if(typeof composerEditId!=='undefined'&&composerEditId){
       const m=(state.messages||[]).find(function(x){ return x&&x.id===composerEditId; });
-      if(m&&m.type==='image'&&m.align!==a){ m.align=a; renderPreview(); }
+      if(m&&m.type==='image'&&(m.align!==a||(a==='center'&&m.columnPlacement))){
+        if(a==='center'&&m.columnPlacement){returnImageToFlow(m.id);}else{m.align=a;renderPreview();}
+      }
     }
   }catch(_){}
 };
@@ -19028,7 +19182,8 @@ if(typeof __bulkAlignImg==='function'){
     const ms=(state.messages||[]).filter(function(m){ return m&&set.has(m.id)&&m.type==='image'; });
     if(!ms.length) return false;
     try{ if(typeof window.pushUndo==='function') window.pushUndo('사진 정렬 변경'); }catch(_){}
-    ms.forEach(function(m){ m.align=want; });
+    ms.forEach(function(m){if(want==='center')releaseImageColumn(m);m.align=want;});
+    syncControlsFromState();if(window.__syncNovel)window.__syncNovel();
     state.draftImageAlign=want; syncImgAlignSeg();
     try{ renderPreview(); }catch(_){}
     try{ S.refresh(); }catch(_){}
@@ -22872,6 +23027,29 @@ const box=document.createElement('div');box.id='scriptNameOptions';box.innerHTML
 $('scriptNameStyleSection').querySelector('.script-highlight-box').before(box);
 enhanceRange('scriptNameGap','scriptNameGapV',{min:0,max:120,step:1,nudge:1});
 for(const opt of $('fontSel').options) $('scriptNameFont').append(opt.cloneNode(true));
+function syncScriptLanguageFonts(){
+ const select=$('scriptNameFont');if(!select)return;
+ const current=state.layout.scriptNameFont||'';
+ const texts=[...state.members.map(m=>m.name||''),...state.messages.filter(m=>m.type==='chat'||m.type==='text').map(m=>m.content||''),$('msgContent').value||''];
+ const kana=/[\u3040-\u30ff\u31f0-\u31ff\uff66-\uff9f]/u,han=/[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/u;
+ const hasJa=texts.some(t=>kana.test(t)),hasHan=texts.some(t=>han.test(t));
+ // Han-only names are ambiguous: offer both languages rather than guessing.
+ const enabled={Ja:hasJa||hasHan,Zh:hasHan};
+ for(const lang of ['Ja','Zh']){
+   let group=select.querySelector('optgroup[data-language="'+lang+'"]');
+   const choices=[...$('cjkFont'+lang).options].filter(o=>o.value);
+   const selected=choices.some(o=>current==="'"+o.value+"',sans-serif");
+   if(!enabled[lang]&&!selected){if(group)group.remove();continue;}
+   if(!group){group=document.createElement('optgroup');group.dataset.language=lang;group.label=lang==='Ja'?'일본어 글씨체':'중국어 글씨체';
+     choices.forEach(o=>{const option=document.createElement('option');option.value="'"+o.value+"',sans-serif";option.textContent=o.textContent;group.append(option);});select.append(group);}
+ }
+ select.value=current;
+}
+const beforeScriptLanguageRender=renderPreview;
+renderPreview=function(){window.__migrateRetiredCjkFonts();const result=beforeScriptLanguageRender.apply(this,arguments);syncScriptLanguageFonts();return result;};
+$('msgContent').addEventListener('input',syncScriptLanguageFonts);
+syncScriptLanguageFonts();
+
 $('scriptNameGap').oninput=function(){state.layout.scriptNameGap=Number(this.value);$('scriptNameGapV').textContent=this.value+'px';renderPreview();};
 $('scriptNameGapMode').onchange=function(){state.layout.scriptNameGapMode=this.value;renderPreview();};
 $('scriptNameFont').onchange=function(){state.layout.scriptNameFont=this.value;renderPreview();if(typeof __ensureCurrentFontLoaded==='function')__ensureCurrentFontLoaded().then(()=>renderPreview());};
