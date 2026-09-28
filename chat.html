@@ -4054,7 +4054,7 @@ function __applyBlurMarkup(t,tabAttr){
   return t;
 }
 function hasMarkdownBlock(raw){
-  return /^(?: {0,3}#{1,6}\s+|\s*```|\s*>\s?|\s*(?:[-+*]|\d+[.)])\s+|\s*\|?\s*:?-{3,}:?\s*\|)/m.test(String(raw||''));
+  return /^(?: {0,3}#{1,6}\s+|\s*```|\s*>\s?|\s*[-+*]\s+|\s*\|?\s*:?-{3,}:?\s*\|)/m.test(String(raw||''));
 }
 function fmtText(raw,edit){
   let t=esc(raw);
@@ -4226,6 +4226,12 @@ function dividerRow(m,gap){
 }
 function textRow(t,gap){
   const L=state.layout;
+  const paragraphContent=L.textIndent&&!hasMarkdownBlock(t.content)&&/\n{2,}/.test(t.content)
+    ? t.content.split(/(\n{2,})/).map((part,index)=>{
+        if(index%2) return '<span class="text-paragraph-gap" style="display:block">'+('<br>'.repeat(part.length-1))+'</span>';
+        return '<span class="text-paragraph" style="display:block;text-indent:1em">'+fmtText(part)+'</span>';
+      }).join('')
+    : fmtText(t.content);
   /* 대본 모드 옵션: 지문도 이름 칼럼 + 대사 간격만큼 들여써서
      대사 텍스트의 실제 시작선과 정확히 맞춘다. */
   const scriptNarrationIndent=(state.mode==='script'&&L.scriptNarrationIndent)
@@ -4235,7 +4241,7 @@ function textRow(t,gap){
     +`font-size:${L.fs}px;line-height:${L.lh};margin-bottom:${gap}px;${scriptNarrationIndent}${wbStyle()}`;
   return `<div class="pmsg t-block ${scriptNarrationIndent?'script-narration-aligned':''}" style="${st}">
     ${ctrlHTML(t.id)}
-    <div class="t-inner editable" data-id="${t.id}" style="${L.textIndent?'text-indent:1em;':''}">${typeWrap(fmtText(t.content),t.align||'left')}</div>
+    <div class="t-inner editable" data-id="${t.id}" style="${L.textIndent?'text-indent:1em;':''}">${typeWrap(paragraphContent,t.align||'left')}</div>
   </div>`;
 }
 /* 말풍선 좌우 여백 — 전체 바깥 여백과 별개로 말풍선 행만 안쪽으로 */
@@ -9838,7 +9844,7 @@ stage.addEventListener('touchend',e=>{
       const justify=getComputedStyle(flow).textAlign==='justify';
       justifySets.push(justify);
       /* 양쪽 정렬도 실제 미리보기의 자동 줄바꿈 위치를 먼저 잰다. */
-      breakSets.push(measuredSoftBreaks(flow));
+      breakSets.push(flow.querySelector('.text-paragraph')?[]:measuredSoftBreaks(flow));
       if(i&&i%20===0) await yieldThread();
     }
 
@@ -9910,6 +9916,7 @@ stage.addEventListener('touchend',e=>{
 
     const cloneFlows=[...clone.querySelectorAll('.glyph-scale')];
     for(let i=0;i<Math.min(cloneFlows.length,breakSets.length);i++){
+      if(cloneFlows[i].querySelector('.text-paragraph')) continue;
       if(justifySets[i]){
         /* justify는 강제 <br>가 들어가면 줄 끝 정렬 규칙이 바뀌므로 줄 상자로 고정한다. */
         freezeJustifiedFlow(cloneFlows[i],breakSets[i]);
@@ -23086,7 +23093,7 @@ fmtText=function(raw,edit){
   let m=line.match(/^ {0,3}(#{1,6})\s+(.+)$/);if(m){out.push('<h'+m[1].length+'>'+inline(m[2])+'</h'+m[1].length+'>');i++;continue;}
   if(/^\s*([-*_])(?:\s*\1){2,}\s*$/.test(line)){out.push('<hr>');i++;continue;}
   if(/^\s*>\s?/.test(line)){let q=[];while(i<lines.length&&/^\s*>/.test(lines[i]))q.push(inline(lines[i++].replace(/^\s*>\s?/,'')));out.push('<blockquote>'+q.join('<br>')+'</blockquote>');continue;}
-  m=line.match(/^\s*(?:([-+*])|\d+[.)])\s+(.+)$/);if(m){const ordered=!m[1],tag=ordered?'ol':'ul';let items=[];while(i<lines.length){const x=lines[i].match(/^\s*(?:([-+*])|\d+[.)])\s+(.+)$/);if(!x||(!x[1])!==ordered)break;items.push('<li>'+inline(x[2])+'</li>');i++;}out.push('<'+tag+'>'+items.join('')+'</'+tag+'>');continue;}
+  m=line.match(/^\s*[-+*]\s+(.+)$/);if(m){let items=[];while(i<lines.length){const x=lines[i].match(/^\s*[-+*]\s+(.+)$/);if(!x)break;items.push('<li>'+inline(x[1])+'</li>');i++;}out.push('<ul>'+items.join('')+'</ul>');continue;}
   out.push(line?inline(line):'');i++;if(i<lines.length)out.push('<br>');
  }
  return '<div class="md-block">'+out.join('')+'</div>';
