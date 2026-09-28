@@ -9800,11 +9800,12 @@ stage.addEventListener('touchend',e=>{
     }
     if(!lines.length) return;
 
+    const firstLineIndent=getComputedStyle(cloneRoot).textIndent;
     while(cloneRoot.firstChild) cloneRoot.removeChild(cloneRoot.firstChild);
     cloneRoot.style.setProperty('white-space','normal','important');
     cloneRoot.style.setProperty('overflow','visible','important');
 
-    lines.forEach(line=>{
+    lines.forEach((line,index)=>{
       const row=document.createElement('span');
       row.setAttribute('data-preview-locked-line','1');
       row.style.setProperty('display','block','important');
@@ -9814,6 +9815,9 @@ stage.addEventListener('touchend',e=>{
       row.style.setProperty('max-width','none','important');
       row.style.setProperty('white-space','nowrap','important');
       row.style.setProperty('line-height','inherit','important');
+      row.style.setProperty('text-indent','0','important');
+      if(index===0&&firstLineIndent&&firstLineIndent!=='0px')
+        row.style.setProperty('padding-left',firstLineIndent,'important');
       row.style.setProperty('text-align','justify','important');
       row.style.setProperty('text-align-last',line.soft?'justify':'left','important');
       row.style.setProperty('-moz-text-align-last',line.soft?'justify':'left','important');
