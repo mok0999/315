@@ -354,7 +354,8 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   display:grid;
   grid-template-columns:min(var(--script-name-col,96px),38%) minmax(0,1fr);
   column-gap:14px;
-  align-items:start;
+  align-items:baseline;
+  align-items:first baseline;
   position:relative;
 }
 .script-row .script-name{
@@ -366,7 +367,11 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   overflow-wrap:normal;
   word-break:keep-all;
 }
+.script-row .script-name > .glyph-inline{display:block}
 .script-row .script-name.is-hidden{visibility:hidden}
+#scriptNameOptions{margin-top:18px}
+#scriptNameGapMode + .rangewrap{margin-top:12px}
+#scriptNameOptions > .field + .field{margin-top:18px}
 .script-row .script-dialogue{
   min-width:0;
   max-width:100%;
@@ -1613,7 +1618,7 @@ html, body, #canvas, #chat, #canvas * {
 </div>
 <div class="field-help" style="margin-top:10px">투명 배경을 켜면 그라데이션은 적용되지 않아요. 배경 이미지가 있으면 이미지가 그 위에 덮여요.</div>
 </div></div>
-</div></div><div class="flat-tool-section" id="backgroundImageSection"><div class="flat-tool-title"><strong>배경 이미지</strong></div><div class="flat-tool-body"><div class="field"><label class="lb">이미지 불러오기</label><div class="bg-image-load-row"><label class="btn sm bg-upload-btn">↑ 파일<input accept="image/*" hidden="" id="bgImgFile" onchange="onBackgroundImageFile(event)" type="file"/></label><input id="bgImgUrl" onchange="loadBackgroundImageUrl()" onkeydown="if(event.key==='Enter'){event.preventDefault();loadBackgroundImageUrl();}" placeholder="이미지 URL · 붙여넣고 Enter" type="text"/><button class="btn sm danger-ghost" onclick="clearBackgroundImage()" type="button">지우기</button></div><div class="bg-image-preview" id="bgImgPreviewWrap" style="display:none"><img alt="배경 이미지 미리보기" id="bgImgPreview"/><span>배경 이미지 적용 중</span></div></div><div class="colorgrid bg-image-controls"><div class="field"><label class="lb">이미지 크기</label><div class="rangewrap"><input id="bgImgSize" max="600" min="40" oninput="setBackgroundImageValue('size',this.value)" step="1" type="range" value="100"/><span class="val" id="bgImgSizeV">100%</span></div></div><div class="field"><label class="lb">회전</label><div class="rangewrap"><input id="bgImgRotation" max="360" min="0" oninput="setBackgroundImageValue('rotation',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgRotationV">0°</span></div></div><div class="field"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bgImgX" max="100" min="0" oninput="setBackgroundImageValue('x',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgXV">50%</span></div></div><div class="field"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bgImgY" max="100" min="0" oninput="setBackgroundImageValue('y',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgYV">50%</span></div></div><div class="field"><label class="lb">블러 농도</label><div class="rangewrap"><input id="bgImgBlur" max="30" min="0" oninput="setBackgroundImageValue('blur',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgBlurV">0px</span></div></div><div class="field bg-overlay-field" style="grid-column:1/-1;margin-bottom:0"><label class="lb">오버레이</label><div class="overlay-row"><div class="colorrow overlay-colorrow" data-color="bgOverlay"></div><div class="rangewrap overlay-opacity"><input id="bgOverlayOpacity" max="100" min="0" oninput="setBackgroundImageValue('overlayOpacity',this.value)" step="1" type="range" value="0"/><span class="val" id="bgOverlayOpacityV">0%</span></div></div></div></div></div></div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>텍스트·간격</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
+</div></div><div class="flat-tool-section" id="backgroundImageSection"><div class="flat-tool-title"><strong>배경 이미지</strong></div><div class="flat-tool-body"><div class="field"><label class="lb">이미지 불러오기</label><div class="bg-image-load-row"><label class="btn sm bg-upload-btn">↑ 파일<input accept="image/*" hidden="" id="bgImgFile" onchange="onBackgroundImageFile(event)" type="file"/></label><input id="bgImgUrl" onchange="loadBackgroundImageUrl()" onkeydown="if(event.key==='Enter'){event.preventDefault();loadBackgroundImageUrl();}" placeholder="이미지 URL · 붙여넣고 Enter" type="text"/><button class="btn sm danger-ghost" onclick="clearBackgroundImage()" type="button">지우기</button></div><div class="bg-image-preview" id="bgImgPreviewWrap" style="display:none"><img alt="배경 이미지 미리보기" id="bgImgPreview"/><span>배경 이미지 적용 중</span></div></div><div class="colorgrid bg-image-controls"><div class="field"><label class="lb">이미지 크기</label><div class="rangewrap"><input id="bgImgSize" max="600" min="40" oninput="setBackgroundImageValue('size',this.value)" step="1" type="range" value="100"/><span class="val" id="bgImgSizeV">100%</span></div></div><div class="field"><label class="lb">회전</label><div class="rangewrap"><input id="bgImgRotation" max="360" min="0" oninput="setBackgroundImageValue('rotation',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgRotationV">0°</span></div></div><div class="field"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bgImgX" max="800" min="-800" oninput="setBackgroundImageValue('x',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgXV">50%</span></div></div><div class="field"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bgImgY" max="800" min="-800" oninput="setBackgroundImageValue('y',this.value)" step="1" type="range" value="50"/><span class="val" id="bgImgYV">50%</span></div></div><div class="field"><label class="lb">블러 농도</label><div class="rangewrap"><input id="bgImgBlur" max="30" min="0" oninput="setBackgroundImageValue('blur',this.value)" step="1" type="range" value="0"/><span class="val" id="bgImgBlurV">0px</span></div></div><div class="field bg-overlay-field" style="grid-column:1/-1;margin-bottom:0"><label class="lb">오버레이</label><div class="overlay-row"><div class="colorrow overlay-colorrow" data-color="bgOverlay"></div><div class="rangewrap overlay-opacity"><input id="bgOverlayOpacity" max="100" min="0" oninput="setBackgroundImageValue('overlayOpacity',this.value)" step="1" type="range" value="0"/><span class="val" id="bgOverlayOpacityV">0%</span></div></div></div></div></div></div></div></section><section class="tool-panel" id="panel-font"><div class="tool-panel-head"><div><strong>텍스트·간격</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="accText">
 <div class="flat-tool-title"><strong>글꼴 · 텍스트</strong></div>
 <div class="flat-tool-body">
 <div class="field">
@@ -1631,8 +1636,13 @@ html, body, #canvas, #chat, #canvas * {
 <option value="'Mona12',sans-serif">Mona12 (픽셀 · 12px 권장)</option>
 <option value="-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif">시스템 기본</option>
 </select>
-<div class="field-help">중국어·일본어 문자는 자동 감지해 Noto Sans SC / JP로 보완하고, 이미지 저장에도 함께 포함해요. 한글 글꼴로 <b>명조</b>를 고르면 한자·가나도 Noto Serif SC / JP(명조)로 함께 바뀌어요.</div>
+<div class="field-help">중국어·일본어 본문은 자동 감지하며, 아래에서 언어별 글꼴을 따로 고를 수 있어요. 자동 선택은 본문 글꼴의 고딕·명조를 따라가요. 이름은 자동 변환에서 제외돼요.</div>
 <div class="field-help" id="fontLoadState" style="margin-top:6px"></div>
+</div>
+
+<div class="colorgrid" id="cjkFontControls">
+<div class="field"><label class="lb" for="cjkFontJa">일본어 글씨체</label><select id="cjkFontJa" onchange="setCjkFont('Ja',this.value)"><option value="">자동 (본문 글꼴에 맞춤)</option><option value="Noto Sans JP">Noto Sans JP · 본고딕</option><option value="Noto Serif JP">Noto Serif JP · 본명조</option><option value="DotGothic16">DotGothic16 · 도트</option><option value="Zen Maru Gothic">Zen Maru Gothic · 둥근 고딕 · 본문용</option><option value="Zen Kaku Gothic New">Zen Kaku Gothic New · 차분한 돋움 · 중간 굵기</option><option value="Shippori Mincho">차분한 명조 (Shippori Mincho)</option></select></div>
+<div class="field"><label class="lb" for="cjkFontZh">중국어 글씨체</label><select id="cjkFontZh" onchange="setCjkFont('Zh',this.value)"><option value="">자동 (본문 글꼴에 맞춤)</option><option value="Noto Sans SC">Noto Sans SC · 본고딕</option><option value="Noto Serif SC">Noto Serif SC · 본명조</option><option value="LXGW WenKai TC">LXGW WenKai TC · 손글씨 · 번체 중심</option><option value="Huninn">Huninn · 둥근 고딕 · 번체 중심</option><option value="ZCOOL KuaiLe">ZCOOL KuaiLe · 발랄한 손글씨 · 간체</option><option value="Fusion Pixel 12px Proportional SC">퓨전 도트 · 12px · 간체 (Fusion Pixel 12px Proportional SC)</option><option value="Ark Pixel 12px Proportional SC">아크 도트 · 12px · 간체 (Ark Pixel 12px Proportional SC)</option><option value="Iansui">또박또박 손글씨 · 번체 중심 (Iansui)</option></select></div>
 </div>
 <div class="field">
 <div class="toggle">
@@ -1705,7 +1715,7 @@ html, body, #canvas, #chat, #canvas * {
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
 </div>
-<div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="24"/><span class="val" id="exHV">24px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기<span>글이 단을 채우면 옆 단으로 이어져요</span></div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="toggle compact" id="novelTrimField" style="margin-top:12px;display:none"><div class="t-lb">빈 마지막 쪽 빼기<span>마지막 펼침의 빈 쪽을 떼고 한 쪽만 저장해요</span></div><label class="sw"><input id="novelTrimLast" onchange="setNovel('trimLast',this.checked)" type="checkbox"/><span class="track"></span></label></div>
+<div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="50"/><span class="val" id="exHV">50px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기<span>글이 단을 채우면 옆 단으로 이어져요</span></div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="toggle compact" id="novelTrimField" style="margin-top:12px;display:none"><div class="t-lb">빈 마지막 쪽 빼기<span>마지막 펼침의 빈 쪽을 떼고 한 쪽만 저장해요</span></div><label class="sw"><input id="novelTrimLast" onchange="setNovel('trimLast',this.checked)" type="checkbox"/><span class="track"></span></label></div>
 <div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="scriptNameStyleSection" style="display:none"><div class="flat-tool-title"><strong>대본 이름 스타일</strong></div><div class="flat-tool-body"><div class="toggle compact"><div class="t-lb">이름 굵게<span>대본 모드의 캐릭터 이름에만 적용돼요</span></div><label class="sw"><input checked id="scriptNameBoldOn" onchange="setScriptNameBold(this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="script-highlight-box"><button aria-expanded="false" class="script-highlight-toggle" id="scriptHighlightToggle" onclick="toggleScriptHighlightPanel()" type="button"><span class="script-highlight-caret">▾</span><span class="script-highlight-title">캐릭터별 '이름' 형광펜</span><small id="scriptHighlightSummary">설정 없음</small></button><div class="script-highlight-panel" id="scriptHighlightPanel"><div class="script-highlight-list" id="scriptHighlightMemberList"></div></div></div></div></div><div class="flat-tool-section" id="bubbleQuickToggleSection"><div class="flat-tool-body"><div class="toggle-grid">
 <div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
@@ -1717,19 +1727,19 @@ html, body, #canvas, #chat, #canvas * {
 <div class="toggle compact" title="대사 앞 이름｜ 이름표만 지워요 ([ ]가 있어도 함께) · ( ) 해석은 그대로 남아요"><div class="t-lb">대사 앞 이름 삭제</div><label class="sw"><input id="stripNameTagOn" onchange="state.stripSpeakerName=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 </div>
 <div class="acc-panel" id="bubbleShadowPanel"><div class="acc-inner"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">번짐</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bubbleShadowX" max="12" min="-12" oninput="setShadowExtra('bubble','x',this.value)" step="1" type="range" value="0"/><span class="val" id="bubbleShadowXV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bubbleShadowY" max="12" min="-12" oninput="setShadowExtra('bubble','y',this.value)" step="1" type="range" value="3"/><span class="val" id="bubbleShadowYV">3px</span></div></div><div class="field" style="margin:0;grid-column:1/-1"><label class="lb">진하기</label><div class="rangewrap"><input id="bubbleShadowOpacity" max="100" min="0" oninput="setShadowExtra('bubble','opacity',this.value)" step="1" type="range" value="100"/><span class="val" id="bubbleShadowOpacityV">100%</span></div></div></div></div></div>
-</div></div><div class="flat-tool-section" id="bubbleTextAlignSection"><div class="flat-tool-title"><strong>말풍선 정렬</strong></div><div class="flat-tool-body"><div class="field" style="margin:0"><div class="seg" id="bubbleTextAlignSeg"><button onclick="setBubbleTextAlign('justify')" type="button">양쪽</button><button class="on" onclick="setBubbleTextAlign('left')" type="button">왼쪽</button><button onclick="setBubbleTextAlign('center')" type="button">가운데</button><button onclick="setBubbleTextAlign('right')" type="button">오른쪽</button></div><div class="field-help" style="margin-top:6px">말풍선의 위치나 좌우 여백은 그대로 두고, 말풍선 안의 글자 정렬만 바꿔요.</div></div></div></div><div class="flat-tool-section" id="bubbleThemeSection"><div class="flat-tool-title"><strong>말풍선 테마</strong></div><div class="flat-tool-body"><div class="btheme-grid" id="bubbleThemeGrid"><button type="button" class="btheme-btn on" data-theme="default"><span class="btheme-prev bt-default"></span>기본</button><button type="button" class="btheme-btn" data-theme="corner"><span class="btheme-prev bt-corner"></span>모서리</button><button type="button" class="btheme-btn" data-theme="card"><span class="btheme-prev bt-card"></span>카드</button></div><div class="colorgrid" id="cardLineField" style="display:none;margin-top:12px"><div class="field" style="margin:0"><label class="lb">테두리 색</label><div class="colorrow" data-color="cardLine"></div></div><div class="field" style="margin:0"><label class="lb">테두리 두께</label><div class="rangewrap"><input id="lyCardLineW" max="6" min="0" step="1" oninput="setLayout('cardLineW',this.value)" type="range" value="1"/><span class="val" id="lyCardLineWV">1px</span></div></div></div><div class="field-help" id="bubbleThemeHelp">기본 말고는 꼬리가 없어요. 연달아 친 말풍선은 모두 둥글게 이어져요.</div></div></div><div class="flat-tool-section" id="profileShapeSection" style="margin-top:10px"><div class="flat-tool-title"><strong>프로필 사진 모양</strong></div><div class="flat-tool-body"><div class="field" style="margin:0">
+</div></div><div class="flat-tool-section" id="bubbleTextAlignSection"><div class="flat-tool-title"><strong>말풍선 내부 텍스트 정렬</strong></div><div class="flat-tool-body"><div class="field" style="margin:0"><div class="seg" id="bubbleTextAlignSeg"><button onclick="setBubbleTextAlign('justify')" type="button">양쪽</button><button class="on" onclick="setBubbleTextAlign('left')" type="button">왼쪽</button><button onclick="setBubbleTextAlign('center')" type="button">가운데</button><button onclick="setBubbleTextAlign('right')" type="button">오른쪽</button></div><div class="field-help" style="margin-top:6px">말풍선 안의 글자 정렬을 바꿔요. 대본에서는 이름 너비와 이름·대사 간격을 제외한 대사 영역 안에서 정렬해요.</div></div></div></div><div class="flat-tool-section" id="bubblePositionAlignSection"><div class="flat-tool-title"><strong>말풍선 위치 정렬</strong></div><div class="flat-tool-body"><div class="field" style="margin:0"><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div><div class="field-help bubble-align-help">가운데 정렬은 프로필이 있으면 프로필 중심부터 말풍선 끝까지, 프로필이 없으면 말풍선 자체의 양 끝을 기준으로 맞춰요. 메신저 모드는 발신자 기준 정렬을 유지해요.</div></div></div></div><div class="flat-tool-section" id="bubbleThemeSection"><div class="flat-tool-title"><strong>말풍선 테마</strong></div><div class="flat-tool-body"><div class="btheme-grid" id="bubbleThemeGrid"><button type="button" class="btheme-btn on" data-theme="default"><span class="btheme-prev bt-default"></span>기본</button><button type="button" class="btheme-btn" data-theme="corner"><span class="btheme-prev bt-corner"></span>모서리</button><button type="button" class="btheme-btn" data-theme="card"><span class="btheme-prev bt-card"></span>카드</button></div><div class="colorgrid" id="cardLineField" style="display:none;margin-top:12px"><div class="field" style="margin:0"><label class="lb">테두리 색</label><div class="colorrow" data-color="cardLine"></div></div><div class="field" style="margin:0"><label class="lb">테두리 두께</label><div class="rangewrap"><input id="lyCardLineW" max="6" min="0" step="1" oninput="setLayout('cardLineW',this.value)" type="range" value="1"/><span class="val" id="lyCardLineWV">1px</span></div></div></div><div class="field-help" id="bubbleThemeHelp">기본 말고는 꼬리가 없어요. 연달아 친 말풍선은 모두 둥글게 이어져요.</div></div></div><div class="flat-tool-section" id="profileShapeSection" style="margin-top:10px"><div class="flat-tool-title"><strong>프로필 사진 모양</strong></div><div class="flat-tool-body"><div class="field" style="margin:0">
 <div class="seg" id="shapeSeg">
 <button class="on" onclick="setShape('circle')">● 원형</button>
 <button onclick="setShape('rounded')">▢ 라운드 사각</button>
 </div>
 </div></div></div><div class="flat-tool-section"><div class="flat-tool-title"><strong>말풍선 모양</strong></div><div class="flat-tool-body"><div class="colorgrid">
+<div class="field" style="margin-bottom:14px"><label class="lb">이름 크기</label><div class="rangewrap"><input id="lyNameSize" max="24" min="9" oninput="setLayout('nameSize',this.value)" type="range" value="12"/><span class="val" id="lyNameSizeV">12px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↕</label><div class="rangewrap"><input id="lyBpy" max="24" min="2" oninput="setLayout('bpy',this.value)" type="range" value="9"/><span class="val" id="lyBpyV">9px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">안쪽 여백 ↔</label><div class="rangewrap"><input id="lyBpx" max="28" min="4" oninput="setLayout('bpx',this.value)" type="range" value="13"/><span class="val" id="lyBpxV">13px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">모서리 둥글기</label><div class="rangewrap"><input id="lyRadius" max="28" min="0" oninput="setLayout('radius',this.value)" type="range" value="14"/><span class="val" id="lyRadiusV">14px</span></div></div>
-<div class="field" style="margin-bottom:14px"><label class="lb">이름 크기</label><div class="rangewrap"><input id="lyNameSize" max="24" min="9" oninput="setLayout('nameSize',this.value)" type="range" value="12"/><span class="val" id="lyNameSizeV">12px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">말풍선 투명도</label><div class="rangewrap"><input id="bubbleOpacity" max="100" min="0" oninput="setBubbleOpacity(this.value)" type="range" value="100"/><span class="val" id="bubbleOpacityV">100%</span></div></div>
 <div class="field" style="margin:0"><label class="lb">말풍선 글씨 투명도</label><div class="rangewrap"><input id="bubbleTextOpacity" max="100" min="0" oninput="setBubbleTextOpacity(this.value)" type="range" value="100"/><span class="val" id="bubbleTextOpacityV">100%</span></div></div>
-<div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div><div class="field bubble-align-field"><label class="lb">말풍선 정렬</label><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div><div class="field-help bubble-align-help">가운데 정렬은 프로필이 있으면 프로필 중심부터 말풍선 끝까지, 프로필이 없으면 말풍선 자체의 양 끝을 기준으로 맞춰요. 메신저 모드는 발신자 기준 정렬을 유지해요.</div></div></div>
+<div class="bubblepad-sec" style="margin-top:14px"><div class="bubblepad-head"><strong>말풍선 좌우 여백</strong><button aria-pressed="true" class="margin-link-btn on" id="textPadLinkBtn" onclick="toggleTextPadLink()" type="button">🔗 연결</button></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">왼쪽</label><div class="rangewrap"><input id="lyTextPadL" max="200" min="0" oninput="setTextPad('l',this.value)" type="range" value="0"/><span class="val" id="lyTextPadLV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">오른쪽</label><div class="rangewrap"><input id="lyTextPadR" max="200" min="0" oninput="setTextPad('r',this.value)" type="range" value="0"/><span class="val" id="lyTextPadRV">0px</span></div></div></div></div>
 </div></div></div><div class="messenger-settings" id="messengerSettings"><div class="messenger-settings-head"><span>메신저 모드</span><small>내 계정과 양쪽 말풍선 색상</small></div><div class="messenger-settings-body"><div class="field">
 <label class="lb">내 계정 (오른쪽 정렬)</label>
 <select id="meSelect" onchange="state.meId=this.value; renderPreview()"></select>
@@ -1944,7 +1954,7 @@ const state = {
   draftAlign:'left',
   members:[],   // {id,name,image,color,bubbleColor,scriptHighlight}
   messages:[],  // {id,type,senderId,content,...}  type: 'chat' | 'text'
-  export:{ ratio:'auto', hMargin:75, vMargin:37, linkMargin:false, filename:'chat-발췌', scale:2.5 },
+  export:{ ratio:'auto', hMargin:50, vMargin:37, linkMargin:false, filename:'chat-발췌', scale:2.5 },
   transparentBg:false,
   previewZoom:1,
   backgroundImage:{src:'',size:100,rotation:0,x:50,y:50,blur:0,overlayOpacity:0},
@@ -2007,7 +2017,8 @@ let uid=()=>Math.random().toString(36).slice(2,9);
 /* ================= color pickers ================= */
 function buildColorRow(row){
   const key=row.dataset.color;
-  const val=state.colors[key];
+  const val=state.colors[key]||(key==='dividerBg'?'#E5E5E5':key==='dividerText'?'#737373':'#C7C7C8');
+  if(key==='dividerBg'||key==='dividerText') state.colors[key]=val;
   row.innerHTML=`
     <span class="swatch" style="background:${val}">
       <input class="color-proxy" type="text" value="${val}" readonly inputmode="none" aria-label="색 선택"></span>
@@ -2332,7 +2343,7 @@ function setShape(s){
 /* ================= layout / spacing ================= */
 function setLayout(key,val){
   const v=parseFloat(val);
-  state.layout[key]=v;
+  state.layout[key==='nameSize'&&state.mode==='script'?'scriptNameSize':key]=v;
   let disp;
   if(key==='lh') disp=v.toFixed(2);
   else if(key==='widthScale') disp=Math.round(v)+'%';
@@ -3130,7 +3141,7 @@ function defaultLayout(){
     linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',bubbleTextAlign:'left',textIndent:false,scriptNameBold:true,scriptNarrationIndent:false,dividerMargin:8,dividerMarginBottom:null,dividerWidth:100,dividerThickness:1,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
-function defaultExport(){ return {ratio:'auto',hMargin:75,vMargin:37,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
+function defaultExport(){ return {ratio:'auto',hMargin:50,vMargin:37,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
 function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16,sep:'dot',font:''}; }
 function seedThemes(){
   return [
@@ -4042,6 +4053,9 @@ function __applyBlurMarkup(t,tabAttr){
   }
   return t;
 }
+function hasMarkdownBlock(raw){
+  return /^(?: {0,3}#{1,6}\s+|\s*```|\s*>\s?|\s*(?:[-+*]|\d+[.)])\s+|\s*\|?\s*:?-{3,}:?\s*\|)/m.test(String(raw||''));
+}
 function fmtText(raw,edit){
   let t=esc(raw);
   t=t.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
@@ -4089,6 +4103,7 @@ function ctrlHTML(id){
   </div>`;
 }
 function renderPreview(){
+  syncScriptNameSizeControl();
   commitEditIfAny();
   const chat=document.getElementById('chat');
   const __bop=bubbleOpacityVal();
@@ -4206,7 +4221,7 @@ function dividerRow(m,gap){
   }
   return `<div class="pmsg divider-row" style="${wrapStyle}">
     ${ctrlHTML(m.id)}
-    <span class="divider-pill" data-id="${m.id}" style="font-size:${Math.max(10,L.fs-2)}px">${esc(txt)}</span>
+    <span class="divider-pill" data-id="${m.id}" style="background:${state.colors.dividerBg||'rgba(0,0,0,.10)'};color:${state.colors.dividerText||'rgba(0,0,0,.55)'};font-size:${Math.max(10,L.fs-2)}px">${esc(txt)}</span>
   </div>`;
 }
 function textRow(t,gap){
@@ -4214,7 +4229,7 @@ function textRow(t,gap){
   /* 대본 모드 옵션: 지문도 이름 칼럼 + 대사 간격만큼 들여써서
      대사 텍스트의 실제 시작선과 정확히 맞춘다. */
   const scriptNarrationIndent=(state.mode==='script'&&L.scriptNarrationIndent)
-    ?`padding-left:calc(var(--script-name-col,96px) + 14px + ${Math.max(0,Number(L.textPadL)||0)}px);box-sizing:border-box;`
+    ?`padding-left:calc(var(--script-name-col,96px) + ${L.scriptNameGap??14}px + ${Math.max(0,Number(L.textPadL)||0)}px);box-sizing:border-box;`
     :'';
   const st=`text-align:${t.align||'left'};color:${state.colors.nText};`
     +`font-size:${L.fs}px;line-height:${L.lh};margin-bottom:${gap}px;${scriptNarrationIndent}${wbStyle()}`;
@@ -4271,9 +4286,18 @@ function logRow(m,mem,gap,continued=false){
 }
 /* 대본 모드 이름은 본문 대사와 같은 크기를 기본으로 사용한다.
    다른 모드의 '이름 크기' 설정은 그대로 유지한다. */
+function syncScriptNameSizeControl(){
+  const size=state.mode==='script'?scriptNameFontSize():state.layout.nameSize;
+  const range=document.getElementById('lyNameSize');
+  const label=document.getElementById('lyNameSizeV');
+  if(range) range.value=size;
+  if(label) label.textContent=Math.round(size)+'px';
+  const num=document.querySelector('.stepper input[data-stepper-for="lyNameSize"]');
+  if(num) num.value=size;
+}
 function scriptNameFontSize(){
   const L=state.layout||{};
-  return Math.max(9,Number(L.bubbleFs)||Number(L.fs)||16);
+  return Math.max(9,Number(L.scriptNameSize)||Number(L.bubbleFs)||Number(L.fs)||16);
 }
 /* 이름에 공백이 있을 때 첫 단어가 2글자 이상이면 그 공백에서 한 번 줄바꿈한다.
    예: 김 성호 -> 한 줄 / 겐도 아사히 -> 겐도\n아사히 */
@@ -4301,7 +4325,7 @@ function scriptNameColumnWidth(){
   try{
     const cv=document.createElement('canvas'),ctx=cv.getContext('2d');
     if(ctx){
-      ctx.font=`${scriptNameFontWeight()} ${fs}px ${state.layout.font||'sans-serif'}`;
+      ctx.font=`${scriptNameFontWeight()} ${fs}px ${state.layout.scriptNameFont||state.layout.font||'sans-serif'}`;
       names.forEach(n=>scriptNameLines(n).forEach(line=>{
         max=Math.max(max,Math.ceil(ctx.measureText(line).width)+2);
       }));
@@ -4319,17 +4343,41 @@ function scriptDialogueInner(raw){
   const text=String(raw==null?'':raw).trim();
   return fmtText(text);
 }
+// Grid shares the first text baseline, including fallback fonts. When a user
+// changes name size, move its ink centre (not its line-box top) around that baseline.
+function scriptNameBaselineOffset(nameSize,dialogueSize){
+  if(nameSize===dialogueSize) return 0;
+  const L=state.layout||{};
+  const canvas=scriptNameBaselineOffset.canvas||(scriptNameBaselineOffset.canvas=document.createElement('canvas'));
+  const ctx=canvas.getContext('2d');
+  function centre(size,font,weight){
+    if(!ctx) return size*.35;
+    ctx.font=weight+' '+size+'px '+(font||L.font||'sans-serif');
+    const m=ctx.measureText('가나다Ag');
+    const a=m.actualBoundingBoxAscent,d=m.actualBoundingBoxDescent;
+    return Number.isFinite(a)&&Number.isFinite(d)?(a-d)/2:size*.35;
+  }
+  const font=L.scriptNameFont||L.font;
+  return centre(nameSize,font,scriptNameFontWeight())-centre(dialogueSize,font,scriptNameFontWeight());
+}
+function scriptAlignmentStyle(){
+  const L=state.layout,align=normalizeBubbleAlign(L.bubbleAlign);
+  const name=L.scriptNameGapMode==='end'?'max-content':'min(var(--script-name-col,96px),38%)';
+  return 'grid-template-columns:'+name+' minmax(0,'+(align==='left'?'1fr':'max-content')+');justify-content:'+(align==='right'?'end':align==='center'?'center':'start')+';';
+}
 function scriptRow(m,mem,gap,continued=false){
   const L=state.layout;
   const nameHidden=continued||!!state.hideNames;
   const scriptFs=scriptNameFontSize();
-  /* 이름과 대사의 font-size/line-height를 맞춰 첫 줄의 세로 위치와 baseline이 어긋나지 않게 한다. */
-  const name=`<div class="script-name ${nameHidden?'is-hidden':''}" style="color:${mem.color||'#424448'};font-size:${scriptFs}px;line-height:${L.lh};font-weight:${scriptNameFontWeight()}">${typeInline(scriptNameHTML(mem.name||'?',mem.scriptHighlight))}</div>`;
-  const plain=`color:${state.colors.nText};font-size:${scriptFs}px;line-height:${L.lh};${wbStyle()}`;
-  return `<div class="pmsg script-row ${continued?'continuation':''}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
+  // 같은 크기는 첫 기준선을 공유하고, 크기 변경 시 글자 중심을 유지한다.
+  const dialogueFs=Number(L.bubbleFs)||Number(L.fs)||16;
+  const nameOffset=scriptNameBaselineOffset(scriptFs,dialogueFs);
+  const name=`<div class="script-name ${nameHidden?'is-hidden':''}" style="color:${mem.color||'#424448'};font-size:${scriptFs}px;line-height:${L.lh};position:relative;top:${nameOffset}px;font-weight:${scriptNameFontWeight()};${subFontCss(L.scriptNameFont)}">${typeInline(scriptNameHTML(mem.name||'?',mem.scriptHighlight))}</div>`;
+  const plain=`color:${state.colors.nText};font-size:${Number(L.bubbleFs)||L.fs}px;line-height:${L.lh};${bubbleTextAlignStyle()}${wbStyle()}`;
+  return `<div class="pmsg script-row ${continued?'continuation':''}" style="margin-bottom:${gap}px;column-gap:${L.scriptNameGap??14}px;${scriptAlignmentStyle()}${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
     ${name}
-    <div class="script-dialogue editable" data-id="${m.id}" style="${plain}">${typeWrap(scriptDialogueInner(m.content))}</div>
+    <div class="script-dialogue editable" data-id="${m.id}" style="${plain}">${typeWrap(scriptDialogueInner(m.content),normalizeBubbleTextAlign(L.bubbleTextAlign))}</div>
   </div>`;
 }
 
@@ -4653,8 +4701,11 @@ function syncPreviewScrollbar(){
   __previewOverflowFrame=requestAnimationFrame(()=>{
     /* The wrapper stores the transformed preview dimensions, which is more
        reliable than stage.scrollWidth while the stage is a flex container. */
-    const needsX=fit.offsetWidth>stage.clientWidth+2;
-    const needsY=fit.offsetHeight>stage.clientHeight+2;
+    const cs=getComputedStyle(stage);
+    const padX=(parseFloat(cs.paddingLeft)||0)+(parseFloat(cs.paddingRight)||0);
+    const padY=(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0);
+    const needsX=fit.offsetWidth+padX>stage.clientWidth+1;
+    const needsY=fit.offsetHeight+padY>stage.clientHeight+1;
     stage.classList.toggle('preview-scroll-x',needsX);
     stage.classList.toggle('preview-scroll-y',needsY);
     if(!needsX) stage.scrollLeft=0;
@@ -4797,17 +4848,33 @@ function setBubbleTailPosition(axis,v){
 
 function updateBackgroundImageControls(){
   const B=state.backgroundImage;
-  const vals=[['bgImgSize','bgImgSizeV',B.size,'%'],['bgImgRotation','bgImgRotationV',B.rotation||0,'°'],['bgImgX','bgImgXV',B.x,'%'],['bgImgY','bgImgYV',B.y,'%'],['bgImgBlur','bgImgBlurV',B.blur,'px'],['bgOverlayOpacity','bgOverlayOpacityV',B.overlayOpacity,'%']];
+  const vals=[['bgImgSize','bgImgSizeV',B.size,'%'],['bgImgRotation','bgImgRotationV',B.rotation||0,'°'],['bgImgX','bgImgXV',B.offsetX||0,'px'],['bgImgY','bgImgYV',B.offsetY||0,'px'],['bgImgBlur','bgImgBlurV',B.blur,'px'],['bgOverlayOpacity','bgOverlayOpacityV',B.overlayOpacity,'%']];
   vals.forEach(([id,vid,v,u])=>{const el=document.getElementById(id),ve=document.getElementById(vid);if(el)el.value=v;if(ve)ve.textContent=v+u;});
   const wrap=document.getElementById('bgImgPreviewWrap'),img=document.getElementById('bgImgPreview');
   if(wrap)wrap.style.display=B.src?'flex':'none';
   if(img&&B.src&&img.__srcCache!==B.src){img.__srcCache=B.src;img.src=B.src;}
 }
 function setBackgroundImageValue(key,v){
-  const limits={size:[40,600],rotation:[0,360],x:[0,100],y:[0,100],blur:[0,30],overlayOpacity:[0,100]};
-  let n=parseFloat(v);if(!Number.isFinite(n))return;const [a,b]=limits[key]||[-999,999];n=Math.max(a,Math.min(b,n));state.backgroundImage[key]=n;updateBackgroundImageControls();applyBackgroundLayers();fitPreview();
+  const limits={size:[40,600],rotation:[0,360],x:[-800,800],y:[-800,800],blur:[0,30],overlayOpacity:[0,100]};
+  let n=parseFloat(v);if(!Number.isFinite(n))return;const [a,b]=limits[key]||[-999,999];n=Math.max(a,Math.min(b,n));state.backgroundImage[key==='x'?'offsetX':key==='y'?'offsetY':key]=n;updateBackgroundImageControls();applyBackgroundLayers();fitPreview();
 }
-function useBackgroundImage(src){state.backgroundImage.src=src||'';updateBackgroundImageControls();renderPreview();}
+function fitWholeBackgroundImage(){
+  Object.assign(state.backgroundImage,{fit:'contain',size:100,rotation:0,x:50,y:50,offsetX:0,offsetY:0});
+  updateBackgroundImageControls();if(typeof syncStepperBoxes==='function')syncStepperBoxes();renderPreview();
+}
+function useBackgroundImage(src){state.backgroundImage.src=src||'';fitWholeBackgroundImage();}
+const backgroundNaturalSizes=new Map();
+function backgroundNaturalSize(src){
+  if(!src)return null;
+  if(!backgroundNaturalSizes.has(src)){
+    backgroundNaturalSizes.set(src,null);
+    const probe=new Image();
+    probe.onload=()=>{backgroundNaturalSizes.set(src,{w:probe.naturalWidth,h:probe.naturalHeight});if(state.backgroundImage.src===src)applyBackgroundLayers();};
+    probe.onerror=()=>backgroundNaturalSizes.delete(src);
+    probe.src=src;
+  }
+  return backgroundNaturalSizes.get(src);
+}
 function onBackgroundImageFile(e){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>useBackgroundImage(r.result);r.readAsDataURL(f);}
 function loadBackgroundImageUrl(){
   const input=document.getElementById('bgImgUrl');const url=(input&&input.value||'').trim();if(!url)return;
@@ -4828,7 +4895,15 @@ function applyBackgroundLayers(){
     image.__bgSrcCache=B.src;image.__bgHiddenCache=hidden;
     image.style.backgroundImage=hidden?'none':`url("${String(B.src).replace(/"/g,'%22')}")`;
   }
-  image.style.backgroundSize=B.size+'% auto';image.style.backgroundPosition=B.x+'% '+B.y+'%';
+  if(B.fit==='contain'){
+    const natural=backgroundNaturalSize(B.src);
+    if(natural&&natural.w&&natural.h){
+      const w=image.offsetWidth||canvas.offsetWidth||1,h=image.offsetHeight||canvas.offsetHeight||1;
+      const fit=Math.min(w/natural.w,h/natural.h)*(Number(B.size)||100)/100;
+      image.style.backgroundSize=(natural.w*fit)+'px '+(natural.h*fit)+'px';
+    }else image.style.backgroundSize='contain';
+  }else image.style.backgroundSize=B.size+'% auto';
+  image.style.backgroundPosition=B.x+'% '+B.y+'%';
   image.style.filter=B.blur?'blur('+B.blur+'px)':'none';
   const rotation=Number(B.rotation)||0;
   const lw=image.offsetWidth||canvas.offsetWidth||1, lh=image.offsetHeight||canvas.offsetHeight||1;
@@ -4838,12 +4913,12 @@ function applyBackgroundLayers(){
   /* 회전 시 모서리 여백이 생기지 않도록, 회전 각도·레이어 비율에 맞춰
      레이어가 캔버스를 항상 덮는 최소 배율(cover scale)을 곱해 준다. */
   let coverScale=1;
-  if(rotation%360!==0){
+  if(B.fit!=='contain'&&rotation%360!==0){
     const rad=rotation*Math.PI/180, rc=Math.abs(Math.cos(rad)), rs=Math.abs(Math.sin(rad));
     coverScale=Math.max((lw*rc+lh*rs)/lw,(lw*rs+lh*rc)/lh);
   }
-  const totalScale=bgScale*coverScale;
-  image.style.transform=(rotation||totalScale!==1)?`rotate(${rotation}deg) scale(${totalScale})`:'none';
+  const totalScale=B.fit==='contain'?1:bgScale*coverScale;
+  image.style.transform=`translate(${Number(B.offsetX)||0}px,${Number(B.offsetY)||0}px) rotate(${rotation}deg) scale(${totalScale})`;
   image.style.transformOrigin='center center';
   overlay.style.background=state.colors.bgOverlay;overlay.style.opacity=String(B.overlayOpacity/100);
   chat.classList.toggle('bubble-tail-off',!state.layout.tailOn);
@@ -4942,7 +5017,7 @@ exportHTML=function(){
   const __htmlMobileFontCss='@media(max-width:700px),(max-device-width:700px){'
     +'.t-block{font-size:'+__htmlMobileTextPx.toFixed(4)+'px!important;}'
     +'.t-block>.t-inner,.t-block .glyph-scale{font-size:inherit!important;}'
-    +'.n-bubble,.n-plain,.m-bubble,.script-dialogue,.script-name{font-size:'+__htmlMobileBubblePx.toFixed(4)+'px!important;}'
+    +'.n-bubble,.n-plain,.m-bubble,.script-dialogue{font-size:'+__htmlMobileBubblePx.toFixed(4)+'px!important;}'
     +'.n-bubble>.glyph-scale,.n-plain>.glyph-scale,.m-bubble>.glyph-scale,.script-dialogue>.glyph-scale,.script-name>.glyph-inline{font-size:inherit!important;}'
     +'}';
   if(__htmlWidthMode==='stretch'||__htmlWidthMode==='fixed'){
@@ -4991,7 +5066,7 @@ refreshColorRows();
 initPreciseControls();
 ['bgImgSize','bgImgRotation','bgImgX','bgImgY','bgImgBlur','bgOverlayOpacity','bubbleTailSize','bubbleTailY','bubbleTailX'].forEach(id=>{
   const map={bgImgSize:'bgImgSizeV',bgImgRotation:'bgImgRotationV',bgImgX:'bgImgXV',bgImgY:'bgImgYV',bgImgBlur:'bgImgBlurV',bgOverlayOpacity:'bgOverlayOpacityV',bubbleTailSize:'bubbleTailSizeV',bubbleTailY:'bubbleTailYV',bubbleTailX:'bubbleTailXV'};
-  const opts={bgImgSize:{min:40,max:600,step:1,nudge:10},bgImgRotation:{min:0,max:360,step:1,nudge:5},bgImgX:{min:0,max:100,step:1,nudge:2},bgImgY:{min:0,max:100,step:1,nudge:2},bgImgBlur:{min:0,max:30,step:1,nudge:1},bgOverlayOpacity:{min:0,max:100,step:1,nudge:5},bubbleTailSize:{min:6,max:18,step:1,nudge:1},bubbleTailY:{min:-24,max:24,step:1,nudge:1},bubbleTailX:{min:-20,max:20,step:1,nudge:1}};
+  const opts={bgImgSize:{min:40,max:600,step:1,nudge:10},bgImgRotation:{min:0,max:360,step:1,nudge:5},bgImgX:{min:-800,max:800,step:1,nudge:10},bgImgY:{min:-800,max:800,step:1,nudge:10},bgImgBlur:{min:0,max:30,step:1,nudge:1},bgOverlayOpacity:{min:0,max:100,step:1,nudge:5},bubbleTailSize:{min:6,max:18,step:1,nudge:1},bubbleTailY:{min:-24,max:24,step:1,nudge:1},bubbleTailX:{min:-20,max:20,step:1,nudge:1}};
   enhanceRange(id,map[id],opts[id]);
 });
 syncControlsFromState();
@@ -5620,6 +5695,30 @@ else setTimeout(__idleLoadRenderer,1200);
     __RUNTIME_FONT_CONFIG['Noto Serif JP']={css:'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700;800&display=swap',weights:[400,500,600,700,800]};
   }
 
+
+  // Language-only choices: keep these out of the main and name font menus.
+  for(const family of ['DotGothic16','LXGW WenKai TC','Zen Maru Gothic','Huninn','ZCOOL KuaiLe']){
+    __RUNTIME_FONT_CONFIG[family]={css:'https://fonts.googleapis.com/css2?family='+family.replace(/ /g,'+')+'&display=swap',weights:[400]};
+  }
+
+  __RUNTIME_FONT_CONFIG['Zen Kaku Gothic New']={css:'https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&display=swap',weights:[500,700]};
+
+  __RUNTIME_FONT_CONFIG['Zen Maru Gothic']={css:'https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap',weights:[400,700]};
+
+  Object.assign(__RUNTIME_FONT_CONFIG,{"Fusion Pixel 12px Proportional SC": {"css": "https://cdn.jsdelivr.net/npm/@fontsource/fusion-pixel-12px-proportional-sc/index.css", "weights": [400]}, "Iansui": {"css": "https://fonts.googleapis.com/css2?family=Iansui&display=swap", "weights": [400]}, "Shippori Mincho": {"css": "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700&display=swap", "weights": [400, 700]}, "Ark Pixel 12px Proportional SC": {"css": "data:text/css;base64,QGZvbnQtZmFjZXtmb250LWZhbWlseTonQXJrIFBpeGVsIDEycHggUHJvcG9ydGlvbmFsIFNDJztmb250LXN0eWxlOm5vcm1hbDtmb250LXdlaWdodDo0MDA7Zm9udC1kaXNwbGF5OnN3YXA7c3JjOnVybCgnaHR0cHM6Ly9hcmstcGl4ZWwtZm9udC50YWt3b2xmLmNvbS9hcmstcGl4ZWwtMTJweC1wcm9wb3J0aW9uYWwtemhfaGFucy5vdGYud29mZjInKSBmb3JtYXQoJ3dvZmYyJyk7fQ==", "weights": [400]}});
+  window.__migrateRetiredCjkFonts=function(){
+    const aliases={"Mochiy Pop One": "Zen Kaku Gothic New","Ma Shan Zheng": "Iansui", "ZCOOL XiaoWei": "Fusion Pixel 12px Proportional SC", "ZCOOL QingKe HuangYou": "Ark Pixel 12px Proportional SC", "Klee One": "Shippori Mincho", "Yomogi": "Zen Maru Gothic", "Hachi Maru Pop": "Zen Kaku Gothic New"};
+    const L=state.layout;
+    for(const key of ['cjkFontJa','cjkFontZh'])if(aliases[L[key]])L[key]=aliases[L[key]];
+    const name=String(L.scriptNameFont||'');
+    for(const [old,fresh] of Object.entries(aliases)){
+      if(name.includes("'"+old+"'")||name.includes('"'+old+'"')){
+        L.scriptNameFont=name.replace(old,fresh);break;
+      }
+    }
+  };
+  window.__migrateRetiredCjkFonts();
+
   /* 고른 한글 글꼴이 명조 계열이면 한자·가나도 명조로 맞춘다.
      'sans-serif' 를 먼저 걷어내고 나서 serif / 명조 계열 이름을 찾는다. */
   window.__cjkIsSerifStack=function(stack){
@@ -5627,12 +5726,26 @@ else setTimeout(__idleLoadRenderer,1200);
     return /myeongjo|myungjo|batang|bataang|mincho|songti|song ti|\bsong\b|serif/.test(s.replace(/sans-serif/g,' ').replace(/sans serif/g,' '));
   };
   window.__cjkFamilyFor=function(lang){
+    const choice=state.layout[lang==='zh'?'cjkFontZh':'cjkFontJa'];
+    if(choice&&__RUNTIME_FONT_CONFIG[choice])return choice;
     const serif=window.__cjkIsSerifStack();
     if(lang==='zh') return serif?'Noto Serif SC':'Noto Sans SC';
     return serif?'Noto Serif JP':'Noto Sans JP';
   };
-  function isZhFamily(f){ return f==='Noto Sans SC'||f==='Noto Serif SC'; }
-  function isJaFamily(f){ return f==='Noto Sans JP'||f==='Noto Serif JP'; }
+  window.setCjkFont=function(lang,value){
+    state.layout['cjkFont'+lang]=value;
+    renderPreview();
+    __ensureCurrentFontLoaded().then(()=>renderPreview()).catch(()=>{});
+  };
+  const previousSyncCjkFonts=syncControlsFromState;
+  syncControlsFromState=function(){
+    window.__migrateRetiredCjkFonts();
+    const result=previousSyncCjkFonts.apply(this,arguments);
+    ['Ja','Zh'].forEach(lang=>{const el=document.getElementById('cjkFont'+lang);if(el)el.value=state.layout['cjkFont'+lang]||'';});
+    return result;
+  };
+  function isZhFamily(f){ return ['Noto Sans SC','Noto Serif SC','LXGW WenKai TC','Huninn','ZCOOL KuaiLe','Fusion Pixel 12px Proportional SC','Ark Pixel 12px Proportional SC','Iansui'].includes(f); }
+  function isJaFamily(f){ return ['Noto Sans JP','Noto Serif JP','DotGothic16','Zen Maru Gothic','Zen Kaku Gothic New','Shippori Mincho'].includes(f); }
 
   function cpOf(ch){return ch.codePointAt(0);}
   function isHan(ch){
@@ -5674,7 +5787,7 @@ else setTimeout(__idleLoadRenderer,1200);
       if(!buf)return;
       if(kind){
         const span=document.createElement('span');
-        span.className='cjk-auto';span.dataset.cjkLang=kind;span.lang=kind==='ja'?'ja':'zh-CN';span.textContent=buf;frag.appendChild(span);
+        span.className='cjk-auto';span.dataset.cjkLang=kind;span.style.fontFamily='"'+window.__cjkFamilyFor(kind)+'",'+(kind==='ja'?'"Noto Sans JP"':'"Noto Sans SC"')+',sans-serif';span.lang=kind==='ja'?'ja':'zh-CN';span.textContent=buf;frag.appendChild(span);
       }else frag.appendChild(document.createTextNode(buf));
       buf='';
     };
@@ -5698,7 +5811,7 @@ else setTimeout(__idleLoadRenderer,1200);
       acceptNode(node){
         const p=node.parentElement, value=node.nodeValue||'';
         if(!p||!value.trim())return NodeFilter.FILTER_REJECT;
-        if(p.closest('.ctrl,.cjk-auto,script,style,textarea,select,option'))return NodeFilter.FILTER_REJECT;
+        if(p.closest('.script-name,.n-name,.m-name,.ctrl,.cjk-auto,script,style,textarea,select,option'))return NodeFilter.FILTER_REJECT;
         return cjkQuickRe.test(value)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
       }
     });
@@ -5718,8 +5831,8 @@ else setTimeout(__idleLoadRenderer,1200);
   }
   function sampleForFamily(node,family){
     if(!node)return 'ABC123';
-    if(isZhFamily(family))return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="zh"]')].map(x=>x.textContent).join(''))||'中文';
-    if(isJaFamily(family))return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="ja"]')].map(x=>x.textContent).join(''))||'日本語';
+    if(isZhFamily(family))return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="zh"],.script-name')].filter(x=>x.matches('.cjk-auto')||String(getComputedStyle(x).fontFamily).includes(family)).map(x=>x.textContent).join(''))||'中文';
+    if(isJaFamily(family))return uniqueChars([...node.querySelectorAll('.cjk-auto[data-cjk-lang="ja"],.script-name')].filter(x=>x.matches('.cjk-auto')||String(getComputedStyle(x).fontFamily).includes(family)).map(x=>x.textContent).join(''))||'日本語';
     const clone=node.cloneNode(true);clone.querySelectorAll&&clone.querySelectorAll('.cjk-auto').forEach(x=>x.remove());
     return uniqueChars(clone.textContent)||'가나다ABC123';
   }
@@ -5728,6 +5841,7 @@ else setTimeout(__idleLoadRenderer,1200);
     if(isZhFamily(family))elements=[...node.querySelectorAll('.cjk-auto[data-cjk-lang="zh"]')];
     else if(isJaFamily(family))elements=[...node.querySelectorAll('.cjk-auto[data-cjk-lang="ja"]')];
     else elements=[node,...node.querySelectorAll('*')].filter(el=>el.textContent&&el.textContent.trim()&&String(getComputedStyle(el).fontFamily||'').toLowerCase().includes(family.toLowerCase()));
+    node.querySelectorAll('.script-name').forEach(el=>{if(String(getComputedStyle(el).fontFamily).includes(family))elements.push(el);});
     elements.forEach(el=>set.add(normalizedWeight(getComputedStyle(el).fontWeight)));if(!set.size)set.add(400);
     return [...set].sort((a,b)=>a-b);
   }
@@ -5737,7 +5851,7 @@ else setTimeout(__idleLoadRenderer,1200);
     /* 서명·페이지 번호에만 따로 지정한 글꼴도 저장 결과에 들어가야 한다.
        빠뜨리면 미리보기와 저장본의 글꼴이 달라진다. */
     try{
-      [ (state.credit&&state.credit.font), (state.pageNum&&state.pageNum.font) ].forEach(stack=>{
+      [ (state.mode==='script'&&state.layout.scriptNameFont), (state.credit&&state.credit.font), (state.pageNum&&state.pageNum.font) ].forEach(stack=>{
         if(!stack||typeof __selectedWebFont!=='function') return;
         const f=__selectedWebFont(stack);
         if(f&&!list.includes(f)) list.push(f);
@@ -5772,7 +5886,10 @@ else setTimeout(__idleLoadRenderer,1200);
     /* 굴림처럼 이 파일 안에 base64 로 박혀 있는 글꼴은 문서의 @font-face 를 그대로 쓴다 */
     if(cfg&&cfg.inlineCss){ try{ return __documentFontFaceCSS(family); }catch(_){ return ''; } }
     if(!cfg||!cfg.css)return '';
-    const sample=sampleForFamily(node,family),cps=Array.from(sample,ch=>ch.codePointAt(0)),wanted=weightsForFamily(node,family);
+    const sample=sampleForFamily(node,family),cps=Array.from(sample,ch=>ch.codePointAt(0));
+    // Embed a real available face when the browser synthesizes bold (e.g. Gowun Dodum).
+    const available=cfg.weights||[400];
+    const wanted=weightsForFamily(node,family).map(w=>available.includes(w)?w:available.reduce((a,b)=>Math.abs(b-w)<Math.abs(a-w)?b:a));
     const css=await fetchFontCSS(cfg.css),blocks=css.match(/@font-face\s*\{[\s\S]*?\}/gi)||[];
     const selected=blocks.filter(block=>{
       const fam=(block.match(/font-family\s*:\s*(['"]?)([^;'"}]+)\1\s*;/i)||[])[2]||'';
@@ -5821,6 +5938,12 @@ else setTimeout(__idleLoadRenderer,1200);
 <style id="fixed-ratio-crisp-zoom-hand-pan-v3">
 /* Fixed-ratio preview: keep the authored text width/wrapping intact. */
 #canvas{image-rendering:auto}
+/* Persistent glyph compositor layers cache low-resolution text, and very tall
+   layers can lose their lower tiles. Normal paint lets the browser tile/raster
+   at the current preview scale while retaining intentional character width. */
+#canvas .glyph-scale,#canvas .glyph-inline{will-change:auto!important}
+
+@media(min-width:861px){#stageEl{scrollbar-gutter:stable}}
 #stageEl.preview-pan-ready{cursor:grab}
 #stageEl.preview-pan-ready.is-panning,
 #stageEl.preview-pan-ready.is-panning *{cursor:grabbing!important}
@@ -5918,9 +6041,8 @@ else setTimeout(__idleLoadRenderer,1200);
     fitPreview();
   };
 
-  /* CSS zoom triggers a real browser repaint instead of enlarging one cached
-     transform layer. Text, borders and vector UI therefore remain much sharper
-     while the actual export canvas and save scale stay unchanged. */
+  /* Measure authored geometry at 1x. Preview scale never changes text metrics;
+     text is painted at the current visual scale without cached glyph layers. */
   fitPreview=function(){
     const stage=document.getElementById('stageEl');
     const wrap=document.getElementById('canvasFit');
@@ -5971,7 +6093,7 @@ else setTimeout(__idleLoadRenderer,1200);
     const stageCS=window.getComputedStyle?getComputedStyle(stage):null;
     const stagePadX=stageCS?((parseFloat(stageCS.paddingLeft)||0)+(parseFloat(stageCS.paddingRight)||0)):0;
     const stagePadY=stageCS?((parseFloat(stageCS.paddingTop)||0)+(parseFloat(stageCS.paddingBottom)||0)):0;
-    const availW=Math.max(40,stage.clientWidth-(mobileTransformOnly?stagePadX:8));
+    const availW=Math.max(40,stage.clientWidth-stagePadX);
     const desktop=window.matchMedia&&window.matchMedia('(min-width:861px)').matches;
     const ratioLocked=state.export&&state.export.ratio!=='auto';
     const availH=(desktop&&ratioLocked)?Math.max(40,stage.clientHeight-stagePadY):Infinity;
@@ -5979,45 +6101,54 @@ else setTimeout(__idleLoadRenderer,1200);
     const zoom=(typeof normalizedPreviewZoom==='function')?normalizedPreviewZoom(state.previewZoom):1;
     const scale=Math.max(0.002,Math.min(8,fitScale*zoom));
 
-    /* Mobile WebKit can treat CSS zoom as real layout width and reflow long
-       text when a fixed-ratio canvas reaches the viewport edge. Mobile therefore
-       always uses a visual transform. The wrapper alone owns the scaled layout
-       size, while the full-size export canvas is removed from normal flow so it
-       cannot widen the page or change wrapping. Desktop keeps CSS zoom for crisp
-       inspection where the browser handles it safely. */
-    const canZoom=!mobileTransformOnly&&window.CSS&&CSS.supports&&CSS.supports('zoom','1');
-    const scaledW=Math.max(1,Math.round(cw*scale));
-    const scaledH=Math.max(1,Math.round(ch*scale));
-
+    // Reserve the full preview area independently of the rendering method.
+    // Rounding upward preserves the last fractional pixel of long canvases.
+    const scaledW=Math.max(1,Math.ceil(cw*scale));
+    const scaledH=Math.max(1,Math.ceil(ch*scale));
     wrap.style.width=scaledW+'px';
     wrap.style.height=scaledH+'px';
-
-    if(canZoom){
-      canvas.style.position='relative';
-      canvas.style.zoom=String(scale);
-      canvas.style.transform='none';
-    }else{
-      /* Size containment prevents the unscaled child box from participating in
-         flex/min-content calculations. Absolute positioning keeps the authored
-         canvas width intact; only transform changes what the user sees. */
-      wrap.style.contain='layout size style';
-      wrap.style.overflow='visible';
-      canvas.style.position='absolute';
-      canvas.style.left='0';
-      canvas.style.top='0';
-      canvas.style.zoom='1';
-      canvas.style.transform=Math.abs(scale-1)>0.0001?'scale('+scale+')':'none';
-    }
+    wrap.style.contain='layout size style';
+    // The unscaled absolute child must not enlarge the scrollable overflow area.
+    wrap.style.overflow=CSS.supports('overflow','clip')?'clip':'hidden';
+    canvas.style.position='absolute';
+    canvas.style.left='0';
+    canvas.style.top='0';
+    // Native zoom changes text metrics at fractional sizes. Use a visual scale
+    // on every platform and let text repaint without persistent glyph layers.
+    canvas.style.zoom='1';
+    canvas.style.transform=Math.abs(scale-1)>0.0001?'scale('+scale+')':'none';
     if(typeof updatePreviewZoomLabel==='function') updatePreviewZoomLabel();
     if(typeof syncPreviewScrollbar==='function') syncPreviewScrollbar();
     requestAnimationFrame(updatePanAvailability);
   };
 
+  let previewGeometryFrame=0;
+  function observePreviewContent(){
+    const chat=document.getElementById('chat');
+    if(!chat||!window.ResizeObserver)return;
+    let last='';
+    new ResizeObserver(()=>{
+      if(previewCaptureMode||(state.novel&&state.novel.on))return;
+      const signature=chat.offsetWidth+':'+Math.max(chat.offsetHeight,chat.scrollHeight);
+      if(signature===last)return;
+      last=signature;
+      cancelAnimationFrame(previewGeometryFrame);
+      previewGeometryFrame=requestAnimationFrame(()=>{
+        if(!previewCaptureMode&&!(state.novel&&state.novel.on))applyCanvas();
+      });
+    }).observe(chat);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observePreviewContent,{once:true});
+  else observePreviewContent();
+
   function updatePanAvailability(){
     const stage=document.getElementById('stageEl');
     const fit=document.getElementById('canvasFit');
     if(!stage||!fit) return;
-    const canPan=fit.offsetWidth>stage.clientWidth+2||fit.offsetHeight>stage.clientHeight+2;
+    const cs=getComputedStyle(stage);
+    const padX=(parseFloat(cs.paddingLeft)||0)+(parseFloat(cs.paddingRight)||0);
+    const padY=(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0);
+    const canPan=fit.offsetWidth+padX>stage.clientWidth+1||fit.offsetHeight+padY>stage.clientHeight+1;
     stage.classList.toggle('preview-pan-ready',canPan);
     if(!canPan) stage.classList.remove('is-panning');
   }
@@ -7374,6 +7505,8 @@ else setTimeout(__idleLoadRenderer,1200);
       const a=sourceEls[i],b=cloneEls[i];
       if(!a||!b||!a.textContent||!a.textContent.trim()) continue;
       const cs=getComputedStyle(a);
+      b.style.color=cs.color;
+      b.style.setProperty('-webkit-text-fill-color',cs.getPropertyValue('-webkit-text-fill-color')||cs.color);
       b.style.fontFamily=cs.fontFamily;
       b.style.fontSize=cs.fontSize;
       b.style.fontWeight=cs.fontWeight;
@@ -7765,6 +7898,7 @@ function projectSnapshot(){
 }
 function applyProject(d){
   if(!d||typeof d!=='object') return;
+  if(d.layout&&!Object.prototype.hasOwnProperty.call(d.layout,'scriptNameSize')) delete state.layout.scriptNameSize;
   if(Array.isArray(d.members)) state.members=d.members;
   if(Array.isArray(d.messages)) state.messages=d.messages;
   if(Array.isArray(d.stickers)) state.stickers=d.stickers;
@@ -7777,6 +7911,9 @@ function applyProject(d){
   if(d.novel&&typeof d.novel==='object'&&state.novel){
     const nv=JSON.parse(JSON.stringify(d.novel));
     Object.keys(nv).forEach(k=>{ if(k.indexOf('__')===0) delete nv[k]; });
+    if(!nv.columnWidths)delete state.novel.columnWidths;
+    if(!nv.columnAlign)delete state.novel.columnAlign;
+    if(!nv.splitMode)delete state.novel.splitMode;
     Object.assign(state.novel,nv);
   }
   try{ if(typeof window.__syncNovel==='function') window.__syncNovel(); }catch(_){}
@@ -7880,7 +8017,7 @@ const __undoStack=[];
 function pushUndo(label){
   try{
     __undoStack.push({label,data:JSON.parse(JSON.stringify({
-      members:state.members, messages:state.messages, meId:state.meId
+      members:state.members, messages:state.messages, meId:state.meId, novel:state.novel
     }))});
     if(__undoStack.length>20) __undoStack.shift();
   }catch(_){}
@@ -7888,6 +8025,9 @@ function pushUndo(label){
 function undoLast(){
   const u=__undoStack.pop(); if(!u) return;
   state.members=u.data.members; state.messages=u.data.messages; state.meId=u.data.meId;
+  if(u.data.novel)state.novel=u.data.novel;
+  if(window.__syncNovel)window.__syncNovel();
+  if(window.__syncColumnExtras)window.__syncColumnExtras();
   try{ renderMembers(); renderSenders(); renderMeSelect(); }catch(_){}
   renderPreview();
   toast('“'+u.label+'” 실행을 취소했어요');
@@ -7929,10 +8069,12 @@ window.dupMsg=function(id){
 
 /* ---------- 메시지 컨트롤 버튼 확장 (⠿ 드래그 · ⧉ 복제 추가) ---------- */
 window.ctrlHTML=function(id){
+  const sidePhoto=state.messages.find(m=>m.id===id&&m.type==='image'&&m.columnPlacement);
   return '<div class="ctrl">'
     +'<button type="button" class="drag-handle" data-mid="'+id+'" title="드래그로 순서 이동" onclick="return false">⠿</button>'
     +'<button type="button" title="위로" onclick="moveMsg(\''+id+'\',-1)">▲</button>'
     +'<button type="button" title="아래로" onclick="moveMsg(\''+id+'\',1)">▼</button>'
+    +(sidePhoto?'<button type="button" title="사진 가운데로 복구" onclick="returnImageToFlow(\''+id+'\')">↩</button>':'')
     +'<button type="button" title="복제" onclick="dupMsg(\''+id+'\')">⧉</button>'
     +'<button type="button" class="edit-btn" title="수정" onclick="editMsgPrompt(\''+id+'\')">✎</button>'
     +'<button type="button" class="del" title="삭제" onclick="delMsg(\''+id+'\')">×</button>'
@@ -7943,59 +8085,132 @@ window.ctrlHTML=function(id){
 (function initDragSort(){
   const chat=document.getElementById('chat'); if(!chat) return;
   let drag=null;
-  function clearMarks(){
-    chat.querySelectorAll('.drop-before,.drop-after').forEach(r=>r.classList.remove('drop-before','drop-after'));
+  const hint=document.createElement('div');hint.id='photoColumnDropHint';hint.hidden=true;document.body.appendChild(hint);
+  function showHint(pos,e){
+    hint.textContent=pos==='left'?'왼쪽에 사진용 단 만들기':pos==='right'?'오른쪽에 사진용 단 만들기':pos==='before'?'위로 이동':'아래로 이동';
+    hint.hidden=false;hint.style.left=Math.max(8,Math.min(window.innerWidth-220,e.clientX+14))+'px';
+    hint.style.top=Math.max(8,Math.min(window.innerHeight-48,e.clientY+18))+'px';
   }
+  function clearMarks(){chat.querySelectorAll('.drop-before,.drop-after,.drop-left,.drop-right').forEach(r=>r.classList.remove('drop-before','drop-after','drop-left','drop-right'));}
   chat.addEventListener('pointerdown',e=>{
-    const h=e.target.closest('.drag-handle'); if(!h) return;
+    const h=e.target.closest('.drag-handle'); if(!h||e.button>0) return;
     const row=h.closest('.pmsg'); if(!row) return;
     e.preventDefault();
-    drag={id:h.dataset.mid,row,moved:false,target:null,pos:null};
+    drag={id:h.dataset.mid,row,handle:h,pointer:e.pointerId,x:e.clientX,y:e.clientY,moved:false,target:null,pos:null};
     row.classList.add('dragging');
-    try{ h.setPointerCapture(e.pointerId); }catch(_){}
+    // Mobile toolbar proxy retains capture and forwards synthetic events.
+    if(e.isTrusted!==false){try{h.setPointerCapture(e.pointerId);}catch(_){}}
     document.body.style.userSelect='none';
   });
-  chat.addEventListener('pointermove',e=>{
-    if(!drag) return;
-    drag.moved=true;
-    clearMarks(); drag.target=null;
-    const rows=[...chat.querySelectorAll('.pmsg')].filter(r=>r!==drag.row);
+  document.addEventListener('pointermove',e=>{
+    if(!drag||e.pointerId!==drag.pointer) return;
+    if(!drag.moved&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<6)return;
+    drag.moved=true;clearMarks();drag.target=null;
+    const source=state.messages.find(m=>m.id===drag.id);
+    const sideAllowed=source&&source.type==='image'&&!(state.novel&&state.novel.on&&state.novel.mode==='ratio');
     let best=null,bestDist=Infinity;
-    rows.forEach(r=>{
-      const rc=r.getBoundingClientRect();
-      const mid=rc.top+rc.height/2;
-      const d=Math.abs(e.clientY-mid);
-      if(d<bestDist){ bestDist=d; best={r,before:e.clientY<mid}; }
+    chat.querySelectorAll('.pmsg').forEach(r=>{
+      const h=r.querySelector('.drag-handle');if(!h||h.dataset.mid===drag.id)return;
+      const rc=r.getBoundingClientRect();if(!rc.width||!rc.height)return;
+      const dx=Math.max(rc.left-e.clientX,0,e.clientX-rc.right),dy=Math.max(rc.top-e.clientY,0,e.clientY-rc.bottom);
+      const d=Math.hypot(dx,dy)+Math.abs(e.clientY-(rc.top+rc.height/2))*.001;
+      if(d<bestDist){bestDist=d;best={r,rc};}
     });
-    if(best){
-      best.r.classList.add(best.before?'drop-before':'drop-after');
-      drag.target=best.r; drag.pos=best.before?'before':'after';
-    }
+    if(!best){hint.hidden=true;return;}
+    const {r,rc}=best;
+    let pos=e.clientY<rc.top+rc.height/2?'before':'after';
+    const edge=Math.min(90,rc.width*.28);
+    // A side drop stays available beyond the paragraph's top/bottom and canvas edge.
+    // This also covers a photo handle whose starting Y is below its neighbouring text.
+    if(sideAllowed){if(e.clientX<=rc.left+edge)pos='left';else if(e.clientX>=rc.right-edge)pos='right';}
+    r.classList.add('drop-'+pos);drag.target=r;drag.pos=pos;
+    if(sideAllowed)showHint(pos,e);
   });
-  function finish(){
-    if(!drag) return;
-    const {id,row,target,pos,moved}=drag;
-    clearMarks();
-    row.classList.remove('dragging');
-    document.body.style.userSelect='';
-    drag=null;
-    if(!moved||!target) return;
-    const th=target.querySelector('.drag-handle');
-    const tid=th?th.dataset.mid:null; if(!tid) return;
-    const from=state.messages.findIndex(m=>m.id===id);
-    let to=state.messages.findIndex(m=>m.id===tid);
-    if(from<0||to<0) return;
-    if(pos==='after') to++;
-    if(to>from) to--;
-    if(to===from) return;
-    pushUndo('순서 이동');
-    const it=state.messages.splice(from,1)[0];
-    state.messages.splice(to,0,it);
-    renderPreview();
+  function finish(e){
+    if(!drag||e.pointerId!==drag.pointer)return;
+    const d=drag;drag=null;hint.hidden=true;clearMarks();d.row.classList.remove('dragging');document.body.style.userSelect='';
+    try{d.handle.releasePointerCapture(d.pointer);}catch(_){}
+    if(e.type!=='pointerup'||!d.moved||!d.target)return;
+    const th=d.target.querySelector('.drag-handle'),tid=th&&th.dataset.mid;if(!tid)return;
+    if(d.pos==='left'||d.pos==='right'){placeImageBeside(d.id,tid,d.pos,d.target);return;}
+    const from=state.messages.findIndex(m=>m.id===d.id);let to=state.messages.findIndex(m=>m.id===tid);
+    if(from<0||to<0)return;if(d.pos==='after')to++;if(to>from)to--;
+    if(to===from&&!state.messages[from].columnPlacement)return;
+    pushUndo('순서 이동');const it=state.messages.splice(from,1)[0];releaseImageColumn(it);state.messages.splice(to,0,it);syncControlsFromState();if(window.__syncNovel)window.__syncNovel();renderPreview();
   }
-  chat.addEventListener('pointerup',finish);
-  chat.addEventListener('pointercancel',finish);
+  document.addEventListener('pointerup',finish);document.addEventListener('pointercancel',finish);
+  window.addEventListener('blur',()=>{if(drag)finish({type:'pointercancel',pointerId:drag.pointer});});
 })();
+
+function releaseImageColumn(image){
+  if(!image||!image.columnPlacement)return false;
+  const old=Number(image.columnPlacement.column),n=state.novel;
+  delete image.columnPlacement;
+  if(!n||!n.on||n.mode==='ratio'||!Number.isInteger(old)||old<0||old>=n.cols)return true;
+  if(n.__msgCols)delete n.__msgCols[image.id];
+  const occupied=state.messages.some(m=>{
+    if(m===image)return false;
+    if(m.columnPlacement)return Number(m.columnPlacement.column)===old;
+    const rec=n.__msgCols&&n.__msgCols[m.id];
+    return rec&&(rec.cols||[rec.col]).some(c=>Number(c)%n.cols===old);
+  });
+  if(occupied)return true;
+  const drop=map=>Object.fromEntries(Object.entries(map||{}).filter(([k])=>Number(k)!==old).map(([k,v])=>[Number(k)>old?Number(k)-1:k,v]));
+  n.columnWidths=drop(n.columnWidths);n.columnAlign=drop(n.columnAlign);
+  state.messages.forEach(m=>{if(m.columnPlacement&&Number(m.columnPlacement.column)>old)m.columnPlacement.column--;});
+  n.cols=Math.max(1,n.cols-1);n.page=0;delete n.__msgCols;
+  if(n.cols===1){n.on=false;n.cols=2;}
+  return true;
+}
+function returnImageToFlow(id){
+  const image=state.messages.find(m=>m.id===id);
+  if(!image||!image.columnPlacement)return;
+  pushUndo('사진 가운데로 복구');
+  releaseImageColumn(image);image.align='center';
+  syncControlsFromState();if(window.__syncNovel)window.__syncNovel();renderPreview();
+}
+function placeImageBeside(id,targetId,side,targetRow){
+  const image=state.messages.find(m=>m.id===id),target=state.messages.find(m=>m.id===targetId);
+  if(!image||image.type!=='image'||!target||id===targetId)return;
+  const n=state.novel;if(!n||n.on&&n.mode==='ratio')return;
+  const active=!!n.on&&n.mode!=='ratio';
+  let count=active?n.cols:1;
+  const rec=n.__msgCols&&n.__msgCols[targetId];
+  let targetCol=active?(Number(targetRow&&targetRow.dataset.fluidColumn)||Number(rec&&rec.col)||0)%count:0;
+  const own=image.columnPlacement;
+  // Reuse the photo's own column when it is already on the requested side.
+  const adjacent=targetCol+(side==='left'?-1:1);
+  const reuse=active&&own&&Number(own.column)===adjacent;
+  const removeOld=active&&own&&!reuse&&Number(own.column)>=0&&Number(own.column)<count&&Number(own.column)!==targetCol&&!state.messages.some(m=>m!==image&&m.columnPlacement&&Number(m.columnPlacement.column)===Number(own.column));
+  if(!reuse&&count-(removeOld?1:0)>=8){toast('단은 최대 8개까지 만들 수 있어요.');return;}
+  pushUndo('사진 옆으로 배치');
+  const movingWidth=removeOld&&(n.columnWidths||{})[own.column],movingAlign=removeOld&&(n.columnAlign||{})[own.column];
+  if(removeOld){
+    const old=Number(own.column);
+    function removeIndex(map){const out={};Object.entries(map||{}).forEach(([k,v])=>{const i=Number(k);if(i!==old)out[i>old?i-1:i]=v;});return out;}
+    n.columnWidths=removeIndex(n.columnWidths);n.columnAlign=removeIndex(n.columnAlign);
+    state.messages.forEach(m=>{if(m!==image&&m.columnPlacement&&m.columnPlacement.column>old)m.columnPlacement.column--;});
+    if(targetCol>old)targetCol--;count--;
+  }
+  let col=adjacent;
+  if(!reuse){
+    col=targetCol+(side==='right'?1:0);
+    function shiftMap(map){const out={};Object.entries(map||{}).forEach(([k,v])=>{out[Number(k)>=col?Number(k)+1:k]=v;});return out;}
+    n.columnWidths=shiftMap(active?n.columnWidths:{});n.columnAlign=shiftMap(active?n.columnAlign:{});
+    state.messages.forEach(m=>{if(m.columnPlacement&&m!==image&&active&&m.columnPlacement.column>=col)m.columnPlacement.column++;});
+    n.cols=count+1;
+    if(movingWidth)n.columnWidths[col]=movingWidth;
+    if(movingAlign)n.columnAlign[col]=movingAlign;
+  }
+  n.on=true;n.mode='cols';n.page=0;
+  image.columnPlacement={column:col,anchorId:targetId,side};
+  // Keep an intelligible fallback order when columns are turned off.
+  state.messages.splice(state.messages.indexOf(image),1);
+  const at=state.messages.indexOf(target);state.messages.splice(at+(side==='right'?1:0),0,image);
+  syncControlsFromState();if(window.__syncNovel)window.__syncNovel();renderPreview();
+  toast(!active?'2단으로 나누어졌어요!':(n.cols+'단으로 배치했어요!'));
+}
+
 
 /* ---------- 프로젝트 백업 (.json 저장/불러오기) ---------- */
 window.exportProject=function(){
@@ -8853,6 +9068,7 @@ stage.addEventListener('touchend',e=>{
      빈 줄이 하나도 없으면 줄바꿈 기준으로 나눈다. */
   function splitIntoParagraphs(src){
     const text=String(src||'').replace(/\r\n?/g,'\n');
+    if(hasMarkdownBlock(text)) return text.trim()?[text.trim()]:[];
     const hasBlank=/\n[ \t]*\n/.test(text);
     return (hasBlank?text.split(/\n[ \t]*\n+/):text.split(/\n+/))
       .map(s=>s.trim()).filter(Boolean);
@@ -9076,8 +9292,9 @@ stage.addEventListener('touchend',e=>{
     const B=state.backgroundImage;
     if(bgLayer&&B&&B.src&&!state.transparentBg&&getComputedStyle(bgLayer).display!=='none'){
       bg={
-        src:B.src, size:Number(B.size)||100,
+        src:B.src, size:Number(B.size)||100, fit:B.fit,
         posX:Number(B.x)||0, posY:Number(B.y)||0,
+        offsetX:Number(B.offsetX)||0, offsetY:Number(B.offsetY)||0,
         blur:Number(B.blur)||0, rotation:Number(B.rotation)||0,
         overlayColor:(state.colors&&state.colors.bgOverlay)||'#000000',
         overlayOpacity:(Number(B.overlayOpacity)||0)/100,
@@ -9152,21 +9369,23 @@ stage.addEventListener('touchend',e=>{
     try{ raster=await loadRasterImage(bg.src); }catch(_){ return; }
     const layerW=bg.w*scale, layerH=bg.h*scale;
     const iw=raster.naturalWidth||1, ih=raster.naturalHeight||1;
-    const drawW=layerW*bg.size/100, drawH=drawW*(ih/iw);
+    const fit=bg.fit==='contain'?Math.min(layerW/iw,layerH/ih):layerW/iw;
+    const drawW=iw*fit*bg.size/100, drawH=ih*fit*bg.size/100;
     const offX=(layerW-drawW)*bg.posX/100, offY=(layerH-drawH)*bg.posY/100;
     /* 미리보기와 동일: 블러 번짐 폭만큼 확대해 가장자리 비네팅 제거 */
     const minDim=Math.max(1,Math.min(layerW,layerH));
     const bgScale=bg.blur?1+(bg.blur*scale*3)/minDim:1;
     /* 미리보기와 동일하게: 회전해도 모서리 여백이 안 생기도록 cover 배율을 곱한다 */
     let coverScale=1;
-    if(bg.rotation%360!==0){
+    if(bg.fit!=='contain'&&bg.rotation%360!==0){
       const rad=bg.rotation*Math.PI/180, rc=Math.abs(Math.cos(rad)), rs=Math.abs(Math.sin(rad));
       coverScale=Math.max((layerW*rc+layerH*rs)/layerW,(layerW*rs+layerH*rc)/layerH);
     }
-    const totalScale=bgScale*coverScale;
+    const totalScale=bg.fit==='contain'?1:bgScale*coverScale;
     ctx.save();
     try{
       ctx.beginPath(); ctx.rect(0,0,layerW,layerH); ctx.clip();
+      ctx.translate((bg.offsetX||0)*scale,(bg.offsetY||0)*scale);
       if(bg.rotation||totalScale!==1){
         ctx.translate(layerW/2,layerH/2);
         ctx.rotate(bg.rotation*Math.PI/180);
@@ -9458,6 +9677,8 @@ stage.addEventListener('touchend',e=>{
       const from=sourceEls[i],to=cloneEls[i];
       if(!from||!to||!from.textContent||!from.textContent.trim()) continue;
       const cs=getComputedStyle(from);
+      to.style.color=cs.color;
+      to.style.setProperty('-webkit-text-fill-color',cs.getPropertyValue('-webkit-text-fill-color')||cs.color);
       to.style.fontFamily=cs.fontFamily;
       to.style.fontSize=cs.fontSize;
       to.style.fontWeight=cs.fontWeight;
@@ -9488,8 +9709,8 @@ stage.addEventListener('touchend',e=>{
     root.removeAttribute('aria-live');
     root.querySelectorAll('.ctrl,#selToolbar,[data-export-soft-break]').forEach(el=>el.remove());
     root.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
-    root.querySelectorAll('.editing,.ctrl-open,.dragging,.drop-before,.drop-after').forEach(el=>{
-      el.classList.remove('editing','ctrl-open','dragging','drop-before','drop-after');
+    root.querySelectorAll('.editing,.ctrl-open,.dragging,.drop-before,.drop-after,.drop-left,.drop-right').forEach(el=>{
+      el.classList.remove('editing','ctrl-open','dragging','drop-before','drop-after','drop-left','drop-right');
     });
     root.querySelectorAll('.editable,.pmsg').forEach(el=>{
       el.style.setProperty('outline','none','important');
@@ -9528,6 +9749,13 @@ stage.addEventListener('touchend',e=>{
       return r;
     }
 
+    function cloneStyledRange(range){
+      let frag=range.cloneContents();
+      let ancestor=range.commonAncestorContainer;
+      if(ancestor.nodeType!==Node.ELEMENT_NODE)ancestor=ancestor.parentElement;
+      while(ancestor&&ancestor!==cloneRoot){const shell=ancestor.cloneNode(false);shell.appendChild(frag);frag=document.createDocumentFragment();frag.appendChild(shell);ancestor=ancestor.parentElement;}
+      return frag;
+    }
     const cuts=[];
     (softPoints||[]).forEach(point=>{
       const node=nodeAtPath(cloneRoot,point.path);
@@ -9555,7 +9783,7 @@ stage.addEventListener('touchend',e=>{
       if(cmpPos(cut.before,cursor)<0) continue;
       try{
         const range=makeRange(cursor,cut.before);
-        const frag=range.cloneContents();
+        const frag=cloneStyledRange(range);
         /* hard break는 빈 줄도 실제 한 줄이므로 보존한다. soft break 중 빈 조각은 중복 경계라 건너뛴다. */
         if(cut.kind==='hard'||frag.childNodes.length||String(frag.textContent||'').length){
           lines.push({frag,soft:cut.kind==='soft'});
@@ -9566,7 +9794,7 @@ stage.addEventListener('touchend',e=>{
     if(cmpPos(cursor,finish)<=0&&!samePos(cursor,finish)){
       try{
         const range=makeRange(cursor,finish);
-        const frag=range.cloneContents();
+        const frag=cloneStyledRange(range);
         if(frag.childNodes.length||String(frag.textContent||'').length) lines.push({frag,soft:false});
       }catch(_){}
     }
@@ -10954,7 +11182,7 @@ requestAnimationFrame(syncCtrlScale);
    원본 툴바는 기능·드래그 이벤트를 위해 말풍선 안에 그대로 두고 숨긴다.
    화면에 보이는 복제본만 body의 fixed 레이어에 띄워 stage/pane의 overflow와
    contain:paint 경계에 잘리지 않도록 한다. */
-.mobile-ui #chat .pmsg .ctrl.mobile-ctrl-source-hidden{
+#chat .pmsg .ctrl.mobile-ctrl-source-hidden{
   visibility:hidden!important;
   pointer-events:none!important;
 }
@@ -10962,6 +11190,7 @@ requestAnimationFrame(syncCtrlScale);
   position:fixed!important;
   left:0;top:0;right:auto!important;bottom:auto!important;
   display:flex!important;align-items:center;
+  width:max-content!important;max-width:none!important;flex-wrap:nowrap;
   gap:5px;padding:4px;margin:0;
   background:var(--panel,#fff);border-radius:11px;
   box-shadow:0 5px 16px rgba(0,0,0,.16);
@@ -10984,6 +11213,8 @@ requestAnimationFrame(syncCtrlScale);
 .mobile-ctrl-viewport-proxy button.del:active{color:var(--danger,#D14343);border-color:var(--danger,#D14343)}
 .mobile-ctrl-viewport-proxy button.drag-handle{touch-action:none!important;cursor:grab;font-size:11px;letter-spacing:-1px}
 .mobile-ctrl-viewport-proxy button.drag-handle:active{cursor:grabbing}
+body:not(.mobile-ui) .mobile-ctrl-viewport-proxy{gap:3px;padding:3px;border-radius:8px}
+body:not(.mobile-ui) .mobile-ctrl-viewport-proxy button{width:24px;height:24px;flex:0 0 24px;font-size:12px;border-radius:6px}
 </style>
 <script id="mobile-message-toolbar-viewport-fix-script">
 (function(){
@@ -10993,6 +11224,9 @@ const canvas=document.getElementById('canvas');
 if(!chat||!canvas) return;
 
 let proxy=null, source=null, owner=null, raf=0, forwardingDrag=false;
+let hoveredImage=null,hideTimer=0;
+function cancelHide(){clearTimeout(hideTimer);hideTimer=0;}
+function scheduleHide(){cancelHide();hideTimer=setTimeout(()=>{if(forwardingDrag)return;hoveredImage=null;queue();},180);}
 
 function mobileOn(){ return document.body.classList.contains('mobile-ui'); }
 function visualScale(){
@@ -11037,6 +11271,8 @@ function syntheticPointer(type,e){
 }
 function bindProxy(){
   if(!proxy) return;
+  proxy.addEventListener('pointerenter',cancelHide);
+  proxy.addEventListener('pointerleave',()=>{if(!mobileOn())scheduleHide();});
   proxy.addEventListener('click',e=>{
     const b=e.target.closest('button');
     if(!b) return;
@@ -11096,7 +11332,7 @@ function position(){
     proxy.style.visibility='hidden';return;
   }
   proxy.style.visibility='visible';
-  const sc=proxyScale();
+  const sc=Math.min(proxyScale(),Math.max(.1,(vp.right-vp.left-16)/Math.max(1,proxy.offsetWidth)));
   proxy.style.setProperty('--m-proxy-scale',sc.toFixed(4));
   const bw=proxy.offsetWidth*sc,bh=proxy.offsetHeight*sc;
   const pad=8,gap=4;
@@ -11113,9 +11349,8 @@ function position(){
 }
 function sync(){
   raf=0;
-  if(!mobileOn()){ clearProxy();return; }
-  const rows=Array.from(chat.querySelectorAll('.pmsg.ctrl-open'));
-  const row=rows.length?rows[rows.length-1]:null;
+  const rows=mobileOn()?Array.from(chat.querySelectorAll('.pmsg.ctrl-open')):[];
+  const row=mobileOn()?(rows.length?rows[rows.length-1]:null):(hoveredImage&&hoveredImage.isConnected?hoveredImage:null);
   if(!row){ clearProxy();return; }
   if(owner!==row||!source||!source.isConnected){
     const ctrl=row.querySelector(':scope > .ctrl');
@@ -11126,6 +11361,23 @@ function sync(){
 }
 function queue(){ if(!raf) raf=requestAnimationFrame(sync); }
 
+// Desktop image controls share the existing viewport overlay and action forwarding.
+// A short bridge delay lets the pointer cross from a tiny image to its toolbar.
+chat.addEventListener('pointerover',e=>{
+  if(mobileOn())return;
+  const row=e.target.closest('.pmsg.image-row');if(!row)return;
+  cancelHide();hoveredImage=row;queue();
+});
+chat.addEventListener('pointerout',e=>{
+  if(mobileOn()||!hoveredImage)return;
+  const next=e.relatedTarget;
+  if(next&&(hoveredImage.contains(next)||(proxy&&proxy.contains(next))))return;
+  scheduleHide();
+});
+chat.addEventListener('focusin',e=>{
+  if(mobileOn())return;
+  const row=e.target.closest('.pmsg.image-row');if(row){cancelHide();hoveredImage=row;queue();}
+});
 /* 말풍선 탭 토글이 끝난 다음 열린 행을 읽는다. */
 document.addEventListener('click',queue);
 window.addEventListener('resize',queue,{passive:true});
@@ -15629,8 +15881,10 @@ const EMBED_CJK_FONT_CSS={
 function fontImports(){
   const s0=ST();
   const rawStack=String((s0&&s0.layout&&s0.layout.font)||'');
-  const stack=rawStack.toLowerCase();
+  const stack=(rawStack+' '+((s0&&s0.mode==='script'&&s0.layout.scriptNameFont)||'')).toLowerCase();
   const urls=[EMBED_FONT_CSS['pretendard']];
+  const nameFamily=s0&&s0.mode==='script'&&__selectedWebFont(s0.layout.scriptNameFont||'');
+  if(nameFamily&&__RUNTIME_FONT_CONFIG[nameFamily].css)urls.push(__RUNTIME_FONT_CONFIG[nameFamily].css);
   Object.keys(EMBED_FONT_CSS).forEach(k=>{
     if(k!=='pretendard'&&stack.indexOf(k)>=0) urls.push(EMBED_FONT_CSS[k]);
   });
@@ -15644,10 +15898,12 @@ function fontImports(){
   }catch(_){}
   try{
     if(document.querySelector('#canvas .cjk-auto[data-cjk-lang="ja"]')){
-      urls.push(EMBED_CJK_FONT_CSS[serif?'noto serif jp':'noto sans jp']);
+      const family=window.__cjkFamilyFor('ja');
+      urls.push((__RUNTIME_FONT_CONFIG[family]||{}).css||EMBED_CJK_FONT_CSS[serif?'noto serif jp':'noto sans jp']);
     }
     if(document.querySelector('#canvas .cjk-auto[data-cjk-lang="zh"]')){
-      urls.push(EMBED_CJK_FONT_CSS[serif?'noto serif sc':'noto sans sc']);
+      const family=window.__cjkFamilyFor('zh');
+      urls.push((__RUNTIME_FONT_CONFIG[family]||{}).css||EMBED_CJK_FONT_CSS[serif?'noto serif sc':'noto sans sc']);
     }
   }catch(_){}
 
@@ -15765,8 +16021,8 @@ function buildEmbedHTML(){
   node.querySelectorAll('.ctrl,#selToolbar,[data-export-soft-break],.bulk-select-mark,.fr-hit')
     .forEach(el=>{ if(el.classList&&el.classList.contains('fr-hit')){ el.replaceWith(...el.childNodes); } else el.remove(); });
   node.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
-  node.querySelectorAll('.editable,.editing,.ctrl-open,.dragging,.drop-before,.drop-after,.bulk-selected')
-    .forEach(el=>el.classList.remove('editable','editing','ctrl-open','dragging','drop-before','drop-after','bulk-selected'));
+  node.querySelectorAll('.editable,.editing,.ctrl-open,.dragging,.drop-before,.drop-after,.drop-left,.drop-right,.bulk-selected')
+    .forEach(el=>el.classList.remove('editable','editing','ctrl-open','dragging','drop-before','drop-after','drop-left','drop-right','bulk-selected'));
   node.querySelectorAll('.pmsg').forEach(el=>{ el.style.outline='none'; });
   /* 화면 편집용으로 숨겨 둔 줄(다른 장)은 통째로 뺀다 */
   node.querySelectorAll('*').forEach(el=>{ if(el.style&&el.style.display==='none') el.remove(); });
@@ -15831,7 +16087,7 @@ function buildEmbedHTML(){
   const stretchMobileFontCss='@media(max-width:700px),(max-device-width:700px){'
     +rootSel+' .t-block{font-size:'+stretchMobileTextPx.toFixed(4)+'px!important;}'
     +rootSel+' .t-block>.t-inner,'+rootSel+' .t-block .glyph-scale{font-size:inherit!important;}'
-    +rootSel+' .n-bubble,'+rootSel+' .n-plain,'+rootSel+' .m-bubble,'+rootSel+' .script-dialogue,'+rootSel+' .script-name{font-size:'+stretchMobileBubblePx.toFixed(4)+'px!important;}'
+    +rootSel+' .n-bubble,'+rootSel+' .n-plain,'+rootSel+' .m-bubble,'+rootSel+' .script-dialogue{font-size:'+stretchMobileBubblePx.toFixed(4)+'px!important;}'
     +rootSel+' .n-bubble>.glyph-scale,'+rootSel+' .n-plain>.glyph-scale,'+rootSel+' .m-bubble>.glyph-scale,'+rootSel+' .script-dialogue>.glyph-scale,'+rootSel+' .script-name>.glyph-inline{font-size:inherit!important;}'
     +'}\n';
 
@@ -17246,9 +17502,92 @@ async function normalizeMp4VideoFps(blob,targetFps,realSeconds,info){
 }
 
 
-/* 일부 갤럭시 갤러리는 fragmented MP4의 실제 조각 길이보다 moov 안의 짧은
-   duration 값만 읽어 3초 영상처럼 표시한다. 실제 재생 데이터는 건드리지 않고
-   mvhd/tkhd/mdhd/mehd의 전체 길이를 완성된 영상 길이에 맞춘다. */
+/* Safari: prefer the recorder's own timeline. Never replace an empty fragment
+   initialization duration with wall time: it is not a second media segment.
+   Encoded samples, decode/composition timestamps and edit lists stay intact. */
+async function finalizeSafariMp4(blob,seconds,info){
+  info=info||{};
+  try{
+    if(!Number.isFinite(seconds)||seconds<=0)throw new Error('invalid recording duration');
+    const buf=await blob.arrayBuffer(),v=new DataView(buf),bytes=new Uint8Array(buf);
+    const need=(p,n,end=bytes.length)=>{if(p<0||p+n>end)throw new Error('truncated MP4 field');};
+    const u32=p=>{need(p,4);return v.getUint32(p,false);};
+    const u64=p=>{const n=u32(p)*4294967296+u32(p+4);if(!Number.isSafeInteger(n))throw new Error('MP4 integer overflow');return n;};
+    function boxes(a,b){const out=[];for(let p=a;p<b;){need(p,8,b);let z=u32(p),head=8;if(z===1){need(p,16,b);z=u64(p+8);head=16;}if(!z)z=b-p;if(z<head||p+z>b)throw new Error('invalid box size');out.push({p,end:p+z,d:p+head,type:String.fromCharCode(...bytes.slice(p+4,p+8))});p+=z;}return out;}
+    const kids=b=>boxes(b.d,b.end),top=boxes(0,bytes.length),moov=top.find(b=>b.type==='moov');if(!moov)throw new Error('moov missing');
+    const children=kids(moov),mvhd=children.find(b=>b.type==='mvhd');if(!mvhd)throw new Error('mvhd missing');
+    function clock(b){const version=bytes[b.d];if(version>1)throw new Error('unsupported clock version');const scaleAt=b.d+(version?20:12),at=b.d+(version?24:16),size=version?8:4;need(at,size,b.end);const scale=u32(scaleAt);if(!scale)throw new Error('zero timescale');return {scale,at,size};}
+    const movie=clock(mvhd),tracks=new Map(),clear=[movie];
+    let emptyInit=true;
+    for(const trak of children.filter(b=>b.type==='trak')){
+      const tk=kids(trak),tkhd=tk.find(b=>b.type==='tkhd'),mdia=tk.find(b=>b.type==='mdia');
+      if(!tkhd||!mdia)throw new Error('track header missing');
+      const version=bytes[tkhd.d];if(version>1)throw new Error('unsupported track version');
+      const id=u32(tkhd.d+(version?20:12)),at=tkhd.d+(version?28:20),size=version?8:4;need(at,size,tkhd.end);clear.push({at,size});
+      const md=kids(mdia),mdhd=md.find(b=>b.type==='mdhd'),hdlr=md.find(b=>b.type==='hdlr'),minf=md.find(b=>b.type==='minf');
+      if(!mdhd||!hdlr||!minf)throw new Error('media header missing');
+      const c=clock(mdhd);clear.push(c);need(hdlr.d+8,4,hdlr.end);
+      const type=String.fromCharCode(...bytes.slice(hdlr.d+8,hdlr.d+12));
+      tracks.set(id,{id,type,scale:c.scale,count:0,ticks:0,start:Infinity,end:0,next:0,defaultDuration:0});
+      const stbl=kids(minf).find(b=>b.type==='stbl');if(!stbl)throw new Error('sample table missing');
+      const tables=kids(stbl),stts=tables.find(b=>b.type==='stts'),stsz=tables.find(b=>b.type==='stsz'),stz2=tables.find(b=>b.type==='stz2');
+      // Only an initialization segment with no regular samples may be cleared.
+      if(!stts||(!stsz&&!stz2))emptyInit=false;
+      if(stts){need(stts.d+4,4,stts.end);if(u32(stts.d+4))emptyInit=false;}
+      for(const b of [stsz,stz2].filter(Boolean)){need(b.d+8,4,b.end);if(u32(b.d+8))emptyInit=false;}
+    }
+    const mvex=children.find(b=>b.type==='mvex');
+    if(mvex)for(const b of kids(mvex).filter(b=>b.type==='trex')){need(b.d,24,b.end);const t=tracks.get(u32(b.d+4));if(t)t.defaultDuration=u32(b.d+12);}
+    const fragments=top.filter(b=>b.type==='moof');
+    for(const moof of fragments)for(const traf of kids(moof).filter(b=>b.type==='traf')){
+      const k=kids(traf),tfhd=k.find(b=>b.type==='tfhd');if(!tfhd)throw new Error('tfhd missing');need(tfhd.d,8,tfhd.end);
+      const t=tracks.get(u32(tfhd.d+4));if(!t)throw new Error('unknown fragment track');
+      const flags=u32(tfhd.d)&0xffffff;let p=tfhd.d+8,dd=t.defaultDuration;
+      if(flags&1)p+=8;if(flags&2)p+=4;
+      if(flags&8){need(p,4,tfhd.end);dd=u32(p);p+=4;}
+      if(flags&16)p+=4;if(flags&32)p+=4;need(p,0,tfhd.end);
+      const tfdt=k.find(b=>b.type==='tfdt');let dts=t.next;
+      if(tfdt){const ver=bytes[tfdt.d];if(ver>1)throw new Error('unsupported tfdt');need(tfdt.d+4,ver?8:4,tfdt.end);dts=ver?u64(tfdt.d+4):u32(tfdt.d+4);}
+      for(const trun of k.filter(b=>b.type==='trun')){
+        need(trun.d,8,trun.end);const f=u32(trun.d)&0xffffff,count=u32(trun.d+4);let q=trun.d+8;
+        if(f&1)q+=4;if(f&4)q+=4;
+        const stride=((f&256?1:0)+(f&512?1:0)+(f&1024?1:0)+(f&2048?1:0))*4;
+        need(q,count*stride,trun.end);if(count>10000000)throw new Error('too many samples');
+        for(let i=0;i<count;i++){
+          let duration=dd;if(f&256){duration=u32(q);q+=4;}
+          if(f&512)q+=4;if(f&1024)q+=4;
+          let cto=0;if(f&2048){cto=bytes[trun.d]===1?v.getInt32(q,false):u32(q);q+=4;}
+          if(!duration)throw new Error('sample duration missing');
+          t.start=Math.min(t.start,dts+cto);t.end=Math.max(t.end,dts+cto+duration);
+          t.ticks+=duration;t.count++;dts+=duration;
+        }
+      }
+      t.next=dts;
+    }
+    const all=[...tracks.values()],video=all.find(t=>t.type==='vide');
+    Object.assign(info,{applied:true,metadataOnly:true,seconds,timescale:movie.scale,fragments:fragments.length,
+      samples:video?video.count:0,fps:video&&video.ticks?video.count/(video.ticks/video.scale):null,
+      tracks:all.map(t=>t.id+' '+t.type+' ts'+t.scale+' · '+t.count+'개 · 간격합 '+(t.ticks/t.scale).toFixed(3)+'초 · 표시구간 '+(t.count?((t.end-t.start)/t.scale).toFixed(3):'?')+'초').join(' / '),
+      top:top.map(b=>b.type).join(' '),mode:'녹화 원본 유지',rawDuration:await probeBlobDuration(blob)});
+    const close=d=>Number.isFinite(d)&&d>0&&Math.abs(d-seconds)<=Math.max(.5,seconds*.15);
+    // Healthy native output is returned byte-for-byte, including AAC priming edits.
+    if(close(info.rawDuration)){info.measured=info.rawDuration;return blob;}
+    if(fragments.length&&mvex&&emptyInit){
+      let changed=false;
+      for(const c of clear)for(let i=0;i<c.size;i++){if(bytes[c.at+i])changed=true;bytes[c.at+i]=0;}
+      if(changed){
+        const candidate=new Blob([buf],{type:blob.type||'video/mp4'});
+        info.candidateDuration=await probeBlobDuration(candidate);
+        if(close(info.candidateDuration)){info.mode='빈 초기화 구간의 중복 길이 제거';info.measured=info.candidateDuration;return candidate;}
+      }
+    }
+    // Do not guess a new frame rate or overwrite audio timing to hide a mismatch.
+    info.measured=info.rawDuration;
+    if(info.rawDuration!=null&&!close(info.rawDuration))info.bail='녹화 원본 길이가 예상과 다름';
+    return blob;
+  }catch(e){info.applied=false;info.bail=String(e.message||e);return blob;}
+}
+
 async function normalizeMp4DurationMetadata(blob,durationSeconds){
   try{
     if(!blob||!/mp4/i.test(String(blob.type||''))||typeof blob.arrayBuffer!=='function') return blob;
@@ -17814,14 +18153,17 @@ window.exportBackgroundVideo=async function(opt){
     const outMime=String(chunkMime||(rec&&rec.mimeType)||mime||'video/webm').split(';')[0];
     let blob=new Blob(chunks,{type:outMime});
     if(!blob.size) throw new Error('empty recording');
-    /* ---- 사파리(아이폰)에서는 파일을 손대지 않는다 ----
-       MP4 시간표 손질은 원래 크로미움(갤럭시) 전용 보정이었다. 사파리가 만든 파일에
-       그걸 그대로 적용하면서 길이가 두 배가 됐다. 아이폰에서는 녹화기가 만든 파일을
-       그대로 저장한다. 정말로 '그대로'. */
+    /* Safari validates native output before considering an empty-init metadata repair. */
     const rawSave=/iP(hone|ad|od)/i.test(navigator.userAgent||'')
       ||(/Safari/i.test(navigator.userAgent||'')&&!/Chrome|Chromium|CriOS|Edg|OPR|Whale/i.test(navigator.userAgent||''));
     if(rawSave) window.__lastMp4Timeline=null;
     let declared=targetSeconds, mp4Fixed=false, mp4Samples=0;
+    if(/mp4/i.test(outMime)&&rawSave){
+      const timeline={applied:false,metadataOnly:true,bail:''};
+      blob=await finalizeSafariMp4(blob,targetSeconds,timeline);
+      mp4Fixed=!!timeline.applied;mp4Samples=timeline.samples||0;window.__lastMp4Timeline=timeline;
+      if(!timeline.applied)throw new Error('MP4 길이 정보를 마무리하지 못했어요: '+timeline.bail);
+    }
     if(/mp4/i.test(outMime)&&!rawSave){
       const timeline={seconds:0,applied:false,samples:0,fps:0,timescale:0,fragments:0,bail:''};
       blob=await normalizeMp4VideoFps(blob,fps,spanSeconds,timeline);
@@ -17852,10 +18194,11 @@ window.exportBackgroundVideo=async function(opt){
         +' · rVFC='+(useFrameCb?frameHits:'없음')+' · pixel='+(sigOk?'ok':'없음'),
       '벽시계: 전체 '+round(wallTotal)+'초 / 내용 '+round(wallContent)+'초',
       '계산: target '+round(targetSeconds)+'초 · span '+round(spanSeconds)+'초 · 적은 길이 '+round(declared)+'초',
-      'MP4 시간표 수정: '+(mp4Fixed?'적용됨':'실패')+(tl.bail?(' ('+tl.bail+')'):'')
+      (tl.metadataOnly?'MP4 길이 검사: ':'MP4 시간표 수정: ')+(mp4Fixed?'적용됨':'실패')+(tl.bail?(' ('+tl.bail+')'):'')
         +' · 샘플 '+(mp4Samples||tl.samples||0)+'개 · 조각 '+(tl.fragments||0)
         +' · timescale '+(tl.timescale||0)+' · 계산fps '+round(tl.fps),
-      '후처리: '+(rawSave?'손대지 않음(사파리 원본 그대로)':'적용'),
+      '후처리: '+(rawSave?((tl.mode||'원본 유지')+' · 영상/오디오 샘플 및 편집 목록 원본 유지'):'적용'),
+      ...(rawSave?['보정 전 원본 측정: '+(tl.rawDuration==null?'측정 불가':round(tl.rawDuration)+'초')+' · 초기화 보정 후보: '+(tl.candidateDuration==null?'측정값 없음':round(tl.candidateDuration)+'초')]:[]),
       '트랙별(계산값): '+(tl.tracks||'없음'),
       '파일 구조: '+(tl.top||'-'),
       '--- 저장된 파일 실제 내용 ---',
@@ -17875,7 +18218,8 @@ window.exportBackgroundVideo=async function(opt){
     console.log(report);
     const expected=declared||targetSeconds;
     const wayOff=(measured!=null)&&(measured>expected*1.25+0.5||measured<expected*0.75-0.5);
-    if(wayOff) setTimeout(()=>{ try{ showVideoReport(report); }catch(_){} },900);
+    if(wayOff||(rawSave&&tl.bail)) setTimeout(()=>{ try{ showVideoReport(report); }catch(_){} },900);
+    if((rawSave&&((tl.bail&&tl.applied)||wayOff))||(measured!=null&&(!Number.isFinite(measured)||measured>expected*4+5)))throw new Error('저장 파일의 재생 길이가 비정상이라 다운로드를 중단했어요. 영상 길이 진단을 확인해 주세요.');
     const ext=extOf(outMime,rec);
     const name=((typeof safeFilename==='function')?safeFilename(s.export.filename):'chat')+'.'+ext;
     const fallback=()=>{
@@ -18743,7 +19087,9 @@ window.setAlign=function(a){
   try{
     if(typeof composerEditId!=='undefined'&&composerEditId){
       const m=(state.messages||[]).find(function(x){ return x&&x.id===composerEditId; });
-      if(m&&m.type==='image'&&m.align!==a){ m.align=a; renderPreview(); }
+      if(m&&m.type==='image'&&(m.align!==a||(a==='center'&&m.columnPlacement))){
+        if(a==='center'&&m.columnPlacement){returnImageToFlow(m.id);}else{m.align=a;renderPreview();}
+      }
     }
   }catch(_){}
 };
@@ -18836,7 +19182,8 @@ if(typeof __bulkAlignImg==='function'){
     const ms=(state.messages||[]).filter(function(m){ return m&&set.has(m.id)&&m.type==='image'; });
     if(!ms.length) return false;
     try{ if(typeof window.pushUndo==='function') window.pushUndo('사진 정렬 변경'); }catch(_){}
-    ms.forEach(function(m){ m.align=want; });
+    ms.forEach(function(m){if(want==='center')releaseImageColumn(m);m.align=want;});
+    syncControlsFromState();if(window.__syncNovel)window.__syncNovel();
     state.draftImageAlign=want; syncImgAlignSeg();
     try{ renderPreview(); }catch(_){}
     try{ S.refresh(); }catch(_){}
@@ -19203,11 +19550,12 @@ function layoutSig(){
   const s=ST(); if(!s) return '';
   const n=s.novel||{};
   const msg=(s.messages||[]).map(m=>m?((m.type||'')+'|'+(m.content||'')+'|'+(m.senderId||'')
-    +'|'+(m.align||'')+'|'+(m.splitBefore?'1':'')+'|'+(m.img?'i':'')+'|'+(m.imgW||'')):'').join('\u0001');
+    +'|'+(m.align||'')+'|'+(m.splitBefore?'1':'')+'|'+(m.image?m.image.length:0)+'|'+(m.imgSize??60)+'|'+(m.imgMargin??6)):'').join('\u0001');
   return [
     (s.messages||[]).length, hashStr(msg),
     hashStr(JSON.stringify(s.layout||{})),
     n.ratio, n.gutter, n.single?1:0, n.mode,
+    Array.from(document.querySelectorAll('#chat .image-row img.mimg'),img=>img.naturalWidth+'x'+img.naturalHeight).join(','),
     s.bubbleTheme||'', s.mode||'',
     s.showProfile?1:0, s.showMyIdentity?1:0, s.hideNames?1:0,
     s.stripSpeakerName?1:0, s.stripQuoteMarks?1:0, s.autoQuoteBubble?1:0,
@@ -19326,6 +19674,7 @@ function restoreChat(canvas,chat){
 
 
 function novelRowId(row){
+  if(row.dataset.fluidSource)return row.dataset.fluidSource;
   const h=row.querySelector('.drag-handle[data-mid]');
   if(h) return h.dataset.mid||'';
   const d=row.querySelector('[data-id]');
@@ -19470,14 +19819,312 @@ window.__novelGotoMsg=function(id){
   return {page:target+1,total:total,col:(rec.col||0)+1};
 };
 
+/* Rebuild each column from the original blocks on every layout pass. */
+function restoreVariableColumns(chat){
+  const saved=chat.__variableOriginal;
+  if(saved&&saved.marker.parentNode===chat){chat.replaceChildren(...saved.nodes);}
+  chat.__variableOriginal=null;
+  chat.classList.remove('variable-columns');
+}
+function variableColumnWidth(n,index,base){
+  const v=Number(n.columnWidths&&n.columnWidths[index]);
+  return Number.isFinite(v)&&v>0?Math.max(120,Math.min(1600,Math.round(v))):base;
+}
+/* Greedy flow at measured heights; binary search chooses a balanced height. */
+function flowColumnItems(items,widths,height,measure,maxColumns){
+  const placements=[];let col=0,y=0;
+  const next=()=>{col++;y=0;return col<maxColumns;};
+  for(let index=0;index<items.length;index++){
+    const item=items[index];let start=0;
+    if(item.forced&&placements.length&&y>0&&!next())return null;
+    while(start<item.length){
+      const width=widths[col%widths.length],available=height-y;
+      let end=item.length,h=measure(index,start,end,width);
+      if(h>available+.1){
+        if(!item.splittable){if(y>0){if(!next())return null;continue;}return null;}
+        let lo=start,hi=item.length;
+        while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(measure(index,start,mid,width)<=available+.1)lo=mid;else hi=mid-1;}
+        end=lo;
+        if(end===start){if(y>0){if(!next())return null;continue;}return null;}
+        if(item.wordEnds){for(let k=end;k>start&&k>end-24;k--){if(item.wordEnds.has(k)){end=k;break;}}}
+        h=measure(index,start,end,width);
+      }
+      placements.push({index,start,end,col,y,h});y+=h;start=end;
+      if(start<item.length&&!next())return null;
+    }
+  }
+  return {placements,columns:col+1};
+}
+function balanceColumnItems(items,widths,measure,maxColumns){
+  let high=64,result=null;
+  for(let i=0;i<24;i++){result=flowColumnItems(items,widths,high,measure,maxColumns);if(result)break;high*=2;}
+  if(!result)throw new Error('단 높이를 계산하지 못했어요.');
+  let low=0;
+  while(high-low>1){const mid=Math.floor((low+high)/2),trial=flowColumnItems(items,widths,mid,measure,maxColumns);if(trial){high=mid;result=trial;}else low=mid;}
+  return {height:high,...result};
+}
+// Whole-block partition: minimize the tallest column, then the height imbalance.
+// No ranges are sliced in paragraph mode, including a block taller than its neighbours.
+function balanceBlockColumns(items,widths,measure,maxColumns){
+  const count=items.length,cols=Math.min(count,maxColumns);
+  if(!count)return {height:0,placements:[],columns:1};
+  // Large documents retain the measured greedy minimax path without quadratic work.
+  if(count>180)return balanceColumnItems(items,widths,measure,maxColumns);
+  const hs=Array.from({length:cols},(_,c)=>items.map((item,i)=>measure(i,0,item.length,widths[c%widths.length])));
+  const sums=hs.map(h=>{const p=[0];h.forEach(v=>p.push(p[p.length-1]+v));return p;});
+  const forced=[0];items.forEach((item,i)=>forced.push(forced[i]+(i>0&&item.forced?1:0)));
+  const dp=Array.from({length:cols+1},()=>Array(count+1).fill(null));dp[0][0]={peak:0,squares:0};
+  for(let c=1;c<=cols;c++){
+    for(let end=c;end<=count;end++){
+      for(let start=c-1;start<end;start++){
+        const prev=dp[c-1][start];if(!prev)continue;
+        // A forced boundary may be the first block of a column, never inside it.
+        if(forced[end]-forced[start+1]>0)continue;
+        const h=sums[c-1][end]-sums[c-1][start];
+        const peak=Math.max(prev.peak,h),squares=prev.squares+h*h,old=dp[c][end];
+        if(!old||peak<old.peak-.01||(Math.abs(peak-old.peak)<=.01&&squares<old.squares))dp[c][end]={peak,squares,start};
+      }
+    }
+  }
+  if(!dp[cols][count])return balanceColumnItems(items,widths,measure,maxColumns);
+  const ranges=[];let end=count;
+  for(let c=cols;c>0;c--){const start=dp[c][end].start;ranges.unshift({start,end});end=start;}
+  const placements=[];
+  ranges.forEach((range,col)=>{let y=0;for(let i=range.start;i<range.end;i++){const h=hs[col][i];placements.push({index:i,start:0,end:items[i].length,col,y,h});y+=h;}});
+  return {height:dp[cols][count].peak,placements,columns:cols};
+}
+// Side photos derive their width from the text height and their own aspect ratio.
+function fitSidePhotos(photos,width,height){
+  const fitted=photos.map(photo=>{
+    const scale=Math.max(.01,Math.min(1,(Number(photo.percent)||60)/100));
+    const ratio=Math.max(.001,Number(photo.ratio)||1);
+    const w=height*ratio*scale;
+    return {width:w,height:w/ratio};
+  });
+  const total=fitted.reduce((sum,p)=>sum+p.height,0),shrink=Math.min(1,height/Math.max(1,total));
+  let y=0;
+  return fitted.map(p=>{const item={width:p.width*shrink,height:p.height*shrink,y};y+=item.height;return item;});
+}
+function textColumnAlignmentShift(bounds,reference,align){
+  if(align==='bottom')return reference.bottom-bounds.bottom;
+  if(align==='middle')return (reference.top+reference.bottom-bounds.top-bounds.bottom)/2;
+  return reference.top-bounds.top;
+}
+// Measure text ranges rather than the row's line-height, padding or bottom gap.
+function columnTextBounds(row){
+  const origin=row.getBoundingClientRect(),scale=row.offsetHeight?origin.height/row.offsetHeight:1;
+  if(!(scale>0))return null;
+  const margin=parseFloat(getComputedStyle(row).marginTop)||0;
+  let top=Infinity,bottom=-Infinity;
+  const walker=document.createTreeWalker(row,NodeFilter.SHOW_TEXT);
+  for(let node=walker.nextNode();node;node=walker.nextNode()){
+    const parent=node.parentElement;
+    if(!parent||parent.closest('.ctrl,button,.drag-handle,.row-quote-bar')||!parent.closest('.t-inner,.n-bubble,.m-bubble,.n-plain,.n-name,.m-name,.divider-pill'))continue;
+    const first=node.data.search(/\S/);if(first<0)continue;
+    const end=node.data.trimEnd().length,range=document.createRange();
+    range.setStart(node,first);range.setEnd(node,end);
+    for(const rect of range.getClientRects()){
+      if(rect.width<=0||rect.height<=0)continue;
+      top=Math.min(top,(rect.top-origin.top)/scale+margin);
+      bottom=Math.max(bottom,(rect.bottom-origin.top)/scale+margin);
+    }
+  }
+  return Number.isFinite(top)&&bottom>top?{top,bottom}:null;
+}
+function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pages){
+  const widths=Array.from({length:n.cols},(_,i)=>variableColumnWidth(n,i,base));
+  let pageW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1);
+  const original=[...chat.childNodes],rows=[...chat.querySelectorAll(':scope > .pmsg')];
+  const top=chatPadTop(chat),bottom=chatPadBottom(chat);
+  function rawText(node){if(node.nodeType===3)return node.data;if(node.nodeType!==1)return '';if(node.tagName==='BR')return '\n';return [...node.childNodes].map(rawText).join('');}
+  const segmenter=typeof Intl.Segmenter==='function'?new Intl.Segmenter(undefined,{granularity:'grapheme'}):null;
+  const items=rows.map(row=>{
+    const inner=row.matches('.t-block')?row.querySelector('.t-inner'):null;
+    const splittable=n.splitMode!=='block'&&!!(inner&&!inner.querySelector('table,img,svg,video'));
+    const text=splittable?rawText(inner):'';
+    const units=segmenter?[...segmenter.segment(text)].map(x=>x.segment):[];
+    if(!segmenter){let regional=0;for(const cp of Array.from(text)){const code=cp.codePointAt(0),flag=code>=0x1F1E6&&code<=0x1F1FF;const join=units.length&&(/\p{Mark}/u.test(cp)||cp==='\u200d'||cp==='\ufe0f'||(code>=0x1F3FB&&code<=0x1F3FF)||units[units.length-1].endsWith('\u200d')||(flag&&regional%2===1));if(join)units[units.length-1]+=cp;else units.push(cp);regional=flag?regional+1:0;}}
+    const offsets=[0];units.forEach(x=>offsets.push(offsets[offsets.length-1]+x.length));
+    return {row,inner,text,offsets,length:splittable&&units.length?units.length:1,splittable:splittable&&units.length>0,forced:!!(state.messages.find(m=>m.id===novelRowId(row))||{}).splitBefore,wordEnds:new Set(units.map((x,i)=>/\s/.test(x)?i+1:-1))};
+  });
+  const msgById=new Map(state.messages.map(m=>[m.id,m]));
+  const reserved=new Set(), pinned=[];
+  items.forEach((item,index)=>{
+    const m=msgById.get(novelRowId(item.row)), pin=m&&m.type==='image'&&m.columnPlacement;
+    if(!pin) return;
+    const col=Math.max(0,Math.min(n.cols-1,Number(pin.column)||0));
+    // Always retain at least one flowing text column after manual count changes.
+    if(!reserved.has(col)&&reserved.size>=n.cols-1) return;
+    reserved.add(col);pinned.push({index,col,anchorId:pin.anchorId});
+  });
+  const slots=widths.map((_,i)=>i).filter(i=>!reserved.has(i));
+  const pinnedIndices=new Set(pinned.map(p=>p.index));
+  const textIndices=items.map((_,i)=>i).filter(i=>!pinnedIndices.has(i));
+  const textItems=textIndices.map(i=>items[i]);
+  let forced=0;textItems.forEach((x,i)=>{if(i&&x.forced)forced++;});
+  const maxColumns=Math.max(slots.length,Math.ceil((forced+1)/slots.length)*slots.length);
+  const marker=document.createComment('fluid column layout');chat.replaceChildren(marker);chat.__variableOriginal={nodes:original,marker};
+  chat.classList.remove('novel-fixed');chat.classList.add('variable-columns');chat.dataset.columnSplitMode=n.splitMode||'sentence';chat.style.columnCount='auto';chat.style.columnGap='normal';chat.style.height='auto';
+  chat.style.width=pageW+'px';chat.style.minWidth=pageW+'px';chat.style.maxWidth=pageW+'px';
+  chat.style.marginLeft='0px';chat.style.marginRight='0px';chat.style.transform='';chat.style.clipPath='';
+  function sliceInner(root,from,to){
+    let offset=0;
+    function trim(node){
+      if(node.nodeType===3){const a=offset;offset+=node.data.length;node.data=node.data.slice(Math.max(0,from-a),Math.max(0,to-a));if(!node.data)node.remove();return;}
+      if(node.nodeType!==1)return;
+      if(node.tagName==='BR'){const a=offset++;if(a<from||a>=to)node.remove();return;}
+      const had=node.childNodes.length;[...node.childNodes].forEach(trim);if(had&&!node.childNodes.length&&node!==root)node.remove();
+    }
+    trim(root);
+  }
+  function makePiece(index,start,end,width){
+    const item=items[index],row=item.row.cloneNode(true);row.classList.remove('col-break');row.dataset.fluidSource=novelRowId(item.row);
+    Object.assign(row.style,{position:'absolute',boxSizing:'border-box',width:width+'px',minWidth:'0',maxWidth:width+'px',left:'0px',top:'0px',display:'',visibility:'hidden'});
+    row.style.setProperty('position','absolute','important');
+    row.dataset.fluidStart=String(start);row.dataset.fluidEnd=String(end);
+    if(item.splittable){const inner=row.querySelector('.t-inner');sliceInner(inner,item.offsets[start],item.offsets[end]);if(start){row.style.marginTop='0px';inner.style.textIndent='0';}if(end<item.length)row.style.marginBottom='0px';}
+    row.querySelectorAll('.glyph-scale,.t-inner,.n-bubble,.m-bubble,.n-plain').forEach(el=>{el.style.width='';el.style.minWidth='';el.style.maxWidth='';});
+    chat.appendChild(row);
+    const gs=typeof gsScale==='function'?gsScale():1;
+    row.querySelectorAll('.t-inner > .glyph-scale').forEach(el=>{el.style.width=(100/gs)+'%';el.style.maxWidth='none';});
+    return row;
+  }
+  const cache=new Map();
+  function measure(index,start,end,width){
+    const key=[index,start,end,width].join(':');if(cache.has(key))return cache.get(key);
+    const row=makePiece(index,start,end,width),cs=getComputedStyle(row);
+    const h=Math.max(1,row.offsetHeight)+(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0);row.remove();cache.set(key,h);return h;
+  }
+  let flow;
+  try{
+    flow=(n.splitMode==='block'?balanceBlockColumns:balanceColumnItems)(textItems,slots.map(i=>widths[i]),(i,a,b,w)=>measure(textIndices[i],a,b,w),maxColumns);
+    flow.placements=flow.placements.map(p=>({...p,index:textIndices[p.index],col:Math.floor(p.col/slots.length)*n.cols+slots[p.col%slots.length]}));
+    const anchorPlacements=new Map();
+    flow.placements.forEach(p=>{const id=novelRowId(items[p.index].row);if(!anchorPlacements.has(id))anchorPlacements.set(id,p);});
+    // A side photo uses the existing text-height envelope, never anchor.y + image height.
+    const textPageHeights=new Map();
+    flow.placements.forEach(p=>{const pg=Math.floor(p.col/n.cols);textPageHeights.set(pg,Math.max(textPageHeights.get(pg)||0,p.y+p.h));});
+    const textColumnHeights=new Map(),textColumnBounds=new Map(),textPageBounds=new Map();
+    flow.placements.forEach(p=>textColumnHeights.set(p.col,Math.max(textColumnHeights.get(p.col)||0,p.y+p.h)));
+    flow.placements.forEach(p=>{
+      const row=makePiece(p.index,p.start,p.end,widths[p.col%n.cols]);
+      const bounds=columnTextBounds(row);row.remove();if(!bounds)return;
+      const current=textColumnBounds.get(p.col)||{top:Infinity,bottom:-Infinity};
+      current.top=Math.min(current.top,p.y+bounds.top);current.bottom=Math.max(current.bottom,p.y+bounds.bottom);
+      textColumnBounds.set(p.col,current);
+    });
+    // The longest visible text span is the stable reference, regardless of
+    // row margins and of the alignment selected for that reference column.
+    textColumnBounds.forEach((bounds,col)=>{
+      const page=Math.floor(col/n.cols),current=textPageBounds.get(page);
+      if(!current||bounds.bottom-bounds.top>current.bottom-current.top)textPageBounds.set(page,{...bounds});
+    });
+    flow.placements.forEach(p=>{
+      const bounds=textColumnBounds.get(p.col),reference=textPageBounds.get(Math.floor(p.col/n.cols));
+      if(bounds&&reference)p.textShift=textColumnAlignmentShift(bounds,reference,(n.columnAlign||{})[p.col%n.cols]||'top');
+    });
+    const photoGroups=new Map();
+    pinned.forEach(pin=>{
+      const anchor=anchorPlacements.get(pin.anchorId),page=anchor?Math.floor(anchor.col/n.cols):0;
+      const col=page*n.cols+pin.col,group=photoGroups.get(col)||[];
+      group.push(pin);photoGroups.set(col,group);
+    });
+    photoGroups.forEach((group,col)=>{
+      const page=Math.floor(col/n.cols),local=col%n.cols;
+      const bounds=textPageBounds.get(page)||{top:0,bottom:textPageHeights.get(page)||Math.max(40,base)};
+      const available=Math.max(1,bounds.bottom-bounds.top);
+      const photos=group.map(pin=>{
+        const item=items[pin.index],msg=msgById.get(novelRowId(item.row)),img=item.row.querySelector('img.mimg');
+        const ratio=img&&img.naturalWidth&&img.naturalHeight?img.naturalWidth/img.naturalHeight:1;
+        return {pin,ratio,percent:msg&&msg.imgSize!=null?Number(msg.imgSize):60};
+      });
+      const fitted=fitSidePhotos(photos,widths[local],available);
+      const photoFree=Math.max(0,available-fitted.reduce((sum,p)=>sum+p.height,0));
+      fitted.forEach((photo,i)=>{
+        const pin=group[i];
+        flow.placements.push({index:pin.index,start:0,end:items[pin.index].length,col,y:bounds.top+photo.y,h:photo.height,photo:{...photo,free:photoFree}});
+      });
+    });
+    flow.columns=Math.max(1,...flow.placements.map(p=>p.col+1));
+  }catch(e){chat.replaceChildren(...original);chat.__variableOriginal=null;chat.classList.remove('variable-columns');throw e;}
+  pages=Math.max(1,Math.ceil(flow.columns/n.cols));n.__pages=pages;n.page=Math.max(0,Math.min(pages-1,n.page||0));n.__tailEmpty=false;
+  firstCol=n.page*n.cols;const map={};
+  // Photo-only columns occupy exactly the rendered image width, independently
+  // of the text-column defaults. Recompute offsets and the export canvas together.
+  reserved.forEach(local=>{
+    const photos=flow.placements.filter(p=>p.photo&&p.col===firstCol+local);
+    widths[local]=Math.max(0,...photos.map(p=>p.photo.width));
+  });
+  pageW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1);
+  chat.style.width=pageW+'px';chat.style.minWidth=pageW+'px';chat.style.maxWidth=pageW+'px';
+  const heights=new Map();flow.placements.forEach(p=>heights.set(p.col,Math.max(heights.get(p.col)||0,p.y+p.h)));
+  const pageHeight=Math.max(0,...Array.from({length:n.cols},(_,i)=>heights.get(firstCol+i)||0));
+  let maxH=top+Math.max(pageHeight,...flow.placements.filter(p=>p.col>=firstCol&&p.col<firstCol+n.cols).map(p=>p.y+p.h+(p.textShift||0)));
+  for(const p of flow.placements){
+    const id=novelRowId(items[p.index].row);if(id){const rec=map[id]||(map[id]={col:p.col,page:Math.floor(p.col/n.cols),cols:[],pages:[]});if(!rec.cols.includes(p.col))rec.cols.push(p.col);const pg=Math.floor(p.col/n.cols);if(!rec.pages.includes(pg))rec.pages.push(pg);}
+    if(p.col<firstCol||p.col>=firstCol+n.cols)continue;
+    const local=p.col-firstCol,row=makePiece(p.index,p.start,p.end,widths[local]);row.style.visibility='';row.style.left=(widths.slice(0,local).reduce((a,b)=>a+b,0)+local*gap)+'px';const align=(n.columnAlign||{})[local]||'top';
+    const free=p.photo?p.photo.free:Math.max(0,pageHeight-(heights.get(p.col)||0));
+    const shift=Number.isFinite(p.textShift)?p.textShift:align==='bottom'?free:align==='middle'?free/2:0;
+    row.dataset.fluidColumn=String(p.col);row.style.top=(top+p.y+shift)+'px';
+    if(p.photo){
+      row.style.marginTop='0px';row.style.marginBottom='0px';row.style.height=p.h+'px';row.style.lineHeight='0';
+      const img=row.querySelector('img.mimg');
+      if(img){img.style.width=p.photo.width+'px';img.style.height=p.photo.height+'px';img.style.maxWidth='100%';img.style.objectFit='contain';img.style.verticalAlign='top';}
+    }
+  }
+  n.__msgCols=map;watchImages(chat);
+  const dispH=Math.max(40,Math.ceil(maxH+bottom));chat.style.height=dispH+'px';
+  let win=canvas.querySelector('#novelWindow');if(!win){win=document.createElement('div');win.id='novelWindow';}
+  win.style.cssText='position:absolute;overflow:hidden;top:'+vMargin+'px;left:'+hMargin+'px;width:'+pageW+'px;height:'+dispH+'px;z-index:1';
+  if(chat.parentElement!==win)win.appendChild(chat);if(win.parentElement!==canvas)canvas.appendChild(win);
+  canvas.style.display='block';canvas.style.padding='0px';canvas.style.width=Math.ceil(pageW+2*hMargin)+'px';
+  const footer=drawColsFooter(canvas,hMargin,pageW,vMargin+bottom,n.page+1,pages);canvas.style.height=Math.ceil(dispH+2*vMargin+footer)+'px';syncPager();return true;
+}
+
+// Ratio mode uses image rows in the ordinary document flow. Restore authored
+// dimensions first, so switching modes never carries fitted sizes into another mode.
+function restoreNovelImages(chat){
+  chat.querySelectorAll('.image-row[data-novel-image-fit]').forEach(row=>{
+    const img=row.querySelector('img.mimg');
+    if(img){const css=img.getAttribute('data-novel-image-style');if(css!==null){img.setAttribute('style',css);img.removeAttribute('data-novel-image-style');}}
+    row.style.lineHeight=row.getAttribute('data-novel-row-line-height')||'';
+    row.removeAttribute('data-novel-row-line-height');row.removeAttribute('data-novel-image-fit');
+  });
+}
+function novelImageBox(width,height,ratio,percent){
+  const scale=Math.max(.01,Math.min(1,(Number(percent)||60)/100));
+  const r=Number(ratio)>0?Number(ratio):1;
+  const w=Math.min(width,height*r)*scale;
+  return {width:w,height:w/r};
+}
+function fitNovelImages(chat,width,height){
+  const messages=new Map((ST().messages||[]).map(m=>[m.id,m]));
+  const available=Math.max(1,height-chatPadTop(chat)-chatPadBottom(chat));
+  chat.querySelectorAll(':scope > .image-row').forEach(row=>{
+    const img=row.querySelector('img.mimg');if(!img)return;
+    const msg=messages.get(novelRowId(row));if(!msg)return;
+    const cs=getComputedStyle(row);
+    const spacing=(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0)
+      +(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0);
+    const room=Math.max(1,available-spacing-2);
+    const box=novelImageBox(width,room,img.naturalWidth/img.naturalHeight,msg.imgSize);
+    img.setAttribute('data-novel-image-style',img.getAttribute('style')||'');
+    row.setAttribute('data-novel-row-line-height',row.style.lineHeight||'');
+    row.setAttribute('data-novel-image-fit','1');row.style.lineHeight='0';
+    Object.assign(img.style,{width:box.width+'px',height:box.height+'px',maxWidth:'100%',maxHeight:room+'px',objectFit:'contain',verticalAlign:'top'});
+  });
+}
 window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
+  restoreVariableColumns(chat);
+  restoreNovelImages(chat);
   const n=cfg();
   if(!n.on){
     restoreChat(canvas,chat);
     clearBreakFillers(chat);
     chat.classList.remove('novel-mode','novel-fixed');
     chat.style.columnCount=''; chat.style.columnGap=''; chat.style.height=''; chat.style.transform='';
-    chat.style.paddingLeft=''; chat.style.paddingRight='';
+    chat.style.paddingLeft=(state.layout.margin.l||0)+'px'; chat.style.paddingRight=(state.layout.margin.r||0)+'px';
     chat.style.marginLeft=''; chat.style.marginRight=''; chat.style.clipPath='';
     canvas.classList.remove('novel-canvas');
     canvas.classList.remove('novel-sheets');
@@ -19502,6 +20149,11 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   };
 
   if(n.mode!=='ratio'){
+    if(n.mode!=='ratio'){
+      restoreChat(canvas,chat);clearBreakFillers(chat);canvas.classList.remove('novel-sheets');
+      canvas.querySelectorAll('.novel-paper,.novel-folio,.novel-cols-footer').forEach(el=>el.remove());
+      return drawVariableColumns(chat,canvas,n,colW,gap,0,hMargin,vMargin,1);
+    }
     /* 단 수 모드: '지정 단 수 = 화면 한 페이지'.
        ✂ 는 실제 다음 column을 만들고, 그 결과 지정 단 수를 넘으면 다음 화면 페이지가 된다. */
     restoreChat(canvas,chat);
@@ -19636,6 +20288,7 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
     return ww;
   };
 
+  fitNovelImages(chat,colW2,textH);
   watchImages(chat);
   const per=n.single?1:2;                          /* 한 번에 보여줄 쪽 수 */
   const apply=(k)=>{ const ww=setCols(k); chat.style.height=textH+'px'; return ww; };
@@ -19650,7 +20303,7 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   const sig=layoutSig();
   let cols;
   clearBreakFillers(chat);
-  if(colCache&&colCache.sig===sig){
+  if(colCache&&colCache.sig===sig&&!chat.querySelector('.image-row')){
     /* 글도 설정도 그대로면 다시 재지 않는다 — 재면 잴 때마다 값이 흔들린다 */
     cols=colCache.cols;
     apply(cols);
@@ -19666,7 +20319,12 @@ window.__novelLayout=function(chat,canvas,baseChatW,hMargin,vMargin){
   }
   /* 넘치면 늘리기만 한다 (줄이지 않는다 — 줄이는 순간 블럭이 뭉친다) */
   kick();
-  for(let i=0;i<24&&overflowing();i++){ cols+=per; apply(cols); kick(); }
+  for(let i=0;i<24&&overflowing();i++){
+    const prevW=chat.scrollWidth,prevH=chat.scrollHeight,prevCols=cols;
+    cols+=per;apply(cols);kick();
+    if(chat.scrollWidth<=chat.clientWidth+2&&chat.scrollHeight>chat.clientHeight+2
+      &&Math.abs(chat.scrollHeight-prevH)<=1&&prevW<=colW2*prevCols+colGap*(prevCols-1)+2){cols=prevCols;apply(cols);kick();break;}
+  }
   /* 소설 비율에서도 사파리가 ✂ 를 흘려버리면 받침으로 다음 쪽에 밀어 넣는다 */
   const forced2=[...chat.querySelectorAll(':scope > .pmsg.col-break')];
   if(forced2.length&&!breaksHonored(chat,forced2,chatPadTop(chat))){
@@ -20065,7 +20723,7 @@ setTimeout(dump,800);
 @supports (-webkit-touch-callout:none){
   /* fragment가 되어야 하는 블럭 자신이 positioned box가 되지 않게 한다.
      모바일 툴바는 이미 body fixed proxy를 사용하므로 원래 기능은 유지된다. */
-  body.mobile-ui #chat.novel-mode > .pmsg.t-block{
+  body.mobile-ui #chat.novel-mode:not(.variable-columns) > .pmsg.t-block{
     position:static !important;
     z-index:auto !important;
     transform:none !important;
@@ -20082,8 +20740,8 @@ setTimeout(dump,800);
      두 번째 column fragment의 좌표를 첫 column 좌표로 그리는 경우가 있다.
      장평 100%에서는 transform 자체가 시각적으로 아무 일도 하지 않으므로
      해당 레이어를 완전히 평범한 flow로 되돌린다. */
-  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode > .pmsg.t-block > .t-inner,
-  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
+  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode:not(.variable-columns) > .pmsg.t-block > .t-inner,
+  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode:not(.variable-columns) > .pmsg.t-block > .t-inner > .glyph-scale{
     position:static !important;
     z-index:auto !important;
     transform:none !important;
@@ -20099,7 +20757,7 @@ setTimeout(dump,800);
     backface-visibility:visible !important;
     -webkit-backface-visibility:visible !important;
   }
-  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale{
+  body.mobile-ui.novel-glyph-fragment-safe #chat.novel-mode:not(.variable-columns) > .pmsg.t-block > .t-inner > .glyph-scale{
     display:block !important;
     width:auto !important;
     min-width:0 !important;
@@ -20107,7 +20765,7 @@ setTimeout(dump,800);
     margin-right:0 !important;
   }
 
-  body.mobile-ui #chat.novel-mode > .pmsg.t-block{
+  body.mobile-ui #chat.novel-mode:not(.variable-columns) > .pmsg.t-block{
     break-inside:auto !important;
     -webkit-column-break-inside:auto !important;
   }
@@ -20119,9 +20777,9 @@ setTimeout(dump,800);
      한 번만 칠해서, 계산은 맞는데 화면에서만 글이 단을 못 넘어간 것처럼 보인다.
      (저장은 다시 그리므로 멀쩡했다.)
      그래서 장평은 그대로 두고 레이어를 만드는 성질만 걷어낸다. */
-  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode > .pmsg.t-block > .t-inner,
-  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode > .pmsg.t-block > .t-inner > .glyph-scale,
-  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode > .pmsg.t-block .glyph-inline{
+  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode:not(.variable-columns) > .pmsg.t-block > .t-inner,
+  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode:not(.variable-columns) > .pmsg.t-block > .t-inner > .glyph-scale,
+  body.mobile-ui.novel-glyph-layer-safe #chat.novel-mode:not(.variable-columns) > .pmsg.t-block .glyph-inline{
     will-change:auto !important;
     contain:none !important;
     isolation:auto !important;
@@ -22323,6 +22981,221 @@ setTimeout(sync,350);
 #scriptNarrationPositionSection>.flat-tool-body{padding-top:2px!important;padding-bottom:14px!important}
 #scriptNarrationPositionSection .toggle.compact{margin:0!important}
 </style>
+<style id="requested-fixes">
+#alignField.divider-align #dividerColorCol#dividerColorCol#dividerColorCol#dividerColorCol{display:flex!important;flex-direction:row!important;gap:8px!important;align-items:end!important;width:82px!important;min-width:82px!important;max-width:82px!important;flex:0 0 82px!important;overflow:visible!important}
+#alignField:not(.divider-align) #dividerColorCol#dividerColorCol#dividerColorCol#dividerColorCol{display:none!important}
+.mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align .text-format-row{grid-template-columns:minmax(0,1fr) 1px 82px!important}
+#dividerColorCol#dividerColorCol#dividerColorCol#dividerColorCol .divider-color-option .lb{display:block!important;font-size:10px!important;line-height:14px!important;height:14px!important}
+#dividerColorCol#dividerColorCol#dividerColorCol#dividerColorCol .divider-color-row{position:static!important;top:0!important;width:34px!important;height:34px!important;min-height:34px!important;max-height:34px!important}
+#dividerColorCol#dividerColorCol#dividerColorCol#dividerColorCol .divider-color-row .swatch{width:34px!important;height:34px!important;min-width:34px!important;max-width:34px!important;min-height:34px!important;max-height:34px!important}
+#dividerColorCol>.divider-color-option{display:flex;flex-direction:column;gap:5px;align-items:center}
+#dividerColorCol .lb{margin:0!important;white-space:nowrap}
+#dividerColorCol .colorrow{margin:0!important;display:flex!important;width:34px!important;height:34px!important}
+#dividerColorCol .swatch{width:34px!important;height:34px!important;flex:0 0 34px!important}
+#dividerColorCol .color-code-input{display:none!important}
+.md-table{border-collapse:collapse;width:100%;table-layout:fixed;margin:8px 0;text-indent:0;white-space:normal;font-size:inherit}
+.md-table th,.md-table td{border:1px solid #bfc3c8;padding:7px 9px;overflow-wrap:anywhere;vertical-align:top}
+.md-table th{background:rgba(128,128,128,.13);font-weight:700}
+.md-block{white-space:normal;text-indent:0;display:block}
+.md-block pre{white-space:pre-wrap;overflow-wrap:anywhere;background:rgba(128,128,128,.1);padding:10px;border-radius:4px}
+.md-block blockquote{margin:8px 0;padding-left:12px;border-left:3px solid #a5a5a5}
+.md-block h1,.md-block h2,.md-block h3,.md-block h4,.md-block h5,.md-block h6{margin:.5em 0;line-height:1.4}
+.md-block h1{font-size:1.6em}.md-block h2{font-size:1.35em}.md-block h3{font-size:1.15em}
+.t-inner code,.n-bubble code,.m-bubble code,.n-plain code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:rgba(128,128,128,.12);padding:.08em .25em;border-radius:3px;white-space:pre-wrap}
+.md-block pre code{background:none;padding:0}
+.md-block ul,.md-block ol{padding-left:1.6em;margin:.4em 0}
+</style>
+<script id="requested-fixes-script">
+(function(){
+const $=id=>document.getElementById(id);
+function defaults(){
+ if(!state.colors.dividerBg) state.colors.dividerBg='#E5E5E5';
+ if(!state.colors.dividerText) state.colors.dividerText='#737373';
+}
+defaults();
+const col=$('dividerColorCol');
+const oldLabel=col.querySelector('.lb'), oldRow=col.querySelector('.colorrow');
+const bgWrap=document.createElement('div');bgWrap.className='divider-color-option';bgWrap.append(oldLabel,oldRow);col.append(bgWrap);
+const tw=document.createElement('div');tw.className='divider-color-option';tw.innerHTML='<label class="lb">텍스트</label><div class="colorrow divider-color-row" data-color="dividerText"></div>';col.append(tw);buildColorRow(tw.lastElementChild);
+function syncDivider(){
+ defaults();
+ const key=$('msgContent').value.trim()?'dividerBg':'divider';
+ if(oldRow.dataset.color!==key){oldRow.dataset.color=key;buildColorRow(oldRow);}
+}
+$('msgContent').addEventListener('input',syncDivider);
+const box=document.createElement('div');box.id='scriptNameOptions';box.innerHTML='<div class="field"><label class="lb">이름 / 대사 간격</label><select id="scriptNameGapMode"><option value="column">대사 시작선 맞춤</option><option value="end">이름 끝 기준</option></select><div class="rangewrap"><input id="scriptNameGap" type="range" min="0" max="120" value="14"><span class="val" id="scriptNameGapV">14px</span></div></div><div class="field"><label class="lb">이름 글씨체</label><select id="scriptNameFont"><option value="">본문과 같게</option></select></div>';
+$('scriptNameStyleSection').querySelector('.script-highlight-box').before(box);
+enhanceRange('scriptNameGap','scriptNameGapV',{min:0,max:120,step:1,nudge:1});
+for(const opt of $('fontSel').options) $('scriptNameFont').append(opt.cloneNode(true));
+function syncScriptLanguageFonts(){
+ const select=$('scriptNameFont');if(!select)return;
+ const current=state.layout.scriptNameFont||'';
+ const texts=[...state.members.map(m=>m.name||''),...state.messages.filter(m=>m.type==='chat'||m.type==='text').map(m=>m.content||''),$('msgContent').value||''];
+ const kana=/[\u3040-\u30ff\u31f0-\u31ff\uff66-\uff9f]/u,han=/[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/u;
+ const hasJa=texts.some(t=>kana.test(t)),hasHan=texts.some(t=>han.test(t));
+ // Han-only names are ambiguous: offer both languages rather than guessing.
+ const enabled={Ja:hasJa||hasHan,Zh:hasHan};
+ for(const lang of ['Ja','Zh']){
+   let group=select.querySelector('optgroup[data-language="'+lang+'"]');
+   const choices=[...$('cjkFont'+lang).options].filter(o=>o.value);
+   const selected=choices.some(o=>current==="'"+o.value+"',sans-serif");
+   if(!enabled[lang]&&!selected){if(group)group.remove();continue;}
+   if(!group){group=document.createElement('optgroup');group.dataset.language=lang;group.label=lang==='Ja'?'일본어 글씨체':'중국어 글씨체';
+     choices.forEach(o=>{const option=document.createElement('option');option.value="'"+o.value+"',sans-serif";option.textContent=o.textContent;group.append(option);});select.append(group);}
+ }
+ select.value=current;
+}
+const beforeScriptLanguageRender=renderPreview;
+renderPreview=function(){window.__migrateRetiredCjkFonts();const result=beforeScriptLanguageRender.apply(this,arguments);syncScriptLanguageFonts();return result;};
+$('msgContent').addEventListener('input',syncScriptLanguageFonts);
+syncScriptLanguageFonts();
+
+$('scriptNameGap').oninput=function(){state.layout.scriptNameGap=Number(this.value);$('scriptNameGapV').textContent=this.value+'px';renderPreview();};
+$('scriptNameGapMode').onchange=function(){state.layout.scriptNameGapMode=this.value;renderPreview();};
+$('scriptNameFont').onchange=function(){state.layout.scriptNameFont=this.value;renderPreview();if(typeof __ensureCurrentFontLoaded==='function')__ensureCurrentFontLoaded().then(()=>renderPreview());};
+const md=document.createElement('div');md.className='field';md.innerHTML='<div class="toggle"><div class="t-lb">마크다운 자동 인식<span>표·제목·목록·코드·기울임·굵게를 자동으로 표시해요</span></div></div>';
+$('textIndentOn').closest('.field').after(md);
+
+function sync(){defaults();$('scriptNameGap').value=state.layout.scriptNameGap??14;$('scriptNameGapV').textContent=(state.layout.scriptNameGap??14)+'px';$('scriptNameGapMode').value=state.layout.scriptNameGapMode||'column';$('scriptNameFont').value=state.layout.scriptNameFont||'';syncStepperBoxes();syncScriptNameSizeControl();syncDivider();}
+const oldSync=syncControlsFromState;syncControlsFromState=function(){defaults();const r=oldSync.apply(this,arguments);sync();return r;};
+for(const name of ['setMsgType','beginComposerEdit','endComposerEdit']){const fn=window[name];window[name]=function(){const r=fn.apply(this,arguments);syncDivider();return r;};}
+const add=window.addMessage;window.addMessage=function(){const before=state.messages.length, text=$('msgContent').value;const r=add.apply(this,arguments);syncDivider();if(state.messages.length>before&&text.includes('세르네이')){toast('좋은 하루 되세요');if(window.__serneiHearts)window.__serneiHearts();}return r;};
+const baseFmt=fmtText;
+function cells(line){return line.trim().replace(/^\|/,'').replace(/(?<!\\)\|$/,'').split(/(?<!\\)\|/).map(x=>x.trim().replace(/\\\|/g,'|'));}
+function inline(text){
+ const tokens=[];
+ const hold=html=>{tokens.push(html);return '\uE000'+(tokens.length-1)+'\uE001';};
+ // Protect code and escaped punctuation before applying any text formatting.
+ text=String(text).replace(/(`+)([^\n]*?)\1(?!`)/g,(_,ticks,body)=>hold('<code>'+esc(body)+'</code>'));
+ text=text.replace(/\\([\\`*{}\[\]()#+\-.!_>|~])/g,(_,char)=>hold(esc(char)));
+ text=text.replace(/\*\*\*([^*\n]+)\*\*\*/g,(_,body)=>hold('<b><i>'+inline(body)+'</i></b>'));
+ const formatted=baseFmt(text).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" rel="noopener noreferrer">$1</a>');
+ return formatted.replace(/\uE000(\d+)\uE001/g,(_,n)=>tokens[n]??'');
+}
+fmtText=function(raw,edit){
+ if(edit)return baseFmt.apply(this,arguments);
+ if(!hasMarkdownBlock(raw))return inline(String(raw||''));
+ const lines=String(raw||'').replace(/\r\n?/g,'\n').split('\n');let out=[],i=0;
+ while(i<lines.length){const line=lines[i];
+  if(/^\s*```/.test(line)){let code=[];i++;while(i<lines.length&&!/^\s*```/.test(lines[i]))code.push(lines[i++]);if(i<lines.length)i++;out.push('<pre><code>'+esc(code.join('\n'))+'</code></pre>');continue;}
+  if(i+1<lines.length&&line.includes('|')){const sep=cells(lines[i+1]);if(sep.length>0&&sep.every(x=>/^:?-{3,}:?$/.test(x))&&cells(line).length===sep.length){const heads=cells(line),align=sep.map(x=>x.startsWith(':')&&x.endsWith(':')?'center':x.endsWith(':')?'right':'left');const row=(a,tag)=>'<tr>'+heads.map((_,n)=>'<'+tag+' style="text-align:'+align[n]+'">'+inline(a[n]||'')+'</'+tag+'>').join('')+'</tr>';let table='<table class="md-table"><thead>'+row(heads,'th')+'</thead><tbody>';i+=2;while(i<lines.length&&lines[i].includes('|')&&lines[i].trim()){table+=row(cells(lines[i++]),'td');}out.push(table+'</tbody></table>');continue;}}
+  let m=line.match(/^ {0,3}(#{1,6})\s+(.+)$/);if(m){out.push('<h'+m[1].length+'>'+inline(m[2])+'</h'+m[1].length+'>');i++;continue;}
+  if(/^\s*([-*_])(?:\s*\1){2,}\s*$/.test(line)){out.push('<hr>');i++;continue;}
+  if(/^\s*>\s?/.test(line)){let q=[];while(i<lines.length&&/^\s*>/.test(lines[i]))q.push(inline(lines[i++].replace(/^\s*>\s?/,'')));out.push('<blockquote>'+q.join('<br>')+'</blockquote>');continue;}
+  m=line.match(/^\s*(?:([-+*])|\d+[.)])\s+(.+)$/);if(m){const ordered=!m[1],tag=ordered?'ol':'ul';let items=[];while(i<lines.length){const x=lines[i].match(/^\s*(?:([-+*])|\d+[.)])\s+(.+)$/);if(!x||(!x[1])!==ordered)break;items.push('<li>'+inline(x[2])+'</li>');i++;}out.push('<'+tag+'>'+items.join('')+'</'+tag+'>');continue;}
+  out.push(line?inline(line):'');i++;if(i<lines.length)out.push('<br>');
+ }
+ return '<div class="md-block">'+out.join('')+'</div>';
+};
+sync();renderPreview();
+})();
+</script>
+
+
+
+<style>
+#chat.variable-columns{position:relative!important;column-count:auto!important;column-width:auto!important;overflow:visible}
+#columnWidthField .column-width-controls{display:grid;grid-template-columns:90px 36px minmax(0,1fr);gap:6px;align-items:center}
+#columnWidthField #columnWidthTarget{height:36px;min-width:0;width:100%;box-sizing:border-box}
+#columnWidthField #columnWidthReset{width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid var(--line,#E4E4E6);border-radius:8px;background:var(--panel,#fff);color:var(--ink,#424448);cursor:pointer}
+#columnWidthField .rangewrap.has-stepper{grid-template-columns:minmax(24px,1fr) auto;gap:6px;margin:0}
+#columnWidthField .val{display:none}
+#columnWidthField .stepper input{width:42px}
+@media(max-width:380px){#columnWidthField .column-width-controls{grid-template-columns:70px 36px minmax(0,1fr);gap:4px}#columnWidthField .rangewrap.has-stepper{gap:4px}}
+</style>
+<script id="individual-column-width-controls">
+(function(){
+const field=document.createElement('div');field.id='columnWidthField';field.className='field';field.style.marginTop='14px';
+field.innerHTML='<label class="lb">단별 너비</label><div class="column-width-controls"><select id="columnWidthTarget" aria-label="조절할 단"></select><button type="button" id="columnWidthReset" aria-label="선택한 단 기본 너비로" title="선택한 단 기본 너비로"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M19.1 7A8 8 0 1 0 20 16"/></svg></button><div class="rangewrap"><input id="columnWidthValue" type="range" min="120" max="1600" step="1" value="440" aria-label="선택한 단 너비"><span class="val" id="columnWidthValueV">440px</span></div></div>';
+document.getElementById('novelCols').closest('.colorgrid').after(field);
+const select=document.getElementById('columnWidthTarget'),input=document.getElementById('columnWidthValue');
+function sync(){const n=state.novel||{};field.style.display=n.on&&n.mode!=='ratio'?'':'none';const selected=Math.min(Number(select.value)||0,(n.cols||2)-1);if(select.options.length!==(n.cols||2)){select.replaceChildren();for(let i=0;i<(n.cols||2);i++){const op=document.createElement('option');op.value=i;op.textContent=(i+1)+'단';select.append(op);}}select.value=selected;input.value=Number(n.columnWidths&&n.columnWidths[selected])||state.layout.width;document.getElementById('columnWidthValueV').textContent=input.value+'px';const num=field.querySelector('.stepper input');if(num)num.value=input.value;}
+select.onchange=sync;
+let widthRenderTimer=0;
+function flushWidthRender(){clearTimeout(widthRenderTimer);widthRenderTimer=0;renderPreview();sync();}
+input.oninput=()=>{const v=Number(input.value);if(!Number.isFinite(v)||v<=0){sync();return;}state.novel.columnWidths=state.novel.columnWidths||{};state.novel.columnWidths[select.value]=Math.max(120,Math.min(1600,Math.round(v)));sync();clearTimeout(widthRenderTimer);widthRenderTimer=setTimeout(flushWidthRender,90);};
+input.addEventListener('change',flushWidthRender);
+enhanceRange('columnWidthValue','columnWidthValueV',{min:120,max:1600,step:1,nudge:10});
+document.getElementById('columnWidthReset').onclick=()=>{clearTimeout(widthRenderTimer);if(state.novel.columnWidths)delete state.novel.columnWidths[select.value];renderPreview();sync();};
+for(const name of ['setNovel','syncControlsFromState','setLayout','applyThemeById']){const fn=window[name];if(typeof fn==='function')window[name]=function(){const r=fn.apply(this,arguments);sync();return r;};}
+sync();
+})();
+</script>
+
+<style id="column-layout-options-style">
+#photoColumnDropHint{position:fixed;z-index:99999;pointer-events:none;padding:9px 12px;border-radius:9px;background:#424448;color:white;font:600 12px/1.4 sans-serif;box-shadow:0 3px 12px #0002}
+#photoColumnDropHint[hidden]{display:none!important}
+
+.drag-handle{touch-action:none}
+.pmsg.drop-left::before,.pmsg.drop-right::after{content:'';position:absolute;top:0;bottom:0;width:4px;background:var(--accent,#424448);border-radius:3px;pointer-events:none;z-index:20}
+.pmsg.drop-left::before{left:-6px}.pmsg.drop-right::after{right:-6px}
+#columnLayoutOptions{margin-top:16px}
+#columnLayoutOptions .field + .field{margin-top:16px}
+#columnLayoutOptions .column-align-controls{display:grid;grid-template-columns:90px minmax(0,1fr);gap:10px;align-items:center}
+#columnAlignTarget{width:100%;min-width:0;height:36px}
+#columnLayoutOptions .seg{display:flex;width:100%}
+#columnLayoutOptions .seg button{flex:1;min-height:36px}
+</style>
+<script id="column-layout-options">
+(function(){
+  const box=document.createElement('div');box.id='columnLayoutOptions';
+  box.innerHTML='<div class="field"><label class="lb">단 나누기 방식</label><div class="seg" id="columnSplitMode"><button type="button" data-value="sentence">문장</button><button type="button" data-value="block">문단</button></div></div><div class="field"><label class="lb">단별 세로 정렬</label><div class="column-align-controls"><select id="columnAlignTarget" aria-label="정렬할 단"></select><div class="seg" id="columnAlignMode"><button type="button" data-value="top">상</button><button type="button" data-value="middle">중</button><button type="button" data-value="bottom">하</button></div></div></div>';
+  document.getElementById('columnWidthField').after(box);
+  const target=document.getElementById('columnAlignTarget');
+  function sync(){
+    const n=state.novel||{},count=n.cols||2;box.style.display=n.on&&n.mode!=='ratio'?'':'none';
+    const selected=Math.min(Number(target.value)||0,count-1);
+    if(target.options.length!==count){target.replaceChildren();for(let i=0;i<count;i++){const op=document.createElement('option');op.value=i;op.textContent=(i+1)+'단';target.append(op);}}
+    target.value=selected;
+    box.querySelectorAll('#columnSplitMode button').forEach(b=>{const on=b.dataset.value===(n.splitMode||'sentence');b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});
+    box.querySelectorAll('#columnAlignMode button').forEach(b=>{const on=b.dataset.value===((n.columnAlign||{})[selected]||'top');b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});
+  }
+  target.onchange=sync;
+  box.querySelectorAll('#columnSplitMode button').forEach(b=>b.onclick=()=>{pushUndo('단 나누기 방식');state.novel.splitMode=b.dataset.value;state.novel.page=0;renderPreview();sync();});
+  box.querySelectorAll('#columnAlignMode button').forEach(b=>b.onclick=()=>{pushUndo('단 세로 정렬');state.novel.columnAlign=state.novel.columnAlign||{};state.novel.columnAlign[target.value]=b.dataset.value;renderPreview();sync();});
+  for(const name of ['setNovel','syncControlsFromState']){const old=window[name];window[name]=function(){const r=old.apply(this,arguments);sync();return r;};}
+  window.__syncColumnExtras=sync;sync();
+})();
+</script>
+
+<style id="sernei-hearts-style">
+.sernei-hearts{position:fixed;inset:0;overflow:hidden;pointer-events:none!important;z-index:2147483000;contain:strict}
+.sernei-heart{position:absolute;left:var(--heart-x);bottom:-48px;color:var(--heart-color);font-family:Arial,sans-serif;font-size:var(--heart-size);line-height:1;opacity:0;pointer-events:none!important;user-select:none;animation:sernei-heart-rise var(--heart-time) ease-out var(--heart-delay) both}
+@keyframes sernei-heart-rise{
+  0%{opacity:0;transform:translate3d(0,0,0) scale(.35) rotate(-12deg)}
+  12%{opacity:.9;transform:translate3d(0,-12vh,0) scale(1.12) rotate(8deg)}
+  55%{opacity:.8;transform:translate3d(var(--heart-drift),-55vh,0) scale(.95) rotate(-8deg)}
+  100%{opacity:0;transform:translate3d(var(--heart-drift),-110vh,0) scale(.65) rotate(14deg)}
+}
+@media(prefers-reduced-motion:reduce){
+  .sernei-heart{bottom:24px;animation-name:sernei-heart-soft;animation-duration:.8s!important}
+  @keyframes sernei-heart-soft{0%,100%{opacity:0}40%{opacity:.8}}
+}
+</style>
+<script id="sernei-hearts-script">
+(function(){
+  let cleanup=0;
+  window.__serneiHearts=function(){
+    clearTimeout(cleanup);
+    document.querySelectorAll('.sernei-hearts').forEach(el=>el.remove());
+    const layer=document.createElement('div');layer.className='sernei-hearts';layer.setAttribute('aria-hidden','true');
+    const colors=['#FF749F','#F45D8E','#FF9DBB','#E94E85'];
+    for(let i=0;i<18;i++){
+      const heart=document.createElement('span');heart.className='sernei-heart';heart.textContent='♥';
+      heart.style.setProperty('--heart-x',(5+Math.random()*90)+'%');
+      heart.style.setProperty('--heart-color',colors[i%colors.length]);
+      heart.style.setProperty('--heart-size',(18+Math.random()*18)+'px');
+      heart.style.setProperty('--heart-drift',(-45+Math.random()*90)+'px');
+      heart.style.setProperty('--heart-time',(2.5+Math.random()*.9)+'s');
+      heart.style.setProperty('--heart-delay',(i*.075)+'s');
+      layer.appendChild(heart);
+    }
+    document.body.appendChild(layer);
+    cleanup=setTimeout(()=>{layer.remove();cleanup=0;},5000);
+  };
+})();
+</script>
+
 </body>
 
 
