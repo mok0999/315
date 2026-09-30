@@ -1394,7 +1394,7 @@ html, body, #canvas, #chat, #canvas * {
 <div class="text-format-row">
 <div class="tfr-col sender-col">
 <label class="lb">발신자</label>
-<select id="senderSel"><option value="">— 멤버를 먼저 추가하세요 —</option></select>
+<select id="senderSel"><option value="">멤버 추가</option></select>
 </div>
 <span class="fmt-div tfr-div" id="senderHeadingDiv"></span>
 </div>
@@ -1559,7 +1559,7 @@ html, body, #canvas, #chat, #canvas * {
 <div class="preset-hint" id="themeHint"></div>
 </div></div></details><div class="field" style="margin-top:2px;margin-bottom:0">
 <div class="toggle">
-<div class="t-lb">배경 투명화<span>PNG · HTML 저장 시 배경 없이 로그만 남아요</span></div>
+<div class="t-lb">배경 투명화</div>
 <label class="sw"><input id="transparentOn" onchange="setTransparent(this.checked)" type="checkbox"/><span class="track"></span></label>
 </div>
 </div><div class="flat-tool-section" id="accAppearance"><div class="flat-tool-title"><strong>색상 · 프로필</strong></div><div class="flat-tool-body"><div class="field">
@@ -1579,7 +1579,7 @@ html, body, #canvas, #chat, #canvas * {
 <div class="flat-tool-body">
 <div class="field" style="margin-bottom:0">
 <div class="toggle">
-<div class="t-lb">그라데이션 사용<span>배경 색상 대신 그라데이션을 깔아요</span></div>
+<div class="t-lb">그라데이션 사용</div>
 <label class="sw"><input id="gradOn" onchange="setGradient('on',this.checked)" type="checkbox"/><span class="track"></span></label>
 </div>
 </div>
@@ -1636,7 +1636,7 @@ html, body, #canvas, #chat, #canvas * {
 <option value="'Mona12',sans-serif">Mona12 (픽셀 · 12px 권장)</option>
 <option value="-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif">시스템 기본</option>
 </select>
-<div class="field-help">중국어·일본어 본문은 자동 감지하며, 아래에서 언어별 글꼴을 따로 고를 수 있어요. 자동 선택은 본문 글꼴의 고딕·명조를 따라가요. 이름은 자동 변환에서 제외돼요.</div>
+
 <div class="field-help" id="fontLoadState" style="margin-top:6px"></div>
 </div>
 
@@ -1653,7 +1653,7 @@ html, body, #canvas, #chat, #canvas * {
 <div class="field">
 <label class="lb">한자·가나 크기 보정</label>
 <div class="rangewrap"><input id="lyCjkScale" max="120" min="80" oninput="setCjkScale(this.value)" step="1" type="range" value="100"/><span class="val" id="lyCjkScaleV">100%</span></div>
-<div class="field-help">대체 글꼴(Noto Sans / Serif SC · JP)로 그려지는 한자·가나만 키우거나 줄여요. 한글·영문은 그대로예요.</div>
+
 </div>
 <div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">글자 크기</label>
@@ -1679,9 +1679,7 @@ html, body, #canvas, #chat, #canvas * {
 <button class="on" onclick="setWordBreak('word')">단어 단위</button>
 <button onclick="setWordBreak('char')">글자 단위</button>
 </div>
-<div style="font-size:11px;color:var(--muted);margin-top:6px;padding-left:2px">
-                  단어 단위 = 단어 안 잘리게 띄어쓰기에서 줄바꿈 · 글자 단위 = 칸 차면 글자에서 바로 잘림
-                </div>
+
 </div>
 <div class="shadow-control-group" style="margin-top:14px">
 <div class="field" style="margin-bottom:9px"><div class="toggle"><div class="t-lb">그림자<span>켜면 세부 설정이 열려요</span></div><label class="sw"><input id="textShadowOn" onchange="setTextShadow('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><label class="mini-check" style="margin:9px 0 0 2px"><input id="textShadowBubblesOff" onchange="setTextShadow('bubblesOff',this.checked)" type="checkbox"/><span>말풍선 그림자 삭제 — 체크하면 글 블럭 텍스트에만 그림자를 적용해요</span></label></div>
@@ -1698,9 +1696,7 @@ html, body, #canvas, #chat, #canvas * {
 <button onclick="setMarginMode('each')">커스텀</button>
 </div>
 </div>
-<div class="marg-auto" style="font-size:11.5px;color:var(--muted);line-height:1.6;padding:2px 2px 2px">
-                네 방향 여백을 균형있게 자동으로 맞춰요. 세밀하게 바꾸려면 <b>커스텀</b>(상·하·좌·우 따로)을 선택해.
-              </div>
+
 <div class="marg-each margin-pair-grid" style="display:none"><div class="margin-pair-block"><div class="margin-pair-head"><strong>위 · 아래</strong><button aria-pressed="false" class="margin-link-btn" id="marginLinkVBtn" onclick="toggleMarginLink('v')" type="button">🔗 연결</button></div><div class="margin-pair-controls"><div class="field"><label class="lb">위</label><div class="rangewrap"><input id="mgT" max="400" min="0" oninput="setMarginSide('t',this.value)" type="range" value="18"/><span class="val" id="mgTV">18px</span></div></div><div class="field"><label class="lb">아래</label><div class="rangewrap"><input id="mgB" max="400" min="0" oninput="setMarginSide('b',this.value)" type="range" value="18"/><span class="val" id="mgBV">18px</span></div></div></div></div><div class="margin-pair-block"><div class="margin-pair-head"><strong>왼쪽 · 오른쪽</strong><button aria-pressed="false" class="margin-link-btn" id="marginLinkHBtn" onclick="toggleMarginLink('h')" type="button">🔗 연결</button></div><div class="margin-pair-controls"><div class="field"><label class="lb">왼쪽</label><div class="rangewrap"><input id="mgL" max="400" min="0" oninput="setMarginSide('l',this.value)" type="range" value="16"/><span class="val" id="mgLV">16px</span></div></div><div class="field"><label class="lb">오른쪽</label><div class="rangewrap"><input id="mgR" max="400" min="0" oninput="setMarginSide('r',this.value)" type="range" value="16"/><span class="val" id="mgRV">16px</span></div></div></div></div></div>
 <div class="field" style="margin:14px 0 0"><label class="lb">전체 너비</label><div class="rangewrap"><input id="lyWidth" max="1000" min="300" oninput="setLayout('width',this.value)" type="range" value="440"/><span class="val" id="lyWidthV">440px</span></div></div>
 </div>
@@ -1715,7 +1711,7 @@ html, body, #canvas, #chat, #canvas * {
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
 </div>
-<div class="field-help">비율은 저장 결과와 미리보기 캔버스에 함께 적용돼요.</div></div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="50"/><span class="val" id="exHV">50px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기<span>글이 단을 채우면 옆 단으로 이어져요</span></div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="toggle compact" id="novelTrimField" style="margin-top:12px;display:none"><div class="t-lb">빈 마지막 쪽 빼기<span>마지막 펼침의 빈 쪽을 떼고 한 쪽만 저장해요</span></div><label class="sw"><input id="novelTrimLast" onchange="setNovel('trimLast',this.checked)" type="checkbox"/><span class="track"></span></label></div>
+</div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="50"/><span class="val" id="exHV">50px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기</div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="toggle compact" id="novelTrimField" style="margin-top:12px;display:none"><div class="t-lb">빈 마지막 쪽 빼기<span>마지막 펼침의 빈 쪽을 떼고 한 쪽만 저장해요</span></div><label class="sw"><input id="novelTrimLast" onchange="setNovel('trimLast',this.checked)" type="checkbox"/><span class="track"></span></label></div>
 <div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="scriptNameStyleSection" style="display:none"><div class="flat-tool-title"><strong>대본 이름 스타일</strong></div><div class="flat-tool-body"><div class="toggle compact"><div class="t-lb">이름 굵게<span>대본 모드의 캐릭터 이름에만 적용돼요</span></div><label class="sw"><input checked id="scriptNameBoldOn" onchange="setScriptNameBold(this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="script-highlight-box"><button aria-expanded="false" class="script-highlight-toggle" id="scriptHighlightToggle" onclick="toggleScriptHighlightPanel()" type="button"><span class="script-highlight-caret">▾</span><span class="script-highlight-title">캐릭터별 '이름' 형광펜</span><small id="scriptHighlightSummary">설정 없음</small></button><div class="script-highlight-panel" id="scriptHighlightPanel"><div class="script-highlight-list" id="scriptHighlightMemberList"></div></div></div></div></div><div class="flat-tool-section" id="bubbleQuickToggleSection"><div class="flat-tool-body"><div class="toggle-grid">
 <div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
@@ -1727,7 +1723,7 @@ html, body, #canvas, #chat, #canvas * {
 <div class="toggle compact" title="대사 앞 이름｜ 이름표만 지워요 ([ ]가 있어도 함께) · ( ) 해석은 그대로 남아요"><div class="t-lb">대사 앞 이름 삭제</div><label class="sw"><input id="stripNameTagOn" onchange="state.stripSpeakerName=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 </div>
 <div class="acc-panel" id="bubbleShadowPanel"><div class="acc-inner"><div class="shadow-control-row"><div class="field" style="margin:0"><label class="lb">그림자 색깔</label><div class="colorrow" data-color="bubbleShadow"></div></div><div class="field" style="margin:0"><label class="lb">번짐</label><div class="rangewrap"><input id="bubbleShadowStrength" max="20" min="0" oninput="setBubbleShadow('strength',this.value)" type="range" value="4"/><span class="val" id="bubbleShadowStrengthV">4px</span></div></div></div><div class="colorgrid" style="margin-top:12px"><div class="field" style="margin:0"><label class="lb">가로 위치</label><div class="rangewrap"><input id="bubbleShadowX" max="12" min="-12" oninput="setShadowExtra('bubble','x',this.value)" step="1" type="range" value="0"/><span class="val" id="bubbleShadowXV">0px</span></div></div><div class="field" style="margin:0"><label class="lb">세로 위치</label><div class="rangewrap"><input id="bubbleShadowY" max="12" min="-12" oninput="setShadowExtra('bubble','y',this.value)" step="1" type="range" value="3"/><span class="val" id="bubbleShadowYV">3px</span></div></div><div class="field" style="margin:0;grid-column:1/-1"><label class="lb">진하기</label><div class="rangewrap"><input id="bubbleShadowOpacity" max="100" min="0" oninput="setShadowExtra('bubble','opacity',this.value)" step="1" type="range" value="100"/><span class="val" id="bubbleShadowOpacityV">100%</span></div></div></div></div></div>
-</div></div><div class="flat-tool-section" id="bubbleTextAlignSection"><div class="flat-tool-title"><strong>말풍선 내부 텍스트 정렬</strong></div><div class="flat-tool-body"><div class="field" style="margin:0"><div class="seg" id="bubbleTextAlignSeg"><button onclick="setBubbleTextAlign('justify')" type="button">양쪽</button><button class="on" onclick="setBubbleTextAlign('left')" type="button">왼쪽</button><button onclick="setBubbleTextAlign('center')" type="button">가운데</button><button onclick="setBubbleTextAlign('right')" type="button">오른쪽</button></div><div class="field-help" style="margin-top:6px">말풍선 안의 글자 정렬을 바꿔요. 대본에서는 이름 너비와 이름·대사 간격을 제외한 대사 영역 안에서 정렬해요.</div></div></div></div><div class="flat-tool-section" id="bubblePositionAlignSection"><div class="flat-tool-title"><strong>말풍선 위치 정렬</strong></div><div class="flat-tool-body"><div class="field" style="margin:0"><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div><div class="field-help bubble-align-help">가운데 정렬은 프로필이 있으면 프로필 중심부터 말풍선 끝까지, 프로필이 없으면 말풍선 자체의 양 끝을 기준으로 맞춰요. 메신저 모드는 발신자 기준 정렬을 유지해요.</div></div></div></div><div class="flat-tool-section" id="bubbleThemeSection"><div class="flat-tool-title"><strong>말풍선 테마</strong></div><div class="flat-tool-body"><div class="btheme-grid" id="bubbleThemeGrid"><button type="button" class="btheme-btn on" data-theme="default"><span class="btheme-prev bt-default"></span>기본</button><button type="button" class="btheme-btn" data-theme="corner"><span class="btheme-prev bt-corner"></span>모서리</button><button type="button" class="btheme-btn" data-theme="card"><span class="btheme-prev bt-card"></span>카드</button></div><div class="colorgrid" id="cardLineField" style="display:none;margin-top:12px"><div class="field" style="margin:0"><label class="lb">테두리 색</label><div class="colorrow" data-color="cardLine"></div></div><div class="field" style="margin:0"><label class="lb">테두리 두께</label><div class="rangewrap"><input id="lyCardLineW" max="6" min="0" step="1" oninput="setLayout('cardLineW',this.value)" type="range" value="1"/><span class="val" id="lyCardLineWV">1px</span></div></div></div><div class="field-help" id="bubbleThemeHelp">기본 말고는 꼬리가 없어요. 연달아 친 말풍선은 모두 둥글게 이어져요.</div></div></div><div class="flat-tool-section" id="profileShapeSection" style="margin-top:10px"><div class="flat-tool-title"><strong>프로필 사진 모양</strong></div><div class="flat-tool-body"><div class="field" style="margin:0">
+</div></div><div class="flat-tool-section" id="bubbleTextAlignSection"><div class="flat-tool-title"><strong>말풍선 내부 텍스트 정렬</strong></div><div class="flat-tool-body"><div class="field" style="margin:0"><div class="seg" id="bubbleTextAlignSeg"><button onclick="setBubbleTextAlign('justify')" type="button">양쪽</button><button class="on" onclick="setBubbleTextAlign('left')" type="button">왼쪽</button><button onclick="setBubbleTextAlign('center')" type="button">가운데</button><button onclick="setBubbleTextAlign('right')" type="button">오른쪽</button></div></div></div></div><div class="flat-tool-section" id="bubblePositionAlignSection"><div class="flat-tool-title"><strong>말풍선 위치 정렬</strong></div><div class="flat-tool-body"><div class="field" style="margin:0"><div class="seg" id="bubbleAlignSeg"><button class="on" onclick="setBubbleAlign('left')" type="button">왼쪽</button><button onclick="setBubbleAlign('center')" type="button">가운데</button><button onclick="setBubbleAlign('right')" type="button">오른쪽</button></div></div></div></div><div class="flat-tool-section" id="bubbleThemeSection"><div class="flat-tool-title"><strong>말풍선 테마</strong></div><div class="flat-tool-body"><div class="btheme-grid" id="bubbleThemeGrid"><button type="button" class="btheme-btn on" data-theme="default"><span class="btheme-prev bt-default"></span>기본</button><button type="button" class="btheme-btn" data-theme="corner"><span class="btheme-prev bt-corner"></span>모서리</button><button type="button" class="btheme-btn" data-theme="card"><span class="btheme-prev bt-card"></span>카드</button></div><div class="colorgrid" id="cardLineField" style="display:none;margin-top:12px"><div class="field" style="margin:0"><label class="lb">테두리 색</label><div class="colorrow" data-color="cardLine"></div></div><div class="field" style="margin:0"><label class="lb">테두리 두께</label><div class="rangewrap"><input id="lyCardLineW" max="6" min="0" step="1" oninput="setLayout('cardLineW',this.value)" type="range" value="1"/><span class="val" id="lyCardLineWV">1px</span></div></div></div></div></div><div class="flat-tool-section" id="profileShapeSection" style="margin-top:10px"><div class="flat-tool-title"><strong>프로필 사진 모양</strong></div><div class="flat-tool-body"><div class="field" style="margin:0">
 <div class="seg" id="shapeSeg">
 <button class="on" onclick="setShape('circle')">● 원형</button>
 <button onclick="setShape('rounded')">▢ 라운드 사각</button>
@@ -1765,9 +1761,7 @@ html, body, #canvas, #chat, #canvas * {
 <label class="sw"><input id="askSavePathToggle" onchange="setAskSavePath(this.checked)" type="checkbox"/><span class="track"></span></label>
 </div>
 </div>
-<div style="font-size:11px;color:var(--muted);margin-top:10px;padding-left:2px;line-height:1.6">
-                배경이 바깥 여백까지 채워져 발췌 카드처럼 저장돼. 비율을 고르면 그 형태에 맞춰 여백이 더해져.
-              </div>
+
 </div>
 </div><div class="flat-tool-section" id="accCredit">
 <div class="flat-tool-title"><strong>✍️ 서명 (제작자 · 캐릭터)</strong></div>
@@ -1811,7 +1805,7 @@ html, body, #canvas, #chat, #canvas * {
 <div class="flat-tool-title"><strong>✂️ 페이지 나누기</strong></div>
 <div class="flat-tool-body">
 <div class="field">
-<div class="field-help" id="splitCountHelp">블럭에 마우스를 올리면 나오는 <b>✂</b> 버튼으로 분할 지점을 표시해요.</div>
+<div class="field-help" id="splitCountHelp" hidden></div>
 </div>
 <div class="field">
 <div class="toggle">
@@ -3036,7 +3030,7 @@ function renderSenders(){
   const cur=senderSel.value;
   senderSel.innerHTML = state.members.length
     ? state.members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('')
-    : '<option value="">— 멤버를 먼저 추가하세요 —</option>';
+    : '<option value="">멤버 추가</option>';
   if([...senderSel.options].some(o=>o.value===cur)) senderSel.value=cur;
 }
 function renderMeSelect(){
@@ -3758,6 +3752,7 @@ function moveMsg(id,dir){
 function editMsgPrompt(id){ beginComposerEdit(id); }
 function beginComposerEdit(id){
   const m=state.messages.find(x=>x.id===id); if(!m) return;
+  if(m.type==='html'){ window.openHtmlBlockEditor(id); return; }
   composerEditId=id;
   let type=(m.type==='chat')?'chat':(m.type==='divider')?'divider':(m.type==='image')?'image':'text';
   let effSender=m.senderId;
@@ -4054,7 +4049,7 @@ function __applyBlurMarkup(t,tabAttr){
   return t;
 }
 function hasMarkdownBlock(raw){
-  return /^(?: {0,3}#{1,6}\s+|\s*```|\s*>\s?|\s*[-+*]\s+|\s*\|?\s*:?-{3,}:?\s*\|)/m.test(String(raw||''));
+  return /^(?:\s*(?:(?:[-—–]\s*){3,}|—\s*-)$| {0,3}#{1,6}\s+|\s*```|\s*>\s?|\s*[-+*]\s+|\s*\|?\s*:?-{3,}:?\s*\|)/m.test(String(raw||''));
 }
 function fmtText(raw,edit){
   let t=esc(raw);
@@ -4177,6 +4172,7 @@ function renderPreview(){
     }
     if(m.type==='divider') return dividerRow(m,gap);
     if(m.type==='image') return imageRow(m,gap);
+    if(m.type==='html') return htmlBlockRow(m,gap);
     if(m.type==='text') return textRow(m,gap);
     const mem=state.members.find(x=>x.id===m.senderId)||{};
     if(state.mode==='messenger') return msgrRow(m,mem,gap,continued);
@@ -4224,13 +4220,69 @@ function dividerRow(m,gap){
     <span class="divider-pill" data-id="${m.id}" style="background:${state.colors.dividerBg||'rgba(0,0,0,.10)'};color:${state.colors.dividerText||'rgba(0,0,0,.55)'};font-size:${Math.max(10,L.fs-2)}px">${esc(txt)}</span>
   </div>`;
 }
+function htmlBlockRow(m,gap){
+  const w=Math.max(1,Math.min(4096,Number(m.htmlWidth)||1));
+  const h=Math.max(1,Math.min(8192,Number(m.htmlHeight)||1));
+  const image=m.htmlStill||'';
+  return `<div class="pmsg html-block-row" style="margin-bottom:${gap}px;width:100%;max-width:100%;position:relative">
+    ${ctrlHTML(m.id)}
+    <img class="html-block-still" data-id="${m.id}" data-html-source="${encodeURIComponent(m.htmlSource||'')}" src="${image}" width="${w}" height="${h}" alt="HTML 블록의 첫 화면" style="display:block;width:min(100%,${w}px);max-width:100%;height:auto;aspect-ratio:${w}/${h};object-fit:contain;margin:0 auto">
+  </div>`;
+}
+function restoreHtmlBlocksForExport(root){
+  root.querySelectorAll('img.html-block-still[data-id]').forEach(img=>{
+    const block=state.messages.find(m=>m.type==='html'&&String(m.id)===img.dataset.id);
+    if(!block||!block.htmlSource)return;
+    const parsed=new DOMParser().parseFromString(block.htmlSource,'text/html');
+    const content=document.createElement('div');
+    content.className='html-block-content';
+    content.style.cssText='display:block;width:100%;max-width:100%;height:auto;overflow:visible;box-sizing:border-box';
+    if(parsed.body){
+      if(parsed.body.getAttribute('style'))content.style.cssText+=';'+parsed.body.getAttribute('style');
+      [...parsed.head.querySelectorAll('style,link[rel="stylesheet"],script')].forEach(el=>content.appendChild(document.importNode(el,true)));
+      [...parsed.body.childNodes].forEach(el=>content.appendChild(document.importNode(el,true)));
+    }
+    img.replaceWith(content);
+  });
+}
+function formatIndentedParagraphs(content){
+  const template=document.createElement('template');
+  template.innerHTML=fmtText(content);
+  const root=template.content;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  const breaks=[];
+  while(walker.nextNode()){
+    const node=walker.currentNode;
+    for(const match of node.data.matchAll(/\n{2,}/g))breaks.push({node,start:match.index,end:match.index+match[0].length,count:match[0].length});
+  }
+  let startNode=root,startOffset=0;
+  const parts=[];
+  function paragraph(endNode,endOffset){
+    const range=document.createRange();
+    range.setStart(startNode,startOffset);range.setEnd(endNode,endOffset);
+    const span=document.createElement('span');
+    span.className='text-paragraph';span.style.cssText='display:block;text-indent:1em';
+    let fragment=range.cloneContents();
+    let ancestor=range.commonAncestorContainer;
+    if(ancestor.nodeType===Node.TEXT_NODE)ancestor=ancestor.parentNode;
+    while(ancestor&&ancestor!==root){
+      const wrapper=ancestor.cloneNode(false);wrapper.appendChild(fragment);
+      fragment=wrapper;ancestor=ancestor.parentNode;
+    }
+    span.appendChild(fragment);parts.push(span.outerHTML);
+  }
+  breaks.forEach(b=>{
+    paragraph(b.node,b.start);
+    parts.push('<span class="text-paragraph-gap" style="display:block">'+'<br>'.repeat(b.count-1)+'</span>');
+    startNode=b.node;startOffset=b.end;
+  });
+  paragraph(root,root.childNodes.length);
+  return parts.join('');
+}
 function textRow(t,gap){
   const L=state.layout;
   const paragraphContent=L.textIndent&&!hasMarkdownBlock(t.content)&&/\n{2,}/.test(t.content)
-    ? t.content.split(/(\n{2,})/).map((part,index)=>{
-        if(index%2) return '<span class="text-paragraph-gap" style="display:block">'+('<br>'.repeat(part.length-1))+'</span>';
-        return '<span class="text-paragraph" style="display:block;text-indent:1em">'+fmtText(part)+'</span>';
-      }).join('')
+    ? formatIndentedParagraphs(t.content)
     : fmtText(t.content);
   /* 대본 모드 옵션: 지문도 이름 칼럼 + 대사 간격만큼 들여써서
      대사 텍스트의 실제 시작선과 정확히 맞춘다. */
@@ -4998,6 +5050,7 @@ exportHTML=function(){
   if(editingId){commitEdit();renderPreview();}applyCanvas();
   const node=document.getElementById('canvas').cloneNode(true);node.style.transform='none';node.style.boxShadow='none';
   node.querySelectorAll('.ctrl').forEach(c=>c.remove());node.querySelectorAll('.editable').forEach(el=>{el.removeAttribute('contenteditable');el.classList.remove('editable','editing');});
+  restoreHtmlBlocksForExport(node);
   const css=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
   const bodyBg=state.transparentBg?'transparent':state.colors.bg;
   const transparentCss=state.transparentBg?'html,body,#canvas,#chat{background:transparent!important}#canvasBgImage,#canvasBgOverlay{display:none!important}':'';
@@ -6988,6 +7041,18 @@ else setTimeout(__idleLoadRenderer,1200);
     const pt=normalizeFontSizePt(input.value);
     if(pt==null) return false;
     input.value=prettyFontSizePt(pt);
+    const bulk=window.__bulkSelection;
+    if(bulk&&bulk.active()&&bulk.ids().length){
+      const ids=new Set(bulk.ids());
+      const targets=state.messages.filter(m=>ids.has(m.id)&&(m.type==='text'||m.type==='chat'));
+      if(!targets.length)return false;
+      if(typeof window.pushUndo==='function')window.pushUndo('선택한 글씨 크기 변경');
+      targets.forEach(m=>{m.content='[size='+pt+']'+String(m.content||'').replace(/\[size=[0-9.]+\]|\[\/size\]/gi,'')+'[/size]';});
+      __fontSizeInputDirty=false;
+      delete input.dataset.mixed;
+      renderPreview();bulk.refresh();
+      return true;
+    }
     const root=editorRoot(); if(!root) return false;
     if(!fontSizeRangeUsable(root) && !captureFontSizeSelection(root)) return false;
     if(!updateActiveFontSizeSpan(root,pt)) __activeFontSizeSpan=applyPartialFontSizePt(root,pt);
@@ -8259,7 +8324,7 @@ window.importProject=function(ev){
     +'<label class="btn sm" style="cursor:pointer;text-align:center">↑ 프로젝트 불러오기'
     +'<input type="file" accept="application/json,.json" hidden onchange="importProject(event)"></label>'
     +'</div>'
-    +'<div class="field-help" style="margin-top:8px">멤버·메시지·이미지·설정 전체가 파일 하나에 담겨요. 다른 기기나 브라우저에서 이어서 작업할 수 있어요. 이 브라우저 안에서는 작업 내용이 자동 저장돼 새로고침해도 복원할 수 있어요.</div>'
+    +''
     +'</div>';
   body.insertBefore(sec,body.firstChild);
 })();
@@ -12671,9 +12736,8 @@ function applyPageView(){
 }
 function updateSplitHelp(total){
   const el=document.getElementById('splitCountHelp'); if(!el) return;
-  el.innerHTML=(total<2)
-    ? '블럭의 <b>\u2702</b> 버튼을 누르면 그 블럭 <b>위에서</b> 잘려 새 장이 시작돼요.'
-    : '현재 <b>'+total+'장</b>이에요. 미리보기 아래 <b>\u2039 \u203A</b> 로 장을 넘기면서 한 장씩 저장하면 돼요.';
+  el.hidden=total<2;
+  el.innerHTML=total<2?'':'현재 <b>'+total+'장</b>이에요. 미리보기 아래 <b>\u2039 \u203A</b> 로 장을 넘기면서 한 장씩 저장하면 돼요.';
 }
 
 /* ---------- 페이지 이동 바 ---------- */
@@ -15065,9 +15129,6 @@ window.frPresetRun=function(doReplace){
    +'<button class="btn sm primary" type="button" onclick="frPresetRun(true)">\uCCB4\uD06C\uD55C \uADDC\uCE59 \uC801\uC6A9</button>'
    +'<button class="btn sm" type="button" onclick="frPresetRestore()">\uAE30\uBCF8\uAC12</button>'
    +'</div>'
-   +'<div class="fr-preset-help">\uCCB4\uD06C\uD55C \uADDC\uCE59\uC744 \uC704\uC5D0\uC11C\uBD80\uD130 \uCC28\uB840\uB300\uB85C \uC801\uC6A9\uD574\uC694. '
-   +'\uC704\uCABD \uC801\uC6A9 \uBC94\uC704(\uB9D0\uD48D\uC120\u00B7\uAE00\u00B7\uAC00\uB984\uC120)\uC640 \uB300\uC18C\uBB38\uC790 \uAD6C\uBD84 \uC124\uC815\uC744 \uAC19\uC774 \uB530\uB77C\uAC00\uC694. '
-   +'\uACE0\uCE5C \uADDC\uCE59\uC740 \uC774 \uBE0C\uB77C\uC6B0\uC800\uC5D0 \uC800\uC7A5\uB3FC\uC694.</div>'
    +'<details class="fr-guide">'
    +'<summary>\uADDC\uCE59\uC744 \uC9C1\uC811 \uB9CC\uB4E4\uACE0 \uC2F6\uB2E4\uBA74 \u2014 \uAE30\uD638 \uB3C4\uC6C0\uB9D0</summary>'
    +'<div class="fr-guide-body">'
@@ -15663,6 +15724,7 @@ function saveActions(){
   const canSplitSave=nv?(nv.mode==='ratio'):true;
   if(total>1&&canSplitSave) list.push({key:'pages',label:'🗂 장별로 나눠 저장',
     desc:total+'장을 순서대로 한 장씩',run:()=>{ window.saveAllPages(); }});
+  list.push({key:'pdf',label:'↓ PDF 저장',run:()=>{window.savePDF();}});
   list.push({key:'copy',label:'⧉ 이미지 복사',
     desc:'클립보드로 바로',now:true,run:()=>{ try{ const p=window.copyImage&&window.copyImage(); if(p&&p.catch) p.catch(()=>{}); }catch(_){} }});
   list.push({key:'html-code',label:'⧉ HTML 코드 복사',
@@ -16037,6 +16099,7 @@ function buildEmbedHTML(){
   node.querySelectorAll('.pmsg').forEach(el=>{ el.style.outline='none'; });
   /* 화면 편집용으로 숨겨 둔 줄(다른 장)은 통째로 뺀다 */
   node.querySelectorAll('*').forEach(el=>{ if(el.style&&el.style.display==='none') el.remove(); });
+  restoreHtmlBlocksForExport(node);
 
   const root='moko-'+Math.random().toString(36).slice(2,8);
   const rootSel='#'+root;
@@ -16608,9 +16671,11 @@ setTimeout(install,400);
 .bgv-fit button{height:32px;border:1px solid var(--line,#EAEAEC);background:var(--panel,#fff);
   border-radius:8px;font:700 11.5px/1 inherit;color:var(--ink,#424448);cursor:pointer}
 .bgv-fit button.on{background:var(--ink,#424448);border-color:var(--ink,#424448);color:#fff}
-.bgv-beta-badge{display:inline-flex;align-items:center;margin-left:6px;padding:2px 6px;border-radius:999px;
+.bgv-beta-badge,.toggle .t-lb .bgv-beta-badge{display:inline-flex!important;align-items:center;margin-left:6px;padding:2px 6px;border-radius:999px;
   background:var(--accent-soft,#EDEDEE);color:var(--muted,#909096);font-size:9px;font-weight:800;
-  line-height:1;letter-spacing:.04em;vertical-align:1px}
+  line-height:1;letter-spacing:.04em;vertical-align:middle}
+.toggle .t-lb:has(>.bgv-beta-badge),.hbe-head>strong:has(>.bgv-beta-badge){display:flex;align-items:center;white-space:nowrap}
+.toggle .t-lb .bgv-beta-badge{margin:0 0 0 6px!important;font-size:9px!important;line-height:1!important}
 </style>
 <script id="moko-bg-video-script">
 (function(){
@@ -16684,7 +16749,9 @@ function applyVideoLayer(){
     try{ vd.load(); }catch(_){}
   }
   vd.loop=!!v.loop;
-  vd.muted=!v.sound;
+  vd.muted=!!v.previewMuted||!!window.__bgVideoExportRunning;
+  const soundBtn=$('bgvPreviewSoundBtn');
+  if(soundBtn){soundBtn.textContent=v.previewMuted?'🔊':'🔇';soundBtn.title=v.previewMuted?'미리보기 소리 켜기':'미리보기 음소거';soundBtn.setAttribute('aria-label',soundBtn.title);}
   vd.playbackRate=Math.max(.25,Math.min(3,Number(v.speed)||1));
   if(dim) dim.style.opacity=String(Math.max(0,Math.min(90,Number(v.dim)||0))/100);
   geom(vd,true);
@@ -16789,7 +16856,7 @@ function buildUI(){
     '<div class="flat-tool-title"><strong>영상 배경<span class="bgv-beta-badge">BETA</span></strong></div>'
    +'<div class="flat-tool-body">'
    +'<div class="field" style="margin-bottom:0"><div class="toggle">'
-   +'<div class="t-lb">영상 배경 사용<span>배경 자리에 영상을 깔아요 · 저장 이미지는 그 순간 프레임으로 나와요</span></div>'
+   +'<div class="t-lb">영상 배경 사용</div>'
    +'<label class="sw"><input id="bgvOn" type="checkbox"><span class="track"></span></label>'
    +'</div></div>'
    +'<div class="acc-panel" id="bgvPanel"><div class="acc-inner">'
@@ -16827,16 +16894,8 @@ function buildUI(){
    +'<div class="t-lb">반복 재생<span>끄면 영상 길이만큼 한 번만 재생돼요</span></div>'
    +'<label class="sw"><input id="bgvLoop" type="checkbox" checked><span class="track"></span></label>'
    +'</div></div>'
-   +'<div class="field" style="margin-top:12px;margin-bottom:0"><div class="toggle">'
-   +'<div class="t-lb">소리 켜기<span>브라우저가 자동 재생을 막을 수 있어요 · 저장 이미지엔 영향 없어요</span></div>'
-   +'<label class="sw"><input id="bgvSound" type="checkbox"><span class="track"></span></label>'
-   +'</div></div>'
 
-   +'<div class="field-help" style="margin-top:12px">'
-   +'길이는 넣은 영상 그대로예요 (자르지 않아요). 이미지로 저장하면 <b>그 순간의 한 프레임</b>이 배경으로 들어가고, '
-   +'움직이는 영상 그대로는 미리보기에서만 볼 수 있어요. 영상은 용량이 커서 자동 저장에 담기지 않아요 — '
-   +'새로고침하면 다시 넣어 주세요.'
-   +'</div>'
+
    +'</div></div></div>';
   host.parentNode.insertBefore(sec,host.nextSibling);
   wire();
@@ -16893,7 +16952,6 @@ function wire(){
   [['bgvSize','size'],['bgvX','x'],['bgvY','y'],['bgvBlur','blur'],['bgvDim','dim'],['bgvSpeed','speed']]
     .forEach(([id,key])=>{ const el=$(id); if(el) el.oninput=()=>set(key,el.value,false); });
   $('bgvLoop').onchange=e=>set('loop',e.target.checked,false);
-  $('bgvSound').onchange=e=>set('sound',e.target.checked,false);
 
   try{ if(typeof enhanceRange==='function'){
     enhanceRange('bgvSize','bgvSizeV',{min:50,max:300,step:1,nudge:5,suffix:'%'});
@@ -16931,7 +16989,6 @@ function sync(){
   put('bgvDim','bgvDimV',v.dim,'%');
   put('bgvSpeed','bgvSpeedV',v.speed,'×');
   const lp=$('bgvLoop'); if(lp) lp.checked=!!v.loop;
-  const sd=$('bgvSound'); if(sd) sd.checked=!!v.sound;
   syncInfo();
   applyVideoLayer();
 }
@@ -17228,36 +17285,22 @@ function primeAudioContext(enabled){
 }
 /* iOS 사파리는 스피커(destination)로 아무것도 안 나가는 AudioContext 를
    몇 초 뒤 놀고 있는 것으로 보고 재워 버린다. 그러면 녹화 중간부터 소리가 끊긴다.
-   들리지 않을 만큼 작은 소리를 destination 으로 계속 흘려보내 깨어 있게 한다. */
+   스피커 경로의 gain은 0으로 고정하고 녹화 destination에는 원음을 보낸다. */
 function keepContextAwake(ctx,node){
   try{
     const g=ctx.createGain();
-    g.gain.value=0.0001;
+    g.gain.value=0;
     node.connect(g);
     g.connect(ctx.destination);
     return g;
   }catch(_){ return null; }
 }
-async function prepareExportAudio(vid,stream,rate,seed){
+async function prepareExportAudio(vid,stream,rate,seed,enabled){
   const pack={mode:'none',track:null,ctx:seed&&seed.ctx||null,source:null,dest:null,mediaStream:null,
     started:false,start(){},stop(){}};
-  if(!(V()&&V().sound)) return pack;
+  if(!enabled) return pack;
 
-  /* Chrome/Android/desktop: 브라우저가 원본 영상의 오디오 스트림을 직접 줄 수 있으면
-     그 경로를 먼저 쓴다. 재생 속도와 피치 처리는 원본 video 요소와 정확히 같다. */
-  const cap=vid.captureStream||vid.mozCaptureStream;
-  if(typeof cap==='function'){
-    try{
-      const ms=cap.call(vid);
-      const tr=ms&&ms.getAudioTracks&&ms.getAudioTracks()[0];
-      if(tr){
-        stream.addTrack(tr); pack.mode='capture'; pack.track=tr; pack.mediaStream=ms;
-        pack.stop=()=>{ try{ tr.stop(); }catch(_){} };
-        return pack;
-      }
-    }catch(_){}
-  }
-
+  // 모든 기기에서 녹화용 destination으로만 소리를 보내 스피커 출력과 분리한다.
   const AC=window.AudioContext||window.webkitAudioContext;
   let ctx=pack.ctx;
   try{
@@ -17311,6 +17354,7 @@ async function prepareExportAudio(vid,stream,rate,seed){
       pack.keep=keepContextAwake(ctx,src);
       const tr=dest.stream.getAudioTracks()[0];
       if(tr){
+        vid.muted=false;vid.volume=1;
         stream.addTrack(tr); pack.mode='media-element'; pack.track=tr; pack.source=src; pack.dest=dest;
         pack.stop=()=>{ try{ src.disconnect(); }catch(_){} try{ tr.stop(); }catch(_){} };
         return pack;
@@ -17892,7 +17936,8 @@ window.exportBackgroundVideo=async function(opt){
   }
   const v=V();
   /* 반드시 사용자 클릭이 살아 있는 이 지점에서 iOS 오디오 컨텍스트를 깨운다. */
-  const audioSeed=primeAudioContext(!!v.sound);
+  const includeAudio=true;
+  const audioSeed=primeAudioContext(includeAudio);
   const mime=pickMime();
 
   const canvas=$('canvas');
@@ -17910,7 +17955,8 @@ window.exportBackgroundVideo=async function(opt){
   const H=Math.max(2,Math.round(ch*S/2)*2);       /* 짝수 (H.264 요구) */
 
   busy=true; cancelled=false;
-  let overlay=null, vid=null, vidHolder=null, rec=null, raf=0, audioPack=null;
+  window.__bgVideoExportRunning=true;window.applyBackgroundVideoLayer();
+  let overlay=null, vid=null, vidHolder=null, rec=null, raf=0, audioPack=null, frameCallback=0, recordStream=null;
   let outputDuration=0, recStartedAt=0, recEndedAt=0;
   try{
     const autoReduced=S<requestedS*.97;
@@ -17924,19 +17970,16 @@ window.exportBackgroundVideo=async function(opt){
     /* 녹화용 영상은 미리보기와 따로 돌린다 (미리보기는 그대로 재생) */
     vid=document.createElement('video');
     const playRate=Math.max(.25,Math.min(3,Number(v.speed)||1));
-    vid.muted=!v.sound; vid.playsInline=true; vid.loop=false; vid.preload='auto';
+    vid.muted=true; vid.volume=1; vid.playsInline=true; vid.loop=false; vid.preload='auto';
     vid.setAttribute('playsinline','');
     vid.setAttribute('webkit-playsinline','');
     vid.defaultPlaybackRate=playRate; vid.playbackRate=playRate;
-    /* 아이폰은 문서에 붙어 있지 않은 <video> 를 제대로 디코딩·재생하지 않고
-       재생 속도도 무시하는 경우가 있다. 눈에 안 띄는 2px 자리에 실제로 붙여 둔다. */
+    /* iOS가 녹화용 영상을 화면 밖/가려진 미디어로 중단하지 않도록 진행창에 둔다. */
     vidHolder=document.createElement('div');
-    vidHolder.setAttribute('aria-hidden','true');
-    vidHolder.style.cssText='position:fixed;left:0;bottom:0;width:2px;height:2px;'
-      +'overflow:hidden;opacity:.01;pointer-events:none;z-index:-1';
-    vid.style.cssText='width:2px;height:2px;object-fit:cover';
+    vidHolder.style.cssText='width:120px;height:68px;margin:12px auto;overflow:hidden;border-radius:8px;background:#000';
+    vid.style.cssText='display:block;width:100%;height:100%;object-fit:contain';
     vidHolder.appendChild(vid);
-    document.body.appendChild(vidHolder);
+    $('mokoVidProg').querySelector('.mvp').appendChild(vidHolder);
     vid.src=v.src;
     await new Promise((res,rej)=>{
       if(vid.readyState>=2){ res(); return; }
@@ -17971,10 +18014,14 @@ window.exportBackgroundVideo=async function(opt){
     ctx.imageSmoothingEnabled=true;
     ctx.imageSmoothingQuality='high';
 
-    const stream=out.captureStream(fps);
+    const stream=out.captureStream(fps);recordStream=stream;
     if(!stream||!stream.getVideoTracks||!stream.getVideoTracks().length) throw new Error('capture stream failed');
-    audioPack=await prepareExportAudio(vid,stream,playRate,audioSeed);
-    if(v.sound&&(!audioPack||audioPack.mode==='none')) T('이 영상의 소리 트랙을 읽지 못해 소리 없이 저장돼요');
+    audioPack=await prepareExportAudio(vid,stream,playRate,audioSeed,includeAudio);
+    if(includeAudio&&(!audioPack||audioPack.mode==='none')) throw new Error('audio export unavailable');
+    if(audioPack?.ctx&&audioPack.ctx.state!=='running'){
+      await Promise.race([audioPack.ctx.resume(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('audio export blocked')),4000))]);
+      if(audioPack.ctx.state!=='running')throw new Error('audio export blocked');
+    }
     /* Web Audio로 소리를 따로 담는 iPhone 경로에서는 영상 요소 자체는 음소거해
        자동 재생 차단과 이중 재생을 피한다. */
     if(audioPack&&audioPack.mode==='buffer') vid.muted=true;
@@ -17988,6 +18035,8 @@ window.exportBackgroundVideo=async function(opt){
       rec.onerror=e=>rej(new Error('recorder runtime failed: '+String(e&&e.error&&e.error.name||e&&e.name||'unknown')));
     });
 
+    done.catch(()=>{});
+
     const draw=()=>{
       ctx.clearRect(0,0,W,H);
       paintBackdrop(ctx,W,H);
@@ -18000,11 +18049,10 @@ window.exportBackgroundVideo=async function(opt){
     try{
       await vid.play();
     }catch(_){
-      /* 소리가 video 요소에 직접 붙은 경로만 자동 재생 제한을 받을 수 있다.
-         Web Audio 버퍼가 준비돼 있으면 영상만 음소거로 재생하고 소리는 별도 트랙에 담는다. */
+      // MediaElement/capture 경로를 mute하면 녹화 트랙까지 무음이 될 수 있다.
+      if(includeAudio&&audioPack&&audioPack.mode!=='buffer')throw new Error('audio export playback blocked');
       vid.muted=true;
-      try{ await vid.play(); }catch(e2){ throw new Error('play blocked'); }
-      if(!audioPack||audioPack.mode==='none'||audioPack.mode==='capture'||audioPack.mode==='media-element') T('브라우저가 소리 있는 자동 재생을 막아서 소리 없이 담았어요');
+      try{await vid.play();}catch(e2){throw new Error('play blocked');}
     }
     /* 아이폰은 play() 가 끝나도 실제 재생이 시작되기까지 0.5초쯤 걸린다.
        그 사이를 녹화하면 앞에 멈춘 화면이 붙고 길이 계산도 어긋나므로,
@@ -18049,9 +18097,9 @@ window.exportBackgroundVideo=async function(opt){
         lastFrameAt=performance.now(); frameHits++;
         const c=Number(vid.currentTime);
         if(Number.isFinite(c)){ frameCT=c; aliveCT=c; }
-        try{ vid.requestVideoFrameCallback(onFrame); }catch(_){}
+        try{ frameCallback=vid.requestVideoFrameCallback(onFrame); }catch(_){}
       };
-      try{ vid.requestVideoFrameCallback(onFrame); useFrameCb=true; }catch(_){ useFrameCb=false; }
+      try{ frameCallback=vid.requestVideoFrameCallback(onFrame); useFrameCb=true; }catch(_){ useFrameCb=false; }
     }
 
     /* 신호 ① 디코딩된 프레임 수 — 그림이 실제로 새로 풀리고 있는지 (가장 확실) */
@@ -18088,7 +18136,7 @@ window.exportBackgroundVideo=async function(opt){
       }catch(_){ return null; }
     };
 
-    await new Promise(res=>{
+    await new Promise((res,rej)=>{
       const stop=(endAt,why)=>{ contentEndAt=endAt||performance.now(); endReason=why||'end'; res(); };
       const tick=()=>{
         const now=performance.now();
@@ -18114,10 +18162,14 @@ window.exportBackgroundVideo=async function(opt){
           stop(now,cancelled?'cancel':'ended');
           return;
         }
-        /* 안전장치: 어떤 이유로도 예상 길이의 3배를 넘기지 않는다.
-           (신호로 '멈춤'을 판정하던 방식은 아이폰에서 오판이 잦아 걷어냈다 —
-            디코딩 프레임 수가 실제보다 훨씬 적게 보고돼 녹화가 중간에 잘렸다) */
-        if(now-t0>dur*3000+5000){ stop(now,'safety-cap'); return; }
+        // 끝 이벤트가 늦는 기기에서도 마지막 프레임 뒤로 녹화를 늘리지 않는다.
+        const nearEnd=Number.isFinite(dNum)&&dNum>0&&ct>=dNum-Math.max(.15,playRate/fps*2);
+        if(nearEnd&&now-lastMoveAt>500){stop(now,'last-frame');return;}
+        if(vid.error){rej(new Error('video load failed'));return;}
+        if(now-lastMoveAt>4000){rej(new Error('video playback stalled'));return;}
+        if(now-t0>dur*1000+10000){rej(new Error('video playback timeout'));return;}
+        if(rec.state==='inactive'){rej(new Error('recorder runtime stopped'));return;}
+        if(vid.paused&&!vid.ended){vid.play().catch(()=>{});}
         if(Math.abs(vid.playbackRate-playRate)>.001) vid.playbackRate=playRate;
         /* 소리 끊김 방지: 오디오 컨텍스트가 잠들면 바로 깨운다 */
         if(audioPack&&audioPack.ctx&&now-audioCheckAt>400){
@@ -18127,9 +18179,10 @@ window.exportBackgroundVideo=async function(opt){
           if(st!=='running'){ try{ audioPack.ctx.resume(); }catch(_){} }
         }
         if(now-lastDraw>=frameGap-1){ lastDraw=now; draw(); }
-        const pct=2+96*Math.min(1,(now-t0)/(dur*1000));
+        const elapsed=Math.min(dur,ct/playRate);
+        const pct=2+96*Math.min(1,elapsed/dur);
         prog(true,'영상 만드는 중',
-          Math.round((now-t0)/1000)+'초 / '+Math.round(dur)+'초 · 재생하면서 담는 중이라 실제 길이만큼 걸려요',pct);
+          Math.min(Math.round(dur),Math.round(elapsed))+'초 / '+Math.round(dur)+'초',pct);
         raf=requestAnimationFrame(tick);
       };
       raf=requestAnimationFrame(tick);
@@ -18140,8 +18193,12 @@ window.exportBackgroundVideo=async function(opt){
     if(!contentEndAt) contentEndAt=performance.now();
     await new Promise(r=>setTimeout(r,60));   /* 마지막 프레임이 담기게 잠깐 */
     recEndedAt=performance.now();
+    prog(true,'영상 저장 준비 중','녹화한 영상을 파일로 정리하고 있어요',99);
     rec.stop();
-    await done;
+    await new Promise((resolve,reject)=>{
+      const timeout=setTimeout(()=>reject(new Error('recorder finish timeout')),10000);
+      done.then(value=>{clearTimeout(timeout);resolve(value);},err=>{clearTimeout(timeout);reject(err);});
+    });
 
     /* ---- 결과 길이 ----
        진단으로 확인된 사실: 이 파일의 길이는 오로지 '샘플 수 × 샘플 간격' 으로 정해진다.
@@ -18252,8 +18309,11 @@ window.exportBackgroundVideo=async function(opt){
         try{ const j=JSON.stringify(err); if(j&&j!=='{}') return j; }catch(_){}
         return Object.prototype.toString.call(err||null);
       })();
-      if(/play blocked/i.test(d)) alert('브라우저가 영상 재생을 막았어요. 페이지를 한 번 누른 뒤 다시 시도해 주세요.');
+      if(/audio export/i.test(d)) alert('원본 음성을 녹화에 연결하지 못해 무음 저장을 중단했어요. 영상 저장 버튼을 다시 눌러 주세요.');
+      else if(/play blocked/i.test(d)) alert('브라우저가 영상 재생을 막았어요. 페이지를 한 번 누른 뒤 다시 시도해 주세요.');
       else if(/recorder init|recorder runtime/i.test(d)) alert('브라우저 녹화기가 시작되지 않았어요. MP4를 우선 시도하고, 지원하지 않으면 WebM으로 자동 대체해요. 그래도 안 되면 24fps로 저장해 주세요.');
+      else if(/video playback/i.test(d)) alert('영상 재생이 멈춰 저장을 완료하지 못했어요. 화면을 켜 둔 상태에서 다시 시도해 주세요.');
+      else if(/recorder finish/i.test(d)) alert('브라우저가 녹화 파일을 완성하지 못했어요. 24fps로 다시 시도해 주세요.');
       else if(/video load/i.test(d)) alert('넣은 영상을 이 브라우저가 못 읽어요. mp4(H.264) 또는 webm 으로 바꿔서 넣어 주세요.');
       else if(/overlay|renderer|image|decode/i.test(d)) alert('대화 화면을 영상 위에 얹는 준비에 실패했어요. 먼저 이미지 저장이 되는지 확인한 뒤 다시 눌러 주세요.');
       else if(/canvas context|capture stream/i.test(d)) alert('이 화면 크기로 영상 캔버스를 만들지 못했어요. 24fps로 다시 시도해 주세요.');
@@ -18261,21 +18321,23 @@ window.exportBackgroundVideo=async function(opt){
     }
   }finally{
     if(raf) cancelAnimationFrame(raf);
+    try{if(frameCallback&&vid?.cancelVideoFrameCallback)vid.cancelVideoFrameCallback(frameCallback);}catch(_){}
     try{ if(rec&&rec.state!=='inactive') rec.stop(); }catch(_){}
+    try{recordStream?.getTracks().forEach(track=>track.stop());}catch(_){}
     try{ await closeExportAudio(audioPack||audioSeed); }catch(_){}
     try{ if(vid){ vid.pause(); vid.removeAttribute('src'); vid.load(); } }catch(_){}
     try{ if(vidHolder&&vidHolder.parentNode) vidHolder.parentNode.removeChild(vidHolder); }catch(_){}
     try{ if(overlay&&overlay.close) overlay.close(); }catch(_){}
     prog(false);
-    busy=false;
+    busy=false;window.__bgVideoExportRunning=false;
     try{ renderPreview(); }catch(_){}
   }
 };
 
 /* ---------- 설정 패널에 버튼 달기 ---------- */
 function installButton(){
-  const help=document.querySelector('#bgvPanel .field-help');
-  if(!help||$('bgvExportRow')) return;
+  const host=document.querySelector('#bgvPanel .acc-inner');
+  if(!host||$('bgvExportRow')) return;
   const row=document.createElement('div');
   row.id='bgvExportRow';
   row.innerHTML='<button class="btn sm" id="bgvExportBtn" type="button">🎬 영상으로 저장</button>'
@@ -18283,8 +18345,14 @@ function installButton(){
     +'<option value="1.5">1.5×</option><option value="2" selected>2×</option><option value="3">3×</option></select>'
     +'<select id="bgvExportFps" title="초당 프레임"><option value="24">24fps</option>'
     +'<option value="30" selected>30fps</option><option value="60">60fps</option></select>'
-    +'<button class="btn sm" id="bgvDiagBtn" type="button" title="마지막 저장의 진단 정보">🩺</button>';
-  help.parentNode.insertBefore(row,help);
+    +'<button class="btn sm" id="bgvDiagBtn" type="button" title="마지막 저장의 진단 정보">🩺</button>'
+    +'<button class="btn sm" id="bgvPreviewSoundBtn" type="button" title="미리보기 음소거" aria-label="미리보기 음소거">🔇</button>';
+  host.appendChild(row);
+  const soundBtn=$('bgvPreviewSoundBtn');
+  $('bgvClear').after($('bgvDiagBtn'),soundBtn);
+  [$('bgvDiagBtn'),soundBtn].forEach(b=>{b.style.cssText='width:34px;min-width:34px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;flex:0 0 34px';});
+  soundBtn.onclick=()=>{const v=V();v.previewMuted=!v.previewMuted;window.applyBackgroundVideoLayer();};
+  window.applyBackgroundVideoLayer();
   const diagBtn=$('bgvDiagBtn');
   if(diagBtn) diagBtn.onclick=()=>{ try{ window.showVideoExportReport(); }catch(_){} };
   $('bgvExportBtn').onclick=()=>window.exportBackgroundVideo({
@@ -18311,13 +18379,7 @@ function installButton(){
     const b=$('bgvExportBtn'); if(b) b.disabled=true;
   }
   row.parentNode.insertBefore(st,row.nextSibling);
-  const note=document.createElement('div');
-  note.className='field-help';
-  note.style.marginTop='8px';
-  note.innerHTML='영상은 <b>실제로 재생하면서</b> 담기 때문에 넣은 영상 길이만큼 시간이 걸려요. '
-    +'대화·말풍선은 한 번만 떠서 겹치니까 글씨는 또렷하게 나와요. '
-    +'형식은 브라우저가 지원하는 걸로 (사파리 MP4 · 크롬 WebM) 자동으로 골라요.';
-  row.parentNode.insertBefore(note,row.nextSibling);
+
 }
 installButton();
 document.addEventListener('DOMContentLoaded',()=>setTimeout(installButton,80));
@@ -23027,7 +23089,7 @@ defaults();
 const col=$('dividerColorCol');
 const oldLabel=col.querySelector('.lb'), oldRow=col.querySelector('.colorrow');
 const bgWrap=document.createElement('div');bgWrap.className='divider-color-option';bgWrap.append(oldLabel,oldRow);col.append(bgWrap);
-const tw=document.createElement('div');tw.className='divider-color-option';tw.innerHTML='<label class="lb">텍스트</label><div class="colorrow divider-color-row" data-color="dividerText"></div>';col.append(tw);buildColorRow(tw.lastElementChild);
+const tw=document.createElement('div');tw.className='divider-color-option';tw.innerHTML='<label class="lb">텍스트 색</label><div class="colorrow divider-color-row" data-color="dividerText"></div>';col.append(tw);buildColorRow(tw.lastElementChild);
 function syncDivider(){
  defaults();
  const key=$('msgContent').value.trim()?'dividerBg':'divider';
@@ -23064,8 +23126,7 @@ syncScriptLanguageFonts();
 $('scriptNameGap').oninput=function(){state.layout.scriptNameGap=Number(this.value);$('scriptNameGapV').textContent=this.value+'px';renderPreview();};
 $('scriptNameGapMode').onchange=function(){state.layout.scriptNameGapMode=this.value;renderPreview();};
 $('scriptNameFont').onchange=function(){state.layout.scriptNameFont=this.value;renderPreview();if(typeof __ensureCurrentFontLoaded==='function')__ensureCurrentFontLoaded().then(()=>renderPreview());};
-const md=document.createElement('div');md.className='field';md.innerHTML='<div class="toggle"><div class="t-lb">마크다운 자동 인식<span>표·제목·목록·코드·기울임·굵게를 자동으로 표시해요</span></div></div>';
-$('textIndentOn').closest('.field').after(md);
+
 
 function sync(){defaults();$('scriptNameGap').value=state.layout.scriptNameGap??14;$('scriptNameGapV').textContent=(state.layout.scriptNameGap??14)+'px';$('scriptNameGapMode').value=state.layout.scriptNameGapMode||'column';$('scriptNameFont').value=state.layout.scriptNameFont||'';syncStepperBoxes();syncScriptNameSizeControl();syncDivider();}
 const oldSync=syncControlsFromState;syncControlsFromState=function(){defaults();const r=oldSync.apply(this,arguments);sync();return r;};
@@ -23091,7 +23152,7 @@ fmtText=function(raw,edit){
   if(/^\s*```/.test(line)){let code=[];i++;while(i<lines.length&&!/^\s*```/.test(lines[i]))code.push(lines[i++]);if(i<lines.length)i++;out.push('<pre><code>'+esc(code.join('\n'))+'</code></pre>');continue;}
   if(i+1<lines.length&&line.includes('|')){const sep=cells(lines[i+1]);if(sep.length>0&&sep.every(x=>/^:?-{3,}:?$/.test(x))&&cells(line).length===sep.length){const heads=cells(line),align=sep.map(x=>x.startsWith(':')&&x.endsWith(':')?'center':x.endsWith(':')?'right':'left');const row=(a,tag)=>'<tr>'+heads.map((_,n)=>'<'+tag+' style="text-align:'+align[n]+'">'+inline(a[n]||'')+'</'+tag+'>').join('')+'</tr>';let table='<table class="md-table"><thead>'+row(heads,'th')+'</thead><tbody>';i+=2;while(i<lines.length&&lines[i].includes('|')&&lines[i].trim()){table+=row(cells(lines[i++]),'td');}out.push(table+'</tbody></table>');continue;}}
   let m=line.match(/^ {0,3}(#{1,6})\s+(.+)$/);if(m){out.push('<h'+m[1].length+'>'+inline(m[2])+'</h'+m[1].length+'>');i++;continue;}
-  if(/^\s*([-*_])(?:\s*\1){2,}\s*$/.test(line)){out.push('<hr>');i++;continue;}
+  if(/^(?:\s*([-*_])(?:\s*\1){2,}\s*|\s*(?:(?:[-—–]\s*){3,}|—\s*-))$/.test(line)){out.push('<hr>');i++;continue;}
   if(/^\s*>\s?/.test(line)){let q=[];while(i<lines.length&&/^\s*>/.test(lines[i]))q.push(inline(lines[i++].replace(/^\s*>\s?/,'')));out.push('<blockquote>'+q.join('<br>')+'</blockquote>');continue;}
   m=line.match(/^\s*[-+*]\s+(.+)$/);if(m){let items=[];while(i<lines.length){const x=lines[i].match(/^\s*[-+*]\s+(.+)$/);if(!x)break;items.push('<li>'+inline(x[1])+'</li>');i++;}out.push('<ul>'+items.join('')+'</ul>');continue;}
   out.push(line?inline(line):'');i++;if(i<lines.length)out.push('<br>');
@@ -23207,9 +23268,434 @@ sync();
 })();
 </script>
 
+<style id="html-block-editor-style">
+#htmlBlockEditor{position:fixed;inset:0;z-index:100700;background:rgba(24,25,29,.72);display:none;align-items:center;justify-content:center;padding:18px}
+#htmlBlockEditor.show{display:flex}
+#htmlBlockEditor .hbe-panel{background:var(--panel,#fff);color:var(--ink,#333);width:100%;height:100%;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px #0005}
+#htmlBlockEditor .hbe-head,#htmlBlockEditor .hbe-actions{display:flex;align-items:center;gap:10px;padding:12px 16px;flex-wrap:wrap}
+#htmlBlockEditor .hbe-head{border-bottom:1px solid #ddd}#htmlBlockEditor .hbe-head strong{margin-right:auto}
+#htmlBlockEditor .hbe-actions{border-top:1px solid #ddd;justify-content:flex-end}
+#htmlBlockEditor .hbe-size{display:flex;align-items:center;gap:5px;font-size:12px}#htmlBlockEditor .hbe-size input{width:70px;padding:5px}
+#htmlBlockEditor .hbe-main{display:grid;grid-template-columns:1fr 1fr;min-height:0;flex:1}
+#htmlBlockEditor .hbe-code,#htmlBlockEditor .hbe-view{display:flex;flex-direction:column;min-height:0;min-width:0;padding:12px;gap:7px}
+#htmlBlockEditor .hbe-code{border-right:1px solid #ddd}#htmlBlockEditor .hbe-code textarea{flex:1;resize:none;min-height:0;width:100%;box-sizing:border-box;font:12px/1.55 ui-monospace,monospace;tab-size:2}
+#htmlBlockEditor .hbe-view{overflow:hidden;padding:0;gap:0}#htmlBlockEditor .hbe-view iframe{display:block;flex:1 1 auto!important;width:100%!important;height:100%!important;max-width:100%!important;min-width:0!important;min-height:0!important;border:0;background:white}
+#htmlBlockEditor .hbe-note{font-size:11px;color:var(--muted,#777);line-height:1.4}
+@media(max-width:700px){#htmlBlockEditor{padding:5px}#htmlBlockEditor .hbe-panel{height:98vh}#htmlBlockEditor .hbe-main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}#htmlBlockEditor .hbe-code{border-right:0;border-bottom:1px solid #ddd}}
+@media(max-width:700px){
+  .mobile-ui.m-tools-open #mDock .composer-card{
+    --m-top-control-h:clamp(28px,8vw,34px)!important;
+    --m-top-four:calc(4 * var(--m-top-control-h) + 3 * var(--m-top-inner-gap))!important;
+    --m-top-five:calc(5 * var(--m-top-control-h) + 4 * var(--m-top-inner-gap));
+  }
+  .mobile-ui.m-tools-open #mDock .composer-top-grid{position:relative!important;grid-template-columns:var(--m-top-five) minmax(0,1fr)!important}
+  .mobile-ui.m-tools-open #mDock .composer-type-field{width:var(--m-top-five)!important;min-width:var(--m-top-five)!important;max-width:var(--m-top-five)!important}
+  .mobile-ui.m-tools-open #mDock #msgTypeSeg{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:var(--m-top-five)!important;min-width:var(--m-top-five)!important;max-width:var(--m-top-five)!important}
+  .mobile-ui.m-tools-open #mDock #msgTypeSeg button{width:var(--m-top-control-h)!important;min-width:var(--m-top-control-h)!important;max-width:var(--m-top-control-h)!important;font-size:clamp(9px,2.5vw,11px)!important}
+
+}
+</style>
+<script id="html-block-feature">
+(function(){
+  function positionMobileTextSize(){
+    const col=document.getElementById('textHeadingCol');
+    if(col){col.style.removeProperty('top');col.style.removeProperty('left');}
+  }
+
+  let textSizeRaf=0;
+  function queueTextSize(){if(!textSizeRaf)textSizeRaf=requestAnimationFrame(()=>{textSizeRaf=0;positionMobileTextSize();});}
+  const previousType=window.setMsgType;
+  window.setMsgType=function(){const result=previousType.apply(this,arguments);queueTextSize();setTimeout(queueTextSize,50);return result;};
+  window.addEventListener('resize',queueTextSize,{passive:true});
+  document.addEventListener('click',queueTextSize,true);
+  setTimeout(queueTextSize,350);
+  const button=document.createElement('button');
+  button.type='button';button.textContent='HTML';button.title='HTML·CSS·JavaScript 블록';
+  button.onclick=()=>window.openHtmlBlockEditor(null);
+  document.getElementById('msgTypeSeg').appendChild(button);
+  const modal=document.createElement('div');modal.id='htmlBlockEditor';
+  modal.innerHTML='<div class="hbe-panel" role="dialog" aria-modal="true" aria-label="HTML 블록 편집">'
+    +'<div class="hbe-head"><strong>HTML 블록 편집<span class="bgv-beta-badge">BETA</span></strong></div>'
+    +'<div class="hbe-main"><div class="hbe-code"><b>HTML · CSS · JavaScript</b><textarea id="hbeSource" spellcheck="false" aria-label="HTML 코드" placeholder="HTML·CSS·JavaScript 코드를 입력하세요"></textarea></div>'
+    +'<div class="hbe-view"><iframe id="hbeFrame" sandbox="allow-scripts" title="HTML 실행 미리보기"></iframe></div></div>'
+    +'<div class="hbe-actions"><button type="button" class="btn sm" id="hbeCancel">취소</button><button type="button" class="btn sm primary" id="hbeSave">✓ 블록으로 넣기</button></div></div>';
+  document.body.appendChild(modal);
+  const source=modal.querySelector('#hbeSource'),frame=modal.querySelector('#hbeFrame');
+  let editing=null,saving=false;
+  const defaultSource='';
+  function documentSource(code){return '<!doctype html>'+new DOMParser().parseFromString(code,'text/html').documentElement.outerHTML;}
+  function inject(code,extra){
+    const doc=new DOMParser().parseFromString(code,'text/html');
+    doc.body.insertAdjacentHTML('beforeend',extra);
+    return '<!doctype html>'+doc.documentElement.outerHTML;
+  }
+  function measureNatural(){
+    const body=document.body,cs=getComputedStyle(body);
+    const children=[...body.children].filter(el=>!['SCRIPT','STYLE','LINK','META'].includes(el.tagName)&&getComputedStyle(el).display!=='none');
+    let contentWidth=0,bottom=0;
+    children.forEach(el=>{const r=el.getBoundingClientRect();contentWidth=Math.max(contentWidth,r.width,el.scrollWidth);});
+    [...body.querySelectorAll('*')].forEach(el=>{
+      if(['SCRIPT','STYLE','LINK','META'].includes(el.tagName)||getComputedStyle(el).display==='none')return;
+      const r=el.getBoundingClientRect();
+      if(r.width||r.height)bottom=Math.max(bottom,r.bottom,r.top+el.scrollHeight);
+    });
+    const width=children.length?contentWidth+(parseFloat(cs.marginLeft)||0)+(parseFloat(cs.marginRight)||0):body.scrollWidth;
+    const pageScroll=document.documentElement.scrollHeight>innerHeight+1?document.documentElement.scrollHeight:0;
+    const height=Math.max(body.scrollHeight,pageScroll,bottom+(parseFloat(cs.marginBottom)||0));
+    return {w:Math.max(1,Math.min(4096,Math.ceil(width))),h:Math.max(1,Math.min(8192,Math.ceil(height)))};
+  }
+  function expandCaptureHeight(){
+    [...document.body.querySelectorAll('*')].reverse().forEach(el=>{
+      if(['SCRIPT','STYLE','LINK','META'].includes(el.tagName)||el.clientHeight<1||el.scrollHeight<=el.clientHeight+1)return;
+      const overflow=getComputedStyle(el).overflowY;
+      if(overflow==='visible')return;
+      el.style.setProperty('height',el.scrollHeight+'px','important');
+      el.style.setProperty('max-height','none','important');
+      el.style.setProperty('overflow-y','visible','important');
+    });
+  }
+  function run(){
+    frame.srcdoc=source.value;
+  }
+  let runTimer=0;
+  source.addEventListener('input',()=>{clearTimeout(runTimer);runTimer=setTimeout(run,220);});
+  window.openHtmlBlockEditor=function(id){
+    const m=id?state.messages.find(x=>x.id===id&&x.type==='html'):null;
+    editing=m?m.id:null;source.value=m?m.htmlSource||'':defaultSource;
+    modal.classList.add('show');modal.querySelector('#hbeSave').textContent=m?'✓ 수정 완료':'✓ 블록으로 넣기';run();
+  };
+  function close(){clearTimeout(runTimer);modal.classList.remove('show');frame.removeAttribute('srcdoc');editing=null;}
+  modal.querySelector('#hbeCancel').onclick=close;
+  modal.addEventListener('click',e=>{if(e.target===modal)close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('show'))close();});
+  function freezeSvg(serialized,w,h){
+    const parsed=new DOMParser().parseFromString(serialized,'text/html');
+    parsed.querySelectorAll('script,iframe,object,embed,link[rel="stylesheet"],meta').forEach(el=>el.remove());
+    parsed.querySelectorAll('*').forEach(el=>{
+      [...el.attributes].forEach(a=>{if(/^on/i.test(a.name)||/^javascript:/i.test(a.value))el.removeAttribute(a.name);});
+    });
+    const svg=document.implementation.createDocument('http://www.w3.org/2000/svg','svg',null);
+    const root=svg.documentElement;root.setAttribute('xmlns','http://www.w3.org/2000/svg');root.setAttribute('width',w);root.setAttribute('height',h);root.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const fo=svg.createElementNS('http://www.w3.org/2000/svg','foreignObject');fo.setAttribute('width','100%');fo.setAttribute('height','100%');root.appendChild(fo);
+    const body=svg.createElementNS('http://www.w3.org/1999/xhtml','body');
+    body.setAttribute('xmlns','http://www.w3.org/1999/xhtml');
+    [...parsed.body.attributes].forEach(a=>{if(!/^on/i.test(a.name))body.setAttribute(a.name,a.value);});
+    body.setAttribute('style',(body.getAttribute('style')||'')+`;min-height:${h}px;overflow:hidden;`);
+    parsed.querySelectorAll('head style').forEach(el=>{const style=svg.createElementNS('http://www.w3.org/1999/xhtml','style');style.textContent=el.textContent;body.appendChild(style);});
+    [...parsed.body.childNodes].forEach(child=>body.appendChild(svg.importNode(child,true)));
+    const css=svg.createElementNS('http://www.w3.org/1999/xhtml','style');
+    css.textContent='*,*::before,*::after{animation-play-state:paused!important;transition:none!important}';body.appendChild(css);
+    fo.appendChild(body);
+    const xml=new XMLSerializer().serializeToString(svg);
+    return 'data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(xml)));
+  }
+  function prepareVectorStill(svg){
+    return new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>resolve(svg);
+      img.onerror=()=>reject(new Error('HTML 첫 화면을 표시할 수 없습니다.'));
+      img.src=svg;
+    });
+  }
+  function captureInitial(code){
+    return new Promise(resolve=>{
+      const viewport={w:Math.max(1,Math.round(document.getElementById('chat')?.clientWidth||state.layout.width||440)),h:600};
+      const captureFrame=document.createElement('iframe');captureFrame.setAttribute('sandbox','allow-scripts');
+      Object.assign(captureFrame.style,{position:'fixed',left:'-100000px',top:'0',width:viewport.w+'px',height:viewport.h+'px',border:'0',pointerEvents:'none'});
+      const token='html-block-'+Math.random().toString(36).slice(2);
+      let finished=false;
+      const done=data=>{
+        if(finished)return;finished=true;clearTimeout(timer);window.removeEventListener('message',receive);captureFrame.remove();
+        const s=data&&data.size||viewport;
+        const w=Math.max(1,Math.min(4096,Number(s.w)||viewport.w)),h=Math.max(1,Math.min(8192,Number(s.h)||viewport.h));
+        resolve(prepareVectorStill(freezeSvg(data&&data.html||documentSource(code),w,h)).then(still=>({still,w,h})));
+      };
+      const receive=e=>{if(e.source===captureFrame.contentWindow&&e.data&&e.data.token===token)done(e.data);};
+      window.addEventListener('message',receive);
+      document.body.appendChild(captureFrame);
+      const captureScript='<style>*,*::before,*::after{animation-play-state:paused!important;transition:none!important}</style>'
+        +'<script>addEventListener("load",async()=>{try{await Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,1500))]);await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))}catch(_){}requestAnimationFrame(()=>{document.querySelectorAll("canvas").forEach(c=>{try{const i=new Image();i.src=c.toDataURL("image/png");i.width=c.width;i.height=c.height;c.replaceWith(i)}catch(_){}});('+expandCaptureHeight.toString()+')();parent.postMessage({token:'+JSON.stringify(token)+',html:document.documentElement.outerHTML,size:('+measureNatural.toString()+')()},"*")})})<\/script>';
+      const doc=documentSource(code);
+      captureFrame.srcdoc=inject(code,captureScript);
+      const timer=setTimeout(()=>done({html:doc,size:viewport}),6000);
+    });
+  }
+  modal.querySelector('#hbeSave').onclick=async()=>{
+    if(saving)return;const code=source.value;
+    if(!code.trim()){alert('HTML 코드를 입력해 주세요.');return;}
+    saving=true;const btn=modal.querySelector('#hbeSave');btn.disabled=true;btn.textContent='첫 화면 준비 중…';
+    try{
+      const {still,w,h}=await captureInitial(code);
+      const m=editing?state.messages.find(x=>x.id===editing):null;
+      if(m)Object.assign(m,{htmlSource:code,htmlStill:still,htmlWidth:w,htmlHeight:h});
+      else state.messages.push({id:uid(),type:'html',htmlSource:code,htmlStill:still,htmlWidth:w,htmlHeight:h});
+      close();renderPreview();
+    }catch(err){console.error('HTML block capture failed',err);alert('HTML 첫 화면을 만들지 못했어요. 코드를 확인해 주세요.');}
+    finally{saving=false;btn.disabled=false;btn.textContent='✓ 블록으로 넣기';}
+  };
+})();
+</script>
+
+
+<style id="six-requested-ui-fixes">
+#cjkFontControls + .field{margin-top:18px!important}
+#alignField.divider-align #dividerColorCol#dividerColorCol#dividerColorCol#dividerColorCol{width:116px!important;min-width:116px!important;max-width:116px!important;flex-basis:116px!important;height:auto!important;min-height:0!important;max-height:none!important;align-items:flex-start!important}
+#alignField.divider-align #dividerColorCol .divider-color-option{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:5px}
+#alignField#alignField#alignField#alignField#alignField.divider-align .lb{position:static!important;inset:auto!important;transform:none!important;display:block!important;width:auto!important;max-width:none!important;margin:0 0 5px!important;white-space:nowrap!important;line-height:14px!important;height:14px!important;font-size:10px!important}
+@media(max-width:700px){
+.mobile-ui.m-tools-open #mDock .composer-card[data-mobile-composer-type="divider"] #alignField.divider-align .text-format-row{grid-template-columns:minmax(0,1fr) 1px 116px!important}
+.mobile-ui.m-tools-open #mDock #alignField.divider-align#alignField #dividerColorCol .lb{position:static!important;inset:auto!important;transform:none!important;text-align:center!important}
+.mobile-ui:not(.m-tools-open) #mDock #dividerOpts,
+.mobile-ui:not(.m-tools-open) #mDock #msgImgEditor{display:none!important}
+}
+</style>
+
+<style id="divider-row-height-match">
+@media(max-width:700px){
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align,
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .text-format-row{height:var(--m-top-row-h)!important;min-height:var(--m-top-row-h)!important;max-height:var(--m-top-row-h)!important;overflow:visible!important;align-items:start!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .tfr-col:first-child,
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .divider-color-option{display:grid!important;grid-template-rows:var(--m-top-label-h) var(--m-top-control-h)!important;row-gap:var(--m-top-label-gap)!important;align-content:start!important;align-items:start!important;height:var(--m-top-row-h)!important;min-height:var(--m-top-row-h)!important;max-height:var(--m-top-row-h)!important;padding:0!important;margin:0!important;overflow:visible!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .lb{position:static!important;inset:auto!important;transform:none!important;grid-row:1!important;align-self:start!important;height:var(--m-top-label-h)!important;min-height:var(--m-top-label-h)!important;max-height:var(--m-top-label-h)!important;line-height:var(--m-top-label-h)!important;padding:0!important;margin:0!important;font-size:9px!important;font-weight:700!important;text-align:left!important;white-space:nowrap!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align #dividerColorCol{display:grid!important;grid-template-columns:repeat(2,48px)!important;column-gap:8px!important;align-items:start!important;justify-content:start!important;width:104px!important;min-width:104px!important;max-width:104px!important;flex:0 0 104px!important;height:var(--m-top-row-h)!important;min-height:var(--m-top-row-h)!important;max-height:var(--m-top-row-h)!important;margin:0!important;padding:0!important;overflow:visible!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align #alignSeg,
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .divider-color-row{grid-row:2!important;position:static!important;inset:auto!important;transform:none!important;align-self:start!important;margin:0!important;padding:0!important;height:var(--m-top-control-h)!important;min-height:var(--m-top-control-h)!important;max-height:var(--m-top-control-h)!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align #alignSeg button,
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .divider-color-row,
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .divider-color-row .swatch{width:var(--m-top-control-h)!important;min-width:var(--m-top-control-h)!important;max-width:var(--m-top-control-h)!important;height:var(--m-top-control-h)!important;min-height:var(--m-top-control-h)!important;max-height:var(--m-top-control-h)!important;box-sizing:border-box!important}
+}
+</style>
+
+<style id="desktop-divider-height-match">
+@media(min-width:701px){
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .text-format-row{height:auto!important;align-items:start!important;overflow:visible!important;display:flex!important;width:max-content!important;min-width:0!important;max-width:none!important;justify-content:flex-start!important;gap:6px!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .tfr-col:first-child,
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .divider-color-option{display:grid!important;grid-template-rows:var(--divider-label-h,14px) var(--divider-control-h,31px)!important;row-gap:var(--divider-label-gap,6px)!important;align-content:start!important;height:auto!important;padding:0!important;margin:0!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .lb{grid-row:1!important;height:var(--divider-label-h,14px)!important;line-height:var(--divider-label-h,14px)!important;margin:0!important;padding:0!important;font-size:var(--divider-label-font,10px)!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align #dividerColorCol{align-items:start!important;gap:8px!important;height:auto!important;padding:0!important;margin:0!important;display:grid!important;grid-template-columns:48px 48px!important;width:104px!important;min-width:104px!important;max-width:104px!important;flex:0 0 104px!important;justify-content:start!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align #alignSeg,
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .divider-color-row{grid-row:2!important;height:var(--divider-control-h,31px)!important;min-height:var(--divider-control-h,31px)!important;max-height:var(--divider-control-h,31px)!important;margin:0!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align #alignSeg button,
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .swatch{height:var(--divider-control-h,31px)!important;min-height:var(--divider-control-h,31px)!important;max-height:var(--divider-control-h,31px)!important;box-sizing:border-box!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .tfr-col:first-child{flex:0 0 auto!important;width:auto!important;min-width:0!important;max-width:none!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align #alignHeadingDiv{flex:0 0 1px!important;width:1px!important;min-width:1px!important;max-width:1px!important;margin:0!important;align-self:end!important;height:var(--divider-control-h,31px)!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .divider-color-option{width:48px!important;min-width:48px!important;justify-items:start!important}
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .divider-color-row,
+#alignField#alignField#alignField#alignField#alignField#alignField.divider-align .divider-color-row .swatch{width:var(--divider-control-h,31px)!important;min-width:var(--divider-control-h,31px)!important;max-width:var(--divider-control-h,31px)!important;position:static!important;inset:auto!important;transform:none!important}
+
+}
+</style>
+<script id="desktop-divider-kind-metrics">
+(function(){
+ function sync(){
+  const card=document.querySelector('.composer-card'),seg=document.getElementById('msgTypeSeg'),label=seg?.parentElement.querySelector('.lb');
+  if(!card||!seg||!label||document.body.classList.contains('mobile-ui'))return;
+  const c=seg.getBoundingClientRect(),l=label.getBoundingClientRect();
+  card.style.setProperty('--divider-label-h',label.offsetHeight+'px');
+  card.style.setProperty('--divider-label-font',getComputedStyle(label).fontSize);
+  card.style.setProperty('--divider-label-gap',Math.max(0,Math.round(c.top-l.bottom))+'px');
+  card.style.setProperty('--divider-control-h',seg.offsetHeight+'px');
+ }
+ window.addEventListener('resize',sync,{passive:true});
+ document.addEventListener('click',()=>requestAnimationFrame(sync));
+ requestAnimationFrame(sync);
+})();
+</script>
+
+<style id="desktop-chat-text-position-match">
+@media(min-width:701px){
+.composer-card #msgTypeSeg button:last-child{min-width:40px!important;width:40px!important;padding-left:5px!important;padding-right:5px!important;flex-shrink:0!important}
+.composer-card #senderField#senderField{position:relative;padding-left:8px!important;margin:0 0 8px -2px!important;min-width:0!important}
+.composer-card #senderField#senderField::before{content:"";position:absolute;left:0;bottom:2px;width:1px;height:27px;background:var(--line)}
+.composer-card.text-mode #alignField#alignField .text-format-row,
+.composer-card #senderField#senderField .text-format-row{display:grid!important;grid-template-columns:133px 1px 72px!important;column-gap:7px!important;width:max-content!important;align-items:end!important}
+.composer-top-grid.text-mode #alignField#alignField .text-format-row{display:grid!important;grid-template-columns:133px 1px 72px!important;column-gap:7px!important;width:max-content!important;align-items:end!important}
+.composer-card #senderField#senderField .sender-col{width:133px!important;min-width:133px!important;max-width:133px!important}
+.composer-card #senderField#senderField #senderSel{width:133px!important;min-width:133px!important;max-width:133px!important;height:31px!important;min-height:31px!important;max-height:31px!important;line-height:29px!important;box-sizing:border-box!important}
+.composer-card #senderHeadingDiv#senderHeadingDiv,
+.composer-top-grid.text-mode #alignHeadingDiv#alignHeadingDiv{width:1px!important;margin:0!important;height:27px!important;align-self:end!important}
+.composer-card #senderField#senderField #textHeadingCol{width:72px!important;min-width:72px!important;max-width:72px!important}
+}
+</style>
+
+<style id="background-toggle-stack-style">
+#backgroundToggleStack{display:grid;gap:0;margin:2px 0 12px}
+#backgroundToggleStack>.field{margin:0!important}
+#backgroundToggleStack>.field:not(:first-child){margin-top:8px!important}
+#accGradient#accGradient,#bgvSection#bgvSection{border:0!important;margin:0!important;padding:0!important;background:none!important}
+#accGradient>.flat-tool-title,#bgvSection>.flat-tool-title{display:none!important}
+#accGradient>.flat-tool-body,#bgvSection>.flat-tool-body{padding:0!important}
+</style>
+<script id="background-toggle-stack-script">
+(function(){
+ const transparent=document.getElementById('transparentOn')?.closest('.field');
+ const gradient=document.getElementById('gradOn')?.closest('.field');
+ const video=document.getElementById('bgvOn')?.closest('.field');
+ const gradSection=document.getElementById('accGradient');
+ const videoSection=document.getElementById('bgvSection');
+ if(!transparent||!gradient||!video||!gradSection||!videoSection)return;
+ const stack=document.createElement('div');stack.id='backgroundToggleStack';
+ transparent.before(stack);stack.append(transparent,gradient,video);
+ gradient.querySelector('.t-lb').textContent='그라데이션 배경';
+ video.querySelector('.t-lb').innerHTML='영상 배경<span class="bgv-beta-badge">BETA</span>';
+ gradient.after(gradSection);video.after(videoSection);
+})();
+</script>
+
+<style id="additional-toggle-details-style">
+#saveIdentityToggles{display:grid;gap:8px;margin:12px 0}
+#saveIdentityToggles>.field{margin:0!important}
+#accCredit#accCredit,#accSplit#accSplit{border:0!important;margin:0!important;padding:0!important;background:none!important}
+#accCredit>.flat-tool-title,#accSplit>.flat-tool-title{display:none!important}
+#accCredit>.flat-tool-body,#accSplit>.flat-tool-body{padding:0!important}
+#creditDetails[hidden],#pageNumberDetails[hidden],#messengerDetails[hidden]{display:none!important}
+#creditDetails,#pageNumberDetails{padding:0;margin-top:0!important}
+#creditDetails.open,#pageNumberDetails.open{margin-top:8px!important}
+#messengerSettings#messengerSettings{border:0!important;background:none!important;padding:0!important;margin:13px 0 0!important}
+#messengerDetails.messenger-settings-body{padding:0!important;border:0!important}
+#messengerDetails>.acc-inner>.field:first-child{margin-top:0}
+#messengerSettings .messenger-settings-head{display:none!important}
+</style>
+<script id="additional-toggle-details-script">
+(function(){
+ const byId=id=>document.getElementById(id);
+ const credit=byId('creditOn'),page=byId('pageNumOn');
+ function wrapDetails(section,toggle,id){
+  const body=section.querySelector('.flat-tool-body');
+  const toggleField=toggle.closest('.field');
+  const details=document.createElement('div');details.id=id;details.className='acc-panel';
+  const inner=document.createElement('div');inner.className='acc-inner';details.append(inner);
+  [...body.children].filter(el=>el!==toggleField).forEach(el=>inner.append(el));
+  body.append(details);return {details,toggleField};
+ }
+ const c=wrapDetails(byId('accCredit'),credit,'creditDetails');
+ const p=wrapDetails(byId('accSplit'),page,'pageNumberDetails');
+ const stack=document.createElement('div');stack.id='saveIdentityToggles';
+ byId('accCredit').before(stack);stack.append(c.toggleField,byId('accCredit'),p.toggleField,byId('accSplit'));
+ const creditAlign=byId('creditAlignSeg').closest('.field');
+ const sizeRow=document.createElement('div');sizeRow.className='colorgrid';
+ sizeRow.append(byId('creditSize').closest('.field'),byId('creditGap').closest('.field'));
+ creditAlign.before(sizeRow);
+ const pageAlign=byId('pageNumAlignSeg').closest('.field');
+ const pageSizeRow=byId('pageNumSize').closest('.colorgrid');
+ pageAlign.before(pageSizeRow);
+ const messenger=byId('messengerSettings');
+ const messengerDetails=messenger.querySelector('.messenger-settings-body');messengerDetails.id='messengerDetails';messengerDetails.classList.add('acc-panel');
+ const messengerInner=document.createElement('div');messengerInner.className='acc-inner';
+ while(messengerDetails.firstChild)messengerInner.append(messengerDetails.firstChild);
+ messengerDetails.append(messengerInner);
+ const row=document.createElement('div');row.className='toggle';
+ row.innerHTML='<div class="t-lb">메신저 모드</div><label class="sw"><input id="messengerModeToggle" type="checkbox"><span class="track"></span></label>';
+ messenger.prepend(row);
+ const mode=row.querySelector('input');let previousMode=state.mode==='messenger'?'normal':state.mode;
+ mode.onchange=()=>{if(mode.checked){previousMode=state.mode==='messenger'?previousMode:state.mode;setMode('messenger');}else setMode(previousMode==='messenger'?'normal':previousMode);};
+ function sync(){
+  c.details.classList.toggle('open',!!state.credit.on);c.details.inert=!state.credit.on;
+  p.details.classList.toggle('open',!!state.pageNum?.on);p.details.inert=!state.pageNum?.on;
+  mode.checked=state.mode==='messenger';messengerDetails.classList.toggle('open',mode.checked);messengerDetails.inert=!mode.checked;
+ }
+ const oldRender=renderPreview;
+ renderPreview=function(){const result=oldRender.apply(this,arguments);sync();return result;};
+ sync();
+})();
+</script>
+<script id="paged-pdf-export">
+(function(){
+ let busy=false;
+ const bytes=s=>new TextEncoder().encode(s);
+ function collectPDFText(root){
+  const box=root.getBoundingClientRect(),sx=root.offsetWidth/box.width,sy=root.offsetHeight/box.height;
+  const out=[],walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  let node;
+  while((node=walker.nextNode())){
+   const parent=node.parentElement;if(!parent||parent.closest('script,style,[hidden],.ctrl,button,.mobile-ctrl-viewport-proxy'))continue;
+   const style=getComputedStyle(parent);if(style.visibility==='hidden'||style.display==='none')continue;
+   let index=0;
+   for(const char of node.data){
+    const range=document.createRange();range.setStart(node,index);index+=char.length;range.setEnd(node,index);
+    const r=range.getBoundingClientRect();
+    if(!r.width||!r.height||r.bottom<=box.top||r.top>=box.bottom||r.right<=box.left||r.left>=box.right)continue;
+    if(/[\r\n\t]/.test(char))continue;
+    out.push({char,x:(r.left-box.left)*sx,y:(r.top-box.top)*sy,w:r.width*sx,h:r.height*sy});
+   }
+  }
+  return out;
+ }
+ const PDF_TEXT_FONT='AAEAAAASAQAABAAgR0RFRgAPAAIAAA3cAAAAFEdQT1MkpSu1AAAN8AAAAG5HU1VCJ6Q/wwAADmAAAACWTUFUSAk/M4QAAA74AAAA9k9TLzJqUW+DAAABqAAAAFZjbWFwAAwAywAAAggAAAA0Y3Z0IABpHTkAAAhQAAAB/mZwZ21xNHZqAAACPAAAAKtnYXNwAAcABwAADdAAAAAMZ2x5ZuExUjwAAApYAAABhGhlYWQrxOANAAABLAAAADZoaGVhDCMDMAAAAWQAAAAkaG10eAmJAKEAAAIAAAAACGxvY2EAwgAAAAAKUAAAAAZtYXhwBDECvQAAAYgAAAAgbmFtZSftPb4AAAvcAAAB1HBvc3T/2wBaAAANsAAAACBwcmVwOwfxAAAAAugAAAVoAAEAAAACXrhorQk4Xw889QAfCAAAAAAA4PrROQAAAADm4ma/ADsAAAR5BGAAAAAIAAIAAAAAAAAAAQAAB23+HQAABM0AOwBDBHkAAQAAAAAAAAAAAAAAAAAAAAIAAQAAAAIADAABAAAAAAACABAAmQAIAAAEFQIWAAAAAAABBA4BkAAFAAAFMwWZAAABHgUzBZkAAAPXAGYCEgAAAgsGAwMIBAICBAAAAAEAAAAAAAAAAAAAAABQZkVkAEAAeAB4BhT+FAGaB20B4wAAAAEAAAAAAAAEzQBmBLwAOwAAAAIAAAADAAAAFAADAAEAAAAUAAQAIAAAAAQABAABAAAAeP//AAAAeP///4kAAQAAAAC3BwYFBAMCAQAsIBCwAiVJZLBAUVggyFkhLSywAiVJZLBAUVggyFkhLSwgEAcgsABQsA15ILj//1BYBBsFWbAFHLADJQiwBCUj4SCwAFCwDXkguP//UFgEGwVZsAUcsAMlCOEtLEtQWCCw/UVEWSEtLLACJUVgRC0sS1NYsAIlsAIlRURZISEtLEVELSywAiWwAiVJsAUlsAUlSWCwIGNoIIoQiiM6ihBlOi0AuAKAQP/7/gP6FAP5JQP4MgP3lgP2DgP1/gP0/gPzJQPyDgPxlgPwJQPvikEF7/4D7pYD7ZYD7PoD6/oD6v4D6ToD6EID5/4D5jID5eRTBeWWA+SKQQXkUwPj4i8F4/oD4i8D4f4D4P4D3zID3hQD3ZYD3P4D2xID2n0D2bsD2P4D1opBBdZ9A9XURwXVfQPURwPT0hsF0/4D0hsD0f4D0P4Dz/4Dzv4DzZYDzMseBcz+A8seA8oyA8n+A8aFEQXGHAPFFgPE/gPD/gPC/gPB/gPA/gO//gO+/gO9/gO8/gO7/gO6EQO5hiUFuf4DuLe7Bbj+A7e2XQW3uwO3gAS2tSUFtl1A/wO2QAS1JQO0/gOzlgOy/gOx/gOw/gOv/gOuZAOtDgOsqyUFrGQDq6oSBaslA6oSA6mKQQWp+gOo/gOn/gOm/gOlEgOk/gOjog4FozIDog4DoWQDoIpBBaCWA5/+A56dDAWe/gOdDAOcmxkFnGQDm5oQBZsZA5oQA5kKA5j+A5eWDQWX/gOWDQOVikEFlZYDlJMOBZQoA5MOA5L6A5GQuwWR/gOQj10FkLsDkIAEj44lBY9dA49ABI4lA43+A4yLLgWM/gOLLgOKhiUFikEDiYgLBYkUA4gLA4eGJQWHZAOGhREFhiUDhREDhP4Dg4IRBYP+A4IRA4H+A4D+A3/+A0D/fn19BX7+A319A3xkA3tUFQV7JQN6/gN5/gN4DgN3DAN2CgN1/gN0+gNz+gNy+gNx+gNw/gNv/gNu/gNsIQNr/gNqEUIFalMDaf4DaH0DZxFCBWb+A2X+A2T+A2P+A2L+A2E6A2D6A14MA13+A1v+A1r+A1lYCgVZ+gNYCgNXFhkFVzIDVv4DVVQVBVVCA1QVA1MBEAVTGANSFANRShMFUf4DUAsDT/4DTk0QBU7+A00QA0z+A0tKEwVL/gNKSRAFShMDSR0NBUkQA0gNA0f+A0aWA0WWA0T+A0MCLQVD+gNCuwNBSwNA/gM//gM+PRIFPhQDPTwPBT0SAzw7DQU8QP8PAzsNAzr+Azn+Azg3FAU4+gM3NhAFNxQDNjULBTYQAzULAzQeAzMNAzIxCwUy/gMxCwMwLwsFMA0DLwsDLi0JBS4QAy0JAywyAysqJQUrZAMqKRIFKiUDKRIDKCclBShBAyclAyYlCwUmDwMlCwMk/gMj/gMiDwMhARAFIRIDIGQDH/oDHh0NBR5kAx0NAxwRQgUc/gMb+gMaQgMZEUIFGf4DGGQDFxYZBRf+AxYBEAUWGQMV/gMU/gMT/gMSEUIFEv4DEQItBRFCAxB9Aw9kAw7+Aw0MFgUN/gMMARAFDBYDC/4DChADCf4DCAItBQj+AwcUAwZkAwQBEAUE/gNAFQMCLQUD/gMCARAFAi0DARADAP4DAbgBZIWNASsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrHQE1ALgAywDLAMEAqgCcAaYAuABmAAAAcQDLAKACsgCFAHUAuADDAcsBiQItAMsApgDwANMAqgCHAMsDqgQAAUoAMwDLAAAA2QUCAPQBVAC0AJwBOQEUATkHBgQABE4EtARSBLgE5wTNADcEcwTNBGAEcwEzA6IFVgWmBVYFOQPFAhIAyQAfALgB3wBzALoD6QMzA7wERAQOAN8DzQOqAOUDqgQEAAAAywCPAKQAewC4ABQBbwB/AnsCUgCPAMcFzQCaAJoAbwDLAM0BngHTAPAAugGDANUAmAMEAkgAngHVAMEAywD2AIMDVAJ/AAADMwJmANMAxwCkAM0AjwCaAHMEAAXVAQoA/gIrAKQAtACcAAAAYgCcAAAAHQMtBdUF1QXVBfAAfwB7AFQApAa4BhQHIwHTALgAywCmAcMB7AaTAKAA0wNcA3ED2wGFBCMEqARIAI8BOQEUATkDYACPBdUBmgYUByMGZgF5BGAEYARgBHsAnAAAAncEYAGqAOkEYAdiAHsAxQB/AnsAAAC0AlIFzQBmALwAZgB3BhAAzQE7AYUDiQCPAHsAAAAdAM0HSgQvAJwAnAAAB30AbwAAAG8DNQBqAG8AewCuALIALQOWAI8CewD2AIMDVAY3BfYAjwCcBOECZgCPAY0C9gDNA0QAKQBmBO4AcwAAFAAAlgAAAAAAAADCAAAAAQA7AAAEeQRgAAsBQ0BGBREGBwYEEQMEBwcGBBEFBAECAQMRAgIBCxEAAQAKEQkKAQEAChELCgcIBwkRCAgHQgoHBAEECAC/BQIKBwQBBAgAAggGDBDUS7AKVEuwD1RbS7AQVFtLsBFUW1i5AAYAQDhZS7AUVFi5AAb/wDhZxNTEERc5MQAvPOwyFzkwS1NYBxAF7QcQCO0HEAjtBxAF7QcQBe0HEAjtBxAI7QcQBe1ZIgFAmAoEBAoaBBUKJgo9BDEKVQRXB1gKZgp2AXoEdgd0Co0EggqZBJ8ElweSCpAKpgGpBK8EpQejCqAKHAoDBAUFCQoLGgMVBRUJGgspAyYFJQkqCyANOgE5AzcFNAc2CTkLMA1JA0YFRQlKC0ANWQBWAVkCWQNXBVYGWQdWCFYJWQtQDW8NeAF/DZsBlAerAaQHsA3PDd8N/w0vXQBdCQIjAQEjAQEzAQEEZP5rAarZ/rr+utkBs/5y2QEpASkEYP3f/cEBuP5IAkoCFv5xAY8AAAAABwBaAAMAAQQJAAABMAAAAAMAAQQJAAEAFgEwAAMAAQQJAAIACAFGAAMAAQQJAAMAFgEwAAMAAQQJAAQAFgEwAAMAAQQJAAUAGAFOAAMAAQQJAAYAFAFmAEMAbwBwAHkAcgBpAGcAaAB0ACAAKABjACkAIAAyADAAMAAzACAAYgB5ACAAQgBpAHQAcwB0AHIAZQBhAG0ALAAgAEkAbgBjAC4AIABBAGwAbAAgAFIAaQBnAGgAdABzACAAUgBlAHMAZQByAHYAZQBkAC4ACgBDAG8AcAB5AHIAaQBnAGgAdAAgACgAYwApACAAMgAwADAANgAgAGIAeQAgAFQAYQB2AG0AagBvAG4AZwAgAEIAYQBoAC4AIABBAGwAbAAgAFIAaQBnAGgAdABzACAAUgBlAHMAZQByAHYAZQBkAC4ACgBEAGUAagBhAFYAdQAgAGMAaABhAG4AZwBlAHMAIABhAHIAZQAgAGkAbgAgAHAAdQBiAGwAaQBjACAAZABvAG0AYQBpAG4ACgBEAGUAagBhAFYAdQAgAFMAYQBuAHMAQgBvAG8AawBWAGUAcgBzAGkAbwBuACAAMgAuADMANwBEAGUAagBhAFYAdQBTAGEAbgBzAAMAAAAAAAD/2ABaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgAAv//AAMAAQAAAAwAAAAAAAAAAQABAAEAAQABAAAACgAuADwAAkRGTFQADmxhdG4AGAAEAAAAAP//AAAABAAAAAD//wABAAAAAWtlcm4ACAAAAAEAAAABAAQAAgAAAAEACAACABQABAAAABoAHgABAAIAAAAAAAEAAQABAAIAAAABAAEAAQABAAAAAQAAAAoAkgCUABRERkxUAHphcmFiAIRhcm1uAIRicmFpAIRjYW5zAIRjaGVyAIRjeXJsAIRnZW9yAIRncmVrAIRoYW5pAIRoZWJyAIRrYW5hAIRsYW8gAIRsYXRuAIRtYXRoAIRua28gAIRvZ2FtAIRydW5yAIR0Zm5nAIR0aGFpAIQABAAAAAD//wAAAAAAAAAAAAAAAAABAAAACgDgAOgAUAA8DAAH3QAAAAACggAABGAAAAXVAAAAAAAABGAAAAAAAAAAAAAAAAAAAARgAAAAAAAAAWgAAARgAAAAVQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABDgAAAnYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFoAAAEOAAAAWgAAAFoAAAEOAAAAAAAAAAAAAAEOAAAAWgAAAFoAAAEOAAAAWgAAAFoAAABaAAABcgAAAFoAAABaAAACOAAA+48AAAA8AAAAAAAAAAAAKAAKAAoAAAAAAAEAAAAA';
+ function makePDF(pages){
+  const chunks=[];const offsets=[0];let length=0;
+  const put=data=>{const b=typeof data==='string'?bytes(data):data;chunks.push(b);length+=b.length;};
+  const obj=(id,parts)=>{offsets[id]=length;put(id+' 0 obj\n');parts.forEach(put);put('\nendobj\n');};
+  const stream=(id,dict,data)=>obj(id,['<< '+dict+' /Length '+data.length+' >>\nstream\n',data,'\nendstream']);
+  const chars=new Map();pages.forEach(p=>(p.text||[]).forEach(t=>{if(!chars.has(t.char))chars.set(t.char,chars.size+1);}));
+  if(chars.size>65534)throw new Error('Too many PDF characters');
+  const font=3+pages.length*3,hex=n=>n.toString(16).padStart(4,'0').toUpperCase();
+  put('%PDF-1.4\n');
+  obj(1,['<< /Type /Catalog /Pages 2 0 R >>']);
+  obj(2,['<< /Type /Pages /Count '+pages.length+' /Kids ['+pages.map((_,i)=>(3+i*3)+' 0 R').join(' ')+'] >>']);
+  pages.forEach((p,i)=>{
+   const id=3+i*3,w=p.w*0.75,h=p.h*0.75;
+   obj(id,['<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+w+' '+h+'] /Resources << /XObject << /Img '+(id+1)+' 0 R >> /Font << /Text '+font+' 0 R >> >> /Contents '+(id+2)+' 0 R >>']);
+   stream(id+1,'/Type /XObject /Subtype /Image /Width '+p.pw+' /Height '+p.ph+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode',p.data);
+   let content='q\n'+w+' 0 0 '+h+' 0 0 cm\n/Img Do\nQ\nBT\n3 Tr\n';
+   (p.text||[]).forEach(t=>{
+    const size=t.h*0.75;
+    content+='/Text '+size+' Tf\n'+(t.w/t.h*100)+' Tz\n1 0 0 1 '+(t.x*0.75)+' '+(h-(t.y+t.h*0.8)*0.75)+' Tm\n<'+hex(chars.get(t.char))+'> Tj\n';
+   });
+   content+='ET\n';stream(id+2,'',bytes(content));
+  });
+  obj(font,['<< /Type /Font /Subtype /Type0 /BaseFont /ExcerptText /Encoding /Identity-H /DescendantFonts ['+(font+1)+' 0 R] /ToUnicode '+(font+2)+' 0 R >>']);
+  obj(font+1,['<< /Type /Font /Subtype /CIDFontType2 /BaseFont /ExcerptText /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor '+(font+3)+' 0 R /DW 1000 /CIDToGIDMap '+(font+5)+' 0 R >>']);
+  let cmap='/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /ExcerptUnicode def\n/CMapType 2 def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n';
+  const entries=[...chars];
+  for(let i=0;i<entries.length;i+=100){const batch=entries.slice(i,i+100);cmap+=batch.length+' beginbfchar\n';batch.forEach(([char,cid])=>{let utf='';for(let j=0;j<char.length;j++)utf+=hex(char.charCodeAt(j));cmap+='<'+hex(cid)+'> <'+utf+'>\n';});cmap+='endbfchar\n';}
+  cmap+='endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n';stream(font+2,'',bytes(cmap));
+  obj(font+3,['<< /Type /FontDescriptor /FontName /ExcerptText /Flags 4 /FontBBox [0 -200 1000 800] /ItalicAngle 0 /Ascent 800 /Descent -200 /CapHeight 800 /StemV 80 /FontFile2 '+(font+4)+' 0 R >>']);
+  const fontData=Uint8Array.from(atob(PDF_TEXT_FONT),c=>c.charCodeAt(0));stream(font+4,'/Length1 '+fontData.length,fontData);
+  const gids=new Uint8Array((chars.size+1)*2);for(let i=1;i<=chars.size;i++)gids[i*2+1]=1;stream(font+5,'',gids);
+  const xref=length,count=font+6;
+  put('xref\n0 '+count+'\n0000000000 65535 f \n');
+  for(let i=1;i<count;i++)put(String(offsets[i]).padStart(10,'0')+' 00000 n \n');
+  put('trailer\n<< /Size '+count+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n');
+  return new Blob(chunks,{type:'application/pdf'});
+ }
+ window.savePDF=async function(){
+  if(busy)return;
+  if(!state.messages.length){alert('먼저 메시지를 추가해 주세요.');return;}
+  busy=true;
+  const start=window.__currentPage?window.__currentPage():1;
+  try{
+   if(window.__bulkSelection?.active())window.__bulkSelection.exit();
+   if(typeof editingId!=='undefined'&&editingId){commitEdit();renderPreview();}
+   const total=window.__pageCount?Math.max(1,window.__pageCount()):1;
+   const pages=[];
+   for(let n=1;n<=total;n++){
+    if(window.gotoPage)window.gotoPage(n);
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    const source=document.getElementById('canvas');
+    if(document.fonts?.ready)await document.fonts.ready;
+    const w=source.offsetWidth,h=source.offsetHeight,text=collectPDFText(source);
+    const blob=await window.__exactPreviewCaptureBlob(n+' / '+total+'장 PDF 저장 중…');
+    if(!blob)throw new Error('PDF page capture failed');
+    const url=URL.createObjectURL(blob);
+    try{
+     const image=new Image();image.src=url;await image.decode();
+     const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+     const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0);
+     const jpeg=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.98));
+     if(!jpeg)throw new Error('PDF image conversion failed');
+     pages.push({w,h,text,pw:canvas.width,ph:canvas.height,data:new Uint8Array(await jpeg.arrayBuffer())});
+     canvas.width=canvas.height=0;
+    }finally{URL.revokeObjectURL(url);}
+   }
+   const pdf=makePDF(pages),name=(typeof safeFilename==='function'?safeFilename(state.export.filename):'chat')+'.pdf';
+   const fallback=()=>{const url=URL.createObjectURL(pdf);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);};
+   if(typeof window.__saveBlobAs==='function')await window.__saveBlobAs(pdf,name,fallback);else fallback();
+  }catch(err){console.error('PDF export failed',err);alert('PDF 저장 중 문제가 생겼어요. 저장 배율을 낮춘 뒤 다시 시도해 주세요.');}
+  finally{try{if(window.gotoPage)window.gotoPage(start);}finally{busy=false;}}
+ };
+})();
+</script>
+
 </body>
-
-
-
-
 </html>
