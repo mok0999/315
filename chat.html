@@ -1187,7 +1187,7 @@ mark,.rich-composer mark,.editable mark{border-radius:0!important}
 .divider-row{display:flex;align-items:center;justify-content:center;width:100%}
 .divider-row .divider-pill{display:inline-block;padding:4px 13px;border-radius:999px;
   background:rgba(0,0,0,.10);color:rgba(0,0,0,.55);font-size:11.5px;font-weight:600;
-  letter-spacing:.01em;max-width:80%;text-align:center;word-break:keep-all}
+  letter-spacing:.01em;max-width:100%;min-width:0;text-align:center;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}
 /* iMessage-ish variant: plain centered text, no pill */
 .divider-row.plain .divider-pill{background:transparent;color:rgba(0,0,0,.42);font-weight:700;padding:2px 4px}
 /* plain line divider (----) shown when the date is left empty */
@@ -3283,8 +3283,8 @@ function importThemes(e){
       if(!Array.isArray(arr)) throw 0;
       let added=0;
       arr.forEach(t=>{
-        if(t&&t.name&&t.colors){ themes.push({id:uid(),name:String(t.name),shape:t.shape||'circle',
-          parenOn:!!t.parenOn,colors:t.colors,layout:t.layout||defaultLayout()}); added++; }
+        if(t&&t.name&&t.colors){ themes.push(Object.assign({},t,{id:uid(),name:String(t.name),shape:t.shape||'circle',
+          parenOn:!!t.parenOn,colors:t.colors,layout:t.layout||defaultLayout()})); added++; }
       });
       persistThemes(); renderThemes();
       alert(added+'개의 테마를 불러왔어요.');
@@ -8106,6 +8106,7 @@ function undoLast(){
 
 /* 뒤에 붙는 스크립트에서도 토스트·실행 취소를 그대로 쓸 수 있게 내보낸다 */
 window.toast=toast; window.hideToast=hideToast;
+window.__modeDefaultsProjectAPI={snapshot:projectSnapshot,get apply(){return applyProject;},set apply(fn){applyProject=fn;}};
 window.pushUndo=pushUndo; window.undoLast=undoLast;
 
 /* 기존 삭제 함수들을 감싸서 실행 취소 지원 */
@@ -23693,6 +23694,143 @@ sync();
    if(typeof window.__saveBlobAs==='function')await window.__saveBlobAs(pdf,name,fallback);else fallback();
   }catch(err){console.error('PDF export failed',err);alert('PDF 저장 중 문제가 생겼어요. 저장 배율을 낮춘 뒤 다시 시도해 주세요.');}
   finally{try{if(window.gotoPage)window.gotoPage(start);}finally{busy=false;}}
+ };
+})();
+</script>
+
+<style id="mode-defaults-style">
+#modeDefaultsAcc{margin-top:10px;margin-bottom:12px}
+#modeDefaultsAcc .md-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+#modeDefaultsAcc .md-row{display:flex;align-items:center;gap:6px;padding:9px 0;border-top:1px solid var(--line)}
+#modeDefaultsAcc .md-name{flex:1;min-width:0;font-weight:600;font-size:12px}
+#modeDefaultsAcc .md-status{display:block;font-size:10px;color:var(--muted);font-weight:400;margin-top:2px}
+#modeDefaultsAcc .md-feedback{font-size:11px;line-height:1.5;margin-top:8px}
+</style>
+<script id="mode-defaults-script">
+(function(){
+ const KEY='chatExtractorModeDefaults_v1';
+ const project=window.__modeDefaultsProjectAPI;
+ const formatKeys=['quoteOn','parenOn','draftAlign','draftDividerAlign','draftImageAlign'];
+ const modes={normal:'일반',log:'로그',messenger:'메신저',script:'대본'};
+ const clone=x=>JSON.parse(JSON.stringify(x));
+ let saved={};try{const raw=JSON.parse(localStorage.getItem(KEY)||'{}');if(raw&&typeof raw==='object'&&!Array.isArray(raw))saved=raw;}catch(_){}
+ let applying=false,restoring=false;
+ const box=document.createElement('details');box.className='preset-acc';box.id='modeDefaultsAcc';
+ box.innerHTML='<summary>모드별 기본 설정</summary><div class="preset-acc-bd"><div class="md-toolbar" id="mdSaveButtons"></div><div id="mdRows"></div><div class="md-feedback" id="mdFeedback" role="status" aria-live="polite"></div></div>';
+ const theme=document.getElementById('themePresetAcc');if(!theme)return;theme.after(box);
+ const feedback=message=>{box.querySelector('#mdFeedback').textContent=message;};
+ const empty=()=>!state.messages?.length;
+ function persist(next){try{localStorage.setItem(KEY,JSON.stringify(next));saved=next;return true;}catch(_){feedback('저장 공간이 부족해 저장하지 못했어요. 멤버 이미지 크기를 줄여 주세요.');return false;}}
+ function apply(mode){
+  const preset=saved[mode];if(!preset||!empty())return false;
+  applying=true;
+  try{
+   const data=clone(preset);delete data.messages;data.mode=mode;
+   if(data.export)data.export.filename=state.export.filename;
+   formatKeys.forEach(key=>{if(Object.prototype.hasOwnProperty.call(data,key))state[key]=clone(data[key]);});
+   project.apply(data);
+   if(typeof window.__updateQuoteButton==='function')window.__updateQuoteButton();
+   if(typeof updateParenButton==='function')updateParenButton();
+   if(typeof setAlign==='function'&&data.draftAlign)setAlign(data.draftAlign);
+   feedback(modes[mode]+' 기본 설정과 멤버를 불러왔어요.');return true;
+  }finally{applying=false;render();}
+ }
+ function render(){
+  const rows=box.querySelector('#mdRows');rows.replaceChildren();
+  for(const [mode,name] of Object.entries(modes)){
+   const row=document.createElement('div');row.className='md-row';
+   const label=document.createElement('div');label.className='md-name';label.textContent=name;
+   const status=document.createElement('span');status.className='md-status';status.textContent=saved[mode]?'저장됨 · 멤버 '+(saved[mode].members?.length||0)+'명':'저장된 기본값 없음';label.append(status);
+   const load=document.createElement('button');load.type='button';load.className='btn sm';load.textContent='불러오기';load.disabled=!saved[mode];load.onclick=()=>{if(!empty()){feedback('작성 중인 블럭이 있어 기본값을 적용하지 않았어요. 빈 작업에서 불러와 주세요.');return;}pushUndo('기본 설정 불러오기');apply(mode);};
+   const remove=document.createElement('button');remove.type='button';remove.className='btn sm';remove.textContent='삭제';remove.disabled=!saved[mode];remove.onclick=()=>{const next={...saved};delete next[mode];if(persist(next)){render();feedback(name+'의 저장된 기본값을 삭제했어요.');}};
+   row.append(label,load,remove);rows.append(row);
+  }
+ }
+ function notify(message){
+  window.toast(message);
+  const text=document.querySelector('#upToast>span');if(text)text.style.whiteSpace='pre-line';
+ }
+ for(const [mode,name] of Object.entries(modes)){
+  const button=document.createElement('button');button.type='button';button.className='btn sm';button.textContent=name;
+  button.setAttribute('aria-label',name+' 기본값 저장');
+  button.onclick=()=>{
+   const selected=modes[state.mode];if(!selected)return;
+   if(state.mode!==mode){notify(selected+'에 맞는 버튼을 눌러 저장해 주세요!');return;}
+   const snapshot=project.snapshot();delete snapshot.messages;
+   formatKeys.forEach(key=>{if(state[key]!==undefined)snapshot[key]=clone(state[key]);});
+   if(persist({...saved,[mode]:clone(snapshot)})){
+    render();feedback('');notify(selected+'의 기본값이 저장되었어요!\n새로고침을 해도 이 기본값으로 유지돼요!');
+   }
+  };
+  box.querySelector('#mdSaveButtons').append(button);
+ }
+ const originalProject=project.apply;
+ project.apply=function(){const prior=restoring;restoring=true;try{return originalProject.apply(this,arguments);}finally{restoring=prior;render();}};
+ const originalMode=setMode;
+ setMode=function(mode){
+  if(!applying&&!restoring&&empty()&&saved[mode]){apply(mode);return;}
+  const result=originalMode.apply(this,arguments);render();return result;
+ };
+ render();
+ if(empty()&&saved[state.mode])apply(state.mode);
+})();
+</script>
+
+<script id="divider-capsule-text-fit">
+(function(){
+ function fit(){
+  document.querySelectorAll('#chat .divider-pill').forEach(el=>{
+   if(el.closest('.plain'))return;
+   const row=el.parentElement;
+   const width=row.clientWidth;if(!width)return;
+   el.style.paddingLeft=el.style.paddingRight='13px';el.style.paddingTop=el.style.paddingBottom='4px';
+   // Keep single-line date labels unchanged. Wider labels reserve space for the rounded ends.
+   const css=getComputedStyle(el),line=parseFloat(css.lineHeight)||parseFloat(css.fontSize)*1.5;
+   if(el.offsetHeight<=line+9)return;
+   let inset=13;
+   for(let i=0;i<12;i++){
+    const next=Math.min(width*.3,Math.max(13,Math.ceil(el.offsetHeight/2)));
+    if(next<=inset)break;
+    inset=next;el.style.paddingLeft=el.style.paddingRight=inset+'px';
+    if(inset>=width*.3)el.style.paddingTop=el.style.paddingBottom=Math.max(4,Math.ceil(width*.06))+'px';
+   }
+  });
+ }
+ let pending=0;
+ const schedule=()=>{cancelAnimationFrame(pending);pending=requestAnimationFrame(fit);};
+ const old=renderPreview;renderPreview=function(){const result=old.apply(this,arguments);fit();schedule();return result;};
+ window.addEventListener('resize',schedule,{passive:true});
+ if(document.fonts)document.fonts.ready.then(schedule);
+ schedule();
+})();
+</script>
+<script id="complete-theme-settings">
+(function(){
+ const clone=value=>JSON.parse(JSON.stringify(value));
+ const extra=['quoteOn','parenOn','draftAlign','draftDividerAlign','draftImageAlign'];
+ const previousCurrent=currentTheme;
+ currentTheme=function(name){
+  const theme=previousCurrent.apply(this,arguments);
+  const settings=window.__modeDefaultsProjectAPI.snapshot();
+  delete settings.messages;delete settings.mode;
+  if(settings.export)delete settings.export.filename;
+  extra.forEach(key=>{if(state[key]!==undefined)settings[key]=clone(state[key]);});
+  theme.settings=clone(settings);
+  theme.colors=clone(state.colors);
+  return theme;
+ };
+ const previousApply=applyThemeById;
+ applyThemeById=function(id){
+  const theme=themes.find(item=>item.id===id);if(!theme)return;
+  if(theme.settings){
+   const data=clone(theme.settings);delete data.messages;delete data.mode;
+   if(data.export)data.export.filename=state.export.filename;
+   extra.forEach(key=>{if(Object.prototype.hasOwnProperty.call(data,key))state[key]=clone(data[key]);});
+   window.__modeDefaultsProjectAPI.apply(data);
+  }
+  previousApply.apply(this,arguments);
+  if(typeof window.__updateQuoteButton==='function')window.__updateQuoteButton();
+  if(typeof updateParenButton==='function')updateParenButton();
  };
 })();
 </script>
