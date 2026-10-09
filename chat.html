@@ -3948,6 +3948,7 @@ function htmlToMarkup(node){
     if(tag==='br'){ out+='\n'; return; }
     if(ch.classList&&ch.classList.contains('mimg')) return; // skip images
     const inner=htmlToMarkup(ch);
+    if(ch.dataset?.relativeSub==='1'&&ch.style.fontSize.includes('calc(')){ out+='<sub>'+inner+'</sub>'; return; }
     let __sizePt='';
     try{
       __sizePt=(ch.dataset&&ch.dataset.fontSizePt)||'';
@@ -4442,7 +4443,7 @@ function normalRow(m,mem,gap,continued=false){
   const hasAvatarColumn=!!state.showProfile&&showIdentity;
   const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
   const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
-  const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="${subFontCss(state.layout.scriptNameFont)}color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>`:'';
   return `<div class="pmsg n-msg ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
     ${avatar||avatarSpacer}
@@ -4460,7 +4461,7 @@ function logRow(m,mem,gap,continued=false){
   const plain=`color:${state.colors.nText};font-size:${(Number(L.bubbleFs)||L.fs)}px;line-height:${L.lh};${bubbleTextAlignStyle()}${wbStyle()}`;
   const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
   const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
-  const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="${subFontCss(state.layout.scriptNameFont)}color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>`:'';
   return `<div class="pmsg n-msg log-row ${state.hideNames?'log-name-hidden':''} ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
     ${avatar||avatarSpacer}
@@ -4575,7 +4576,7 @@ function msgrRow(m,mem,gap,continued=false){
   const hasAvatarColumn=!!state.showProfile&&showIdentity;
   const showAvatar=hasAvatarColumn&&!continued;
   const avatar=showAvatar?avatarHTML(mem,state.shape):'';
-  const name=showIdentity&&!continued&&!state.hideNames?`<div class="m-name" style="font-size:${state.layout.nameSize}px;color:${mem.color||'#555'}">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  const name=showIdentity&&!continued&&!state.hideNames?`<div class="m-name" style="${subFontCss(state.layout.scriptNameFont)}font-size:${state.layout.nameSize}px;color:${mem.color||'#555'}">${typeInline(esc(mem.name||'?'))}</div>`:'';
   // Keep the appropriate avatar column during a consecutive run even though the avatar itself is hidden.
   const noAvatarColumn=hasAvatarColumn?'':'no-av';
   const ownIdentityClass=mine&&showIdentity?'own-identity':'';
@@ -6053,7 +6054,7 @@ else setTimeout(__idleLoadRenderer,1200);
     /* 서명·페이지 번호에만 따로 지정한 글꼴도 저장 결과에 들어가야 한다.
        빠뜨리면 미리보기와 저장본의 글꼴이 달라진다. */
     try{
-      [ (state.mode==='script'&&state.layout.scriptNameFont), (state.credit&&state.credit.font), (state.pageNum&&state.pageNum.font) ].forEach(stack=>{
+      [ state.layout.scriptNameFont, (state.credit&&state.credit.font), (state.pageNum&&state.pageNum.font) ].forEach(stack=>{
         if(!stack||typeof __selectedWebFont!=='function') return;
         const f=__selectedWebFont(stack);
         if(f&&!list.includes(f)) list.push(f);
@@ -8891,7 +8892,7 @@ function renderMobileChips(){
   html+='<button type="button" class="mchip add '+shape+'"><span class="mav">＋</span><span class="nm">멤버·설정</span></button>';
   box.innerHTML=html;
   box.querySelectorAll('.mchip[data-id]').forEach(b=>{
-    b.onclick=()=>{ try{ senderSel.value=b.dataset.id; }catch(_){} renderMobileChips(); };
+    b.onclick=()=>{ try{ senderSel.value=b.dataset.id; senderSel.dispatchEvent(new Event('change',{bubbles:true})); }catch(_){} renderMobileChips(); };
   });
   const add=box.querySelector('.mchip.add');
   if(add) add.onclick=()=>{ openSheet(); try{ switchToolPanel('members',true); openMemberEditor(); }catch(_){} };
@@ -12632,6 +12633,7 @@ window.fmtText=function(raw,edit){
   raw=String(raw==null?'':raw);
   if(blankOnly(raw)) raw=raw.replace(/ /g,'\u00A0');
   let t=esc(raw);
+  t=t.replace(/&lt;sub\s*&gt;([\s\S]*?)&lt;\/sub\s*&gt;/gi,'<span data-relative-sub="1" style="font-size:calc(1em - 1.5pt)">$1</span>');
   t=t.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
   t=t.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<i>$1</i>');
   t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
@@ -16129,9 +16131,9 @@ const EMBED_CJK_FONT_CSS={
 function fontImports(){
   const s0=ST();
   const rawStack=String((s0&&s0.layout&&s0.layout.font)||'');
-  const stack=(rawStack+' '+((s0&&s0.mode==='script'&&s0.layout.scriptNameFont)||'')).toLowerCase();
+  const stack=(rawStack+' '+((s0&&s0.layout.scriptNameFont)||'')).toLowerCase();
   const urls=[EMBED_FONT_CSS['pretendard']];
-  const nameFamily=s0&&s0.mode==='script'&&__selectedWebFont(s0.layout.scriptNameFont||'');
+  const nameFamily=s0&&__selectedWebFont(s0.layout.scriptNameFont||'');
   if(nameFamily&&__RUNTIME_FONT_CONFIG[nameFamily].css)urls.push(__RUNTIME_FONT_CONFIG[nameFamily].css);
   Object.keys(EMBED_FONT_CSS).forEach(k=>{
     if(k!=='pretendard'&&stack.indexOf(k)>=0) urls.push(EMBED_FONT_CSS[k]);
@@ -23305,6 +23307,10 @@ function syncDivider(){
 $('msgContent').addEventListener('input',syncDivider);
 const box=document.createElement('div');box.id='scriptNameOptions';box.innerHTML='<div class="field"><label class="lb">이름 / 대사 간격</label><select id="scriptNameGapMode"><option value="column">대사 시작선 맞춤</option><option value="end">이름 끝 기준</option></select><div class="rangewrap"><input id="scriptNameGap" type="range" min="0" max="120" value="14"><span class="val" id="scriptNameGapV">14px</span></div></div><div class="field"><label class="lb">이름 글씨체</label><select id="scriptNameFont"><option value="">본문과 같게</option></select></div>';
 $('scriptNameStyleSection').querySelector('.script-highlight-box').before(box);
+// Name font is shared by all themes; script-only spacing stays in its section.
+const nameFontField=$('scriptNameFont').closest('.field');
+nameFontField.id='allThemeNameFontField';nameFontField.style.marginBottom='18px';
+$('scriptNameStyleSection').before(nameFontField);
 enhanceRange('scriptNameGap','scriptNameGapV',{min:0,max:120,step:1,nudge:1});
 for(const opt of $('fontSel').options) $('scriptNameFont').append(opt.cloneNode(true));
 function syncScriptLanguageFonts(){
@@ -24057,5 +24063,60 @@ sync();
 #alignField#alignField#alignField#alignField#alignField#alignField#alignField #dividerColorCol .divider-color-row .swatch{position:relative!important;inset:auto!important;overflow:hidden!important}
 #dividerColorCol .divider-color-row .swatch>.color-proxy{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;margin:0!important}
 </style>
+<script id="bulk-type-and-sender-edit">
+(function(){
+ const selection=()=>window.__bulkSelection;
+ const selected=()=>{const S=selection();if(!S?.active())return [];const ids=new Set(S.ids());return state.messages.filter(m=>ids.has(m.id));};
+ const sender=document.getElementById('senderSel');
+ const syncChips=()=>document.querySelectorAll('#mChips .mchip[data-id]').forEach(b=>b.classList.toggle('on',b.dataset.id===sender.value));
+ let signature='';
+ const previousChange=window.__onBulkSelectionChange;
+ window.__onBulkSelectionChange=function(active,ids){
+  const result=previousChange?.apply(this,arguments);
+  const messages=active?selected():[];
+  const next=JSON.stringify(messages.map(m=>[m.id,m.type||'chat',m.senderId||'']));
+  if(!messages.length){sender.querySelector('[data-bulk-mixed]')?.remove();syncChips();signature='';return result;}
+  if(next===signature)return result;
+  signature=next;
+  sender.querySelector('[data-bulk-mixed]')?.remove();
+  const type=messages.every(m=>(m.type||'chat')==='chat')?'chat':'text';
+  if(state.composerType!==type)window.setMsgType(type);
+  if(type==='chat'){
+   if(messages.every(m=>m.senderId===messages[0].senderId))sender.value=messages[0].senderId||'';
+   else{const option=new Option('발신자 선택','');option.disabled=true;option.dataset.bulkMixed='1';sender.append(option);sender.value='';}
+   syncChips();
+  }
+  return result;
+ };
+ document.getElementById('msgTypeSeg').addEventListener('click',function(e){
+  const button=e.target.closest('button');if(!button||!this.contains(button))return;
+  const type=button.getAttribute('onclick')?.match(/setMsgType\(['"](text|chat)['"]\)/)?.[1];
+  if(!type)return;
+  const changes=selected().filter(m=>['text','chat'].includes(m.type||'chat')&&(m.type||'chat')!==type);
+  if(!changes.length)return;
+  const first=state.members[0];
+  if(type==='chat'&&!first){e.preventDefault();e.stopImmediatePropagation();toast('먼저 멤버를 추가해 주세요.');return;}
+  pushUndo(type==='chat'?'말풍선으로 일괄 변경':'글로 일괄 변경');
+  changes.forEach(m=>{
+   m.type=type;delete m.autoBubbled;
+   if(type==='chat'){m.senderId=first.id;delete m.align;delete m.noAutoQuote;delete m.autoSenderId;}
+   else{m.align=state.draftAlign||'left';delete m.senderId;delete m.autoSenderId;m.noAutoQuote=true;}
+  });
+  selection().exit();
+  renderPreview();
+  if(type==='chat'){sender.value=first.id;syncChips();}
+ },true);
+ document.getElementById('senderSel').addEventListener('change',function(){
+  const id=this.value;if(!state.members.some(m=>m.id===id))return;
+  const changes=selected().filter(m=>(m.type||'chat')==='chat'&&(m.senderId!==id||m.autoBubbled));
+  if(!changes.length)return;
+  pushUndo('발신자 일괄 변경');
+  changes.forEach(m=>{m.senderId=id;delete m.autoSenderId;delete m.autoBubbled;});
+  selection().exit();
+  renderPreview();
+ });
+})();
+
+</script>
 </body>
 </html>
