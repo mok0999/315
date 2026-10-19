@@ -9310,14 +9310,13 @@ stage.addEventListener('touchend',e=>{
 (function(){
   'use strict';
 
-  /* 빈 줄이 있으면 빈 줄 기준(문단 안의 줄바꿈은 유지),
-     빈 줄이 하나도 없으면 줄바꿈 기준으로 나눈다. */
+  /* 빈 줄에서만 블럭을 나누고, 문단 안의 줄바꿈은 그대로 유지한다. */
   function splitIntoParagraphs(src,keepSingleLines=false){
     const text=String(src||'').replace(/\r\n?/g,'\n');
     const hasBlank=keepSingleLines||/\n[ \t]*\n/.test(text);
     // Keep contiguous Markdown structures intact, without joining unrelated paragraphs.
     if(!hasBlank){
-      return (hasMarkdownBlock(text)?[text]:text.split(/\n+/))
+      return [text]
         .map(s=>s.trim()).filter(Boolean);
     }
     const parts=[];let lines=[],fence=null;
@@ -9346,7 +9345,14 @@ stage.addEventListener('touchend',e=>{
       else if(isDividerInput(line)){flush();parts.push(line.trim());}
       else lines.push(line);
     }
-    flush();return parts;
+    flush();
+    // Each new block needs its own balanced quotation markup and original color.
+    let quoteOpen=null;
+    return parts.map(part=>{
+      const prefix=quoteOpen||'';
+      part.replace(/%%(?:\[#[0-9A-Fa-f]{6}\])?/g,token=>{quoteOpen=quoteOpen?null:token;return token;});
+      return prefix+part+(quoteOpen?'%%':'');
+    });
   }
   function say(msg){ try{toast(msg);}catch(_){ } }
   function el(id){ return document.getElementById(id); }
