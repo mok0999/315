@@ -23401,7 +23401,15 @@ fmtText=function(raw,edit){
   if(/^(?:\s*([-*_])(?:\s*\1){2,}\s*|\s*(?:(?:[-—–]\s*){3,}|—\s*-))$/.test(line)){out.push('<hr>');i++;continue;}
   if(/^\s*>\s?/.test(line)){let q=[];while(i<lines.length&&/^\s*>/.test(lines[i]))q.push(inline(lines[i++].replace(/^\s*>\s?/,'')));out.push('<blockquote>'+q.join('<br>')+'</blockquote>');continue;}
   m=line.match(/^\s*[-+*]\s+(.+)$/);if(m){let items=[];while(i<lines.length){const x=lines[i].match(/^\s*[-+*]\s+(.+)$/);if(!x)break;items.push('<li>'+inline(x[1])+'</li>');i++;}out.push('<ul>'+items.join('')+'</ul>');continue;}
-  out.push(line?inline(line):'');i++;if(i<lines.length)out.push('<br>');
+  // Parse continuous prose together so emphasis spanning line breaks keeps its closing marker.
+  const prose=[line];i++;
+  while(i<lines.length){
+    const next=lines[i];
+    if(/^\s*```/.test(next)||/^ {0,3}#{1,6}\s+/.test(next)||/^\s*>/.test(next)||/^\s*[-+*]\s+/.test(next)||/^(?:\s*([-*_])(?:\s*\1){2,}\s*|\s*(?:(?:[-—–]\s*){3,}|—\s*-))$/.test(next))break;
+    if(i+1<lines.length&&next.includes('|')){const sep=cells(lines[i+1]);if(sep.length&&sep.every(x=>/^:?-{3,}:?$/.test(x))&&cells(next).length===sep.length)break;}
+    prose.push(next);i++;
+  }
+  out.push(inline(prose.join('\n')));if(i<lines.length)out.push('<br>');
  }
  return '<div class="md-block">'+out.join('')+'</div>';
 };
