@@ -396,7 +396,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .script-mark-name{min-width:0;font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .script-mark-preview{background:var(--script-mark-preview);border-radius:0;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .script-mark-tools{display:flex;align-items:center;gap:6px;min-width:0}
-.script-mark-swatch{width:24px!important;height:24px!important;flex:0 0 24px;position:relative}
+.script-mark-swatch{width:40px!important;height:40px!important;flex:0 0 40px;position:relative}
 .script-mark-swatch.is-off{background:repeating-conic-gradient(#ECECEF 0 25%,#fff 0 50%) 50%/8px 8px!important}
 .script-mark-swatch.is-off:after{content:'+';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#6F7178;font-size:14px;font-weight:700;pointer-events:none}
 .script-mark-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:var(--muted);min-width:54px;text-align:right}
@@ -1599,7 +1599,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 <div class="msg-img-thumb"><img id="msgImgPrev"/><button class="x" type="button" title="이미지 제거" onclick="clearMsgImg()">×</button></div>
 <div class="msg-img-controls">
 <div class="field" style="margin:0 0 8px"><label class="lb">이미지 크기</label>
-<div class="rangewrap"><input id="imgSize" max="100" min="20" oninput="onMsgImgSize(this.value)" type="range" value="60"/><span class="val" id="szVal">60%</span></div></div>
+<div class="rangewrap"><input id="imgSize" max="100" min="20" oninput="onMsgImgSize(this.value)" type="range" value="100"/><span class="val" id="szVal">100%</span></div></div>
 <div class="field" style="margin:0"><label class="lb">여백 (위/아래)</label>
 <div class="rangewrap"><input id="imgMargin" max="40" min="0" oninput="onMsgImgMargin(this.value)" type="range" value="6"/><span class="val" id="mgVal">6px</span></div></div>
 </div>
@@ -1840,7 +1840,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 </select>
 </div>
 </div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="50"/><span class="val" id="exHV">50px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기</div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="toggle compact" id="novelTrimField" style="margin-top:12px;display:none"><div class="t-lb">빈 마지막 쪽 빼기<span>마지막 펼침의 빈 쪽을 떼고 한 쪽만 저장해요</span></div><label class="sw"><input id="novelTrimLast" onchange="setNovel('trimLast',this.checked)" type="checkbox"/><span class="track"></span></label></div>
-<div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="scriptNameStyleSection" style="display:none"><div class="flat-tool-title"><strong>대본 이름 스타일</strong></div><div class="flat-tool-body"><div class="toggle compact"><div class="t-lb">이름 굵게<span>대본 모드의 캐릭터 이름에만 적용돼요</span></div><label class="sw"><input checked id="scriptNameBoldOn" onchange="setScriptNameBold(this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="script-highlight-box"><button aria-expanded="false" class="script-highlight-toggle" id="scriptHighlightToggle" onclick="toggleScriptHighlightPanel()" type="button"><span class="script-highlight-caret">▾</span><span class="script-highlight-title">캐릭터별 '이름' 형광펜</span><small id="scriptHighlightSummary">설정 없음</small></button><div class="script-highlight-panel" id="scriptHighlightPanel"><div class="script-highlight-list" id="scriptHighlightMemberList"></div></div></div></div></div><div class="flat-tool-section" id="bubbleQuickToggleSection"><div class="flat-tool-body"><div class="toggle-grid">
+<div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="scriptNameStyleSection" style="display:none"><div class="flat-tool-title"><strong>대본 이름 스타일</strong></div><div class="flat-tool-body"><div class="toggle compact"><div class="t-lb">이름 굵게</div><label class="sw"><input checked id="scriptNameBoldOn" onchange="setScriptNameBold(this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="script-highlight-box"><button aria-expanded="false" class="script-highlight-toggle" id="scriptHighlightToggle" onclick="toggleScriptHighlightPanel()" type="button"><span class="script-highlight-caret">▾</span><span class="script-highlight-title">캐릭터별 '이름' 형광펜</span><small id="scriptHighlightSummary">설정 없음</small></button><div class="script-highlight-panel" id="scriptHighlightPanel"><div class="script-highlight-list" id="scriptHighlightMemberList"></div></div></div></div></div><div class="flat-tool-section" id="bubbleQuickToggleSection"><div class="flat-tool-body"><div class="toggle-grid">
 <div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요"><div class="t-lb">프로필 사진</div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
@@ -2073,7 +2073,7 @@ const state = {
   parenOn:false,
   quoteOn:false,
   composerType:'chat',   // 'chat' | 'text'
-  draftAlign:'left',
+  draftAlign:'justify',
   members:[],   // {id,name,image,color,bubbleColor,scriptHighlight}
   messages:[],  // {id,type,senderId,content,...}  type: 'chat' | 'text'
   export:{ ratio:'auto', hMargin:50, vMargin:37, linkMargin:false, filename:'chat-발췌', scale:2.5 },
@@ -2116,7 +2116,7 @@ const state = {
     bubbleShadowOn:false, bubbleShadowStrength:4, bubbleShadowX:0, bubbleShadowY:3, bubbleShadowOpacity:100,
     bubbleOpacity:100, bubbleTextOpacity:100,
     tailOn:true, tailSize:10, tailY:0, tailX:0, linkV:false, linkH:false,
-    textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left', bubbleTextAlign:'left', textIndent:false,   // 말풍선 행 좌우 여백 · 정렬 / 말풍선 텍스트 정렬 / 글 들여쓰기
+    textPadL:0, textPadR:0, linkTextPad:true, bubbleAlign:'left', bubbleTextAlign:'justify', textIndent:false,   // 말풍선 행 좌우 여백 · 정렬 / 말풍선 텍스트 정렬 / 글 들여쓰기
     scriptNameBold:true, // 대본 모드 이름 굵게
     scriptNarrationIndent:false, // 대본 모드에서 지문 시작점을 대사 시작점에 맞춤
     dividerMargin:8,   // 가름선 위 여백 (구버전의 위·아래 공용값과 호환)
@@ -2438,8 +2438,8 @@ function renderScriptNameStyle(){
 }
 function syncScriptNameStyleVisibility(){
   const sec=document.getElementById('scriptNameStyleSection');
-  if(sec) sec.style.display=(state.mode==='script')?'block':'none';
-  if(state.mode==='script') renderScriptNameStyle();
+  if(sec) sec.style.display='block';
+  renderScriptNameStyle();
 }
 function setScriptNarrationIndent(on){
   state.layout.scriptNarrationIndent=!!on;
@@ -2518,7 +2518,7 @@ function setMsgType(t){
   senderField.style.display=(t==='chat')?'':'none';
   const composer=document.querySelector('.composer-card');
   if(composer) composer.classList.toggle('text-mode',t!=='chat');
-  alignField.style.display=(t==='text')?'':'none';
+  alignField.style.display=(t==='text'||t==='chat')?'':'none';
   const dOpts=document.getElementById('dividerOpts');
   if(dOpts) dOpts.style.display=(t==='divider')?'':'none';
   if(composer) composer.classList.toggle('divider-mode',t==='divider');
@@ -3097,7 +3097,7 @@ function addOrUpdateMember(){
     if(draftAvatar) m.image=draftAvatar;
     editingMemberId=null; memberBtn.textContent='+ 멤버 추가';
   }else{
-    state.members.push({id:uid(),name,image:draftAvatar,color:state.colors.draftColor,bubbleColor:draftBubbleUse?state.colors.draftBubbleColor:null,scriptHighlight:null});
+    state.members.push({id:uid(),presetId:null,name,image:draftAvatar,color:state.colors.draftColor,bubbleColor:draftBubbleUse?state.colors.draftBubbleColor:null,scriptHighlight:null});
   }
   resetMemberForm();
   renderMembers(); renderSenders(); renderMeSelect(); renderPreview();
@@ -3215,12 +3215,14 @@ function savePresetFromForm(){
 function savePresetFromMember(id){
   const m=state.members.find(x=>x.id===id); if(!m) return;
   addPreset(m.name,m.image,m.color,m.bubbleColor,m.scriptHighlight);
+  m.presetId=presets[presets.length-1].id;
+  presets[presets.length-1].quoteColor=quoteMemberColor(m); persistPresets();
 }
 function usePreset(id){
   /* 프리셋 클릭 시 폼을 거치지 않고 곧바로 멤버로 등록한다. */
   const p=presets.find(x=>x.id===id); if(!p) return;
   editingMemberId=null; memberBtn.textContent='+ 멤버 추가';
-  state.members.push({id:uid(),name:p.name,image:p.image||null,color:p.color||'#424448',bubbleColor:p.bubbleColor||null,scriptHighlight:normalizeScriptHighlight(p.scriptHighlight)});
+  state.members.push({id:uid(),presetId:p.id,name:p.name,image:p.image||null,color:p.color||'#424448',bubbleColor:p.bubbleColor||null,scriptHighlight:normalizeScriptHighlight(p.scriptHighlight)});
   renderMembers(); renderSenders(); renderMeSelect(); renderPreview();
 }
 function deletePreset(id){
@@ -3241,7 +3243,7 @@ function importPresets(e){
       if(!Array.isArray(arr)) throw 0;
       let added=0;
       arr.forEach(p=>{
-        if(p&&p.name){ presets.push({id:uid(),name:String(p.name),image:p.image||null,color:p.color||'#424448',bubbleColor:p.bubbleColor||null,scriptHighlight:normalizeScriptHighlight(p.scriptHighlight)}); added++; }
+        if(p&&p.name){ presets.push({id:uid(),name:String(p.name),image:p.image||null,color:p.color||'#424448',bubbleColor:p.bubbleColor||null,scriptHighlight:normalizeScriptHighlight(p.scriptHighlight),quoteColor:/^#[0-9a-f]{6}$/i.test(p.quoteColor||'')?p.quoteColor:null}); added++; }
       });
       persistPresets(); renderPresets();
       alert(added+'개의 프리셋을 불러왔어요.');
@@ -3260,7 +3262,7 @@ let themeStorageOK=true;
 function defaultLayout(){
   return {width:440,margin:{t:18,r:16,b:18,l:16},marginMode:'auto',gap:12,textGap:25,blockGap:16,continuationGap:6,bpy:9,bpx:13,cjkScale:100,
     radius:14,fs:16,lh:1.55,para:0,bubbleFs:null,nameSize:12,widthScale:98,letterSpacing:-0.5,cardLineW:1,textShadowOn:false,textShadowBubblesOff:false,textShadowStrength:4,textShadowX:0,textShadowY:1,textShadowOpacity:100,bubbleShadowOn:false,bubbleShadowStrength:4,bubbleShadowX:0,bubbleShadowY:3,bubbleShadowOpacity:100,tailOn:true,tailSize:10,tailY:0,tailX:0,
-    linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',bubbleTextAlign:'left',textIndent:false,scriptNameBold:true,scriptNarrationIndent:false,dividerMargin:8,dividerMarginBottom:null,dividerWidth:100,dividerThickness:1,
+    linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',bubbleTextAlign:'justify',textIndent:false,scriptNameBold:true,scriptNarrationIndent:false,dividerMargin:8,dividerMarginBottom:null,dividerWidth:100,dividerThickness:1,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
 function defaultExport(){ return {ratio:'auto',hMargin:50,vMargin:37,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
@@ -3583,7 +3585,7 @@ function setQuoteColor(v){
   renderPreview();
 }
 /* ===== 사진(중간 삽입 이미지) — draft 전용 모델 ===== */
-let draftImgSize=60, draftImgMargin=6, draftImgRound=true;
+let draftImgSize=100, draftImgMargin=6, draftImgRound=true;
 
 /* 편집 중인 대상이 사진 블록이면 그 메시지를 반환 (실시간 반영용) */
 function liveImageMsg(){
@@ -3612,7 +3614,14 @@ function clearMsgImg(){
   const m=liveImageMsg(); if(m){ m.image=null; renderPreview(); }
   refreshMsgImgEditor();
 }
-function onMsgImgSize(v){ draftImgSize=parseInt(v)||20; const el=document.getElementById('szVal'); if(el) el.textContent=draftImgSize+'%'; const m=liveImageMsg(); if(m){ m.imgSize=draftImgSize; renderPreview(); } }
+function syncPhotoSizeControls(){
+  const range=document.getElementById('imgSize'),label=document.getElementById('szVal');
+  const number=document.querySelector('.stepper input[data-stepper-for="imgSize"]');
+  if(range)range.value=draftImgSize;
+  if(number)number.value=draftImgSize;
+  if(label)label.textContent=draftImgSize+'%';
+}
+function onMsgImgSize(v){ draftImgSize=Math.max(20,Math.min(100,parseInt(v)||20)); syncPhotoSizeControls(); const m=liveImageMsg(); if(m){ m.imgSize=draftImgSize; renderPreview(); } }
 function onMsgImgMargin(v){ draftImgMargin=parseInt(v)||0; const el=document.getElementById('mgVal'); if(el) el.textContent=draftImgMargin+'px'; const m=liveImageMsg(); if(m){ m.imgMargin=draftImgMargin; renderPreview(); } }
 function toggleImgRound(on){ draftImgRound=!!on; const m=liveImageMsg(); if(m){ m.round=draftImgRound; renderPreview(); } }
 
@@ -3630,15 +3639,16 @@ function refreshMsgImgEditor(){
   const body=document.getElementById('msgImgBody');
   const empty=document.getElementById('msgImgEmpty');
   const prev=document.getElementById('msgImgPrev');
-  const sizeI=document.getElementById('imgSize'), marI=document.getElementById('imgMargin');
-  const szV=document.getElementById('szVal'), mgV=document.getElementById('mgVal');
+  syncPhotoSizeControls();
+  const marI=document.getElementById('imgMargin');
+  const mgV=document.getElementById('mgVal');
   const roundI=document.getElementById('msgImgRound');
   if(roundI) roundI.checked=!!draftImgRound;
   if(draftMsgImg){
     if(prev) prev.src=draftMsgImg;
     if(body){ body.removeAttribute('hidden'); body.style.display='flex'; }
     if(empty){ empty.setAttribute('hidden',''); empty.style.display='none'; }
-    if(sizeI) sizeI.value=draftImgSize; if(szV) szV.textContent=draftImgSize+'%';
+
     if(marI) marI.value=draftImgMargin; if(mgV) mgV.textContent=draftImgMargin+'px';
   }else{
     if(prev){ prev.removeAttribute('src'); prev.src=''; }
@@ -3647,7 +3657,7 @@ function refreshMsgImgEditor(){
   }
 }
 function resetDraftImg(){
-  draftMsgImg=null; draftImgSize=60; draftImgMargin=6; draftImgRound=true;
+  draftMsgImg=null; draftImgSize=100; draftImgMargin=6; draftImgRound=true;
   const file=document.getElementById('msgImgFile'); if(file) file.value='';
   refreshMsgImgEditor();
 }
@@ -4438,12 +4448,13 @@ function imageRow(m,gap){
   </div>`;
 }
 function normalRow(m,mem,gap,continued=false){
+  if(state.bubbleTheme==='quote') return quoteBubbleRow(m,mem,gap,continued);
   const mine=(m.senderId===state.meId);
   const showIdentity=!mine||!!state.showMyIdentity;
   const hasAvatarColumn=!!state.showProfile&&showIdentity;
   const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
   const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
-  const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="${subFontCss(state.layout.scriptNameFont)}color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="${subFontCss(state.layout.scriptNameFont)}color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px">${typeInline(memberNameHighlightHTML(mem))}</div>`:'';
   return `<div class="pmsg n-msg ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
     ${avatar||avatarSpacer}
@@ -4461,7 +4472,7 @@ function logRow(m,mem,gap,continued=false){
   const plain=`color:${state.colors.nText};font-size:${(Number(L.bubbleFs)||L.fs)}px;line-height:${L.lh};${bubbleTextAlignStyle()}${wbStyle()}`;
   const avatar=hasAvatarColumn&&!continued?avatarHTML(mem,state.shape):'';
   const avatarSpacer=hasAvatarColumn&&continued?'<span class="av-continuation-spacer" aria-hidden="true"></span>':'';
-  const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="${subFontCss(state.layout.scriptNameFont)}color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  const name=showIdentity&&!continued&&!state.hideNames?`<div class="n-name" style="${subFontCss(state.layout.scriptNameFont)}color:${mem.color||'#424448'};font-size:${state.layout.nameSize}px;margin-bottom:3px">${typeInline(memberNameHighlightHTML(mem))}</div>`:'';
   return `<div class="pmsg n-msg log-row ${state.hideNames?'log-name-hidden':''} ${hasAvatarColumn?'':'no-av'} ${continued?'continuation':''} ${mine?'mine':''} ${state.shape} ${bubbleAlignClass()}" style="margin-bottom:${gap}px;${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
     ${avatar||avatarSpacer}
@@ -4496,6 +4507,10 @@ function scriptNameLines(name){
     return [parts[0],parts.slice(1).join(' ')];
   }
   return [clean];
+}
+function memberNameHighlightHTML(mem){
+  const text=esc(mem.name||'?'),color=normalizeScriptHighlight(mem.scriptHighlight);
+  return color?'<span class="script-name-mark" style="--script-name-mark:'+color+'">'+text+'</span>':text;
 }
 function scriptNameHTML(name,highlight){
   const col=normalizeScriptHighlight(highlight);
@@ -4559,7 +4574,7 @@ function scriptRow(m,mem,gap,continued=false){
   // 같은 크기는 첫 기준선을 공유하고, 크기 변경 시 글자 중심을 유지한다.
   const dialogueFs=Number(L.bubbleFs)||Number(L.fs)||16;
   const nameOffset=scriptNameBaselineOffset(scriptFs,dialogueFs);
-  const name=`<div class="script-name ${nameHidden?'is-hidden':''}" style="color:${mem.color||'#424448'};font-size:${scriptFs}px;line-height:${L.lh};position:relative;top:${nameOffset}px;font-weight:${scriptNameFontWeight()};${subFontCss(L.scriptNameFont)}">${typeInline(scriptNameHTML(mem.name||'?',mem.scriptHighlight))}</div>`;
+  const name=`<div class="script-name ${nameHidden?'is-hidden':''}" style="color:${mem.color||'#424448'};font-size:${scriptFs}px;line-height:${L.lh};position:relative;top:${nameOffset}px;font-weight:${scriptNameFontWeight()};text-align:${L.scriptNameAlign||'left'};${subFontCss(L.scriptNameFont)}">${typeInline(scriptNameHTML(mem.name||'?',mem.scriptHighlight))}${L.scriptSeparator?`<span aria-hidden="true" style="position:absolute;left:calc(100% + ${(L.scriptNameGap??14)/2}px);top:0;transform:translateX(-50%);font-size:inherit;font-weight:inherit;line-height:inherit">|</span>`:''}</div>`;
   const plain=`color:${state.colors.nText};font-size:${Number(L.bubbleFs)||L.fs}px;line-height:${L.lh};${bubbleTextAlignStyle()}${wbStyle()}`;
   return `<div class="pmsg script-row ${continued?'continuation':''}" style="margin-bottom:${gap}px;column-gap:${L.scriptNameGap??14}px;${scriptAlignmentStyle()}${bubblePadStyle()}">
     ${ctrlHTML(m.id)}
@@ -4569,6 +4584,7 @@ function scriptRow(m,mem,gap,continued=false){
 }
 
 function msgrRow(m,mem,gap,continued=false){
+  if(state.bubbleTheme==='quote') return quoteBubbleRow(m,mem,gap,continued);
   const mine=(m.senderId===state.meId);
   const showIdentity=!mine||!!state.showMyIdentity;
   const bub=(mem&&mem.bubbleColor)||(mine?state.colors.myBubble:state.colors.otBubble);
@@ -4576,7 +4592,7 @@ function msgrRow(m,mem,gap,continued=false){
   const hasAvatarColumn=!!state.showProfile&&showIdentity;
   const showAvatar=hasAvatarColumn&&!continued;
   const avatar=showAvatar?avatarHTML(mem,state.shape):'';
-  const name=showIdentity&&!continued&&!state.hideNames?`<div class="m-name" style="${subFontCss(state.layout.scriptNameFont)}font-size:${state.layout.nameSize}px;color:${mem.color||'#555'}">${typeInline(esc(mem.name||'?'))}</div>`:'';
+  const name=showIdentity&&!continued&&!state.hideNames?`<div class="m-name" style="${subFontCss(state.layout.scriptNameFont)}font-size:${state.layout.nameSize}px;color:${mem.color||'#555'}">${typeInline(memberNameHighlightHTML(mem))}</div>`:'';
   // Keep the appropriate avatar column during a consecutive run even though the avatar itself is hidden.
   const noAvatarColumn=hasAvatarColumn?'':'no-av';
   const ownIdentityClass=mine&&showIdentity?'own-identity':'';
@@ -6214,8 +6230,9 @@ else setTimeout(__idleLoadRenderer,1200);
       return;
     }
 
+    const widePhotos=typeof window.__layoutWidePhotos==='function'&&window.__layoutWidePhotos(chat,baseChatW+2*hMargin);
     /* Force one clean layout pass at the authored width. */
-    const contentW=Math.ceil(Math.max(chat.offsetWidth,chat.scrollWidth));
+    const contentW=widePhotos?Math.ceil(chat.offsetWidth):Math.ceil(Math.max(chat.offsetWidth,chat.scrollWidth));
     const contentH=Math.ceil(Math.max(chat.offsetHeight,chat.scrollHeight));
 
     if(ratio==='auto'){
@@ -6241,6 +6258,10 @@ else setTimeout(__idleLoadRenderer,1200);
       canvas.style.padding='0';
     }
 
+    if(widePhotos){
+      window.__layoutWidePhotos(chat,canvas.offsetWidth);
+      canvas.style.height=Math.max(parseFloat(canvas.style.height)||0,Math.ceil(chat.offsetHeight+2*vMargin))+'px';
+    }
     fitPreview();
   };
 
@@ -8229,23 +8250,30 @@ function showRestoreBar(saved){
 
 /* ---------- 실행 취소 (삭제 계열) ---------- */
 const __undoStack=[];
-function pushUndo(label){
-  try{
-    __undoStack.push({label,data:JSON.parse(JSON.stringify({
-      members:state.members, messages:state.messages, meId:state.meId, novel:state.novel
-    }))});
-    if(__undoStack.length>20) __undoStack.shift();
-  }catch(_){}
+let __undoRestoring=false,__undoLast=null;
+function undoSnapshot(){const d=projectSnapshot();d.__memberPresets=JSON.parse(JSON.stringify(presets));return d;}
+function storeUndo(label,data){
+ const json=JSON.stringify(data);
+ if(__undoStack.length&&JSON.stringify(__undoStack[__undoStack.length-1].data)===json)return;
+ __undoStack.push({label,data});if(__undoStack.length>20)__undoStack.shift();
 }
+function pushUndo(label){try{if(!__undoRestoring)storeUndo(label,undoSnapshot());}catch(_){}}
+window.__recordProjectUndo=function(){
+ if(__undoRestoring)return;
+ const next=undoSnapshot();
+ if(__undoLast&&JSON.stringify(next)!==JSON.stringify(__undoLast)&&!document.body.classList.contains('mobile-ui'))storeUndo('이전 작업',__undoLast);
+ __undoLast=next;
+};
 function undoLast(){
-  const u=__undoStack.pop(); if(!u) return;
-  state.members=u.data.members; state.messages=u.data.messages; state.meId=u.data.meId;
-  if(u.data.novel)state.novel=u.data.novel;
-  if(window.__syncNovel)window.__syncNovel();
-  if(window.__syncColumnExtras)window.__syncColumnExtras();
-  try{ renderMembers(); renderSenders(); renderMeSelect(); }catch(_){}
-  renderPreview();
+ const u=__undoStack.pop();if(!u)return;
+ __undoRestoring=true;
+ try{
+  if(u.data.__memberPresets){presets=u.data.__memberPresets;persistPresets();renderPresets();}
+  // Replace optional layout flags as well as restoring their values.
+  if(u.data.layout)state.layout=JSON.parse(JSON.stringify(u.data.layout));
+  applyProject(u.data);
   toast('“'+u.label+'” 실행을 취소했어요');
+ }finally{__undoRestoring=false;__undoLast=undoSnapshot();}
 }
 
 /* 뒤에 붙는 스크립트에서도 토스트·실행 취소를 그대로 쓸 수 있게 내보낸다 */
@@ -8428,6 +8456,8 @@ function placeImageBeside(id,targetId,side,targetRow){
 }
 
 
+window.__photoColumnActions={place:placeImageBeside,restore:returnImageToFlow};
+
 /* ---------- 프로젝트 백업 (.json 저장/불러오기) ---------- */
 window.exportProject=function(){
   const snap=projectSnapshot();
@@ -8484,7 +8514,7 @@ document.addEventListener('keydown',e=>{
   if(k==='s'&&!e.shiftKey&&!e.altKey){
     e.preventDefault();
     try{ saveImage(); }catch(_){}
-  }else if(k==='z'&&!typing&&!e.shiftKey){
+  }else if(k==='z'&&!e.shiftKey&&!document.body.classList.contains('mobile-ui')&&!(ae&&(ae.isContentEditable||ae.tagName==='TEXTAREA'))){
     if(__undoStack.length){ e.preventDefault(); undoLast(); }
   }
 });
@@ -13729,7 +13759,7 @@ function placeHeadingCol(type){
   const textSlot=document.querySelector('#alignField .text-format-row');
   const alignDiv=document.getElementById('alignHeadingDiv');
 
-  if(type==='chat'&&chatSlot){
+  if(false&&type==='chat'&&chatSlot){
     if(col.parentElement!==chatSlot) chatSlot.appendChild(col);
     if(senderField) senderField.classList.add('has-heading');
     if(alignDiv) alignDiv.style.display='none';
@@ -14147,8 +14177,8 @@ function bindRotate(h,sid){
 }
 
 /* ---------- 추가 / 삭제 ---------- */
-function addSticker(src){
-  loadImg(src).then(im=>{
+function addSticker(src,beforeAdd){
+  return loadImg(src).then(im=>{
     const c=canvasEl();
     const cw=(c&&c.offsetWidth)||440;
     const ch=(c&&c.offsetHeight)||620;
@@ -14164,12 +14194,14 @@ function addSticker(src){
       round:(typeof draftImgRound==='undefined')?true:!!draftImgRound,
       page:curPage()
     };
+    if(beforeAdd) beforeAdd(s);
     state.stickers.push(s);
     selId=s.id;
     commit();
     T('스티커를 붙였어요 \u2014 끌어서 옮기고, 눌러서 크기\u00B7회전\u00B7삭제할 수 있어요');
   }).catch(()=>{ T('이미지를 불러오지 못했어요'); });
 }
+window.__photoStickerActions={add:addSticker};
 function removeSticker(id){
   const i=(state.stickers||[]).findIndex(s=>s&&s.id===id);
   if(i<0) return;
@@ -14210,6 +14242,7 @@ function syncPanel(){
 /* ---------- 모드 토글 ---------- */
 window.setStickerMode=function(on){
   stickerMode=!!on;
+  const toggle=document.getElementById('stickerMode');if(toggle)toggle.checked=stickerMode;
   const ed=document.getElementById('msgImgEditor');
   if(ed) ed.classList.toggle('sticker-on',stickerMode);
   if(!stickerMode){ selId=''; renderStickers(); }
@@ -19554,7 +19587,7 @@ if(typeof __syncCtlImg==='function'){
 (function(){
 'use strict';
 const ST=()=>{ try{ return state; }catch(_){ return window.state||null; } };
-const THEMES=['default','corner','card'];
+const THEMES=['default','corner','card','quote'];
 function norm(t){ return THEMES.indexOf(t)>=0?t:'default'; }
 
 try{ const st=ST(); if(st&&!st.bubbleTheme) st.bubbleTheme='default'; }catch(_){}
@@ -24117,6 +24150,280 @@ sync();
  });
 })();
 
+</script>
+<style id="photo-edit-menu-styles">
+#photoEditMenu{position:fixed;inset:auto;margin:0;width:210px;max-width:calc(100vw - 16px);padding:12px;box-sizing:border-box;border:1px solid var(--line,#ddd);border-radius:12px;background:var(--panel,#fff);color:var(--text,#222);box-shadow:0 8px 28px #0002;z-index:10000}
+#photoEditMenu::backdrop{background:transparent}
+#photoEditMenu label.msg-img-round-toggle{display:flex!important;gap:9px;width:100%;box-sizing:border-box;min-height:34px;margin:0!important;font-size:12px;white-space:nowrap}
+#photoEditMenu label:has(input:disabled){opacity:.45}
+#photoEditButton{white-space:nowrap}
+
+</style>
+<script id="photo-edit-menu-script">
+(function(){
+ const $=id=>document.getElementById(id);
+ let draftSplit=false,draftFill=false;
+ const head=$('msgImgEditorHead').querySelector('.msg-img-head-right');
+ const button=document.createElement('button');button.type='button';button.className='msg-img-pick';button.id='photoEditButton';button.textContent='편집 ▾';button.setAttribute('aria-expanded','false');button.setAttribute('aria-controls','photoEditMenu');
+ head.insertBefore(button,$('msgImgPickBtn'));
+ const menu=document.createElement('div');menu.id='photoEditMenu';menu.setAttribute('popover','auto');menu.setAttribute('aria-label','사진 편집');
+ const sticker=$('stickerMode').closest('label'),round=$('msgImgRound').closest('label');
+ [...sticker.childNodes].filter(n=>n.nodeType===3).forEach(n=>n.textContent=n.textContent.replace('스티커 모드','스티커'));
+ menu.append(sticker,round);
+ function toggle(id,text){const label=document.createElement('label');label.className='msg-img-round-toggle';label.innerHTML='<input type="checkbox" id="'+id+'"><span class="msg-img-round-switch"></span>'+text;menu.append(label);return label.querySelector('input');}
+ const split=toggle('photoSplitToggle','단 나누기'),fill=toggle('photoFillToggle','여백 꽉 채우기');document.body.append(menu);
+ const live=()=>liveImageMsg();
+ const inPhotoColumn=m=>!!(m?.columnPlacement&&state.novel?.on&&state.novel.mode!=='ratio');
+ function sync(){
+  const m=live(),stickerToggle=$('stickerMode');
+  split.checked=m?inPhotoColumn(m):draftSplit;fill.checked=m?!!m.columnFill:draftFill;
+  const blocked=split.checked||fill.checked;
+  stickerToggle.disabled=blocked;
+  if(blocked&&stickerToggle.checked)setStickerMode(false);
+  split.disabled=fill.disabled=false;
+  const disable=fill.checked;
+  $('imgSize').closest('.field').querySelectorAll('input,button').forEach(el=>el.disabled=disable);
+ }
+ function position(){const r=button.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,r.right-menu.offsetWidth))+'px';const mobile=document.body.classList.contains('mobile-ui');menu.style.top=(mobile?Math.max(8,r.top-menu.offsetHeight-6):Math.min(r.bottom+6,Math.max(8,innerHeight-menu.offsetHeight-8)))+'px';}
+ button.onclick=()=>{sync();if(menu.matches(':popover-open'))menu.hidePopover();else{menu.showPopover();position();}};
+ menu.addEventListener('toggle',e=>button.setAttribute('aria-expanded',String(e.newState==='open')));
+ addEventListener('resize',()=>{if(menu.matches(':popover-open'))position();});
+ addEventListener('scroll',()=>{if(menu.matches(':popover-open'))position();},true);
+ function placeLeft(m){
+  if(inPhotoColumn(m))return true;
+  if(state.novel?.on&&state.novel.mode==='ratio'){toast('단 나누기는 단 수 모드에서 사용할 수 있어요.');return false;}
+  const target=state.messages.find(x=>x.id!==m.id&&x.type!=='image')||state.messages.find(x=>x.id!==m.id);
+  if(!target){toast('사진 옆에 둘 글이나 말풍선을 먼저 추가해 주세요.');return false;}
+  window.__photoColumnActions.place(m.id,target.id,'left');return !!m.columnPlacement;
+ }
+ split.onchange=()=>{const m=live();if(m){if(split.checked)placeLeft(m);else window.__photoColumnActions.restore(m.id);}else draftSplit=split.checked;sync();};
+ fill.onchange=()=>{const m=live();if(m){pushUndo('사진 여백 꽉 채우기');if(fill.checked)m.columnFill=true;else delete m.columnFill;renderPreview();}else draftFill=fill.checked;sync();};
+ let converting=false;
+ $('stickerMode').addEventListener('change',async()=>{
+  sync();
+  if(!$('stickerMode').checked||converting)return;
+  const m=live(),src=m?m.image:draftMsgImg;
+  if(!src)return;
+  converting=true;
+  try{
+   await window.__photoStickerActions.add(src,s=>{
+    pushUndo('사진을 스티커로 변경');
+    s.round=m?m.round!==false:!!draftImgRound;
+    if(m){state.messages=state.messages.filter(x=>x.id!==m.id);cancelComposerEdit();}
+    resetDraftImg();
+   });
+   if(menu.matches(':popover-open'))menu.hidePopover();
+  }finally{converting=false;sync();}
+ });
+ const oldRefresh=refreshMsgImgEditor;refreshMsgImgEditor=function(){const r=oldRefresh.apply(this,arguments);sync();return r;};
+ const oldReset=resetDraftImg;resetDraftImg=function(){draftSplit=draftFill=false;const r=oldReset.apply(this,arguments);sync();return r;};
+ const oldAdd=addImage;addImage=function(){
+  const opts={split:draftSplit,fill:draftFill},ids=new Set(state.messages.map(m=>m.id));
+  const r=oldAdd.apply(this,arguments);const m=state.messages.find(m=>!ids.has(m.id)&&m.type==='image');
+  if(m){if(opts.fill)m.columnFill=true;if(opts.split)placeLeft(m);renderPreview();}sync();return r;
+ };
+ const oldRender=renderPreview;renderPreview=function(){const r=oldRender.apply(this,arguments);sync();return r;};
+ const oldImage=msgImgHTML;msgImgHTML=function(m){const html=oldImage.apply(this,arguments);return m.columnFill&&!inPhotoColumn(m)?html.replace('<img ','<img data-photo-wide="1" '):html;};
+ // Invoked by the existing canvas layout before and after its frame measurement.
+ window.__layoutWidePhotos=function(chat,width){
+  const imgs=[...chat.querySelectorAll('.image-row img[data-photo-wide]')];
+  for(const img of imgs){const row=img.closest('.image-row');const r=row.getBoundingClientRect(),c=chat.getBoundingClientRect();const scale=chat.offsetWidth?c.width/chat.offsetWidth:1;const inset=(r.left-c.left)/(scale||1)+(width-chat.offsetWidth)/2;
+   Object.assign(img.style,{width:width+'px',height:'auto',maxWidth:'none',maxHeight:'none',marginLeft:-inset+'px',marginRight:'0',display:'block',objectFit:'contain'});
+   row.style.textAlign='left';
+  }
+  return imgs.length>0;
+ };
+ sync();
+})();
+
+</script>
+
+<style id="quote-bubble-style">
+.btheme-prev.bt-quote{background:none!important;border:0!important;border-left:3.5px solid currentColor!important;border-radius:0!important}
+#scriptNameStyleSection.with-quote-colors .script-mark-code{display:none}
+.quote-picker-divider{color:var(--line);margin:0 3px;user-select:none}
+</style>
+<script id="quote-bubble-script">
+const quoteSessionColors=new Map();
+function quoteMemberPreset(m){
+  if(Object.prototype.hasOwnProperty.call(m,'presetId')) return presets.find(p=>p.id===m.presetId)||null;
+  // Older projects predate preset IDs: only associate an unambiguous exact match.
+  const matches=presets.filter(p=>p.name===m.name&&(p.image||null)===(m.image||null)&&(p.color||'#424448')===(m.color||'#424448'));
+  if(matches.length===1){m.presetId=matches[0].id;return matches[0];}
+  return null;
+}
+function quoteMemberColor(m){
+  const p=quoteMemberPreset(m);
+  const c=p?.quoteColor||quoteSessionColors.get(m.id)||m.color;
+  return /^#[0-9a-f]{6}$/i.test(c||'')?c:'#424448';
+}
+function quoteColorPickerHTML(m){
+ const color=quoteMemberColor(m);
+ return '<span aria-hidden="true" class="quote-picker-divider">|</span><span class="swatch quote-member-swatch" style="background:'+color+'" title="'+esc(m.name||'?')+' 인용구 색 선택"><input class="color-proxy" type="text" readonly inputmode="none" value="'+color+'" data-quote-member="'+m.id+'" aria-label="'+esc(m.name||'?')+' 인용구 색 선택" oninput="setQuoteMemberColor(this.dataset.quoteMember,this.value)"></span>';
+}
+function setQuoteMemberColor(id,value){
+ const m=state.members.find(m=>m.id===id);if(!m||!/^#[0-9a-f]{6}$/i.test(value))return;
+ const p=quoteMemberPreset(m);if(p){p.quoteColor=value;persistPresets();}else quoteSessionColors.set(id,value);
+ document.querySelectorAll('[data-quote-member]').forEach(input=>{if(input.dataset.quoteMember===id){input.value=value;input.parentElement.style.background=value;}});
+ renderPreview();
+}
+function quoteBubbleRow(m,mem,gap,continued){
+  const L=state.layout,mine=m.senderId===state.meId;
+  const txt=state.mode==='messenger'?(mine?state.colors.myText:state.colors.otText):state.colors.nText;
+  const name=!continued&&!state.hideNames?`<div class="n-name" style="${subFontCss(L.scriptNameFont)}font-size:${L.nameSize}px;color:${mem.color||'#424448'};margin:0 0 7px">${typeInline(memberNameHighlightHTML(mem))}</div>`:'';
+  return `<div class="pmsg quote-row" style="margin-bottom:${gap}px;${bubblePadStyle()}">${ctrlHTML(m.id)}${name}<div class="quote-dialogue editable" data-id="${m.id}" style="box-sizing:border-box;border-left:3.5px solid ${quoteMemberColor(mem)};padding:2px 0 2px 12px;color:${txt};font-size:${Number(L.bubbleFs)||L.fs}px;line-height:${L.lh};${bubbleTextAlignStyle()}${wbStyle()}">${typeWrap(fmtText(m.content||''),normalizeBubbleTextAlign(L.bubbleTextAlign))}</div></div>`;
+}
+(function(){
+ const grid=document.getElementById('bubbleThemeGrid');
+ grid.insertAdjacentHTML('beforeend','<button type="button" class="btheme-btn" data-theme="quote"><span class="btheme-prev bt-quote"></span>인용구</button>');
+ let signature='';
+ function sync(){
+  const active=state.bubbleTheme==='quote'&&state.mode!=='log'&&state.mode!=='script';
+  const profile=document.getElementById('showProfile');
+  if(profile){profile.disabled=active;profile.checked=active?false:!!state.showProfile;}
+  const shape=document.getElementById('profileShapeSection');
+  if(shape){shape.inert=active;shape.style.opacity=active?'.45':'';}
+  const sec=document.getElementById('scriptNameStyleSection');
+  sec.style.display='block';
+  sec.classList.remove('with-quote-colors');
+  sec.querySelector('.flat-tool-title').hidden=true;
+  sec.querySelector('.toggle.compact').style.display=state.mode!=='script'?'none':'';
+  sec.querySelector('.script-highlight-title').textContent="캐릭터별 '이름' 형광펜";
+  const next=JSON.stringify([active,...state.members.map(m=>[m.id,m.name])]);
+  if(next!==signature){signature=next;renderScriptNameStyle();}
+ }
+ const old=renderPreview;renderPreview=function(){const r=old.apply(this,arguments);sync();return r;};
+ sync();renderPreview();
+})();
+</script>
+
+
+<style id="composer-chat-alignment-style">
+#bubbleTextAlignSection{display:none!important}
+body:not(.mobile-ui) .composer-card #senderField{flex:0 0 auto;width:100%;margin:0 0 6px;box-sizing:border-box}
+body:not(.mobile-ui) .composer-card #senderField .lb{display:none}
+body:not(.mobile-ui) .composer-card #senderField select{width:100%;height:32px;box-sizing:border-box}
+body:not(.mobile-ui) .composer-card:has(#senderField:not([style*="display: none"])) #msgContent{min-height:68px!important}
+body:not(.mobile-ui) .composer-card #senderField#senderField{padding:0!important;margin:0 0 6px!important}
+body:not(.mobile-ui) .composer-card #senderField#senderField::before{display:none!important}
+body:not(.mobile-ui) .composer-card #senderField#senderField .text-format-row{display:flex!important;width:100%!important}
+body:not(.mobile-ui) .composer-card #senderField#senderField .sender-col,
+body:not(.mobile-ui) .composer-card #senderField#senderField #senderSel{width:100%!important;min-width:0!important;max-width:none!important}
+.mobile-ui #mDock #senderField{display:none!important}
+.mobile-ui.m-tools-open #mChips{display:flex!important}
+</style>
+<script id="composer-chat-alignment-script">
+(function(){
+ const sender=document.getElementById('senderField');
+ const field=document.getElementById('composerTextField');
+ const fmt=field.querySelector('.fmt');
+ field.insertBefore(sender,fmt.nextSibling);
+ const align=document.getElementById('alignField'),seg=document.getElementById('alignSeg');
+ function sync(){
+  const t=state.composerType;
+  if(t==='chat'||t==='text'){
+   align.style.display='';
+   const label=seg.closest('.tfr-col').querySelector('.lb');if(label)label.textContent='정렬';
+   const value=t==='chat'?normalizeBubbleTextAlign(state.layout.bubbleTextAlign):(state.draftAlign||'left');
+   [...seg.children].forEach((b,i)=>b.classList.toggle('on',['justify','left','center','right'][i]===value));
+  }
+ }
+ seg.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||state.composerType!=='chat')return;
+  e.preventDefault();e.stopImmediatePropagation();
+  setBubbleTextAlign(['justify','left','center','right'][[...seg.children].indexOf(b)]);sync();
+ },true);
+ const oldType=setMsgType;setMsgType=function(){const r=oldType.apply(this,arguments);sync();return r;};
+ const oldRender=renderPreview;renderPreview=function(){const r=oldRender.apply(this,arguments);sync();return r;};
+ window.__placeHeadingCol(state.composerType);sync();
+})();
+</script>
+
+<style id="script-extra-options-style">
+#scriptNameStyleSection>.flat-tool-title{display:none!important}
+#quoteThemeColors .script-highlight-box{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+#quoteThemeColors .script-highlight-toggle{display:flex;align-items:center;gap:7px;width:100%;padding:9px 10px;border:0;background:transparent;text-align:left;color:inherit;font-size:12px;font-weight:700;cursor:pointer}
+#quoteThemeColors .script-highlight-panel{padding:0 10px 10px}
+.theme-detail-reveal{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .22s ease,opacity .22s ease}
+.theme-detail-reveal.open{grid-template-rows:1fr;opacity:1}
+.theme-detail-reveal>.theme-detail-inner{overflow:hidden;min-height:0}
+#quoteThemeColors .quote-picker-divider{display:none}
+</style>
+<script id="script-extra-options-script">
+(function(){
+ const sec=document.getElementById('scriptNameStyleSection');
+ sec.querySelector('.flat-tool-body').prepend(document.getElementById('allThemeNameFontField'));
+ const bold=document.getElementById('scriptNameBoldOn').closest('.toggle');
+ const options=document.createElement('div');options.id='scriptExtraOptions';
+ options.innerHTML='<div class="field" style="margin-top:12px"><label class="lb">이름 정렬</label><div class="seg" id="scriptNameAlignSeg"><button data-align="left">왼쪽</button><button data-align="center">가운데</button><button data-align="right">오른쪽</button></div></div><div class="toggle compact"><div class="t-lb">이름 / 대사 구분선 |</div><label class="sw"><input id="scriptSeparatorOn" type="checkbox"><span class="track"></span></label></div>';
+ bold.after(options);
+ options.querySelector('#scriptSeparatorOn').onchange=e=>{state.layout.scriptSeparator=e.target.checked;renderPreview();};
+ options.querySelectorAll('[data-align]').forEach(b=>b.onclick=()=>{state.layout.scriptNameAlign=b.dataset.align;renderPreview();});
+ const theme=document.getElementById('bubbleThemeSection');
+ const card=document.getElementById('cardLineField');
+ function reveal(child){const wrap=document.createElement('div');wrap.className='theme-detail-reveal';const inner=document.createElement('div');inner.className='theme-detail-inner';child.before(wrap);inner.append(child);wrap.append(inner);return wrap;}
+ const cardReveal=reveal(card);
+ const quote=document.createElement('div');quote.id='quoteThemeColors';
+ quote.innerHTML='<div class="script-highlight-box" style="margin-top:12px"><button type="button" class="script-highlight-toggle" aria-expanded="false"><span>▸</span>인용구 색 지정</button><div class="theme-detail-reveal"><div class="theme-detail-inner"><div class="script-highlight-panel"><div class="script-highlight-list"></div></div></div></div></div>';
+ theme.querySelector('.flat-tool-body').append(quote);const quoteReveal=reveal(quote);
+ const toggle=quote.querySelector('button'),list=quote.querySelector('.script-highlight-list'),details=quote.querySelector('.theme-detail-reveal');
+ toggle.onclick=()=>{const on=details.classList.toggle('open');toggle.setAttribute('aria-expanded',on);toggle.querySelector('span').textContent=on?'▾':'▸';};
+ let signature='';
+ function sync(){
+  options.style.display=state.mode==='script'?'':'none';
+  options.querySelector('input').checked=!!state.layout.scriptSeparator;
+  options.querySelectorAll('[data-align]').forEach(b=>b.classList.toggle('on',b.dataset.align===(state.layout.scriptNameAlign||'left')));
+  theme.style.display=(state.mode==='log'||state.mode==='script')?'none':'';
+  card.style.display='';cardReveal.classList.toggle('open',state.bubbleTheme==='card');cardReveal.inert=state.bubbleTheme!=='card';
+  quoteReveal.classList.toggle('open',state.bubbleTheme==='quote');quoteReveal.inert=state.bubbleTheme!=='quote';
+  const key=JSON.stringify(state.members.map(m=>[m.id,m.name]));
+  if(key!==signature){signature=key;list.innerHTML=state.members.map(m=>'<div class="script-mark-row"><div class="script-mark-name">'+esc(m.name||'?')+'</div><div class="script-mark-tools">'+quoteColorPickerHTML(m)+'</div></div>').join('');}
+  list.querySelectorAll('[data-quote-member]').forEach(input=>{const m=state.members.find(m=>m.id===input.dataset.quoteMember);if(m){input.value=quoteMemberColor(m);input.parentElement.style.background=input.value;}});
+ }
+ const old=renderPreview;renderPreview=function(){const r=old.apply(this,arguments);sync();window.__recordProjectUndo();return r;};
+ sync();window.__recordProjectUndo();
+})();
+</script>
+
+<script id="script-panel-refinement">
+(function(){
+ const panel=document.querySelector('#panel-bubble .tool-panel-body');
+ const alignment=document.getElementById('scriptNameAlignSeg').closest('.field');
+ alignment.style.marginTop='0';panel.prepend(alignment);
+ const profile=document.getElementById('profileShapeSection');
+ const shape=[...panel.querySelectorAll('.flat-tool-section')].find(el=>el.querySelector('.flat-tool-title strong')?.textContent.trim()==='말풍선 모양');
+ function textRects(el){
+  const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n;const rects=[];
+  while(n=walker.nextNode()){
+   if(!n.textContent.trim()||n.parentElement.closest('[aria-hidden="true"],.ctrl'))continue;
+   const range=document.createRange();range.selectNodeContents(n);rects.push(...range.getClientRects());
+  }return rects.filter(r=>r.width&&r.height);
+ }
+ function placeBars(){
+  if(state.mode!=='script'||!state.layout.scriptSeparator)return;
+  const rows=[...document.querySelectorAll('#chat .script-row')];
+  const measurements=rows.map(row=>{const name=row.querySelector('.script-name'),dialogue=row.querySelector('.script-dialogue'),bar=name?.querySelector('[aria-hidden="true"]');if(!bar)return null;
+   const nr=textRects(name),dr=textRects(dialogue);if(!nr.length||!dr.length)return null;
+   return {name,bar,end:Math.max(...nr.map(r=>r.right)),start:dr[0].left};
+  }).filter(Boolean);
+  // Shared-column mode keeps one separator line based on the longest rendered name.
+  const sharedEnd=Math.max(...measurements.map(m=>m.end));
+  measurements.forEach(m=>{const r=m.name.getBoundingClientRect(),scale=r.width/m.name.offsetWidth||1;
+   const end=state.layout.scriptNameGapMode==='end'?m.end:sharedEnd;
+   m.bar.style.left=((end+m.start)/2-r.left)/scale+'px';
+  });
+ }
+ function sync(){
+  const script=state.mode==='script';alignment.style.display=script?'':'none';
+  alignment.querySelectorAll('[data-align]').forEach(b=>b.classList.toggle('on',b.dataset.align===(state.layout.scriptNameAlign||'left')));
+  if(profile)profile.style.display=script?'none':'';
+  if(shape)shape.style.display=script?'none':'';
+  document.getElementById('messengerSettings').style.setProperty('display',state.mode==='messenger'?'':'none','important');
+  placeBars();
+ }
+ const old=renderPreview;renderPreview=function(){const r=old.apply(this,arguments);sync();return r;};
+ document.fonts?.ready.then(placeBars);addEventListener('resize',()=>requestAnimationFrame(placeBars));sync();
+})();
 </script>
 </body>
 </html>
