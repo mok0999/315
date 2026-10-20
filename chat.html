@@ -2086,7 +2086,7 @@ const state = {
   colors:{
     bg:'#FFFFFF',
     nBubble:'#F2F2F3', nText:'#424448',
-    myBubble:'#424448', myText:'#FFFFFF',
+    myBubble:'#424448', myText:'#424448',
     otBubble:'#F2F2F3', otText:'#424448',
     draftColor:'#424448',
     draftBubbleColor:'#F2F2F3',
@@ -3270,11 +3270,11 @@ function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',s
 function seedThemes(){
   return [
     {id:uid(),name:'이전 버전',shape:'circle',parenOn:false,transparentBg:false,
-     colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#FFFFFF',
+     colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#424448',
        otBubble:'#FFFFFF',otText:'#424448',highlight:'#E4E4E6',partial:'#D14343',paren:'#8A8F98',credit:'#8A8F98'},
      layout:{...defaultLayout(),widthScale:100,letterSpacing:0},export:{...defaultExport(),hMargin:24,vMargin:24},credit:defaultCredit()},
     {id:uid(),name:'무채색',shape:'circle',parenOn:false,transparentBg:false,
-     colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#FFFFFF',
+     colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#424448',
        otBubble:'#FFFFFF',otText:'#424448',highlight:'#E4E4E6',partial:'#D14343',paren:'#8A8F98',credit:'#8A8F98'},
      layout:defaultLayout(),export:defaultExport(),credit:defaultCredit()},
     {id:uid(),name:'카카오',shape:'circle',parenOn:false,transparentBg:false,
@@ -3291,7 +3291,7 @@ function seedThemes(){
 function builtinTheme(name,over){
   over=over||{};
   const t={id:uid(),name,shape:over.shape||'circle',parenOn:false,transparentBg:false,
-    colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#FFFFFF',
+    colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#424448',
       otBubble:'#FFFFFF',otText:'#424448',highlight:'#E4E4E6',partial:'#D14343',paren:'#8A8F98',credit:'#8A8F98'},
     layout:defaultLayout(),export:defaultExport(),credit:defaultCredit()};
   if(over.colors) Object.assign(t.colors,over.colors);
@@ -3333,7 +3333,7 @@ function loadThemesStore(){
     if(ver<4){
       if(!themes.some(t=>t&&t.name==='이전 버전')){
         themes.unshift({id:uid(),name:'이전 버전',shape:'circle',parenOn:false,transparentBg:false,
-          colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#FFFFFF',otBubble:'#FFFFFF',otText:'#424448',highlight:'#E4E4E6',partial:'#D14343',paren:'#8A8F98',credit:'#8A8F98'},
+          colors:{bg:'#EDEDEE',nBubble:'#FFFFFF',nText:'#424448',myBubble:'#424448',myText:'#424448',otBubble:'#FFFFFF',otText:'#424448',highlight:'#E4E4E6',partial:'#D14343',paren:'#8A8F98',credit:'#8A8F98'},
           layout:{...defaultLayout(),widthScale:100,letterSpacing:0},export:{...defaultExport(),hMargin:24,vMargin:24},credit:defaultCredit()});
       }
       persistThemes();
@@ -3816,7 +3816,7 @@ function addMessage(){
   if(!sid){alert('발신자를 먼저 선택해 주세요. (멤버 추가가 필요해요)');return;}
   const content=msgContent.value;
   if(!content.trim()){alert('내용을 입력해 주세요.');return;}
-  state.messages.push({ id:uid(),type:'chat',senderId:sid,content });
+  state.messages.push({ id:uid(),type:'chat',senderId:sid,content,...(state.draftBubbleAlign?{bubbleTextAlign:state.draftBubbleAlign}:{}) });
   msgContent.value='';
   resetDraftImg();
   renderPreview();
@@ -4345,17 +4345,18 @@ function dividerRow(m,gap){
   const mt=Math.max(0,Number(L.dividerMargin)||0);
   const mb=Math.max(0,Number(L.dividerMarginBottom!=null?L.dividerMarginBottom:L.dividerMargin)||0);
   const wrapStyle=`margin-top:${mt}px;margin-bottom:${mb}px`;
+  const hit=`<span class="divider-hit-area" data-id="${m.id}" aria-hidden="true" style="position:absolute;left:0;right:0;top:-${Math.max(8,mt)}px;bottom:-${Math.max(8,mb)}px;cursor:pointer"></span>`;
   if(!txt){
     const w=Math.max(10,Math.min(100,Number(L.dividerWidth)||100));
     const thick=Math.max(.5,Math.min(8,Number(L.dividerThickness)||1));
     const lineColor=/^#[0-9A-F]{6}$/i.test(state.colors.divider||'')?state.colors.divider:'#C7C7C8';
     return `<div class="pmsg divider-row line-only" style="${wrapStyle}">
-      ${ctrlHTML(m.id)}
+      ${ctrlHTML(m.id)}${hit}
       <span class="divider-line" data-id="${m.id}" style="width:${w}%;border-top-width:${thick}px;border-top-color:${lineColor}"></span>
     </div>`;
   }
   return `<div class="pmsg divider-row" style="${wrapStyle}">
-    ${ctrlHTML(m.id)}
+    ${ctrlHTML(m.id)}${hit}
     <span class="divider-pill" data-id="${m.id}" style="background:${state.colors.dividerBg||'rgba(0,0,0,.10)'};color:${state.colors.dividerText||'rgba(0,0,0,.55)'};font-size:${Math.max(10,L.fs-2)}px">${esc(txt)}</span>
   </div>`;
 }
@@ -14534,13 +14535,13 @@ window.__bulkApplyAlign=function(a){
   const ids=S.ids();
   if(!ids.length){ T('먼저 미리보기에서 정렬을 바꿀 블럭을 눌러 선택해 주세요'); return true; }
   const set=new Set(ids);
-  const ms=(state.messages||[]).filter(m=>m&&set.has(m.id)&&m.type==='text');
-  if(!ms.length){ T('정렬은 글 블럭에만 적용돼요'); return true; }
+  const ms=(state.messages||[]).filter(m=>m&&set.has(m.id)&&(m.type==='text'||m.type==='chat'));
+  if(!ms.length){ T('글 또는 말풍선 블럭을 선택해 주세요'); return true; }
   try{ if(typeof window.pushUndo==='function') window.pushUndo('정렬 일괄 변경'); }catch(_){}
-  ms.forEach(m=>{ m.align=a; });
+  ms.forEach(m=>{ if(m.type==='chat')m.bubbleTextAlign=a;else m.align=a; });
   try{ renderPreview(); }catch(_){}
   try{ S.refresh(); }catch(_){}
-  withUndo(ms.length+'개 글 블럭의 정렬을 바꿨어요');
+  withUndo(ms.length+'개 블럭의 정렬을 바꿨어요');
   return true;
 };
 
@@ -24282,10 +24283,10 @@ function setQuoteMemberColor(id,value){
  renderPreview();
 }
 function quoteBubbleRow(m,mem,gap,continued){
-  const L=state.layout,mine=m.senderId===state.meId;
+  const L=state.layout,mine=m.senderId===state.meId,messenger=state.mode==='messenger';
   const txt=state.mode==='messenger'?(mine?state.colors.myText:state.colors.otText):state.colors.nText;
   const name=!continued&&!state.hideNames?`<div class="n-name" style="${subFontCss(L.scriptNameFont)}font-size:${L.nameSize}px;color:${mem.color||'#424448'};margin:0 0 7px">${typeInline(memberNameHighlightHTML(mem))}</div>`:'';
-  return `<div class="pmsg quote-row" style="margin-bottom:${gap}px;${bubblePadStyle()}">${ctrlHTML(m.id)}${name}<div class="quote-dialogue editable" data-id="${m.id}" style="box-sizing:border-box;border-left:3.5px solid ${quoteMemberColor(mem)};padding:2px 0 2px 12px;color:${txt};font-size:${Number(L.bubbleFs)||L.fs}px;line-height:${L.lh};${bubbleTextAlignStyle()}${wbStyle()}">${typeWrap(fmtText(m.content||''),normalizeBubbleTextAlign(L.bubbleTextAlign))}</div></div>`;
+  return `<div class="pmsg quote-row ${messenger?'m-msg no-av'+(mine?' mine':''):''} ${continued?'continuation':''}" style="margin-bottom:${gap}px;${bubblePadStyle()}">${ctrlHTML(m.id)}<div class="quote-message-body" style="${messenger?'display:inline-block;vertical-align:top;max-width:78%;text-align:'+(mine?'right':'left')+';':''}">${name}<div class="quote-dialogue editable" data-id="${m.id}" style="box-sizing:border-box;border-${messenger&&mine?'right':'left'}:3.5px solid ${quoteMemberColor(mem)};padding:${messenger&&mine?'2px 12px 2px 0':'2px 0 2px 12px'};color:${txt};font-size:${Number(L.bubbleFs)||L.fs}px;line-height:${L.lh};${bubbleTextAlignStyle()}${wbStyle()}">${typeWrap(fmtText(m.content||''),normalizeBubbleTextAlign(L.bubbleTextAlign))}</div></div></div>`;
 }
 (function(){
  const grid=document.getElementById('bubbleThemeGrid');
@@ -24338,14 +24339,14 @@ body:not(.mobile-ui) .composer-card #senderField#senderField #senderSel{width:10
   if(t==='chat'||t==='text'){
    align.style.display='';
    const label=seg.closest('.tfr-col').querySelector('.lb');if(label)label.textContent='정렬';
-   const value=t==='chat'?normalizeBubbleTextAlign(state.layout.bubbleTextAlign):(state.draftAlign||'left');
+   const value=t==='chat'&&window.__composerBubbleAlign?window.__composerBubbleAlign():(t==='chat'?normalizeBubbleTextAlign(state.layout.bubbleTextAlign):(state.draftAlign||'left'));
    [...seg.children].forEach((b,i)=>b.classList.toggle('on',['justify','left','center','right'][i]===value));
   }
  }
  seg.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b||state.composerType!=='chat')return;
   e.preventDefault();e.stopImmediatePropagation();
-  setBubbleTextAlign(['justify','left','center','right'][[...seg.children].indexOf(b)]);sync();
+  window.__setMessageBubbleAlign(['justify','left','center','right'][[...seg.children].indexOf(b)]);sync();
  },true);
  const oldType=setMsgType;setMsgType=function(){const r=oldType.apply(this,arguments);sync();return r;};
  const oldRender=renderPreview;renderPreview=function(){const r=oldRender.apply(this,arguments);sync();return r;};
@@ -24355,6 +24356,7 @@ body:not(.mobile-ui) .composer-card #senderField#senderField #senderSel{width:10
 
 <style id="script-extra-options-style">
 #scriptNameStyleSection>.flat-tool-title{display:none!important}
+#scriptExtraOptions{margin-top:12px}
 #quoteThemeColors .script-highlight-box{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
 #quoteThemeColors .script-highlight-toggle{display:flex;align-items:center;gap:7px;width:100%;padding:9px 10px;border:0;background:transparent;text-align:left;color:inherit;font-size:12px;font-weight:700;cursor:pointer}
 #quoteThemeColors .script-highlight-panel{padding:0 10px 10px}
@@ -24439,5 +24441,88 @@ body:not(.mobile-ui) .composer-card #senderField#senderField #senderSel{width:10
  document.fonts?.ready.then(placeBars);addEventListener('resize',()=>requestAnimationFrame(placeBars));sync();
 })();
 </script>
+
+<style id="continuous-quote-lines">
+.quote-dialogue{position:relative}
+.quote-row.mine .quote-dialogue[data-quote-join]::before{left:auto;right:calc(-1 * var(--quote-line-width));border-left:0;border-right:var(--quote-line-width) solid var(--quote-join-color)}
+.quote-dialogue[data-quote-join]::before{content:"";position:absolute;left:calc(-1 * var(--quote-line-width));top:calc(-1 * var(--quote-join-gap));height:var(--quote-join-gap);border-left:var(--quote-line-width) solid var(--quote-join-color);pointer-events:none}
+</style>
+<script id="continuous-quote-lines-script">
+(function(){
+ function join(){
+  if(state.bubbleTheme!=='quote'||state.mode==='log'||state.mode==='script')return;
+  const rows=[...document.querySelectorAll('#chat>.pmsg')];let group=[],groups=[];
+  for(const row of rows){
+   if(!row.classList.contains('quote-row')){group=[];continue;}
+   if(!row.classList.contains('continuation')||!group.length){group=[];groups.push(group);}
+   group.push(row);
+  }
+  let resized=false;
+  for(const run of groups){
+   if(run.length<2)continue;
+   if(state.mode==='messenger'){
+    const bodies=run.map(r=>r.querySelector('.quote-message-body'));
+    bodies.forEach(b=>b.style.width='');
+    const width=Math.max(...bodies.map(b=>b.offsetWidth));
+    bodies.forEach(b=>b.style.width=width+'px');resized=true;
+   }
+  }
+  if(resized)applyCanvas();
+  for(const run of groups){
+   for(let i=1;i<run.length;i++){
+    const before=run[i-1].querySelector('.quote-dialogue'),current=run[i].querySelector('.quote-dialogue');
+    const a=before.getBoundingClientRect(),b=current.getBoundingClientRect();
+    const scale=current.offsetHeight?b.height/current.offsetHeight:1;
+    const gap=Math.max(0,(b.top-a.bottom)/(scale||1));
+    current.dataset.quoteJoin='';current.style.setProperty('--quote-join-gap',gap+'px');
+    const own=run[i].classList.contains('mine');
+    current.style.setProperty('--quote-join-color',own?getComputedStyle(current).borderRightColor:getComputedStyle(current).borderLeftColor);
+    current.style.setProperty('--quote-line-width',own?getComputedStyle(current).borderRightWidth:getComputedStyle(current).borderLeftWidth);
+   }
+  }
+ }
+ const old=renderPreview;renderPreview=function(){const r=old.apply(this,arguments);join();return r;};
+ addEventListener('resize',()=>requestAnimationFrame(join));document.fonts?.ready.then(join);join();
+})();
+</script>
+
+<script id="per-message-bubble-alignment">
+(function(){
+ const valid=a=>['justify','left','center','right'].includes(a);
+ function resolved(m){
+  if(valid(m?.bubbleTextAlign))return m.bubbleTextAlign;
+  if(state.mode==='messenger'&&state.bubbleTheme==='quote'&&m?.senderId===state.meId)return 'right';
+  return normalizeBubbleTextAlign(state.layout.bubbleTextAlign);
+ }
+ function selected(){const S=window.__bulkSelection;if(!S?.active())return [];const ids=new Set(S.ids());return state.messages.filter(m=>ids.has(m.id)&&(m.type==='chat'||m.type==='text'));}
+ window.__composerBubbleAlign=function(){
+  const ms=selected();if(ms.length){const a=ms.map(m=>m.type==='text'?(m.align||'left'):resolved(m));return a.every(x=>x===a[0])?a[0]:null;}
+  const m=state.messages.find(m=>m.id===composerEditId);if(m?.type==='chat')return resolved(m);
+  return valid(state.draftBubbleAlign)?state.draftBubbleAlign:resolved({senderId:senderSel.value});
+ };
+ window.__setMessageBubbleAlign=function(a){
+  if(!valid(a))return;
+  const ms=selected();
+  if(ms.length){pushUndo('메시지 정렬 변경');ms.forEach(m=>{if(m.type==='text')m.align=a;else m.bubbleTextAlign=a;});}
+  else{const m=state.messages.find(m=>m.id===composerEditId);if(m?.type==='chat'){pushUndo('말풍선 정렬 변경');m.bubbleTextAlign=a;}else state.draftBubbleAlign=a;}
+  renderPreview();window.__bulkSelection?.refresh();
+ };
+ // Use each message's alignment while building its HTML; never change the shared default.
+ for(const key of ['normalRow','logRow','scriptRow','msgrRow']){
+  const old=window[key];window[key]=function(m){const previous=state.layout.bubbleTextAlign;state.layout.bubbleTextAlign=resolved(m);try{return old.apply(this,arguments);}finally{state.layout.bubbleTextAlign=previous;}};
+ }
+ const oldChange=window.__onBulkSelectionChange;window.__onBulkSelectionChange=function(){const r=oldChange?.apply(this,arguments);sync();return r;};
+ function sync(){if(state.composerType!=='chat')return;const a=window.__composerBubbleAlign();document.querySelectorAll('#alignSeg button').forEach((b,i)=>b.classList.toggle('on',['justify','left','center','right'][i]===a));}
+ senderSel.addEventListener('change',()=>{state.draftBubbleAlign=null;sync();});
+ const oldRender=renderPreview;renderPreview=function(){const r=oldRender.apply(this,arguments);sync();return r;};
+ sync();renderPreview();
+})();
+</script>
+
+<style id="divider-selection-hit-area">
+#chat .divider-row{position:relative}
+#chat .divider-row>.divider-line,#chat .divider-row>.divider-pill{position:relative;pointer-events:none}
+@media print{#chat .divider-hit-area{display:none!important}}
+</style>
 </body>
 </html>
