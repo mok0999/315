@@ -24359,7 +24359,7 @@ body:not(.mobile-ui) .composer-card #senderField#senderField #senderSel{width:10
 #scriptExtraOptions{margin-top:12px}
 #quoteThemeColors .script-highlight-box{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
 #quoteThemeColors .script-highlight-toggle{display:flex;align-items:center;gap:7px;width:100%;padding:9px 10px;border:0;background:transparent;text-align:left;color:inherit;font-size:12px;font-weight:700;cursor:pointer}
-#quoteThemeColors .script-highlight-panel{padding:0 10px 10px}
+#quoteThemeColors .script-highlight-panel{display:block;padding:0 10px 10px}
 .theme-detail-reveal{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .22s ease,opacity .22s ease}
 .theme-detail-reveal.open{grid-template-rows:1fr;opacity:1}
 .theme-detail-reveal>.theme-detail-inner{overflow:hidden;min-height:0}
@@ -24387,6 +24387,7 @@ body:not(.mobile-ui) .composer-card #senderField#senderField #senderSel{width:10
  let signature='';
  function sync(){
   options.style.display=state.mode==='script'?'':'none';
+  document.getElementById('scriptNameOptions').style.display=state.mode==='script'?'':'none';
   options.querySelector('input').checked=!!state.layout.scriptSeparator;
   options.querySelectorAll('[data-align]').forEach(b=>b.classList.toggle('on',b.dataset.align===(state.layout.scriptNameAlign||'left')));
   theme.style.display=(state.mode==='log'||state.mode==='script')?'none':'';
