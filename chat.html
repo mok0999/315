@@ -24285,7 +24285,7 @@ function setQuoteMemberColor(id,value){
 function quoteBubbleRow(m,mem,gap,continued){
   const L=state.layout,mine=m.senderId===state.meId,messenger=state.mode==='messenger';
   const txt=state.mode==='messenger'?(mine?state.colors.myText:state.colors.otText):state.colors.nText;
-  const name=!continued&&!state.hideNames?`<div class="n-name" style="${subFontCss(L.scriptNameFont)}font-size:${L.nameSize}px;color:${mem.color||'#424448'};margin:0 0 7px">${typeInline(memberNameHighlightHTML(mem))}</div>`:'';
+  const name=!continued&&!state.hideNames?`<div class="n-name" style="${subFontCss(L.scriptNameFont)}font-size:${L.nameSize}px;color:${mem.color||'#424448'};margin:0 0 7px;${messenger&&mine?'padding-right:15.5px;text-align:right;':'padding-left:15.5px;text-align:left;'}">${typeInline(memberNameHighlightHTML(mem))}</div>`:'';
   return `<div class="pmsg quote-row ${messenger?'m-msg no-av'+(mine?' mine':''):''} ${continued?'continuation':''}" style="margin-bottom:${gap}px;${bubblePadStyle()}">${ctrlHTML(m.id)}<div class="quote-message-body" style="${messenger?'display:inline-block;vertical-align:top;max-width:78%;text-align:'+(mine?'right':'left')+';':''}">${name}<div class="quote-dialogue editable" data-id="${m.id}" style="box-sizing:border-box;border-${messenger&&mine?'right':'left'}:3.5px solid ${quoteMemberColor(mem)};padding:${messenger&&mine?'2px 12px 2px 0':'2px 0 2px 12px'};color:${txt};font-size:${Number(L.bubbleFs)||L.fs}px;line-height:${L.lh};${bubbleTextAlignStyle()}${wbStyle()}">${typeWrap(fmtText(m.content||''),normalizeBubbleTextAlign(L.bubbleTextAlign))}</div></div></div>`;
 }
 (function(){
