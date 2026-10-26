@@ -1596,7 +1596,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 <div class="msg-img-empty" id="msgImgEmpty">
 </div>
 <div class="msg-img-body" id="msgImgBody" hidden="">
-<div class="msg-img-thumb"><img id="msgImgPrev"/><button class="x" type="button" title="이미지 제거" onclick="clearMsgImg()">×</button></div>
+<div class="msg-img-thumb"><img id="msgImgPrev" role="button" tabindex="0" title="사진 다시 크롭" aria-label="사진 다시 크롭" onclick="recropMsgImage()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();recropMsgImage();}" style="cursor:pointer"/><button class="x" type="button" title="이미지 제거" onclick="clearMsgImg()">×</button></div>
 <div class="msg-img-controls">
 <div class="field" style="margin:0 0 8px"><label class="lb">이미지 크기</label>
 <div class="rangewrap"><input id="imgSize" max="100" min="20" oninput="onMsgImgSize(this.value)" type="range" value="100"/><span class="val" id="szVal">100%</span></div></div>
@@ -1785,7 +1785,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 </div>
 <div class="colorgrid">
 <div class="field" style="margin-bottom:14px"><label class="lb">글자 크기</label>
-<div class="rangewrap"><input id="lyFs" max="22" min="11" oninput="setLayout('fs',this.value)" type="range" value="16"/><span class="val" id="lyFsV">16px</span></div></div>
+<div class="rangewrap"><input id="lyFs" max="40" min="11" oninput="setLayout('fs',this.value)" type="range" value="16"/><span class="val" id="lyFsV">16px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">말풍선 글자 크기</label>
 <div class="rangewrap"><input id="lyBubbleFs" max="22" min="11" oninput="setLayout('bubbleFs',this.value)" type="range" value="16"/><span class="val" id="lyBubbleFsV">16px</span></div></div>
 <div class="field" style="margin-bottom:14px"><label class="lb">행간</label>
@@ -1878,7 +1878,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 </div>
 <div class="field save-scale-field">
 <label class="lb">저장 배율</label>
-<div class="save-scale-row"><select id="exportScale" onchange="setExportScale(this.value)"><option value="1">1</option><option value="1.5">1.5</option><option value="2">2</option><option selected value="2.5">2.5</option><option value="3">3</option><option value="4">4</option></select><span class="save-scale-unit">×</span></div>
+<div class="save-scale-row"><select id="exportScale" onchange="setExportScale(this.value)"><option value="1">1</option><option selected value="1.5">1.5</option><option value="2">2</option><option value="2.5">2.5</option><option value="3">3</option><option value="4">4</option></select><span class="save-scale-unit">×</span></div>
 <div class="save-scale-help">배율이 높을수록 저장 시간이 더 걸릴 수 있어요.</div>
 </div>
 </div>
@@ -2076,7 +2076,7 @@ const state = {
   draftAlign:'justify',
   members:[],   // {id,name,image,color,bubbleColor,scriptHighlight}
   messages:[],  // {id,type,senderId,content,...}  type: 'chat' | 'text'
-  export:{ ratio:'auto', hMargin:50, vMargin:37, linkMargin:false, filename:'chat-발췌', scale:2.5 },
+  export:{ ratio:'auto', hMargin:50, vMargin:37, linkMargin:false, filename:'chat-발췌', scale:1.5 },
   transparentBg:false,
   previewZoom:1,
   backgroundImage:{src:'',size:100,rotation:0,x:50,y:50,blur:0,overlayOpacity:0},
@@ -2564,7 +2564,7 @@ function setTransparent(on){ state.transparentBg=!!on; renderPreview(); }
 function setFilename(v){ state.export.filename=v; }
 function normalizedExportScale(v){
   const n=Number(v);
-  return [1,1.5,2,2.5,3,4].includes(n)?n:2.5;
+  return [1,1.5,2,2.5,3,4].includes(n)?n:1.5;
 }
 function setExportScale(v){ state.export.scale=normalizedExportScale(v); }
 function getExportScale(){ return normalizedExportScale(state.export.scale); }
@@ -3265,7 +3265,7 @@ function defaultLayout(){
     linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',bubbleTextAlign:'justify',textIndent:false,scriptNameBold:true,scriptNarrationIndent:false,dividerMargin:8,dividerMarginBottom:null,dividerWidth:100,dividerThickness:1,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
-function defaultExport(){ return {ratio:'auto',hMargin:50,vMargin:37,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
+function defaultExport(){ return {ratio:'auto',hMargin:50,vMargin:37,linkMargin:false,filename:'chat-발췌',scale:1.5}; }
 function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16,sep:'dot',font:''}; }
 function seedThemes(){
   return [
@@ -3586,12 +3586,17 @@ function setQuoteColor(v){
 }
 /* ===== 사진(중간 삽입 이미지) — draft 전용 모델 ===== */
 let draftImgSize=100, draftImgMargin=6, draftImgRound=true;
+let draftImageOriginal=null;
 
 /* 편집 중인 대상이 사진 블록이면 그 메시지를 반환 (실시간 반영용) */
 function liveImageMsg(){
   if(!composerEditId) return null;
   const m=state.messages.find(x=>x.id===composerEditId);
   return (m&&m.type==='image')?m:null;
+}
+function recropMsgImage(){
+ const m=liveImageMsg(),src=m?(m.imageOriginal||m.image):(draftImageOriginal||draftMsgImg);
+ if(src)openMsgCrop(src,(src.match(/^data:([^;,]+)/)||[])[1]||'image/png');
 }
 function pickMsgImg(){ const f=document.getElementById('msgImgFile'); if(f){ f.value=''; f.click(); } }
 function onMsgImg(e){
@@ -3602,12 +3607,14 @@ function onMsgImg(e){
   r.readAsDataURL(f);
 }
 function setDraftMsgImage(src){
+  if(msgCropState.src)draftImageOriginal=msgCropState.src;
   draftMsgImg=src||null;
   const m=liveImageMsg();
-  if(m){ m.image=draftMsgImg; renderPreview(); }
+  if(m){pushUndo('사진 크롭');m.image=draftMsgImg;m.imageOriginal=draftImageOriginal||draftMsgImg;renderPreview();}
   refreshMsgImgEditor();
 }
 function clearMsgImg(){
+  draftImageOriginal=null;
   draftMsgImg=null;
   const file=document.getElementById('msgImgFile'); if(file) file.value='';
   const prev=document.getElementById('msgImgPrev'); if(prev){ prev.removeAttribute('src'); prev.src=''; }
@@ -3617,11 +3624,19 @@ function clearMsgImg(){
 function syncPhotoSizeControls(){
   const range=document.getElementById('imgSize'),label=document.getElementById('szVal');
   const number=document.querySelector('.stepper input[data-stepper-for="imgSize"]');
-  if(range)range.value=draftImgSize;
-  if(number)number.value=draftImgSize;
-  if(label)label.textContent=draftImgSize+'%';
+  const m=liveImageMsg(),metric=m&&state.novel?.on&&state.export?.ratio!=='auto'&&window.__photoCanvasMetrics?.get(m.id);
+  const value=metric?metric.percent:draftImgSize;
+  if(range){range.min=metric?'1':'20';range.value=value;}
+  if(number){number.min=metric?'1':'20';number.value=value;}
+  if(label)label.textContent=value+'%';
 }
-function onMsgImgSize(v){ draftImgSize=Math.max(20,Math.min(100,parseInt(v)||20)); syncPhotoSizeControls(); const m=liveImageMsg(); if(m){ m.imgSize=draftImgSize; renderPreview(); } }
+function onMsgImgSize(v){
+ const m=liveImageMsg();
+ if(m&&state.novel?.on&&state.export?.ratio!=='auto'&&window.__photoCanvasMetrics?.has(m.id)){
+  pushUndo('사진 크기');m.canvasPhotoHeight=window.__photoCanvasMetrics.get(m.id).maxHeight*Math.max(1,Math.min(100,parseInt(v)||1))/100;delete m.canvasPhotoScale;renderPreview();syncPhotoSizeControls();return;
+ }
+ draftImgSize=Math.max(20,Math.min(100,parseInt(v)||20));syncPhotoSizeControls();if(m){m.imgSize=draftImgSize;renderPreview();}
+}
 function onMsgImgMargin(v){ draftImgMargin=parseInt(v)||0; const el=document.getElementById('mgVal'); if(el) el.textContent=draftImgMargin+'px'; const m=liveImageMsg(); if(m){ m.imgMargin=draftImgMargin; renderPreview(); } }
 function toggleImgRound(on){ draftImgRound=!!on; const m=liveImageMsg(); if(m){ m.round=draftImgRound; renderPreview(); } }
 
@@ -3657,6 +3672,7 @@ function refreshMsgImgEditor(){
   }
 }
 function resetDraftImg(){
+  draftImageOriginal=null;
   draftMsgImg=null; draftImgSize=100; draftImgMargin=6; draftImgRound=true;
   const file=document.getElementById('msgImgFile'); if(file) file.value='';
   refreshMsgImgEditor();
@@ -3876,7 +3892,7 @@ function setDividerThickness(v){
 }
 function addImage(){
   if(!draftMsgImg){alert('먼저 “＋ 이미지 선택”으로 사진을 골라 주세요.');return;}
-  state.messages.push({id:uid(),type:'image',image:draftMsgImg,imgSize:draftImgSize,imgMargin:draftImgMargin,round:draftImgRound});
+  state.messages.push({id:uid(),type:'image',image:draftMsgImg,imageOriginal:draftImageOriginal||draftMsgImg,imgSize:draftImgSize,imgMargin:draftImgMargin,round:draftImgRound});
   resetDraftImg();
   renderPreview();
 }
@@ -3904,7 +3920,7 @@ function beginComposerEdit(id){
   if(type==='chat' && effSender){ try{ senderSel.value=effSender; }catch(_){} }
   if(type==='text'){ setAlign(m.align||'left'); }
   if(type==='image'){
-    draftMsgImg=m.image||null;
+    draftMsgImg=m.image||null;draftImageOriginal=m.imageOriginal||m.image||null;
     draftImgSize=(m.imgSize!=null?m.imgSize:60);
     draftImgMargin=(m.imgMargin!=null?m.imgMargin:6);
     draftImgRound=(m.round!==false);
@@ -4852,7 +4868,7 @@ function initPreciseControls(){
   enhanceRange('exV','exVV',{min:0,max:400,step:1,nudge:4});
   enhanceRange('lyWidthScale','lyWidthScaleV',{min:70,max:130,step:1,nudge:1});
   enhanceRange('lyLetterSpacing','lyLetterSpacingV',{min:-3,max:6,step:0.1,nudge:0.1});
-  enhanceRange('lyFs','lyFsV',{min:11,max:22,step:1,nudge:1});
+  enhanceRange('lyFs','lyFsV',{min:11,max:40,step:1,nudge:1});
   enhanceRange('lyLh','lyLhV',{min:1.1,max:2.2,step:0.05,nudge:0.05});
   enhanceRange('lyPara','lyParaV',{min:0,max:40,step:1,nudge:2});
   enhanceRange('lyBlockGap','lyBlockGapV',{min:0,max:60,step:1,nudge:2});
@@ -6227,6 +6243,20 @@ else setTimeout(__idleLoadRenderer,1200);
     /* 여러 단으로 붙이기는 계산 방식이 완전히 다르다 */
     if(typeof window.__novelLayout==='function'
        && window.__novelLayout(chat,canvas,baseChatW,hMargin,vMargin)){
+      // Fixed novel pages keep their layout and receive symmetric outer space.
+      if(state.novel?.mode==='ratio'&&ratio!=='auto'){
+        const parts=String(ratio).split(':').map(Number),r=parts[0]/parts[1];
+        if(parts.length===2&&r>0&&Number.isFinite(r)){
+          const w=parseFloat(canvas.style.width),h=parseFloat(canvas.style.height),nw=Math.max(w,h*r),nh=nw/r;
+          const dx=(nw-w)/2,dy=(nh-h)/2;
+          canvas.querySelectorAll(':scope > #novelWindow,:scope > .novel-paper,:scope > .novel-folio').forEach(el=>{
+            const cs=getComputedStyle(el);el.style.left=((parseFloat(cs.left)||0)+dx)+'px';
+            if(cs.top!=='auto')el.style.top=((parseFloat(cs.top)||0)+dy)+'px';
+            else if(cs.bottom!=='auto')el.style.bottom=((parseFloat(cs.bottom)||0)+dy)+'px';
+          });
+          canvas.style.width=nw+'px';canvas.style.height=nh+'px';
+        }
+      }
       fitPreview();
       return;
     }
@@ -17403,7 +17433,7 @@ async function grabOverlay(scale){
   const videoNext=liveVideo&&liveVideo.nextSibling;
   const keep={
     transparent:s.transparentBg,
-    exportScale:(typeof getExportScale==='function')?getExportScale():2.5,
+    exportScale:(typeof getExportScale==='function')?getExportScale():1.5,
     canvasBg:canvas.style.background,
     chatBg:chat?chat.style.background:'',
     layerDisp:layer?layer.style.display:'',
@@ -20219,7 +20249,7 @@ function columnTextBounds(row){
   const walker=document.createTreeWalker(row,NodeFilter.SHOW_TEXT);
   for(let node=walker.nextNode();node;node=walker.nextNode()){
     const parent=node.parentElement;
-    if(!parent||parent.closest('.ctrl,button,.drag-handle,.row-quote-bar')||!parent.closest('.t-inner,.n-bubble,.m-bubble,.n-plain,.n-name,.m-name,.divider-pill'))continue;
+    if(!parent||parent.closest('.ctrl,button,.drag-handle,.row-quote-bar')||!parent.closest('.t-inner,.n-bubble,.m-bubble,.n-plain,.n-name,.m-name,.script-name,.script-dialogue,.quote-dialogue,.divider-pill'))continue;
     const first=node.data.search(/\S/);if(first<0)continue;
     const end=node.data.trimEnd().length,range=document.createRange();
     range.setStart(node,first);range.setEnd(node,end);
@@ -20257,6 +20287,9 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
     if(!reserved.has(col)&&reserved.size>=n.cols-1) return;
     reserved.add(col);pinned.push({index,col,anchorId:pin.anchorId});
   });
+  // Text-only columns retain the authored outer padding removed from #chat.
+  const leftMargin=hMargin+(reserved.size?0:Math.max(0,Number(state.layout.margin?.l)||0));
+  const rightMargin=hMargin+(reserved.size?0:Math.max(0,Number(state.layout.margin?.r)||0));
   const slots=widths.map((_,i)=>i).filter(i=>!reserved.has(i));
   const pinnedIndices=new Set(pinned.map(p=>p.index));
   const textIndices=items.map((_,i)=>i).filter(i=>!pinnedIndices.has(i));
@@ -20296,15 +20329,16 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
     const h=Math.max(1,row.offsetHeight)+(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0);row.remove();cache.set(key,h);return h;
   }
   let flow;
+  const textColumnBounds=new Map();
   try{
     flow=(n.splitMode==='block'?balanceBlockColumns:balanceColumnItems)(textItems,slots.map(i=>widths[i]),(i,a,b,w)=>measure(textIndices[i],a,b,w),maxColumns);
     flow.placements=flow.placements.map(p=>({...p,index:textIndices[p.index],col:Math.floor(p.col/slots.length)*n.cols+slots[p.col%slots.length]}));
     const anchorPlacements=new Map();
     flow.placements.forEach(p=>{const id=novelRowId(items[p.index].row);if(!anchorPlacements.has(id))anchorPlacements.set(id,p);});
-    // A side photo uses the existing text-height envelope, never anchor.y + image height.
+    // A side photo follows the text-height envelope, with a column-width minimum.
     const textPageHeights=new Map();
     flow.placements.forEach(p=>{const pg=Math.floor(p.col/n.cols);textPageHeights.set(pg,Math.max(textPageHeights.get(pg)||0,p.y+p.h));});
-    const textColumnHeights=new Map(),textColumnBounds=new Map(),textPageBounds=new Map();
+    const textColumnHeights=new Map(),textPageBounds=new Map();
     flow.placements.forEach(p=>textColumnHeights.set(p.col,Math.max(textColumnHeights.get(p.col)||0,p.y+p.h)));
     flow.placements.forEach(p=>{
       const row=makePiece(p.index,p.start,p.end,widths[p.col%n.cols]);
@@ -20332,19 +20366,31 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
     photoGroups.forEach((group,col)=>{
       const page=Math.floor(col/n.cols),local=col%n.cols;
       const bounds=textPageBounds.get(page)||{top:0,bottom:textPageHeights.get(page)||Math.max(40,base)};
-      const available=Math.max(1,bounds.bottom-bounds.top);
+      // Short text must not shrink the photo envelope below its assigned column width.
+      const available=Math.max(1,bounds.bottom-bounds.top,widths[local]);
       const photos=group.map(pin=>{
         const item=items[pin.index],msg=msgById.get(novelRowId(item.row)),img=item.row.querySelector('img.mimg');
         const ratio=img&&img.naturalWidth&&img.naturalHeight?img.naturalWidth/img.naturalHeight:1;
         return {pin,ratio,percent:msg&&msg.imgSize!=null?Number(msg.imgSize):60};
       });
       const fill=group.some(pin=>msgById.get(novelRowId(items[pin.index].row))?.columnFill);
-      const fitted=fill?photos.map((photo,i)=>({width:widths[local],height:available/photos.length,y:i*available/photos.length,fill:true})):fitSidePhotos(photos,widths[local],available);
+      // Filling changes only the final paint box, never the intrinsic layout size.
+      const fitted=fitSidePhotos(photos,widths[local],available).map(photo=>({...photo,fill}));
       const photoFree=Math.max(0,available-fitted.reduce((sum,p)=>sum+p.height,0));
       fitted.forEach((photo,i)=>{
         const pin=group[i];
         flow.placements.push({index:pin.index,start:0,end:items[pin.index].length,col,y:bounds.top+photo.y,h:photo.height,photo:{...photo,free:photoFree}});
       });
+    });
+    // Only pages with side photos center text that is shorter than the photo span.
+    const photoPageBounds=new Map();
+    flow.placements.filter(p=>p.photo).forEach(p=>{
+      const page=Math.floor(p.col/n.cols),b=photoPageBounds.get(page)||{top:Infinity,bottom:-Infinity};
+      b.top=Math.min(b.top,p.y);b.bottom=Math.max(b.bottom,p.y+p.h);photoPageBounds.set(page,b);
+    });
+    flow.placements.filter(p=>!p.photo).forEach(p=>{
+      const text=textColumnBounds.get(p.col),photo=photoPageBounds.get(Math.floor(p.col/n.cols));
+      if(text&&photo&&text.bottom-text.top<photo.bottom-photo.top)p.textShift=(photo.top+photo.bottom-text.top-text.bottom)/2;
     });
     flow.columns=Math.max(1,...flow.placements.map(p=>p.col+1));
   }catch(e){chat.replaceChildren(...original);chat.__variableOriginal=null;chat.classList.remove('variable-columns');throw e;}
@@ -20354,7 +20400,7 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
   // of the text-column defaults. Recompute offsets and the export canvas together.
   reserved.forEach(local=>{
     const photos=flow.placements.filter(p=>p.photo&&p.col===firstCol+local);
-    if(!photos.some(p=>p.photo.fill))widths[local]=Math.max(0,...photos.map(p=>p.photo.width));
+    widths[local]=Math.max(0,...photos.map(p=>p.photo.width));
   });
   pageW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1);
   chat.style.width=pageW+'px';chat.style.minWidth=pageW+'px';chat.style.maxWidth=pageW+'px';
@@ -20374,13 +20420,128 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
       if(img){img.style.width=p.photo.width+'px';img.style.height=p.photo.height+'px';img.style.maxWidth='100%';img.style.objectFit='contain';img.style.verticalAlign='top';}
     }
   }
+  // Outer padding starts at visible content, not the last block's trailing gap.
+  if(!reserved.size){
+    const rendered=[...chat.querySelectorAll(':scope > .pmsg')];
+    let visibleTop=Infinity,visibleBottom=-Infinity;
+    rendered.forEach(row=>{
+      const bounds=columnTextBounds(row)||{top:0,bottom:row.offsetHeight};
+      const y=parseFloat(row.style.top)||0;
+      visibleTop=Math.min(visibleTop,y+bounds.top);
+      visibleBottom=Math.max(visibleBottom,y+bounds.bottom);
+    });
+    if(Number.isFinite(visibleTop)&&visibleBottom>visibleTop){
+      const extra=Math.max(0,40-top-bottom-(visibleBottom-visibleTop));
+      rendered.forEach(row=>row.style.top=((parseFloat(row.style.top)||0)+top-visibleTop+extra/2)+'px');
+      maxH=top+visibleBottom-visibleTop+extra;
+    }
+  }
   n.__msgCols=map;watchImages(chat);
   const dispH=Math.max(40,Math.ceil(maxH+bottom));chat.style.height=dispH+'px';
   let win=canvas.querySelector('#novelWindow');if(!win){win=document.createElement('div');win.id='novelWindow';}
-  win.style.cssText='position:absolute;overflow:hidden;top:'+vMargin+'px;left:'+hMargin+'px;width:'+pageW+'px;height:'+dispH+'px;z-index:1';
+  win.style.cssText='position:absolute;overflow:hidden;top:'+vMargin+'px;left:'+leftMargin+'px;width:'+pageW+'px;height:'+dispH+'px;z-index:1';
   if(chat.parentElement!==win)win.appendChild(chat);if(win.parentElement!==canvas)canvas.appendChild(win);
-  canvas.style.display='block';canvas.style.padding='0px';canvas.style.width=Math.ceil(pageW+2*hMargin)+'px';
-  const footer=drawColsFooter(canvas,hMargin,pageW,vMargin+bottom,n.page+1,pages);canvas.style.height=Math.ceil(dispH+2*vMargin+footer)+'px';
+  canvas.style.display='block';canvas.style.padding='0px';canvas.style.width=Math.ceil(pageW+leftMargin+rightMargin)+'px';
+  const footer=drawColsFooter(canvas,leftMargin,pageW,vMargin+bottom,n.page+1,pages);canvas.style.height=Math.ceil(dispH+2*vMargin+footer)+'px';
+  // Global export ratios expand the complete multi-column canvas, never shrink text.
+  window.__photoCanvasMetrics=new Map();
+  const ratioParts=String(state.export?.ratio||'auto').split(':').map(Number);
+  const canvasRatio=ratioParts.length===2&&ratioParts.every(x=>x>0&&Number.isFinite(x))?ratioParts[0]/ratioParts[1]:0;
+  if(canvasRatio){
+    // Only actual photo sizes contribute to canvas bounds; capacity does not.
+    let actualPhotoBottom=0;
+    reserved.forEach(local=>{
+      const photos=flow.placements.filter(p=>p.photo&&p.col===firstCol+local);
+      let total=0;
+      widths[local]=Math.max(0,...photos.map(p=>{
+        const msg=msgById.get(novelRowId(items[p.index].row));
+        const h=Number(msg?.canvasPhotoHeight)>0?Number(msg.canvasPhotoHeight):p.h;
+        total+=h;return h*p.photo.width/Math.max(1,p.photo.height);
+      }));
+      actualPhotoBottom=Math.max(actualPhotoBottom,total+top+bottom+2*vMargin+footer);
+    });
+    const naturalW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1)+leftMargin+rightMargin,naturalH=Math.max(parseFloat(canvas.style.height),actualPhotoBottom);
+    const outerW=Math.max(naturalW,naturalH*canvasRatio),outerH=outerW/canvasRatio;
+    const extraW=outerW-naturalW;
+    const activePhotos=[...reserved].filter(local=>flow.placements.some(p=>p.photo&&p.col===firstCol+local));
+    const photoSet=new Set(activePhotos);
+    activePhotos.forEach(i=>widths[i]+=extraW/activePhotos.length);
+    pageW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1);
+    const contentLeft=leftMargin+(activePhotos.length?0:extraW/2);
+    const innerH=Math.max(1,outerH-2*vMargin-footer-top-bottom);
+    // A filled photo occupies the same column width as an uncropped 100% photo.
+    activePhotos.forEach(local=>{
+      const photos=flow.placements.filter(p=>p.photo&&p.col===firstCol+local);
+      if(!photos.some(p=>p.photo.fill))return;
+      // Keep the text columns and gaps inside the already computed canvas.
+      const capacity=Math.max(1,widths[local]);
+      widths[local]=Math.max(1,...photos.map(p=>{
+        const img=items[p.index].row.querySelector('img.mimg');
+        const aspect=img?.naturalWidth&&img?.naturalHeight?img.naturalWidth/img.naturalHeight:1;
+        return Math.min(innerH/photos.length*aspect,capacity);
+      }));
+    });
+    pageW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1);
+    Object.assign(canvas.style,{width:outerW+'px',height:outerH+'px'});
+    Object.assign(chat.style,{width:pageW+'px',minWidth:pageW+'px',maxWidth:pageW+'px',height:(innerH+top+bottom)+'px'});
+    Object.assign(win.style,{left:contentLeft+'px',width:pageW+'px',height:chat.style.height});
+    drawColsFooter(canvas,leftMargin,outerW-leftMargin-rightMargin,vMargin+bottom,n.page+1,pages);
+    // Without photos, move the columns as one group: preserve their selected alignment.
+    const textGroup={top:Infinity,bottom:-Infinity};
+    if(!activePhotos.length) textColumnBounds.forEach((bounds,col)=>{
+      if(col<firstCol||col>=firstCol+n.cols)return;
+      const p=flow.placements.find(p=>p.col===col&&!p.photo);
+      const shift=p?.textShift||0;
+      textGroup.top=Math.min(textGroup.top,bounds.top+shift);
+      textGroup.bottom=Math.max(textGroup.bottom,bounds.bottom+shift);
+    });
+    for(const row of chat.querySelectorAll(':scope > .pmsg')){
+      const col=Number(row.dataset.fluidColumn),local=col-firstCol;
+      if(local<0||local>=n.cols)continue;
+      const placement=flow.placements.find(p=>p.col===col&&novelRowId(items[p.index].row)===row.dataset.fluidSource&&String(p.start)===row.dataset.fluidStart);
+      if(!placement)continue;
+      row.style.left=(widths.slice(0,local).reduce((a,b)=>a+b,0)+local*gap)+'px';
+      if(photoSet.has(local)&&placement.photo){
+        const siblings=[...chat.querySelectorAll(':scope > .image-row')].filter(r=>Number(r.dataset.fluidColumn)===col);
+        const i=siblings.indexOf(row),room=innerH/siblings.length;
+        const msg=msgById.get(novelRowId(items[placement.index].row)),img=row.querySelector('img.mimg');
+        const aspect=placement.photo.width/Math.max(1,placement.photo.height);
+        const maxH=msg?.columnFill?room:Math.min(room,Math.max(widths[local],variableColumnWidth(n,local,base))/aspect);
+        const requestedHeight=Number(msg?.canvasPhotoHeight)>0?Number(msg.canvasPhotoHeight):placement.h;
+        const fraction=Math.max(.01,Math.min(1,requestedHeight/maxH));
+        const height=maxH*fraction,width=msg?.columnFill?widths[local]:height*aspect;
+        const x=widths.slice(0,local).reduce((a,b)=>a+b,0)+local*gap+(widths[local]-width)/2;
+        Object.assign(row.style,{left:x+'px',top:(top+i*room+(room-height)/2)+'px',width:width+'px',maxWidth:width+'px',height:height+'px',overflow:'hidden'});
+        if(img)Object.assign(img.style,{width:'100%',height:'100%',maxWidth:'none',maxHeight:'none',objectFit:msg?.columnFill?'cover':'contain',objectPosition:'center',display:'block',margin:'0'});
+        window.__photoCanvasMetrics.set(msg.id,{percent:Math.round(fraction*100),maxHeight:maxH});
+      }else{
+        const bounds=textColumnBounds.get(col)||{top:0,bottom:heights.get(col)||0};
+        if(!activePhotos.length&&Number.isFinite(textGroup.top)){
+          row.style.top=(top+placement.y+(placement.textShift||0)+(innerH-(textGroup.bottom-textGroup.top))/2-textGroup.top)+'px';
+        }else{
+          row.style.top=(top+placement.y+(innerH-(bounds.bottom-bounds.top))/2-bounds.top)+'px';
+        }
+      }
+    }
+    // Capacity determines the 100% limit; visible columns use the current image width.
+    const hasBleed=flow.placements.some(p=>p.photo?.fill&&p.col>=firstCol&&p.col<firstCol+n.cols);
+    if(activePhotos.length&&!hasBleed){
+      activePhotos.forEach(local=>{
+        const rows=[...chat.querySelectorAll(':scope > .image-row')].filter(row=>Number(row.dataset.fluidColumn)===firstCol+local);
+        widths[local]=Math.max(0,...rows.map(row=>parseFloat(row.style.width)||0));
+      });
+      pageW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1);
+      Object.assign(chat.style,{width:pageW+'px',minWidth:pageW+'px',maxWidth:pageW+'px'});
+      Object.assign(win.style,{left:((outerW-pageW)/2)+'px',width:pageW+'px'});
+      for(const row of chat.querySelectorAll(':scope > .pmsg')){
+        const local=Number(row.dataset.fluidColumn)-firstCol;
+        if(local<0||local>=n.cols)continue;
+        const offset=photoSet.has(local)?Math.max(0,(widths[local]-(parseFloat(row.style.width)||0))/2):0;
+        row.style.left=(widths.slice(0,local).reduce((a,b)=>a+b,0)+local*gap+offset)+'px';
+      }
+    }
+    if(typeof syncPhotoSizeControls==='function')syncPhotoSizeControls();
+  }
   // Full-bleed photo columns use their assigned width and the finished canvas height.
   const fillColumns=new Set(flow.placements.filter(p=>p.photo?.fill&&p.col>=firstCol&&p.col<firstCol+n.cols).map(p=>p.col));
   if(fillColumns.size){
@@ -20949,94 +21110,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(run,80));
 setTimeout(run,500); setTimeout(run,1200);
 })();
 </script>
-<style id="novel-debug-style">
-#novelDebug{position:fixed;left:8px;right:8px;bottom:8px;z-index:2147483600;
-  background:rgba(20,20,24,.94);color:#fff;font:11px/1.5 ui-monospace,monospace;
-  padding:10px 12px;border-radius:10px;white-space:pre-wrap;word-break:break-all;display:none}
-#novelDebug.show{display:block}
-#novelDebug b{color:#8ED0FF}
-#novelDebugBtn{position:fixed;right:10px;bottom:10px;z-index:2147483601;
-  width:38px;height:38px;border-radius:50%;border:0;background:#424448;color:#fff;font-size:15px;display:none}
-#novelDebug .tbtns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-#novelDebug .tbtns button{flex:1 1 auto;padding:9px 8px;border:0;border-radius:8px;
-  background:#3A3C42;color:#fff;font-size:12px;font-weight:700}
-#novelDebug .tbtns button.on{background:#8ED0FF;color:#111}
-/* 시험 A — 어떤 블럭이든 단 경계에서 쪼개지도록 (말풍선 포함) */
-#chat.novel-mode.test-a>.pmsg{break-inside:auto!important;-webkit-column-break-inside:auto!important}
-/* 시험 B — 균등 배분 대신 위에서부터 채우기 */
-#chat.novel-mode.test-b{column-fill:auto!important}
-#novelDebugBtn.show{display:block}
-</style>
-<script id="novel-debug">
-/* 사파리에서 다단이 왜 깨지는지 알아내기 위한 임시 진단 표시.
-   여러 단으로 붙이기가 켜져 있을 때만 나타난다. */
-(function(){
-'use strict';
-const ST=()=>{ try{ return state; }catch(_){ return window.state||null; } };
-function el(id,tag){ let e=document.getElementById(id);
-  if(!e){ e=document.createElement(tag||'div'); e.id=id; document.body.appendChild(e); } return e; }
-function applyTest(){
-  const ch=document.getElementById('chat'); if(!ch) return;
-  ch.classList.toggle('test-a',TEST==='a');
-  ch.classList.toggle('test-b',TEST==='b');
-}
-let TEST='';
-window.__novelTest=function(t){
-  TEST=(TEST===t)?'':t;
-  applyTest();
-  try{ if(window.__novelInvalidate) window.__novelInvalidate(); renderPreview(); }catch(_){}
-  dump();
-};
-function dump(){
-  const s=ST(); const box=el('novelDebug'); const btn=el('novelDebugBtn','button');
-  const on=!!(s&&s.novel&&s.novel.on);
-  btn.classList.toggle('show',on);
-  if(!on){ box.classList.remove('show'); return; }
-  btn.textContent='🔍';
-  btn.onclick=()=>{ box.classList.toggle('show'); dump(); };
-  if(!box.classList.contains('show')) return;
-  applyTest();
-  const ch=document.getElementById('chat'), cv=document.getElementById('canvas');
-  const cs=getComputedStyle(ch);
-  const win=document.getElementById('novelWindow');
-  const rows=ch.querySelectorAll('.pmsg');
-  let maxBottom=0, chTop=ch.getBoundingClientRect().top;
-  rows.forEach(r=>{ for(const b of r.getClientRects()) maxBottom=Math.max(maxBottom,b.bottom-chTop); });
-  const supports=(p,v)=>{ try{ return CSS.supports(p,v); }catch(_){ return 'x'; } };
-  const btns='<div class="tbtns">'
-    +'<button onclick="__novelTest(\'a\')" class="'+(TEST==='a'?'on':'')+'">A · 무조건 쪼개기</button>'
-    +'<button onclick="__novelTest(\'b\')" class="'+(TEST==='b'?'on':'')+'">B · 위부터 채우기</button>'
-    +'<button onclick="__novelTest(\'\')" class="'+(TEST===''?'on':'')+'">원래대로</button>'
-    +'</div>';
-  const info=
-   '【화면】'+innerWidth+'x'+innerHeight+' dpr'+(devicePixelRatio||1)+'\n'+
-   '【모드】'+(s.novel.mode)+'  single='+(s.novel.single?1:0)+'  gutter='+s.novel.gutter+'\n'+
-   '【지정】cols='+ (ch.style.columnCount||'-') +'  width='+ch.style.width+'  height='+ch.style.height+'\n'+
-   '【계산】columnCount='+cs.columnCount+'  columnWidth='+cs.columnWidth+'  columnGap='+cs.columnGap+'\n'+
-   '     columnFill='+cs.columnFill+'  display='+cs.display+'  overflow='+cs.overflow+'\n'+
-   '【실측】chat박스='+Math.round(ch.getBoundingClientRect().width)+'x'+Math.round(ch.getBoundingClientRect().height)+
-        '  scroll='+ch.scrollWidth+'x'+ch.scrollHeight+'\n'+
-   '     글맨아래='+Math.round(maxBottom)+'  (지정높이 '+(parseFloat(ch.style.height)||0)+' 넘으면 넘침)\n'+
-   '【창】'+(win?(Math.round(win.getBoundingClientRect().width)+'x'+Math.round(win.getBoundingClientRect().height)+' overflow='+getComputedStyle(win).overflow):'없음')+'\n'+
-   '【캔버스】'+cv.style.width+'x'+cv.style.height+'  실제='+Math.round(cv.getBoundingClientRect().width)+'\n'+
-   '【지원】column-fill:auto='+supports('column-fill','auto')+
-        '  break-inside:avoid='+supports('break-inside','avoid')+
-        '  -webkit-column-break-inside='+supports('-webkit-column-break-inside','avoid')+'\n'+
-   '【블럭】'+rows.length+'개  break-inside(첫블럭)='+(rows[0]?getComputedStyle(rows[0]).breakInside:'-')+
-        '  -webkit='+(rows[0]?getComputedStyle(rows[0]).webkitColumnBreakInside:'-')
-   +'\n【시험】'+(TEST?TEST.toUpperCase():'없음');
-  box.innerHTML=btns+'<span></span>';
-  box.lastChild.textContent=info;
-}
-window.__novelDump=dump;
-['renderPreview','applyCanvas'].forEach(n=>{
-  const prev=window[n];
-  if(typeof prev!=='function') return;
-  window[n]=function(){ const r=prev.apply(this,arguments); try{ dump(); }catch(_){} return r; };
-});
-setTimeout(dump,800);
-})();
-</script>
+
 <!-- ===== iOS Safari multicol fragmented-text paint fix v4 =====
      모바일 Safari에서 글 블럭의 '자리'는 다음 단에 생기는데 실제 glyph layer만
      첫 단 좌표계에 남는 WebKit fragmentation/compositing 문제를 피한다.
@@ -24172,12 +24246,17 @@ sync();
 #photoEditMenu label.msg-img-round-toggle{display:flex!important;gap:9px;width:100%;box-sizing:border-box;min-height:34px;margin:0!important;font-size:12px;white-space:nowrap}
 #photoEditMenu label:has(input:disabled){opacity:.45}
 #photoEditButton{white-space:nowrap}
+#photoEditMenu .photo-split-row{display:flex;align-items:center;gap:6px}
+#photoEditMenu .photo-split-row label{flex:1;width:auto;min-width:0}
+#photoEditMenu .photo-split-side{display:flex;align-items:center;gap:2px;font-size:12px}
+#photoEditMenu .photo-split-side button{font:inherit;padding:4px 5px;min-height:28px;border:0;border-radius:4px;background:transparent;color:inherit;cursor:pointer}
+#photoEditMenu .photo-split-side button[aria-pressed="true"]{background:var(--text,#222);color:var(--panel,#fff)}
 
 </style>
 <script id="photo-edit-menu-script">
 (function(){
  const $=id=>document.getElementById(id);
- let draftSplit=false,draftFill=false;
+ let draftSplit=false,draftFill=false,draftSide='left';
  const head=$('msgImgEditorHead').querySelector('.msg-img-head-right');
  const button=document.createElement('button');button.type='button';button.className='msg-img-pick';button.id='photoEditButton';button.textContent='편집 ▾';button.setAttribute('aria-expanded','false');button.setAttribute('aria-controls','photoEditMenu');
  head.insertBefore(button,$('msgImgPickBtn'));
@@ -24187,11 +24266,18 @@ sync();
  menu.append(sticker,round);
  function toggle(id,text){const label=document.createElement('label');label.className='msg-img-round-toggle';label.innerHTML='<input type="checkbox" id="'+id+'"><span class="msg-img-round-switch"></span>'+text;menu.append(label);return label.querySelector('input');}
  const split=toggle('photoSplitToggle','단 나누기'),fill=toggle('photoFillToggle','여백 꽉 채우기');document.body.append(menu);
+ const splitLabel=split.closest('label'),splitRow=document.createElement('div');splitRow.className='photo-split-row';
+ menu.insertBefore(splitRow,splitLabel);splitRow.append(splitLabel);
+ const sides=document.createElement('div');sides.className='photo-split-side';sides.setAttribute('role','group');sides.setAttribute('aria-label','사진 단 위치');
+ sides.innerHTML='<button type="button" data-side="left" aria-label="첫 단에 배치">왼</button><span aria-hidden="true">|</span><button type="button" data-side="right" aria-label="마지막 단에 배치">오</button>';splitRow.append(sides);
  const live=()=>liveImageMsg();
  const inPhotoColumn=m=>!!(m?.columnPlacement&&state.novel?.on&&state.novel.mode!=='ratio');
  function sync(){
   const m=live(),stickerToggle=$('stickerMode');
   split.checked=m?inPhotoColumn(m):draftSplit;fill.checked=m?!!m.columnFill:draftFill;
+  const selected=m&&inPhotoColumn(m)?m.columnPlacement.side:draftSide;
+  sides.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.side===selected)));
+  if(menu.matches(':popover-open'))requestAnimationFrame(position);
   const blocked=split.checked||fill.checked;
   stickerToggle.disabled=blocked;
   if(blocked&&stickerToggle.checked)setStickerMode(false);
@@ -24204,14 +24290,28 @@ sync();
  menu.addEventListener('toggle',e=>button.setAttribute('aria-expanded',String(e.newState==='open')));
  addEventListener('resize',()=>{if(menu.matches(':popover-open'))position();});
  addEventListener('scroll',()=>{if(menu.matches(':popover-open'))position();},true);
- function placeLeft(m){
-  if(inPhotoColumn(m))return true;
-  if(state.novel?.on&&state.novel.mode==='ratio'){toast('단 나누기는 단 수 모드에서 사용할 수 있어요.');return false;}
+ function placeSide(m,side){
+  const n=state.novel;
+  if(n?.on&&n.mode==='ratio'){toast('단 나누기는 단 수 모드에서 사용할 수 있어요.');return false;}
   const target=state.messages.find(x=>x.id!==m.id&&x.type!=='image')||state.messages.find(x=>x.id!==m.id);
   if(!target){toast('사진 옆에 둘 글이나 말풍선을 먼저 추가해 주세요.');return false;}
-  window.__photoColumnActions.place(m.id,target.id,'left');return !!m.columnPlacement;
+  if(n?.on&&n.cols>=2){
+   const col=side==='right'?n.cols-1:0;
+   const reserved=new Set(state.messages.filter(x=>x!==m&&x.columnPlacement).map(x=>Number(x.columnPlacement.column)));reserved.add(col);
+   if(reserved.size>=n.cols){toast('글이나 말풍선이 들어갈 단을 하나 남겨 주세요.');return false;}
+   pushUndo('사진 단 위치 변경');
+   m.columnPlacement={column:col,anchorId:target.id,side};n.page=0;delete n.__msgCols;
+   syncControlsFromState();if(window.__syncNovel)window.__syncNovel();renderPreview();
+  }else window.__photoColumnActions.place(m.id,target.id,side);
+  if(!inPhotoColumn(m))return false;
+  toast('사진이 '+(Number(m.columnPlacement.column)+1)+'단에 들어갔어요!');return true;
  }
- split.onchange=()=>{const m=live();if(m){if(split.checked)placeLeft(m);else window.__photoColumnActions.restore(m.id);}else draftSplit=split.checked;sync();};
+ sides.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  const side=b.dataset.side,m=live();
+  if(m){if(placeSide(m,side))draftSide=side;}else{draftSide=side;draftSplit=true;}
+  sync();
+ });
+ split.onchange=()=>{const m=live();if(m){if(split.checked)placeSide(m,draftSide);else window.__photoColumnActions.restore(m.id);}else draftSplit=split.checked;sync();};
  fill.onchange=()=>{const m=live();if(m){pushUndo('사진 여백 꽉 채우기');if(fill.checked)m.columnFill=true;else delete m.columnFill;renderPreview();}else draftFill=fill.checked;sync();};
  let converting=false;
  $('stickerMode').addEventListener('change',async()=>{
@@ -24231,11 +24331,11 @@ sync();
   }finally{converting=false;sync();}
  });
  const oldRefresh=refreshMsgImgEditor;refreshMsgImgEditor=function(){const r=oldRefresh.apply(this,arguments);sync();return r;};
- const oldReset=resetDraftImg;resetDraftImg=function(){draftSplit=draftFill=false;const r=oldReset.apply(this,arguments);sync();return r;};
+ const oldReset=resetDraftImg;resetDraftImg=function(){draftSplit=draftFill=false;draftSide='left';const r=oldReset.apply(this,arguments);sync();return r;};
  const oldAdd=addImage;addImage=function(){
-  const opts={split:draftSplit,fill:draftFill},ids=new Set(state.messages.map(m=>m.id));
+  const opts={split:draftSplit,fill:draftFill,side:draftSide},ids=new Set(state.messages.map(m=>m.id));
   const r=oldAdd.apply(this,arguments);const m=state.messages.find(m=>!ids.has(m.id)&&m.type==='image');
-  if(m){if(opts.fill)m.columnFill=true;if(opts.split)placeLeft(m);renderPreview();}sync();return r;
+  if(m){if(opts.fill)m.columnFill=true;if(opts.split)placeSide(m,opts.side);renderPreview();}sync();return r;
  };
  const oldRender=renderPreview;renderPreview=function(){const r=oldRender.apply(this,arguments);sync();return r;};
  const oldImage=msgImgHTML;msgImgHTML=function(m){const html=oldImage.apply(this,arguments);return m.columnFill&&!inPhotoColumn(m)?html.replace('<img ','<img data-photo-wide="1" '):html;};
@@ -24525,5 +24625,41 @@ body:not(.mobile-ui) .composer-card #senderField#senderField #senderSel{width:10
 #chat .divider-row>.divider-line,#chat .divider-row>.divider-pill{position:relative;pointer-events:none}
 @media print{#chat .divider-hit-area{display:none!important}}
 </style>
+
+<style id="preview-size-readout-style">
+#previewSizeReadout{position:fixed;z-index:60;pointer-events:none;display:grid;gap:2px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,.88);color:#555;font:11px/1.4 system-ui,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+@media print{#previewSizeReadout{display:none!important}}
+</style>
+<script id="preview-size-readout-script">
+(function(){
+ const canvas=document.getElementById('canvas'),stage=document.getElementById('stageEl');
+ if(!canvas||!stage)return;
+ const badge=document.createElement('div');badge.id='previewSizeReadout';badge.setAttribute('aria-label','미리보기와 저장 이미지 크기');
+ const current=document.createElement('div'),saved=document.createElement('div');badge.append(current,saved);document.body.append(badge);
+ let pending=false;
+ function update(){
+  pending=false;
+  const width=Math.max(1,Math.ceil(canvas.offsetWidth)),height=Math.max(1,Math.ceil(canvas.offsetHeight));
+  const scale=getExportScale();
+  current.textContent='현재: '+width+' × '+height+' px';
+  saved.textContent='저장 시: '+Math.max(1,Math.floor(width*scale))+' × '+Math.max(1,Math.floor(height*scale))+' px';
+  const r=stage.getBoundingClientRect(),mobile=document.body.classList.contains('mobile-ui');
+  const left=Math.max(0,r.left),right=Math.min(innerWidth,r.right),top=Math.max(0,r.top),bottom=Math.min(innerHeight,r.bottom);
+  badge.hidden=right<=left||bottom<=top||stage.getClientRects().length===0;
+  badge.style.display=badge.hidden?'none':'grid';
+  badge.style.right=Math.max(10,innerWidth-right+10)+'px';
+  badge.style.top=mobile?(top+10)+'px':'auto';
+  badge.style.bottom=mobile?'auto':Math.max(10,innerHeight-bottom+10)+'px';
+ }
+ function schedule(){if(!pending){pending=true;requestAnimationFrame(update);}}
+ const resize=new ResizeObserver(schedule);resize.observe(canvas);resize.observe(stage);
+ new MutationObserver(schedule).observe(document.body,{attributes:true,attributeFilter:['class']});
+ for(const name of ['setExportScale','renderPreview','syncControlsFromState']){
+  const previous=window[name];if(typeof previous==='function')window[name]=function(){const result=previous.apply(this,arguments);schedule();return result;};
+ }
+ window.addEventListener('resize',schedule);window.addEventListener('scroll',schedule,true);
+ schedule();
+})();
+</script>
 </body>
 </html>
