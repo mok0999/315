@@ -20263,6 +20263,7 @@ function columnTextBounds(row){
 }
 function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pages){
   const widths=Array.from({length:n.cols},(_,i)=>variableColumnWidth(n,i,base));
+  const explicitWidths=new Set(widths.map((_,i)=>i).filter(i=>Number(n.columnWidths?.[i])>0));
   let pageW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1);
   const original=[...chat.childNodes],rows=[...chat.querySelectorAll(':scope > .pmsg')];
   const top=chatPadTop(chat),bottom=chatPadBottom(chat);
@@ -20376,6 +20377,10 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
       const fill=group.some(pin=>msgById.get(novelRowId(items[pin.index].row))?.columnFill);
       // Filling changes only the final paint box, never the intrinsic layout size.
       const fitted=fitSidePhotos(photos,widths[local],available).map(photo=>({...photo,fill}));
+      if(explicitWidths.has(local)){
+        let y=0;
+        fitted.forEach(photo=>{const scale=Math.min(1,widths[local]/Math.max(1,photo.width));photo.width*=scale;photo.height*=scale;photo.y=y;y+=photo.height;});
+      }
       const photoFree=Math.max(0,available-fitted.reduce((sum,p)=>sum+p.height,0));
       fitted.forEach((photo,i)=>{
         const pin=group[i];
@@ -20400,7 +20405,7 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
   // of the text-column defaults. Recompute offsets and the export canvas together.
   reserved.forEach(local=>{
     const photos=flow.placements.filter(p=>p.photo&&p.col===firstCol+local);
-    widths[local]=Math.max(0,...photos.map(p=>p.photo.width));
+    if(!explicitWidths.has(local))widths[local]=Math.max(0,...photos.map(p=>p.photo.width));
   });
   pageW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1);
   chat.style.width=pageW+'px';chat.style.minWidth=pageW+'px';chat.style.maxWidth=pageW+'px';
@@ -20416,6 +20421,7 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
     row.dataset.fluidColumn=String(p.col);row.style.top=(top+p.y+shift)+'px';
     if(p.photo){
       row.style.marginTop='0px';row.style.marginBottom='0px';row.style.height=p.h+'px';row.style.lineHeight='0';
+      if(explicitWidths.has(local)&&!p.photo.fill){row.style.left=(parseFloat(row.style.left)+(widths[local]-p.photo.width)/2)+'px';row.style.width=p.photo.width+'px';row.style.maxWidth=p.photo.width+'px';}
       const img=row.querySelector('img.mimg');
       if(img){img.style.width=p.photo.width+'px';img.style.height=p.photo.height+'px';img.style.maxWidth='100%';img.style.objectFit='contain';img.style.verticalAlign='top';}
     }
@@ -20453,11 +20459,12 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
     reserved.forEach(local=>{
       const photos=flow.placements.filter(p=>p.photo&&p.col===firstCol+local);
       let total=0;
-      widths[local]=Math.max(0,...photos.map(p=>{
+      const actualWidth=Math.max(0,...photos.map(p=>{
         const msg=msgById.get(novelRowId(items[p.index].row));
         const h=Number(msg?.canvasPhotoHeight)>0?Number(msg.canvasPhotoHeight):p.h;
         total+=h;return h*p.photo.width/Math.max(1,p.photo.height);
       }));
+      widths[local]=explicitWidths.has(local)?variableColumnWidth(n,local,base):actualWidth;
       actualPhotoBottom=Math.max(actualPhotoBottom,total+top+bottom+2*vMargin+footer);
     });
     const naturalW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1)+leftMargin+rightMargin,naturalH=Math.max(parseFloat(canvas.style.height),actualPhotoBottom);
@@ -20465,14 +20472,15 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
     const extraW=outerW-naturalW;
     const activePhotos=[...reserved].filter(local=>flow.placements.some(p=>p.photo&&p.col===firstCol+local));
     const photoSet=new Set(activePhotos);
-    activePhotos.forEach(i=>widths[i]+=extraW/activePhotos.length);
+    const automaticPhotos=activePhotos.filter(i=>!explicitWidths.has(i));
+    automaticPhotos.forEach(i=>widths[i]+=extraW/automaticPhotos.length);
     pageW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1);
-    const contentLeft=leftMargin+(activePhotos.length?0:extraW/2);
+    const contentLeft=leftMargin+(automaticPhotos.length?0:extraW/2);
     const innerH=Math.max(1,outerH-2*vMargin-footer-top-bottom);
     // A filled photo occupies the same column width as an uncropped 100% photo.
     activePhotos.forEach(local=>{
       const photos=flow.placements.filter(p=>p.photo&&p.col===firstCol+local);
-      if(!photos.some(p=>p.photo.fill))return;
+      if(explicitWidths.has(local)||!photos.some(p=>p.photo.fill))return;
       // Keep the text columns and gaps inside the already computed canvas.
       const capacity=Math.max(1,widths[local]);
       widths[local]=Math.max(1,...photos.map(p=>{
@@ -20506,7 +20514,7 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
         const i=siblings.indexOf(row),room=innerH/siblings.length;
         const msg=msgById.get(novelRowId(items[placement.index].row)),img=row.querySelector('img.mimg');
         const aspect=placement.photo.width/Math.max(1,placement.photo.height);
-        const maxH=msg?.columnFill?room:Math.min(room,Math.max(widths[local],variableColumnWidth(n,local,base))/aspect);
+        const maxH=msg?.columnFill?room:Math.min(room,(explicitWidths.has(local)?widths[local]:Math.max(widths[local],variableColumnWidth(n,local,base)))/aspect);
         const requestedHeight=Number(msg?.canvasPhotoHeight)>0?Number(msg.canvasPhotoHeight):placement.h;
         const fraction=Math.max(.01,Math.min(1,requestedHeight/maxH));
         const height=maxH*fraction,width=msg?.columnFill?widths[local]:height*aspect;
@@ -20528,7 +20536,7 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
     if(activePhotos.length&&!hasBleed){
       activePhotos.forEach(local=>{
         const rows=[...chat.querySelectorAll(':scope > .image-row')].filter(row=>Number(row.dataset.fluidColumn)===firstCol+local);
-        widths[local]=Math.max(0,...rows.map(row=>parseFloat(row.style.width)||0));
+        if(!explicitWidths.has(local))widths[local]=Math.max(0,...rows.map(row=>parseFloat(row.style.width)||0));
       });
       pageW=widths.reduce((a,b)=>a+b,0)+gap*(n.cols-1);
       Object.assign(chat.style,{width:pageW+'px',minWidth:pageW+'px',maxWidth:pageW+'px'});
@@ -20550,7 +20558,8 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
     for(const col of fillColumns){
       const local=col-firstCol;
       const photoRows=[...chat.querySelectorAll(':scope > .image-row')].filter(row=>Number(row.dataset.fluidColumn)===col);
-      const leftBleed=local===0?hMargin:0,rightBleed=local===n.cols-1?hMargin:0;
+      const windowLeft=parseFloat(win.style.left)||0;
+      const leftBleed=local===0?windowLeft:0,rightBleed=local===n.cols-1?Math.max(0,parseFloat(canvas.style.width)-windowLeft-pageW):0;
       const x=widths.slice(0,local).reduce((a,b)=>a+b,0)+local*gap-leftBleed;
       const w=widths[local]+leftBleed+rightBleed;
       photoRows.forEach((row,i)=>{
