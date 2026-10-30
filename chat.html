@@ -1921,11 +1921,14 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 <div class="rangewrap"><input id="creditGap" max="80" min="0" oninput="setCredit('gap',this.value)" type="range" value="16"/><span class="val" id="creditGapV">16px</span></div></div>
 <div class="field" style="margin:0"><label class="lb">색상</label>
 <div class="colorrow" data-color="credit"></div></div>
+<div class="credit-separator-settings" style="grid-column:1 / -1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:end">
 <div class="field" style="margin:0"><label class="lb">구분 기호</label>
 <div class="seg" id="creditSepSeg">
 <button class="on" onclick="setCredit('sep','dot')" type="button">·</button>
 <button onclick="setCredit('sep','bar')" type="button">|</button>
 </div></div>
+<div class="field" style="margin:0;min-width:0"><label class="lb" for="creditSepCustom">직접 입력</label><input id="creditSepCustom" type="text" style="width:100%;min-width:0;box-sizing:border-box" oninput="setCredit('sepCustom',this.value)"/></div>
+</div>
 </div>
 </div>
 </div>
@@ -2080,9 +2083,9 @@ const state = {
   transparentBg:false,
   previewZoom:1,
   backgroundImage:{src:'',size:100,rotation:0,x:50,y:50,blur:0,overlayOpacity:0},
-  credit:{ on:false, maker:'', character:'', align:'right', size:12, gap:16, sep:'dot' },
+  credit:{ on:false, maker:'', character:'', align:'right', size:12, gap:16, sep:'dot', bold:false, italic:false },
   gradient:{ on:false, angle:180, mid:50, useVia:false },
-  pageNum:{ on:false, align:'left', size:12, format:'slash', font:'' },
+  pageNum:{ on:false, align:'left', size:12, format:'slash', font:'', bold:false, italic:false },
   colors:{
     bg:'#FFFFFF',
     nBubble:'#F2F2F3', nText:'#424448',
@@ -2548,8 +2551,9 @@ function setCredit(field,val){
     const order=['left','center','right'];
     [...creditAlignSeg.children].forEach((b,i)=>b.classList.toggle('on',order[i]===val));
   }
-  else if(field==='sep'){
-    state.credit.sep=(val==='bar')?'bar':'dot';
+  else if(field==='sep'||field==='sepCustom'){
+    if(field==='sepCustom'){state.credit.sepCustom=val;state.credit.sep='custom';}
+    else{state.credit.sep=(val==='bar')?'bar':'dot';state.credit.sepCustom='';document.getElementById('creditSepCustom').value='';}
     const seg=document.getElementById('creditSepSeg');
     if(seg){ const order=['dot','bar'];
       [...seg.children].forEach((b,i)=>b.classList.toggle('on',order[i]===state.credit.sep)); }
@@ -3266,7 +3270,7 @@ function defaultLayout(){
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
 function defaultExport(){ return {ratio:'auto',hMargin:50,vMargin:37,linkMargin:false,filename:'chat-발췌',scale:1.5}; }
-function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16,sep:'dot',font:''}; }
+function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16,sep:'dot',font:'',bold:false,italic:false,characterStyle:null,makerStyle:null,separatorColorTarget:null}; }
 function seedThemes(){
   return [
     {id:uid(),name:'이전 버전',shape:'circle',parenOn:false,transparentBg:false,
@@ -3365,7 +3369,7 @@ function applyThemeById(id){
   if(t.layout) Object.assign(state.layout,defaultLayout(),JSON.parse(JSON.stringify(t.layout)));
   if(t.export) Object.assign(state.export,JSON.parse(JSON.stringify(t.export)));
   else Object.assign(state.export,defaultExport());
-  if(t.credit) Object.assign(state.credit,JSON.parse(JSON.stringify(t.credit)));
+  if(t.credit) Object.assign(state.credit,{bold:false,italic:false,characterStyle:null,makerStyle:null,separatorColorTarget:null},JSON.parse(JSON.stringify(t.credit)));
   else Object.assign(state.credit,defaultCredit());
   state.transparentBg=!!t.transparentBg;
   if(t.shape) state.shape=t.shape;
@@ -3492,9 +3496,10 @@ function syncControlsFromState(){
   creditGap.value=(state.credit.gap!=null?state.credit.gap:16); creditGapV.textContent=Math.round(creditGap.value)+'px';
   const cOrder=['left','center','right'];
   [...creditAlignSeg.children].forEach((b,i)=>b.classList.toggle('on',cOrder[i]===state.credit.align));
+  document.getElementById('creditSepCustom').value=state.credit.sep==='custom'?(state.credit.sepCustom||''):'';
   const sepSeg=document.getElementById('creditSepSeg');
   if(sepSeg){ const sOrder=['dot','bar'];
-    [...sepSeg.children].forEach((b,i)=>b.classList.toggle('on',sOrder[i]===(state.credit.sep==='bar'?'bar':'dot'))); }
+    [...sepSeg.children].forEach((b,i)=>b.classList.toggle('on',sOrder[i]===state.credit.sep)); }
 }
 
 function wrapFmt(mark){
@@ -4344,6 +4349,35 @@ function subFontCss(stack){
   stack=String(stack||'').trim();
   return stack?('font-family:'+stack.replace(/"/g,"'")+';'):'';
 }
+function footerTextStyle(value){
+  return 'font-weight:'+(value?.bold?'700':'400')+';font-style:'+(value?.italic?'italic':'normal')+';';
+}
+function creditPartStyle(key){
+  const c=state.credit,part=c[key+'Style']||{};
+  return {bold:part.bold??!!c.bold,italic:part.italic??!!c.italic,color:part.color||state.colors.credit||'#8A8F98'};
+}
+function creditSeparatorBold(){
+ const c=state.credit;
+ let target=c.separatorColorTarget;
+ // Older saved projects contain the colors but not their last-selected target.
+ if(target!=='character'&&target!=='maker'){
+  const color=String(state.colors.credit||'').toLowerCase();
+  const characterColor=String(c.characterStyle?.color||'').toLowerCase();
+  const makerColor=String(c.makerStyle?.color||'').toLowerCase();
+  if(makerColor===color&&characterColor!==color)target='maker';
+ }
+ return !!(creditPartStyle('maker').bold||(target!=='maker'&&creditPartStyle('character').bold));
+}
+function creditPartsHTML(){
+  const c=state.credit,parts=[];
+  for(const key of ['character','maker']){
+    const text=String(c[key]||'').trim();if(!text)continue;
+    const style=creditPartStyle(key),color=/^#[0-9a-f]{6}$/i.test(style.color)?style.color:'#8A8F98';
+    parts.push('<span class="credit-part credit-'+key+'" style="'+footerTextStyle(style)+'color:'+color+';">'+esc(text)+'</span>');
+  }
+  const color=/^#[0-9a-f]{6}$/i.test(state.colors.credit||'')?state.colors.credit:'#8A8F98';
+  return parts.join('<span class="credit-separator" style="font-weight:'+(creditSeparatorBold()?'700':'400')+';font-style:normal;color:'+color+';"> '+esc(c.sep==='custom'?(c.sepCustom||''):(c.sep==='bar'?'|':'·'))+' </span>');
+}
 function creditHTML(){
   const c=state.credit;
   if(!c.on) return '';
@@ -4352,8 +4386,8 @@ function creditHTML(){
   if(c.maker&&c.maker.trim()) parts.push(esc(c.maker.trim()));
   if(!parts.length) return '';
   return `<div class="credit credit-sig" style="text-align:${c.align};color:${state.colors.credit};
-    font-size:${c.size}px;margin-top:${(c.gap!=null?c.gap:16)}px;${subFontCss(c.font)}
-    letter-spacing:.02em;opacity:.95">${parts.join('<span style="opacity:.5"> '+(c.sep==='bar'?'|':'\u00B7')+' </span>')}</div>`;
+    font-size:${c.size}px;margin-top:${(c.gap!=null?c.gap:16)}px;${subFontCss(c.font)}${footerTextStyle(c)}
+    letter-spacing:.02em;opacity:.95">${creditPartsHTML()}</div>`;
 }
 function dividerRow(m,gap){
   const L=state.layout;
@@ -8172,7 +8206,11 @@ function applyProject(d){
   ['mode','shape','meId','bubbleTheme'].forEach(k=>{ if(typeof d[k]==='string') state[k]=d[k]; });
   ['showProfile','hideNames','showMyIdentity','parenOn','transparentBg','autoQuoteBubble','stripSpeakerName','stripQuoteMarks'].forEach(k=>{ if(typeof d[k]==='boolean') state[k]=d[k]; });
   ['export','backgroundImage','credit','pageNum','gradient','colors','layout'].forEach(k=>{
-    if(d[k]&&typeof d[k]==='object') Object.assign(state[k],JSON.parse(JSON.stringify(d[k])));
+    if(d[k]&&typeof d[k]==='object'){
+      if(k==='credit'||k==='pageNum')Object.assign(state[k],{bold:false,italic:false});
+      if(k==='credit')Object.assign(state.credit,{characterStyle:null,makerStyle:null,separatorColorTarget:null});
+      Object.assign(state[k],JSON.parse(JSON.stringify(d[k])));
+    }
   });
   /* 여러 단 설정 — 예전에 저장한 파일에는 이 칸이 없으므로, 있을 때만 덮어쓴다 */
   if(d.novel&&typeof d.novel==='object'&&state.novel){
@@ -12788,7 +12826,7 @@ body.mobile-ui #pagePager .pp-n{min-width:44px;font-size:12px}
 const T=(m,o)=>{ try{ if(typeof window.toast==='function') window.toast(m,o); }catch(_){} };
 
 /* ---------- 상태 ---------- */
-state.pageNum=Object.assign({on:false,align:'left',size:12,format:'slash',font:''},state.pageNum||{});
+state.pageNum=Object.assign({on:false,align:'left',size:12,format:'slash',font:'',bold:false,italic:false},state.pageNum||{});
 if(!state.colors.pageNum) state.colors.pageNum='#8A8F98';
 let curPage=1;
 
@@ -12828,6 +12866,7 @@ window.setPageNum=function(field,val){
   else if(field==='size'){ p.size=parseInt(val)||12; const v=document.getElementById('pageNumSizeV'); if(v) v.textContent=p.size+'px'; }
   else if(field==='align') p.align=val;
   else if(field==='format') p.format=val;
+  else if(field==='bold'||field==='italic') p[field]=!!val;
   syncPageNumControls();
   renderPreview();
 };
@@ -12865,11 +12904,11 @@ window.creditHTML=function(){
   const put=(where,html)=>{ const k=(where in zones)?where:'right'; zones[k]+=(zones[k]?' ':'')+html; };
   if(parts.length){
     put(c.align,'<span class="credit-sig" style="font-size:'+c.size+'px;color:'+state.colors.credit+';'
-      +subFontCss(c.font)+'">'+parts.join(sep)+'</span>');
+      +subFontCss(c.font)+footerTextStyle(c)+'">'+creditPartsHTML()+'</span>');
   }
   const total=clampPage();
   put(p.align,'<span class="page-num" data-page-num style="font-size:'+(p.size||12)+'px;color:'
-    +(state.colors.pageNum||'#8A8F98')+';'+subFontCss(p.font)+'">'+esc(pageLabel(curPage,total))+'</span>');
+    +(state.colors.pageNum||'#8A8F98')+';'+subFontCss(p.font)+footerTextStyle(p)+'">'+esc(pageLabel(curPage,total))+'</span>');
 
   const gap=(c.gap!=null?c.gap:16);
   return '<div class="credit credit-row" style="margin-top:'+gap+'px;letter-spacing:.02em;opacity:.95">'
@@ -19328,7 +19367,7 @@ function applyAndReflow(){
 }
 
 function install(){
-  if(document.getElementById('creditFontField')) return;
+  if(document.getElementById('creditFontSel')) return;
   const st=ST(); if(!st) return;
 
   /* 서명 — 구분 기호 칸이 들어 있는 묶음 바로 뒤에 붙인다 */
@@ -20055,18 +20094,17 @@ function drawColsFooter(canvas,left,width,bottom,page,total){
   if(sigParts.length){
     const sp=document.createElement('span');
     sp.className='credit-sig';
+    sp.style.cssText+=footerTextStyle(c);
     sp.style.fontSize=(Number(c.size)||12)+'px';
     sp.style.color=(s.colors&&s.colors.credit)||'#8A8F98';
     try{ if(c.font) sp.style.fontFamily=c.font; }catch(_){}
-    sigParts.forEach((txt,i)=>{
-      if(i){ const sep=document.createElement('span'); sep.style.opacity='.5'; sep.textContent=' '+(c.sep==='bar'?'|':'·')+' '; sp.appendChild(sep); }
-      sp.appendChild(document.createTextNode(txt));
-    });
+    sp.innerHTML=creditPartsHTML();
     put(c.align||'right',sp);
   }
   if(pn.on){
     const sp=document.createElement('span');
     sp.className='page-num'; sp.dataset.pageNum='1';
+    sp.style.cssText+=footerTextStyle(pn);
     sp.style.fontSize=(Number(pn.size)||12)+'px';
     sp.style.color=(s.colors&&(s.colors.pageNum||s.colors.credit))||'#8A8F98';
     try{ if(pn.font) sp.style.fontFamily=pn.font; }catch(_){}
@@ -20949,13 +20987,18 @@ function drawFolios(canvas,colW,gap,cols,hMargin,vMargin,folioH,from,count){
   for(let k=0;k<count;k++){
     const i=from+k;
     const bits=[];
-    if(parts.length) bits.push(parts.join(sep));
-    if(pn.on) bits.push(String(i+1));
+    if(parts.length) bits.push({text:parts.join(sep),style:c,className:'credit-sig'});
+    if(pn.on) bits.push({text:String(i+1),style:pn,className:'page-num'});
     if(!bits.length) continue;
     const left=(i%2===0);           /* 짝수번째 단 = 펼침의 왼쪽 쪽 */
     const d=document.createElement('div');
     d.className='novel-folio';
-    d.textContent=left?bits.join('   '):bits.slice().reverse().join('   ');
+    (left?bits:bits.slice().reverse()).forEach((bit,index)=>{
+      if(index)d.appendChild(document.createTextNode('   '));
+      const span=document.createElement('span');span.className=bit.className;
+      span.style.cssText=footerTextStyle(bit.style);
+      if(bit.className==='credit-sig')span.innerHTML=creditPartsHTML();else span.textContent=bit.text;d.appendChild(span);
+    });
     d.style.cssText+=';font-size:'+size+'px;color:'+color+';opacity:.9;'+fontCss;
     /* 본문 아래에 비워 둔 띠 한가운데에 앉힌다 */
     d.style.bottom=(vMargin+Math.max(0,((folioH||size+16)-size)/2))+'px';
@@ -23900,6 +23943,18 @@ sync();
 
 <style id="additional-toggle-details-style">
 #saveIdentityToggles{display:grid;gap:8px;margin:12px 0}
+#creditSepSeg button{font-weight:600}
+.footer-format-field{margin:12px 0 0}
+.footer-format-buttons{display:flex;gap:6px}
+.footer-format-buttons .btn{width:36px;height:34px;padding:0;font-size:15px}
+.footer-format-buttons [data-format="italic"]{font-family:Georgia,serif}
+.footer-format-buttons .btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.footer-format-buttons .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#creditFormatRow{display:grid;grid-template-columns:80px 34px 34px 34px minmax(0,1fr);gap:6px;align-items:center}
+#creditFormatRow select{min-width:0;width:100%;height:34px;padding:0 6px;font-size:12px}
+#creditFormatRow .btn{width:34px;min-width:0}
+#creditFormatRow .credit-part-swatch{position:relative;width:34px;height:34px;border-radius:8px;box-sizing:border-box}
+@media(max-width:380px){#creditFormatRow{grid-template-columns:70px 30px 30px 30px minmax(0,1fr);gap:4px}#creditFormatRow .btn,#creditFormatRow .credit-part-swatch{width:30px}}
 #saveIdentityToggles>.field{margin:0!important}
 #accCredit#accCredit,#accSplit#accSplit{border:0!important;margin:0!important;padding:0!important;background:none!important}
 #accCredit>.flat-tool-title,#accSplit>.flat-tool-title{display:none!important}
@@ -23928,13 +23983,54 @@ sync();
  const p=wrapDetails(byId('accSplit'),page,'pageNumberDetails');
  const stack=document.createElement('div');stack.id='saveIdentityToggles';
  byId('accCredit').before(stack);stack.append(c.toggleField,byId('accCredit'),p.toggleField,byId('accSplit'));
+ function formatButtons(key,label){
+  const field=document.createElement('div');field.className='field footer-format-field';
+  field.innerHTML='<label class="lb">서식</label><div class="footer-format-buttons" role="group" aria-label="'+label+' 서식"></div>';
+  for(const [prop,text,title] of [['bold','B','굵게'],['italic','I','기울임']]){
+   const button=document.createElement('button');button.type='button';button.className='btn sm';
+   button.textContent=text;button.title=title;button.setAttribute('aria-label',label+' '+title);
+   button.dataset.footerFormat=key;button.dataset.format=prop;
+   button.style.fontWeight=prop==='bold'?'700':'400';button.style.fontStyle=prop==='italic'?'italic':'normal';
+   button.onclick=()=>{
+    if(typeof pushUndo==='function')pushUndo(label+' 서식 변경');
+    if(key==='credit'){
+      const target=byId('creditFormatTarget').value;
+      state.credit[target+'Style']={...creditPartStyle(target),[prop]:!creditPartStyle(target)[prop]};renderPreview();
+    }else setPageNum(prop,!state.pageNum?.[prop]);
+   };
+   field.lastElementChild.append(button);
+  }
+  if(key==='credit'){
+   const controls=field.lastElementChild;controls.id='creditFormatRow';
+   const target=document.createElement('select');target.id='creditFormatTarget';target.setAttribute('aria-label','서식을 바꿀 서명 항목');
+   target.innerHTML='<option value="character">캐릭터</option><option value="maker">제작자</option>';
+   target.onchange=()=>sync();controls.prepend(target);
+   const swatch=document.createElement('span');swatch.className='swatch credit-part-swatch';
+   swatch.innerHTML='<input id="creditPartColor" class="color-proxy" type="text" readonly inputmode="none" aria-label="선택한 서명 항목과 구분 기호 색상" title="색상">';
+   swatch.firstElementChild.oninput=e=>{
+    const color=e.target.value;if(!/^#[0-9a-f]{6}$/i.test(color))return;
+    if(typeof pushUndo==='function')pushUndo('서명 색상 변경');
+    const target=byId('creditFormatTarget').value;
+    // Freeze the other part's effective color before changing the separator color.
+    for(const key of ['character','maker'])state.credit[key+'Style']={...creditPartStyle(key)};
+    state.credit[target+'Style'].color=color;state.credit.separatorColorTarget=target;state.colors.credit=color;renderPreview();
+   };
+   controls.append(swatch);
+   const font=byId('creditFontSel'),fontField=byId('creditFontField');
+   if(font){font.setAttribute('aria-label','서명 공통 글꼴');font.title='캐릭터·제작자 공통 글꼴';controls.append(font);fontField?.remove();}
+   document.querySelector('.colorrow[data-color="credit"]')?.closest('.field')?.remove();
+  }
+  return field;
+ }
  const creditAlign=byId('creditAlignSeg').closest('.field');
  const sizeRow=document.createElement('div');sizeRow.className='colorgrid';
  sizeRow.append(byId('creditSize').closest('.field'),byId('creditGap').closest('.field'));
- creditAlign.before(sizeRow);
+ creditAlign.before(sizeRow,formatButtons('credit','서명'));
  const pageAlign=byId('pageNumAlignSeg').closest('.field');
  const pageSizeRow=byId('pageNumSize').closest('.colorgrid');
  pageAlign.before(pageSizeRow);
+ const pageFormats=formatButtons('pageNum','페이지 번호');pageFormats.style.gridColumn='1 / -1';
+ byId('pageNumFmtSeg').closest('.field').before(pageFormats);
  const messenger=byId('messengerSettings');
  const messengerDetails=messenger.querySelector('.messenger-settings-body');messengerDetails.id='messengerDetails';messengerDetails.classList.add('acc-panel');
  const messengerInner=document.createElement('div');messengerInner.className='acc-inner';
@@ -23946,6 +24042,13 @@ sync();
  const mode=row.querySelector('input');let previousMode=state.mode==='messenger'?'normal':state.mode;
  mode.onchange=()=>{if(mode.checked){previousMode=state.mode==='messenger'?previousMode:state.mode;setMode('messenger');}else setMode(previousMode==='messenger'?'normal':previousMode);};
  function sync(){
+  document.querySelectorAll('[data-footer-format]').forEach(button=>{
+   const value=button.dataset.footerFormat==='credit'?creditPartStyle(byId('creditFormatTarget')?.value||'character'):state.pageNum;
+   const active=!!value?.[button.dataset.format];
+   button.classList.toggle('on',active);button.setAttribute('aria-pressed',String(active));
+  });
+  const color=byId('creditPartColor'),target=byId('creditFormatTarget');
+  if(color&&target){color.value=creditPartStyle(target.value).color;color.parentElement.style.background=color.value;}
   c.details.classList.toggle('open',!!state.credit.on);c.details.inert=!state.credit.on;
   p.details.classList.toggle('open',!!state.pageNum?.on);p.details.inert=!state.pageNum?.on;
   mode.checked=state.mode==='messenger';messengerDetails.classList.toggle('open',mode.checked);messengerDetails.inert=!mode.checked;
