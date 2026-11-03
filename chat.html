@@ -1878,7 +1878,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 </div>
 <div class="field save-scale-field">
 <label class="lb">저장 배율</label>
-<div class="save-scale-row"><select id="exportScale" onchange="setExportScale(this.value)"><option value="1">1</option><option value="1.5">1.5</option><option selected value="2">2</option><option value="2.5">2.5</option><option value="3">3</option><option value="4">4</option></select><span class="save-scale-unit">×</span></div>
+<div class="save-scale-row"><select id="exportScale" onchange="setExportScale(this.value)"><option value="1">1</option><option value="1.5">1.5</option><option value="2">2</option><option selected value="2.5">2.5</option><option value="3">3</option><option value="4">4</option></select><span class="save-scale-unit">×</span></div>
 <div class="save-scale-help">배율이 높을수록 저장 시간이 더 걸릴 수 있어요.</div>
 </div>
 </div>
@@ -2079,7 +2079,7 @@ const state = {
   draftAlign:'justify',
   members:[],   // {id,name,image,color,bubbleColor,scriptHighlight}
   messages:[],  // {id,type,senderId,content,...}  type: 'chat' | 'text'
-  export:{ ratio:'auto', hMargin:50, vMargin:37, linkMargin:false, filename:'chat-발췌', scale:2 },
+  export:{ ratio:'auto', hMargin:50, vMargin:37, linkMargin:false, filename:'chat-발췌', scale:2.5 },
   transparentBg:false,
   previewZoom:1,
   backgroundImage:{src:'',size:100,rotation:0,x:50,y:50,blur:0,overlayOpacity:0},
@@ -2568,7 +2568,7 @@ function setTransparent(on){ state.transparentBg=!!on; renderPreview(); }
 function setFilename(v){ state.export.filename=v; }
 function normalizedExportScale(v){
   const n=Number(v);
-  return [1,1.5,2,2.5,3,4].includes(n)?n:2;
+  return [1,1.5,2,2.5,3,4].includes(n)?n:2.5;
 }
 function setExportScale(v){ state.export.scale=normalizedExportScale(v); }
 function getExportScale(){ return normalizedExportScale(state.export.scale); }
@@ -3269,7 +3269,7 @@ function defaultLayout(){
     linkV:false,linkH:false,textPadL:0,textPadR:0,linkTextPad:true,bubbleAlign:'left',bubbleTextAlign:'justify',textIndent:false,scriptNameBold:true,scriptNarrationIndent:false,dividerMargin:8,dividerMarginBottom:null,dividerWidth:100,dividerThickness:1,
     wb:'word',font:"'Pretendard',-apple-system,'Malgun Gothic',sans-serif"};
 }
-function defaultExport(){ return {ratio:'auto',hMargin:50,vMargin:37,linkMargin:false,filename:'chat-발췌',scale:2}; }
+function defaultExport(){ return {ratio:'auto',hMargin:50,vMargin:37,linkMargin:false,filename:'chat-발췌',scale:2.5}; }
 function defaultCredit(){ return {on:false,maker:'',character:'',align:'right',size:12,gap:16,sep:'dot',font:'',bold:false,italic:false,characterStyle:null,makerStyle:null,separatorColorTarget:null}; }
 function seedThemes(){
   return [
@@ -17472,7 +17472,7 @@ async function grabOverlay(scale){
   const videoNext=liveVideo&&liveVideo.nextSibling;
   const keep={
     transparent:s.transparentBg,
-    exportScale:(typeof getExportScale==='function')?getExportScale():2,
+    exportScale:(typeof getExportScale==='function')?getExportScale():2.5,
     canvasBg:canvas.style.background,
     chatBg:chat?chat.style.background:'',
     layerDisp:layer?layer.style.display:'',
