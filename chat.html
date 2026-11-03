@@ -24633,13 +24633,15 @@ body:not(.mobile-ui) .composer-card #senderField#senderField #senderSel{width:10
   const rows=[...document.querySelectorAll('#chat .script-row')];
   const measurements=rows.map(row=>{const name=row.querySelector('.script-name'),dialogue=row.querySelector('.script-dialogue'),bar=name?.querySelector('[aria-hidden="true"]');if(!bar)return null;
    const nr=textRects(name),dr=textRects(dialogue);if(!nr.length||!dr.length)return null;
-   return {name,bar,end:Math.max(...nr.map(r=>r.right)),start:dr[0].left};
+   const origin=name.getBoundingClientRect();
+   const scale=origin.width/parseFloat(getComputedStyle(name).width)||1;
+   return {name,bar,end:(Math.max(...nr.map(r=>r.right))-origin.left)/scale,start:(dr[0].left-origin.left)/scale};
   }).filter(Boolean);
-  // Shared-column mode keeps one separator line based on the longest rendered name.
+  // Compare local name offsets, not viewport positions of different columns.
   const sharedEnd=Math.max(...measurements.map(m=>m.end));
-  measurements.forEach(m=>{const r=m.name.getBoundingClientRect(),scale=r.width/m.name.offsetWidth||1;
+  measurements.forEach(m=>{
    const end=state.layout.scriptNameGapMode==='end'?m.end:sharedEnd;
-   m.bar.style.left=((end+m.start)/2-r.left)/scale+'px';
+   m.bar.style.left=(end+m.start)/2+'px';
   });
  }
  function sync(){
@@ -24651,7 +24653,12 @@ body:not(.mobile-ui) .composer-card #senderField#senderField #senderSel{width:10
   placeBars();
  }
  const old=renderPreview;renderPreview=function(){const r=old.apply(this,arguments);sync();return r;};
- document.fonts?.ready.then(placeBars);addEventListener('resize',()=>requestAnimationFrame(placeBars));sync();
+ let barFrame=0;
+ function scheduleBars(){cancelAnimationFrame(barFrame);barFrame=requestAnimationFrame(placeBars);}
+ const chat=document.getElementById('chat');
+ new ResizeObserver(scheduleBars).observe(chat);
+ chat.addEventListener('load',scheduleBars,true);
+ document.fonts?.ready.then(scheduleBars);addEventListener('resize',scheduleBars);sync();scheduleBars();
 })();
 </script>
 
