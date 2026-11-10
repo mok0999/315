@@ -1839,7 +1839,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 <option value="9:16">9 : 16 세로 (스토리)</option>
 </select>
 </div>
-</div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="50"/><span class="val" id="exHV">50px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기</div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="72"/><span class="val" id="novelGapV">72px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="180"/><span class="val" id="novelGutterV">180px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="toggle compact" id="novelTrimField" style="margin-top:12px;display:none"><div class="t-lb">빈 마지막 쪽 빼기<span>마지막 펼침의 빈 쪽을 떼고 한 쪽만 저장해요</span></div><label class="sw"><input id="novelTrimLast" onchange="setNovel('trimLast',this.checked)" type="checkbox"/><span class="track"></span></label></div>
+</div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="50"/><span class="val" id="exHV">50px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기</div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="36"/><span class="val" id="novelGapV">36px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="80"/><span class="val" id="novelGutterV">80px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="toggle compact" id="novelTrimField" style="margin-top:12px;display:none"><div class="t-lb">빈 마지막 쪽 빼기<span>마지막 펼침의 빈 쪽을 떼고 한 쪽만 저장해요</span></div><label class="sw"><input id="novelTrimLast" onchange="setNovel('trimLast',this.checked)" type="checkbox"/><span class="track"></span></label></div>
 <div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="scriptNameStyleSection" style="display:none"><div class="flat-tool-title"><strong>대본 이름 스타일</strong></div><div class="flat-tool-body"><div class="toggle compact"><div class="t-lb">이름 굵게</div><label class="sw"><input checked id="scriptNameBoldOn" onchange="setScriptNameBold(this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="script-highlight-box"><button aria-expanded="false" class="script-highlight-toggle" id="scriptHighlightToggle" onclick="toggleScriptHighlightPanel()" type="button"><span class="script-highlight-caret">▾</span><span class="script-highlight-title">캐릭터별 '이름' 형광펜</span><small id="scriptHighlightSummary">설정 없음</small></button><div class="script-highlight-panel" id="scriptHighlightPanel"><div class="script-highlight-list" id="scriptHighlightMemberList"></div></div></div></div></div><div class="flat-tool-section" id="bubbleQuickToggleSection"><div class="flat-tool-body"><div class="toggle-grid">
 <div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
@@ -19768,8 +19768,8 @@ setTimeout(()=>{ bind(); apply(); },400);
 'use strict';
 const ST=()=>{ try{ return state; }catch(_){ return window.state||null; } };
 const st0=ST();
-if(st0) st0.novel=Object.assign({on:false,mode:'cols',cols:2,gap:72,ratio:'210:297',single:false,page:0,gutter:null,trimLast:false},st0.novel||{});
-function cfg(){ const s=ST(); return (s&&s.novel)||{on:false,mode:'cols',cols:2,gap:72,ratio:'210:297',single:false,page:0,trimLast:false}; }
+if(st0) st0.novel=Object.assign({on:false,mode:'cols',cols:2,gap:36,ratio:'210:297',single:false,page:0,gutter:80,trimLast:false},st0.novel||{});
+function cfg(){ const s=ST(); return (s&&s.novel)||{on:false,mode:'cols',cols:2,gap:36,ratio:'210:297',single:false,page:0,gutter:80,trimLast:false}; }
 /* 소설 비율의 기본 '글 사이 간격' — 두 쪽의 안쪽 여백이 맞붙은 폭(2 × 쪽 폭의 12.5%) */
 const AUTO_GUTTER=2*Math.round(720*0.125);
 window.__novelOn=function(){ return !!cfg().on; };
@@ -20415,6 +20415,7 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
       const fill=group.some(pin=>msgById.get(novelRowId(items[pin.index].row))?.columnFill);
       // Filling changes only the final paint box, never the intrinsic layout size.
       const fitted=fitSidePhotos(photos,widths[local],available).map(photo=>({...photo,fill}));
+      if(window.__mkPhotoBox){let yy=0,any=false;fitted.forEach((photo,i)=>{const bx=window.__mkPhotoBox(msgById.get(novelRowId(items[group[i].index].row)));if(bx){photo.width=bx.w;photo.height=bx.h;photo.mk=1;any=true;}});if(any)fitted.forEach(photo=>{photo.y=yy;yy+=photo.height;});}
       if(explicitWidths.has(local)){
         let y=0;
         fitted.forEach(photo=>{const scale=Math.min(1,widths[local]/Math.max(1,photo.width));photo.width*=scale;photo.height*=scale;photo.y=y;y+=photo.height;});
@@ -20429,11 +20430,11 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
     const photoPageBounds=new Map();
     flow.placements.filter(p=>p.photo).forEach(p=>{
       const page=Math.floor(p.col/n.cols),b=photoPageBounds.get(page)||{top:Infinity,bottom:-Infinity};
-      b.top=Math.min(b.top,p.y);b.bottom=Math.max(b.bottom,p.y+p.h);photoPageBounds.set(page,b);
+      b.top=Math.min(b.top,p.y);b.bottom=Math.max(b.bottom,p.y+p.h);if(p.photo.mk)b.mk=1;photoPageBounds.set(page,b);
     });
     flow.placements.filter(p=>!p.photo).forEach(p=>{
       const text=textColumnBounds.get(p.col),photo=photoPageBounds.get(Math.floor(p.col/n.cols));
-      if(text&&photo&&text.bottom-text.top<photo.bottom-photo.top)p.textShift=(photo.top+photo.bottom-text.top-text.bottom)/2;
+      if(text&&photo&&text.bottom-text.top<photo.bottom-photo.top){const al=photo.mk?((n.columnAlign||{})[p.col%n.cols]||'middle'):'middle';p.textShift=al==='top'?photo.top-text.top:al==='bottom'?photo.bottom-text.bottom:(photo.top+photo.bottom-text.top-text.bottom)/2;}
     });
     flow.columns=Math.max(1,...flow.placements.map(p=>p.col+1));
   }catch(e){chat.replaceChildren(...original);chat.__variableOriginal=null;chat.classList.remove('variable-columns');throw e;}
@@ -20453,7 +20454,7 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
   for(const p of flow.placements){
     const id=novelRowId(items[p.index].row);if(id){const rec=map[id]||(map[id]={col:p.col,page:Math.floor(p.col/n.cols),cols:[],pages:[]});if(!rec.cols.includes(p.col))rec.cols.push(p.col);const pg=Math.floor(p.col/n.cols);if(!rec.pages.includes(pg))rec.pages.push(pg);}
     if(p.col<firstCol||p.col>=firstCol+n.cols)continue;
-    const local=p.col-firstCol,row=makePiece(p.index,p.start,p.end,widths[local]);row.style.visibility='';row.style.left=(widths.slice(0,local).reduce((a,b)=>a+b,0)+local*gap)+'px';const align=(n.columnAlign||{})[local]||'top';
+    const local=p.col-firstCol,row=makePiece(p.index,p.start,p.end,widths[local]);row.style.visibility='';row.style.left=(widths.slice(0,local).reduce((a,b)=>a+b,0)+local*gap)+'px';const align=(n.columnAlign||{})[local]||(p.photo&&p.photo.mk?'middle':'top');
     const free=p.photo?p.photo.free:Math.max(0,pageHeight-(heights.get(p.col)||0));
     const shift=Number.isFinite(p.textShift)?p.textShift:align==='bottom'?free:align==='middle'?free/2:0;
     row.dataset.fluidColumn=String(p.col);row.style.top=(top+p.y+shift)+'px';
@@ -20638,7 +20639,7 @@ function fitNovelImages(chat,width,height){
     const spacing=(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0)
       +(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0);
     const room=Math.max(1,available-spacing-2);
-    const box=novelImageBox(width,room,img.naturalWidth/img.naturalHeight,msg.imgSize);
+    const mkb=window.__mkPhotoBox&&window.__mkPhotoBox(msg),box=mkb?{width:Math.min(width,mkb.w),height:Math.min(room,mkb.h)}:novelImageBox(width,room,img.naturalWidth/img.naturalHeight,msg.imgSize);
     img.setAttribute('data-novel-image-style',img.getAttribute('style')||'');
     row.setAttribute('data-novel-row-line-height',row.style.lineHeight||'');
     row.setAttribute('data-novel-image-fit','1');row.style.lineHeight='0';
@@ -23619,7 +23620,7 @@ sync();
     if(target.options.length!==count){target.replaceChildren();for(let i=0;i<count;i++){const op=document.createElement('option');op.value=i;op.textContent=(i+1)+'단';target.append(op);}}
     target.value=selected;
     box.querySelectorAll('#columnSplitMode button').forEach(b=>{const on=b.dataset.value===(n.splitMode||'sentence');b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});
-    box.querySelectorAll('#columnAlignMode button').forEach(b=>{const on=b.dataset.value===((n.columnAlign||{})[selected]||'top');b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});
+    box.querySelectorAll('#columnAlignMode button').forEach(b=>{const on=b.dataset.value===((n.columnAlign||{})[selected]||(window.__mkAlignDefault?window.__mkAlignDefault():'top'));b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});
   }
   target.onchange=sync;
   box.querySelectorAll('#columnSplitMode button').forEach(b=>b.onclick=()=>{pushUndo('단 나누기 방식');state.novel.splitMode=b.dataset.value;state.novel.page=0;renderPreview();sync();});
@@ -24778,6 +24779,2000 @@ body:not(.mobile-ui) .composer-card #senderField#senderField #senderSel{width:10
  }
  window.addEventListener('resize',schedule);window.addEventListener('scroll',schedule,true);
  schedule();
+})();
+</script>
+
+<!-- ===================================================================
+     moko refresh v1 — 추가형 레이어 (기존 기능·스크립트 무변경)
+     1) 화면(편집 UI)만 새로 입히는 스킨 — 캔버스·저장 결과물은 건드리지 않는다
+     2) "" 자동 말풍선 묶음을 작성창 맨 위(모바일은 칩)로 꺼내기
+     3) 접근성: 포커스 링 · 라벨 대비 · aria 보강
+     모든 규칙은 html.mk 아래에만 걸려서 내보낸 HTML에는 영향이 없다.
+     =================================================================== -->
+<style id="moko-refresh-v1">
+/* ---- 편집 UI 전용 토큰 (:root 는 저장물에 딸려 가므로 건드리지 않는다) ---- */
+html.mk{--mk-accent:#4F86E8;--mk-accent-ink:#2F66C8;--mk-accent-soft:#EAF1FD;--mk-page:#F4F4F2;--mk-ink:#2B2D33;--mk-muted:#6E7079;--mk-line:#E5E5E3;--mk-fill:#F3F3F1}
+html.mk .top,html.mk .composer-card,html.mk .settings-card,html.mk .preview-toolbar,html.mk #mDock,html.mk #mkAutoPop{
+  --ink:#2B2D33;--muted:#6E7079;--line:#E5E5E3;--line-2:#EEEEEC;--panel-2:#F3F3F1;--accent:#2B2D33;--accent-soft:#ECECEA;
+}
+html.mk body:not(.mk-x){background:var(--mk-page)}
+
+/* ---- 포커스 링 (키보드 접근) ---- */
+html.mk .top :focus-visible,html.mk .composer-card :focus-visible,html.mk .settings-card :focus-visible,
+html.mk .preview-toolbar :focus-visible,html.mk #mDock :focus-visible,html.mk #mkAutoPop :focus-visible{
+  outline:2px solid var(--mk-accent)!important;outline-offset:2px;
+}
+html.mk #msgContent:focus-visible{outline-offset:0}
+
+/* ---- 상단 바 ---- */
+html.mk .top{background:rgba(255,255,255,.86);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--mk-line);box-shadow:none}
+html.mk .top .brand{color:var(--mk-ink);letter-spacing:-.02em}
+
+/* ---- 카드 ---- */
+html.mk body:not(.mobile-ui) .composer-card,html.mk body:not(.mobile-ui) .settings-card,html.mk body:not(.mobile-ui) .preview-toolbar{
+  border:1px solid var(--mk-line)!important;border-radius:18px;box-shadow:0 1px 2px rgba(30,30,28,.03)!important;background:#fff;
+}
+html.mk body:not(.mobile-ui) .composer-card>.hd,html.mk body:not(.mobile-ui) .settings-card-hd{border-bottom:0!important;padding:14px 16px 4px!important;background:transparent}
+html.mk body:not(.mobile-ui) .composer-card>.hd h2,html.mk body:not(.mobile-ui) .settings-card-hd h2{font-size:14px!important;font-weight:700;color:var(--mk-ink)}
+html.mk .composer-hint,html.mk .settings-hint{color:var(--mk-muted)}
+html.mk body:not(.mobile-ui) .composer-card label.lb{color:var(--mk-muted);font-weight:600}
+
+/* 작성창 */
+html.mk body:not(.mobile-ui) #msgContent{background:#FAFAF9;border:1px solid var(--mk-line);border-radius:14px;transition:border-color .15s,box-shadow .15s,background .15s}
+html.mk body:not(.mobile-ui) #msgContent:focus{background:#fff;border-color:var(--mk-accent);box-shadow:0 0 0 3px var(--mk-accent-soft);outline:0!important}
+html.mk body:not(.mobile-ui) #addBtn{border-radius:13px;background:var(--mk-ink);border-color:var(--mk-ink);font-weight:700;padding-top:11px;padding-bottom:11px}
+html.mk body:not(.mobile-ui) #addBtn:hover{background:#17181C}
+
+/* 도구 탭 — 모드 전환과 같은 '트랙 위 흰 알약' 언어로 통일 */
+html.mk body:not(.mobile-ui) .tool-tabs{margin:6px 12px 8px;padding:4px;gap:2px;background:var(--mk-fill);border-radius:13px;border:0}
+html.mk body:not(.mobile-ui) .tool-tabs button{border-radius:10px;color:var(--mk-muted);font-weight:600;padding:7px 2px 6px}
+html.mk body:not(.mobile-ui) .tool-tabs button span{color:inherit}
+html.mk body:not(.mobile-ui) .tool-tabs button:hover{background:rgba(255,255,255,.6);color:var(--mk-ink)}
+html.mk body:not(.mobile-ui) .tool-tabs button.on{background:#fff;color:var(--mk-ink);box-shadow:0 1px 3px rgba(30,30,28,.10)}
+html.mk body:not(.mobile-ui) .tool-tabs button.on span{color:var(--mk-ink)}
+html.mk body:not(.mobile-ui) .tool-panels{background:#fff}
+
+/* 켜짐 상태는 한 가지 포인트 색으로 */
+html.mk .composer-card .sw input:checked+.track,html.mk .settings-card .sw input:checked+.track,html.mk #mkAutoPop .sw input:checked+.track{background:var(--mk-accent)}
+html.mk .settings-card input[type=range],html.mk .composer-card input[type=range]{accent-color:var(--mk-accent)}
+
+/* 미리보기 툴바 */
+html.mk body:not(.mobile-ui) .preview-toolbar{padding:10px 12px 10px 16px}
+html.mk body:not(.mobile-ui) .preview-actions .btn{border-radius:11px;border-color:var(--mk-line);box-shadow:none;font-weight:600}
+html.mk body:not(.mobile-ui) .preview-actions .btn.danger-strong:not(.bulk-active){background:#fff;color:#C2453F;border-color:#EBD3D1}
+html.mk body:not(.mobile-ui) .preview-actions .btn.danger-strong:not(.bulk-active):hover{background:#FCF3F2}
+html.mk body:not(.mobile-ui) .preview-surface{border-radius:18px}
+
+/* ---- 넓은 화면: 작성 | 미리보기 | 도구 3단 — 도구가 접히지 않고 항상 보인다 ---- */
+@media(min-width:1440px){
+  html.mk body:not(.mobile-ui) .app-shell{grid-template-columns:430px minmax(0,1fr) clamp(380px,27vw,410px)!important;gap:14px;padding:14px 16px;width:100%!important;max-width:none!important;margin:0!important}
+  html.mk body:not(.mobile-ui) .editor-pane{display:contents}
+  html.mk body:not(.mobile-ui) .preview-heading>strong{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  html.mk body:not(.mobile-ui) .preview-toolbar{padding-left:12px}
+  html.mk body:not(.mobile-ui) .preview-toolbar{flex-wrap:wrap;row-gap:8px}
+  html.mk body:not(.mobile-ui) .preview-actions{flex-wrap:wrap!important;justify-content:flex-end;margin-left:auto;row-gap:6px}
+  html.mk body:not(.mobile-ui) .composer-card{grid-column:1;grid-row:1;height:100%;min-height:0}
+  html.mk body:not(.mobile-ui) .preview-pane{grid-column:2;grid-row:1}
+  html.mk body:not(.mobile-ui) .settings-card{grid-column:3;grid-row:1;height:100%;min-height:0}
+  /* 긴 채팅을 통째로 붙여넣기 좋게 작성창이 남는 높이를 다 쓴다 */
+  html.mk body:not(.mobile-ui) .composer-card>.bd{display:flex;flex-direction:column}
+  html.mk body:not(.mobile-ui) .composer-card #composerTextField:not([style*="display: none"]){flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+  html.mk body:not(.mobile-ui) .composer-card:not(.divider-mode) #msgContent{flex:1 1 auto!important;height:auto!important;min-height:140px!important;max-height:none!important;resize:none}
+}
+
+/* ---- 2단 화면(861~1439px): 작성 카드 높이가 고정이라 묶음을 한 줄로 줄이고 그만큼만 키운다 ---- */
+@media(min-width:861px) and (max-width:1439.98px){
+  html.mk body:not(.mobile-ui) .editor-pane{grid-template-rows:calc(var(--composer-fixed-height) + 52px) minmax(0,1fr)!important}
+  html.mk body:not(.mobile-ui) .mk-auto{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:7px 9px}
+  html.mk body:not(.mobile-ui) .mk-auto-main{width:auto;flex:0 0 auto;gap:8px}
+  html.mk body:not(.mobile-ui) .mk-auto-ico,html.mk body:not(.mobile-ui) .mk-auto-tx small{display:none}
+  html.mk body:not(.mobile-ui) .mk-auto-tx b{font-size:12.5px}
+  html.mk body:not(.mobile-ui) .mk-auto-opts{margin:0 0 0 auto;flex-wrap:nowrap;gap:4px}
+  html.mk body:not(.mobile-ui) .mk-auto-opt{padding:3px 8px 3px 6px;font-size:11px;min-height:26px}
+  html.mk body:not(.mobile-ui) .mk-auto-note{order:3;flex:1 0 100%;margin-top:2px}
+}
+
+/* ================= "" 자동 말풍선 — 메인 묶음 ================= */
+#mkAuto,#mkAutoChip,#mkAutoPop{display:none}
+html.mk body:not(.mobile-ui) #mkAuto{display:block;flex:0 0 auto;margin:8px 14px 2px}
+html.mk .mk-auto{border:1px solid var(--mk-line);border-radius:14px;background:#FAFAF9;padding:10px 12px;transition:background .18s,border-color .18s}
+html.mk .mk-auto.on{background:var(--mk-accent-soft);border-color:#CFDFFA}
+html.mk .mk-auto-main{display:flex;align-items:center;gap:10px;width:100%;padding:0;border:0;background:none;text-align:left;color:var(--mk-ink);cursor:pointer;font:inherit;border-radius:8px}
+html.mk .mk-auto-ico{flex:0 0 30px;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:#fff;border:1px solid var(--mk-line);color:var(--mk-muted);transition:.18s}
+html.mk .mk-auto.on .mk-auto-ico{background:var(--mk-accent);border-color:var(--mk-accent);color:#fff}
+html.mk .mk-auto-tx{flex:1;min-width:0;display:grid;gap:1px}
+html.mk .mk-auto-tx b{font-size:13.5px;font-weight:700;line-height:1.3}
+html.mk .mk-auto-tx small{font-size:11.5px;line-height:1.35;color:var(--mk-muted)}
+html.mk .mk-auto.on .mk-auto-tx small{color:#4B5F86}
+html.mk .mk-auto-sw{flex:0 0 38px;width:38px;height:22px;border-radius:99px;background:#D6D6D3;position:relative;transition:background .18s}
+html.mk .mk-auto-sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .18s}
+html.mk .mk-auto.on .mk-auto-sw{background:var(--mk-accent)}
+html.mk .mk-auto.on .mk-auto-sw::after{transform:translateX(16px)}
+html.mk .mk-auto-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+html.mk .mk-auto-opt{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:4px 10px 4px 8px;border-radius:99px;border:1px solid var(--mk-line);background:#fff;color:var(--mk-muted);font:600 11.5px/1.2 inherit;cursor:pointer;transition:.15s}
+html.mk .mk-auto-opt::before{content:"";width:13px;height:13px;border-radius:50%;border:1.5px solid #C9C9C6;box-sizing:border-box;transition:.15s}
+html.mk .mk-auto-opt:hover{color:var(--mk-ink);border-color:#CFCFCC}
+html.mk .mk-auto-opt[aria-pressed="true"]{color:var(--mk-accent-ink);border-color:#BFD3F6;background:#fff}
+html.mk .mk-auto-opt[aria-pressed="true"]::before{border-color:var(--mk-accent);background:var(--mk-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.2l2.2 2.2 4.6-4.8' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/11px no-repeat}
+html.mk .mk-auto-note{display:none;align-items:center;gap:8px;margin-top:9px;padding:8px 10px;border-radius:10px;background:#fff;border:1px solid var(--mk-line);font-size:12px;color:var(--mk-ink)}
+html.mk .mk-auto-note.show{display:flex}
+html.mk .mk-auto-note span{flex:1;min-width:0}
+html.mk .mk-auto-note button{flex:0 0 auto;border:0;border-radius:8px;background:var(--mk-ink);color:#fff;font:700 11.5px/1 inherit;padding:7px 10px;cursor:pointer}
+html.mk .mk-auto-note button.ghost{background:var(--mk-fill);color:var(--mk-ink)}
+@media(prefers-reduced-motion:reduce){html.mk .mk-auto,html.mk .mk-auto *{transition:none!important}}
+
+/* 모바일: 칩 한 개 + 위로 뜨는 작은 시트 */
+html.mk .mobile-ui #mkAutoChip{display:flex}
+html.mk #mkAutoChip .mav{display:flex;align-items:center;justify-content:center;box-sizing:border-box;border-radius:50%;background:var(--panel);border:1.5px dashed var(--line-2,#C9C9CE);color:var(--muted)}
+html.mk #mkAutoChip.on .mav{background:var(--mk-accent);border-color:var(--mk-accent);border-style:solid;color:#fff}
+html.mk #mkAutoChip.on .nm{color:var(--mk-accent-ink);font-weight:700}
+html.mk #mkAutoChip .nm{max-width:none}
+html.mk .mobile-ui #mkAutoPop.show{display:block;position:fixed;left:8px;right:8px;z-index:3950;border-radius:18px;background:#fff;padding:8px;box-shadow:0 10px 34px rgba(20,20,18,.18),0 0 0 1px rgba(20,20,18,.06)}
+html.mk .mobile-ui #mkAutoPop .mk-auto{border:0;background:transparent;padding:6px}
+html.mk .mobile-ui #mkAutoPop .mk-auto.on{background:var(--mk-accent-soft)}
+html.mk .mobile-ui #mkAutoPop .mk-auto-opt{min-height:36px;padding:6px 14px 6px 10px;font-size:13px}
+html.mk .mobile-ui #mkAutoPop .mk-auto-tx b{font-size:15px}
+html.mk .mobile-ui #mkAutoPop .mk-auto-tx small{font-size:12.5px}
+@media print{#mkAuto,#mkAutoChip,#mkAutoPop{display:none!important}}
+</style>
+<script id="moko-refresh-v1-script">
+(function(){
+'use strict';
+const root=document.documentElement;
+root.classList.add('mk');
+const $=id=>document.getElementById(id);
+const st=()=>{ try{ return state; }catch(_){ return window.state||{}; } };
+const isMobile=()=>document.body.classList.contains('mobile-ui');
+
+/* ---------- 원래 토글을 그대로 누른다 (로직 재구현 없음) ---------- */
+function press(id,on){
+  const el=$(id); if(!el) return;
+  el.checked=!!on;
+  el.dispatchEvent(new Event('change',{bubbles:true}));
+}
+const QUOTE_SVG='<svg aria-hidden="true" viewBox="0 0 20 20" width="16" height="16" fill="none"><path d="M4 4.5h12a2 2 0 0 1 2 2V12a2 2 0 0 1-2 2h-5.2L7 17v-3H4a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.2 8v2.2M10.2 8v2.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+
+const panels=[];
+function buildPanel(){
+  const box=document.createElement('div');
+  box.className='mk-auto';
+  box.setAttribute('role','group');
+  box.setAttribute('aria-label','자동 말풍선');
+  box.innerHTML=
+    '<button type="button" class="mk-auto-main" role="switch" aria-checked="false">'
+   +  '<span class="mk-auto-ico">'+QUOTE_SVG+'</span>'
+   +  '<span class="mk-auto-tx"><b>자동 말풍선</b><small></small></span>'
+   +  '<span class="mk-auto-sw" aria-hidden="true"></span>'
+   +'</button>'
+   +'<div class="mk-auto-note" role="status"><span></span></div>'
+   +'<div class="mk-auto-opts">'
+   +  '<button type="button" class="mk-auto-opt" data-k="strip" aria-pressed="false" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요">따옴표 지우기</button>'
+   +  '<button type="button" class="mk-auto-opt" data-k="name" aria-pressed="false" title="대사 앞 이름｜ 이름표만 지워요 · ( ) 해석은 그대로 남아요">이름표 지우기</button>'
+   +'</div>';
+  const main=box.querySelector('.mk-auto-main');
+  main.addEventListener('click',()=>{
+    const s=st(), want=!s.autoQuoteBubble;
+    if(want&&!(s.members&&s.members.length)){ note('members'); return; }
+    press('autoQuoteOn',want);
+    note(want&&s.composerType!=='text'&&!editing()?'type':'');
+    sync();
+  });
+  box.querySelector('[data-k=strip]').addEventListener('click',()=>{ press('stripQuotesOn',!st().stripQuoteMarks); sync(); });
+  box.querySelector('[data-k=name]').addEventListener('click',()=>{ press('stripNameTagOn',!st().stripSpeakerName); sync(); });
+  panels.push(box);
+  return box;
+}
+function editing(){ const c=document.querySelector('.composer-card'); return !!(c&&c.classList.contains('composer-editing')); }
+
+/* 안내 줄: 멤버가 없을 때 / 종류가 '글'이 아닐 때 */
+let noteKind='';
+function note(kind){
+  noteKind=kind||'';
+  panels.forEach(box=>{
+    const n=box.querySelector('.mk-auto-note');
+    n.classList.toggle('show',!!noteKind);
+    n.querySelectorAll('button').forEach(b=>b.remove());
+    const sp=n.querySelector('span');
+    if(noteKind==='members'){
+      sp.textContent='말풍선의 주인이 될 멤버를 먼저 추가해 주세요.';
+      const b=document.createElement('button'); b.type='button'; b.textContent='멤버 추가';
+      b.onclick=()=>{ note(''); closePop(); goMembers(); };
+      n.appendChild(b);
+    }else if(noteKind==='type'){
+      sp.textContent='종류를 ‘글’로 두고 통째로 붙여넣으면 돼요.';
+      const b=document.createElement('button'); b.type='button'; b.className='ghost'; b.textContent='글로 바꾸기';
+      b.onclick=()=>{ note(''); closePop(); try{ setMsgType('text'); }catch(_){} const c=$('msgContent'); if(c) c.focus(); };
+      n.appendChild(b);
+    }else sp.textContent='';
+  });
+  if(pop&&pop.classList.contains('show')) placePop();
+}
+function goMembers(){
+  if(isMobile()){
+    const add=document.querySelector('#mChips .mchip.add');
+    if(add){ add.click(); return; }
+  }
+  try{ switchToolPanel('members',true); }catch(_){}
+  try{ openMemberEditor(); }catch(_){}
+  const n=$('mName'); if(n) setTimeout(()=>{ try{ n.focus(); }catch(_){} },60);
+}
+
+function sync(){
+  const s=st(), on=!!s.autoQuoteBubble;
+  if(noteKind==='members'&&s.members&&s.members.length) noteKind='', panels.forEach(b=>b.querySelector('.mk-auto-note').classList.remove('show'));
+  if(noteKind==='type'&&(s.composerType==='text'||!on)) noteKind='', panels.forEach(b=>b.querySelector('.mk-auto-note').classList.remove('show'));
+  panels.forEach(box=>{
+    box.classList.toggle('on',on);
+    box.querySelector('.mk-auto-main').setAttribute('aria-checked',on?'true':'false');
+    box.querySelector('small').textContent=on
+      ?'켜짐 — “ ” · 「 」 대사가 말풍선으로 묶여요'
+      :'붙여넣은 글에서 “ ” · 「 」 대사만 말풍선으로';
+    box.querySelector('[data-k=strip]').setAttribute('aria-pressed',s.stripQuoteMarks?'true':'false');
+    box.querySelector('[data-k=name]').setAttribute('aria-pressed',s.stripSpeakerName?'true':'false');
+  });
+  const chip=$('mkAutoChip');
+  if(chip){ chip.classList.toggle('on',on); chip.setAttribute('aria-pressed',on?'true':'false'); }
+}
+
+/* ---------- 데스크톱: 작성창 카드 맨 위 ---------- */
+(function mountDesktop(){
+  const card=document.querySelector('.composer-card'); if(!card) return;
+  const wrap=document.createElement('div'); wrap.id='mkAuto';
+  wrap.appendChild(buildPanel());
+  const bd=card.querySelector(':scope>.bd');
+  if(bd) card.insertBefore(wrap,bd); else card.appendChild(wrap);
+})();
+
+/* ---------- 모바일: 칩 + 시트 ---------- */
+let pop=null;
+function ensurePop(){
+  if(pop) return pop;
+  pop=document.createElement('div'); pop.id='mkAutoPop';
+  pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','자동 말풍선 설정');
+  pop.appendChild(buildPanel());
+  document.body.appendChild(pop);
+  sync(); note(noteKind);
+  return pop;
+}
+function placePop(){
+  const dock=$('mDock'); if(!pop) return;
+  const top=dock?dock.getBoundingClientRect().top:innerHeight-180;
+  pop.style.bottom=Math.max(8,innerHeight-top+8)+'px';
+}
+function openPop(){ ensurePop(); pop.classList.add('show'); placePop(); const c=$('mkAutoChip'); if(c) c.setAttribute('aria-expanded','true'); }
+function closePop(){ if(pop) pop.classList.remove('show'); const c=$('mkAutoChip'); if(c) c.setAttribute('aria-expanded','false'); }
+function appendChip(){
+  const box=$('mChips'); if(!box||box.querySelector('#mkAutoChip')) { sync(); return; }
+  const shape=(st().shape==='rounded')?'rounded':'circle';
+  const b=document.createElement('button'); b.type='button'; b.id='mkAutoChip'; b.className='mchip '+shape;
+  b.setAttribute('aria-haspopup','dialog'); b.setAttribute('aria-expanded','false');
+  b.innerHTML='<span class="mav">'+QUOTE_SVG+'</span><span class="nm">자동 말풍선</span>';
+  b.onclick=e=>{ e.stopPropagation(); (pop&&pop.classList.contains('show'))?closePop():openPop(); };
+  const add=box.querySelector('.mchip.add');
+  if(add&&add.nextSibling) box.insertBefore(b,add.nextSibling); else box.appendChild(b);
+  sync();
+}
+function watchChips(){
+  const box=$('mChips'); if(!box||box.dataset.mkWatch==='1') return !!box;
+  box.dataset.mkWatch='1';
+  new MutationObserver(appendChip).observe(box,{childList:true});
+  appendChip(); return true;
+}
+if(!watchChips()){
+  const mo=new MutationObserver(()=>{ if(watchChips()) mo.disconnect(); });
+  mo.observe(document.body,{childList:true,subtree:true});
+}
+document.addEventListener('pointerdown',e=>{
+  if(!pop||!pop.classList.contains('show')) return;
+  if(e.target.closest('#mkAutoPop,#mkAutoChip')) return;
+  closePop();
+},true);
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&pop&&pop.classList.contains('show')){ closePop(); const c=$('mkAutoChip'); if(c) c.focus(); } });
+addEventListener('resize',()=>{ if(pop&&pop.classList.contains('show')){ isMobile()?placePop():closePop(); } });
+
+/* ---------- 상태 따라가기 ---------- */
+['autoQuoteOn','stripQuotesOn','stripNameTagOn'].forEach(id=>{ const el=$(id); if(el) el.addEventListener('change',()=>setTimeout(sync,0)); });
+for(const name of ['renderPreview','syncControlsFromState','setMsgType']){
+  try{
+    const prev=window[name];
+    if(typeof prev==='function') window[name]=function(){ const r=prev.apply(this,arguments); try{ sync(); }catch(_){} return r; };
+  }catch(_){}
+}
+
+/* ---------- 접근성 보강: 이름 없는 버튼에 이름, 선택 상태 알림 ---------- */
+function a11y(){
+  document.querySelectorAll('.top button[title]:not([aria-label]),.composer-card button[title]:not([aria-label]),.settings-card button[title]:not([aria-label]),.preview-toolbar button[title]:not([aria-label])')
+    .forEach(b=>{ const t=(b.textContent||'').trim(); if(t.length<=2) b.setAttribute('aria-label',b.title); });
+  document.querySelectorAll('.modeswitch button,.composer-card .seg button,.settings-card .seg button,.tool-tabs button')
+    .forEach(b=>b.setAttribute('aria-pressed',b.classList.contains('on')?'true':'false'));
+  const ms=document.querySelector('.modeswitch'); if(ms&&!ms.hasAttribute('role')){ ms.setAttribute('role','group'); ms.setAttribute('aria-label','발췌 모드'); }
+}
+let a11yT=0;
+const a11ySoon=()=>{ clearTimeout(a11yT); a11yT=setTimeout(a11y,80); };
+document.addEventListener('click',a11ySoon,true);
+document.addEventListener('change',a11ySoon,true);
+a11y(); sync();
+})();
+</script>
+
+<!-- ===================================================================
+     moko tools tidy v1 — 도구 창 정리 (추가형 · 기능 무변경)
+     1) 설정 찾기: 이름으로 검색 → 해당 탭·위치로 바로 이동
+     2) 섞여 있던 항목을 주제별로 다시 묶고 소제목을 붙임
+     3) 긴 묶음은 제목을 눌러 접기/펴기
+     =================================================================== -->
+<style id="moko-tools-tidy-v1">
+/* ---- 설정 찾기 ---- */
+#mkFind{display:none}
+html.mk #mkFind{display:block;position:relative;flex:0 0 auto;margin:6px 12px 0;z-index:30}
+html.mk .mobile-ui #mkFind{margin:8px 12px 2px}
+html.mk #mkFind .mk-find-box{position:relative}
+html.mk #mkFind svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mk-muted);pointer-events:none}
+html.mk #mkFindInput{width:100%;box-sizing:border-box;height:36px;padding:0 30px 0 33px;border:1px solid var(--mk-line);border-radius:11px;background:#FAFAF9;color:var(--mk-ink);font:500 13px/1 inherit;outline:0;transition:border-color .15s,box-shadow .15s,background .15s}
+html.mk .mobile-ui #mkFindInput{height:40px;font-size:16px}
+html.mk #mkFindInput::placeholder{color:#9A9BA2}
+html.mk #mkFindInput:focus{background:#fff;border-color:var(--mk-accent);box-shadow:0 0 0 3px var(--mk-accent-soft);outline:0!important}
+html.mk #mkFindClear{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:0;border-radius:8px;background:transparent;color:var(--mk-muted);font-size:15px;line-height:1;cursor:pointer;display:none}
+html.mk #mkFind.has-q #mkFindClear{display:block}
+html.mk #mkFindList{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);margin:0;padding:5px;list-style:none;background:#fff;border:1px solid var(--mk-line);border-radius:13px;box-shadow:0 12px 32px rgba(20,20,18,.14);max-height:min(340px,52vh);overflow-y:auto}
+html.mk #mkFind.open #mkFindList{display:block}
+html.mk #mkFindList li{display:grid;gap:1px;padding:8px 10px;border-radius:9px;cursor:pointer;color:var(--mk-ink)}
+html.mk #mkFindList li b{font-size:13px;font-weight:650;line-height:1.35}
+html.mk #mkFindList li small{font-size:11px;color:var(--mk-muted);line-height:1.3}
+html.mk #mkFindList li[aria-selected="true"],html.mk #mkFindList li:hover{background:var(--mk-accent-soft)}
+html.mk #mkFindList li.none{cursor:default;color:var(--mk-muted);font-size:12.5px;background:none}
+html.mk .mk-flash{animation:mkFlash 1.7s ease-out 1;border-radius:10px}
+@keyframes mkFlash{0%,35%{box-shadow:0 0 0 3px var(--mk-accent),0 0 0 7px var(--mk-accent-soft)}100%{box-shadow:0 0 0 3px transparent,0 0 0 7px transparent}}
+@media(prefers-reduced-motion:reduce){html.mk .mk-flash{animation-duration:.01s;outline:2px solid var(--mk-accent)}}
+
+/* ---- 소제목 ---- */
+.mk-sub{display:none}
+html.mk .settings-card .mk-sub{display:block;margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--mk-line);font-size:12.5px;font-weight:700;color:var(--mk-ink);letter-spacing:-.01em}
+html.mk .settings-card .mk-sub[hidden]{display:none}
+html.mk .settings-card .mk-sub.first{margin-top:2px;padding-top:0;border-top:0}
+html.mk .settings-card .toggle-grid>.mk-sub{grid-column:1/-1;margin:12px 0 2px;padding-top:12px}
+html.mk .settings-card .toggle-grid>.mk-sub.first{margin-top:0;padding-top:0}
+html.mk .settings-card .mk-after-gap{margin-top:12px!important}
+
+/* ---- 접기/펴기 ---- */
+html.mk .settings-card .mk-collapsible>.flat-tool-title{cursor:pointer;user-select:none;-webkit-user-select:none;position:relative;padding-right:26px}
+html.mk .settings-card .mk-collapsible>.flat-tool-title::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;margin-top:-6px;border-right:1.6px solid var(--mk-muted);border-bottom:1.6px solid var(--mk-muted);transform:rotate(45deg);transition:transform .15s}
+html.mk .settings-card .mk-collapsible.mk-closed>.flat-tool-title::after{transform:rotate(-45deg);margin-top:-4px}
+html.mk .settings-card .mk-collapsible.mk-closed>.flat-tool-body{display:none!important}
+html.mk .settings-card .mk-collapsible.mk-closed{padding-bottom:4px}
+html.mk .settings-card .mk-collapsible>.flat-tool-title>button{margin-right:24px}
+</style>
+<script id="moko-tools-tidy-v1-script">
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const card=document.querySelector('.settings-card'); if(!card) return;
+const safe=fn=>{ try{ return fn(); }catch(e){ try{ console.warn('[moko tidy]',e); }catch(_){} } };
+const sub=(text,cls)=>{ const d=document.createElement('div'); d.className='mk-sub'+(cls?' '+cls:''); d.setAttribute('role','heading'); d.setAttribute('aria-level','4'); d.textContent=text; return d; };
+const toggleOf=id=>{ const i=$(id); return i?i.closest('.toggle'):null; };
+
+/* ================= 1) 다시 묶기 ================= */
+/* 테마·배경: 프리셋 → 색상 → 배경 효과 → 배경 이미지 */
+safe(()=>{
+  const stack=$('backgroundToggleStack'), app=$('accAppearance');
+  if(stack&&app&&stack.parentNode===app.parentNode) stack.parentNode.insertBefore(app,stack);
+  const t=app&&app.querySelector('.flat-tool-title strong'); if(t&&/프로필/.test(t.textContent)) t.textContent='색상';
+  if(stack&&!stack.querySelector(':scope>.mk-sub')) stack.insertBefore(sub('배경 효과'),stack.firstChild);
+});
+/* 텍스트·간격: 글꼴 / 크기·간격 / 문단 / 그림자 */
+safe(()=>{
+  const body=document.querySelector('#accText>.flat-tool-body'); if(!body||body.querySelector(':scope>.mk-sub')) return;
+  const cjk=$('cjkFontControls'), scale=$('lyCjkScale')&&$('lyCjkScale').closest('.field');
+  const indent=$('textIndentOn')&&$('textIndentOn').closest('.field');
+  const wrap=$('wbSeg')&&$('wbSeg').closest('.field');
+  const grid=[...body.children].find(c=>c.classList.contains('colorgrid')&&c!==cjk);
+  const shadow=body.querySelector(':scope>.shadow-control-group');
+  if(cjk&&scale&&scale.parentNode===body) body.insertBefore(scale,cjk.nextSibling);
+  if(grid) body.insertBefore(sub('크기 · 간격'),grid);
+  if(wrap&&wrap.parentNode===body){
+    body.insertBefore(sub('문단'),wrap);
+    if(indent&&indent.parentNode===body){ body.insertBefore(indent,wrap.nextSibling); indent.classList.add('mk-after-gap'); }
+  }
+  if(shadow) body.insertBefore(sub('그림자'),shadow);
+  const t=document.querySelector('#accText>.flat-tool-title strong'); if(t&&/글꼴\s*·\s*텍스트/.test(t.textContent)) t.textContent='글꼴';
+});
+/* 말풍선: 대사 자동 정리 / 표시 로 토글을 나누고, 메신저 설정은 맨 위로 */
+safe(()=>{
+  const grid=document.querySelector('#bubbleQuickToggleSection .toggle-grid'); if(!grid||grid.querySelector(':scope>.mk-sub')) return;
+  const A=['autoQuoteOn','stripQuotesOn','stripNameTagOn'].map(toggleOf).filter(t=>t&&t.parentNode===grid);
+  const B=['showProfile','showMyIdentity','hideNames','bubbleTailOn','bubbleShadowOn'].map(toggleOf).filter(t=>t&&t.parentNode===grid);
+  const known=new Set([...A,...B]);
+  const rest=[...grid.children].filter(c=>!known.has(c));
+  const sh=B.find(t=>t.querySelector('#bubbleShadowOn'));
+  const order=[sub('대사 자동 정리','first'),...A,sub('표시'),...B.filter(t=>t!==sh),...rest,...(sh?[sh]:[])];
+  order.forEach(n=>grid.appendChild(n));
+});
+safe(()=>{
+  const ms=$('messengerSettings'); if(!ms) return;
+  const body=ms.parentNode; if(body&&body.firstElementChild!==ms) body.insertBefore(ms,body.firstElementChild);
+});
+let nameSub=null;
+safe(()=>{
+  const body=document.querySelector('#scriptNameStyleSection>.flat-tool-body'); if(!body) return;
+  nameSub=sub('이름','first'); body.insertBefore(nameSub,body.firstChild);
+});
+/* 저장: 서명 · 페이지 번호 */
+safe(()=>{
+  const st=$('saveIdentityToggles'); if(st&&!st.querySelector(':scope>.mk-sub')) st.insertBefore(sub('서명 · 페이지 번호'),st.firstChild);
+});
+function syncSubs(){
+  if(nameSub){ const t=document.querySelector('#scriptNameStyleSection>.flat-tool-title'); nameSub.hidden=!!(t&&getComputedStyle(t).display!=='none'); }
+}
+
+/* ================= 2) 접기/펴기 ================= */
+const KEY='moko.tools.closed.v1';
+let closed=new Set(['accFindReplace']);
+safe(()=>{ const raw=localStorage.getItem(KEY); if(raw) closed=new Set(JSON.parse(raw)); });
+const saveClosed=()=>safe(()=>localStorage.setItem(KEY,JSON.stringify([...closed])));
+const secKey=s=>s.id||('t:'+((s.querySelector(':scope>.flat-tool-title strong')||{}).textContent||'').trim());
+function setClosed(sec,on,persist){
+  sec.classList.toggle('mk-closed',!!on);
+  const t=sec.querySelector(':scope>.flat-tool-title'); if(t) t.setAttribute('aria-expanded',on?'false':'true');
+  if(persist){ const k=secKey(sec); on?closed.add(k):closed.delete(k); saveClosed(); }
+}
+safe(()=>{
+  card.querySelectorAll('.tool-panel-body>.flat-tool-section').forEach(sec=>{
+    const t=sec.querySelector(':scope>.flat-tool-title'), b=sec.querySelector(':scope>.flat-tool-body');
+    if(!t||!b||!t.querySelector('strong')) return;
+    if(sec.id==='scriptNameStyleSection'||sec.id==='accText') return;   /* 제목이 모드에 따라 숨는 묶음·기본 묶음은 항상 펼침 */
+    sec.classList.add('mk-collapsible');
+    t.setAttribute('role','button'); t.tabIndex=0;
+    const flip=e=>{
+      if(e.target.closest('button,a,input,select,label')) return;
+      if(e.type==='keydown'){ if(e.key!=='Enter'&&e.key!==' ') return; e.preventDefault(); }
+      setClosed(sec,!sec.classList.contains('mk-closed'),true);
+    };
+    t.addEventListener('click',flip); t.addEventListener('keydown',flip);
+    setClosed(sec,closed.has(secKey(sec)),false);
+  });
+});
+/* 제목이 안 보이는 상태에서 접혀 있으면 내용에 닿을 수 없으니 풀어 준다 */
+function guardClosed(){
+  card.querySelectorAll('.mk-collapsible.mk-closed').forEach(sec=>{
+    const t=sec.querySelector(':scope>.flat-tool-title');
+    if(t&&getComputedStyle(t).display==='none') sec.classList.remove('mk-closed');
+  });
+}
+
+/* ================= 3) 설정 찾기 ================= */
+const wrap=document.createElement('div'); wrap.id='mkFind';
+wrap.innerHTML='<div class="mk-find-box" role="search">'
+ +'<svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14" fill="none"><circle cx="7" cy="7" r="4.6" stroke="currentColor" stroke-width="1.6"/><path d="M10.6 10.6L14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'
+ +'<input id="mkFindInput" type="text" autocomplete="off" spellcheck="false" enterkeyhint="search" placeholder="설정 찾기 — 예) 그림자, 행간, 서명" role="combobox" aria-expanded="false" aria-controls="mkFindList" aria-autocomplete="list" aria-label="도구 설정 찾기"/>'
+ +'<button type="button" id="mkFindClear" aria-label="검색어 지우기">×</button></div>'
+ +'<ul id="mkFindList" role="listbox" aria-label="찾은 설정"></ul>';
+safe(()=>{
+  const body=card.querySelector('.settings-card-body'), tabs=card.querySelector('.tool-tabs');
+  if(body&&tabs&&tabs.parentNode===body) body.insertBefore(wrap,tabs); else card.insertBefore(wrap,card.children[1]||null);
+});
+const input=wrap.querySelector('#mkFindInput'), list=wrap.querySelector('#mkFindList');
+const norm=s=>String(s||'').toLowerCase().replace(/[\s·・,.\-—_\/()"'“”「」↔↕:]/g,'');
+const ALIAS={'폰트':'글꼴','글씨체':'글꼴','서체':'글꼴','줄간격':'행간','줄간':'행간','글자간격':'자간','폭':'너비','가로폭':'전체너비','넓이':'너비','해상도':'저장배율','화질':'저장배율','배수':'저장배율','워터마크':'서명','크레딧':'서명','출처':'서명','프사':'프로필','아바타':'프로필','치환':'바꾸기','교체':'바꾸기','백업':'프로젝트','불러오기':'프로젝트','단나누기':'여러단','2단':'여러단','세로쓰기':'여러단','투명도':'투명','패딩':'여백','마진':'여백','라운드':'둥글기','모서리':'둥글기','꼬리':'말풍선꼬리','닉네임':'이름','쪽번호':'페이지번호','파일명':'파일이름','동영상':'영상','비디오':'영상','사진배경':'배경이미지','그라디언트':'그라데이션'};
+const SEL='.lb,.t-lb,.flat-tool-title strong,.mk-sub,summary,.section-title-row strong,.margin-pair-head strong,.bubblepad-head strong,.messenger-settings-head span,.script-highlight-title,.fr-opts label';
+const own=el=>{ const t=[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join(' ').replace(/\s+/g,' ').trim(); return t||(el.textContent||'').replace(/\s+/g,' ').trim(); };
+const tabName=p=>{ const b=$('toolBtn-'+p.id.replace('panel-','')); return b?own(b):''; };
+function shown(el,panel){ for(let n=el;n&&n!==panel;n=n.parentElement){ if(n.hidden) return false; if(getComputedStyle(n).display==='none'&&!(n.classList.contains('flat-tool-body')&&n.parentElement&&n.parentElement.classList.contains('mk-closed'))) return false; } return true; }
+const clean=t=>t.replace(/^[^\w가-힣"]+/,'').trim();
+function secName(el,panel){
+  for(let n=el;n&&n!==panel;n=n.parentElement){
+    if(n!==el&&n.matches('.flat-tool-section,details,.messenger-settings,.panel-section')){
+      const t=n.querySelector(':scope>.flat-tool-title strong,:scope>summary,:scope>.messenger-settings-head span,:scope>.section-title-row strong');
+      if(t&&getComputedStyle(t.closest('.flat-tool-title,summary,.messenger-settings-head,.section-title-row')).display!=='none'&&!(n.id==='accText')) return clean(own(t));
+    }
+    for(let p=n.previousElementSibling;p;p=p.previousElementSibling){ if(p.classList.contains('mk-sub')&&!p.hidden) return clean(own(p)); }
+  }
+  const t=panel.querySelector('#accText>.flat-tool-title strong'); return (t&&el.closest('#accText'))?clean(own(t)):'';
+}
+function buildIndex(){
+  const out=[], seen=new Set();
+  card.querySelectorAll('.tool-panel').forEach(panel=>{
+    const tab=tabName(panel);
+    panel.querySelectorAll(SEL).forEach(el=>{
+      const label=own(el); if(!label||label.length>40) return;
+      if(!shown(el,panel)) return;
+      const sec=el.classList.contains('mk-sub')?'':secName(el,panel), key=panel.id+'|'+(sec!==label?sec:'')+'|'+label; if(seen.has(key)) return; seen.add(key);
+      const host=el.closest('.toggle,.field'); 
+      const extra=[(el.querySelector&&el.querySelector('span')?el.querySelector('span').textContent:''),host&&host.title||'',el.title||''].join(' ');
+      out.push({el,panel,label,where:[tab,sec&&sec!==label?sec:''].filter(Boolean).join(' › '),n:norm(label),x:norm(extra)});
+    });
+  });
+  return out;
+}
+let hits=[], cur=-1;
+function search(q){
+  const n=norm(q); if(!n){ close(); return; }
+  const alt=ALIAS[n]?norm(ALIAS[n]):'';
+  const idx=buildIndex(), score=it=>{
+    for(const k of [n,alt]){ if(!k) continue;
+      if(it.n===k) return 0; if(it.n.startsWith(k)) return 1; if(it.n.includes(k)) return 2; if(it.x.includes(k)) return 3; }
+    return -1; };
+  hits=idx.map(it=>({it,s:score(it)})).filter(r=>r.s>=0).sort((a,b)=>a.s-b.s||a.it.n.length-b.it.n.length).slice(0,9).map(r=>r.it);
+  list.innerHTML='';
+  if(!hits.length){ const li=document.createElement('li'); li.className='none'; li.textContent='‘'+q.trim()+'’ 설정을 찾지 못했어요'; list.appendChild(li); }
+  hits.forEach((h,i)=>{
+    const li=document.createElement('li'); li.id='mkFindOpt'+i; li.setAttribute('role','option'); li.setAttribute('aria-selected','false');
+    const b=document.createElement('b'); b.textContent=h.label; const s=document.createElement('small'); s.textContent=h.where;
+    li.append(b,s);
+    li.addEventListener('pointerdown',e=>e.preventDefault());
+    li.addEventListener('click',()=>go(i));
+    list.appendChild(li);
+  });
+  cur=hits.length?0:-1; mark();
+  wrap.classList.add('open'); input.setAttribute('aria-expanded','true');
+}
+function mark(){
+  [...list.children].forEach((li,i)=>{ if(li.classList.contains('none')) return; li.setAttribute('aria-selected',i===cur?'true':'false'); if(i===cur) li.scrollIntoView({block:'nearest'}); });
+  if(cur>=0) input.setAttribute('aria-activedescendant','mkFindOpt'+cur); else input.removeAttribute('aria-activedescendant');
+}
+function close(){ wrap.classList.remove('open'); input.setAttribute('aria-expanded','false'); input.removeAttribute('aria-activedescendant'); hits=[]; cur=-1; }
+function go(i){
+  const h=hits[i]; if(!h) return;
+  const el=h.el, name=h.panel.id.replace('panel-','');
+  close(); input.blur();
+  safe(()=>switchToolPanel(name,true));
+  const sec=el.closest('.mk-collapsible.mk-closed'); if(sec) setClosed(sec,false,true);
+  for(let d=el.closest('details');d;d=d.parentElement&&d.parentElement.closest('details')) d.open=true;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    let t=el.closest('.toggle,.field,details,.mk-sub,.flat-tool-title')||el;
+    while(t&&t!==h.panel&&!(t.getClientRects().length&&t.getBoundingClientRect().height>1)) t=t.parentElement;
+    if(!t||t===h.panel) return;
+    const body=t.closest('.tool-panel-body');
+    if(body&&body.scrollHeight>body.clientHeight+2){
+      body.scrollTop+=t.getBoundingClientRect().top-body.getBoundingClientRect().top-Math.min(120,body.clientHeight/3);
+    }else safe(()=>t.scrollIntoView({block:'center'}));
+    t.classList.remove('mk-flash'); void t.offsetWidth; t.classList.add('mk-flash');
+    setTimeout(()=>t.classList.remove('mk-flash'),1900);
+  }));
+}
+input.addEventListener('input',()=>{ wrap.classList.toggle('has-q',!!input.value); search(input.value); });
+input.addEventListener('focus',()=>{ if(input.value) search(input.value); });
+input.addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){ if(!hits.length) return; e.preventDefault(); cur=(cur+(e.key==='ArrowDown'?1:-1)+hits.length)%hits.length; mark(); }
+  else if(e.key==='Enter'){ if(e.isComposing||e.keyCode===229) return; e.preventDefault(); if(cur>=0) go(cur); }
+  else if(e.key==='Escape'){ if(wrap.classList.contains('open')){ e.preventDefault(); e.stopPropagation(); close(); } else if(input.value){ input.value=''; wrap.classList.remove('has-q'); } }
+});
+wrap.querySelector('#mkFindClear').addEventListener('click',()=>{ input.value=''; wrap.classList.remove('has-q'); close(); input.focus(); });
+document.addEventListener('pointerdown',e=>{ if(!e.target.closest('#mkFind')) close(); },true);
+
+/* ================= 모드가 바뀌면 다시 맞춘다 ================= */
+const resync=()=>{ safe(syncSubs); safe(guardClosed); };
+for(const name of ['setMode','syncControlsFromState','switchToolPanel']){
+  safe(()=>{ const prev=window[name]; if(typeof prev==='function') window[name]=function(){ const r=prev.apply(this,arguments); setTimeout(resync,0); return r; }; });
+}
+resync();
+})();
+</script>
+
+<!-- ===================================================================
+     moko tools ui v2 — 도구 창 개편 (보이는 방식만 · 기능/저장값 무변경)
+     · 모든 input 의 id·onchange·state 키는 그대로다. 테마/프리셋/프로젝트 파일 호환에 영향 없음.
+     · 묶음 = 흰 카드, 스위치 = 한 줄 목록, 말풍선 켜고 끄기 = 칩
+     =================================================================== -->
+<style id="moko-tools-ui-v2">
+/* ---- 탭 안: 회색 바탕 위 흰 카드 ---- */
+html.mk .settings-card .tool-panels{background:var(--mk-fill)!important}
+html.mk .settings-card .tool-panel-body{padding:8px 8px 18px!important;background:var(--mk-fill)}
+html.mk body:not(.mobile-ui) .settings-card .tool-panel:not(#panel-members)>.tool-panel-head{display:none}
+html.mk .settings-card .tool-panel-head{background:var(--mk-fill);border-bottom:0}
+html.mk .settings-card .tool-panel-body>.flat-tool-section,
+html.mk .settings-card .tool-panel-body>#backgroundToggleStack,
+html.mk .settings-card .tool-panel-body>#saveIdentityToggles,
+html.mk .settings-card .tool-panel-body>#messengerSettings#messengerSettings,
+html.mk .settings-card .tool-panel-body>details.preset-acc,
+html.mk .settings-card .tool-panel-body>.mk-card{
+  margin:0 0 10px!important;border:1px solid var(--mk-line)!important;border-radius:14px!important;background:#fff!important;box-shadow:none;overflow:hidden;
+}
+html.mk .settings-card .tool-panel-body>#backgroundToggleStack,
+html.mk .settings-card .tool-panel-body>#saveIdentityToggles,
+html.mk .settings-card .tool-panel-body>#messengerSettings#messengerSettings,
+html.mk .settings-card .tool-panel-body>.mk-card{padding:4px 12px 6px!important}
+html.mk .settings-card .tool-panel-body>.flat-tool-section>.flat-tool-title{min-height:0;padding:13px 12px 8px}
+html.mk .settings-card .tool-panel-body>.flat-tool-section>.flat-tool-body{padding:2px 12px 14px!important}
+html.mk .settings-card .flat-tool-title strong,html.mk .settings-card .mk-sub,html.mk .settings-card details.preset-acc>summary{font-size:13px;font-weight:700;color:var(--mk-ink);letter-spacing:-.015em}
+html.mk .settings-card .tool-panel-body>details.preset-acc>summary{padding:12px 12px}
+html.mk .settings-card .tool-panel-body>details.preset-acc+details.preset-acc{margin-top:-4px!important}
+html.mk .settings-card #accCanvas .flat-tool-title strong::after{content:none!important}
+html.mk .settings-card .lb{color:var(--mk-muted)}
+/* 카드 안 소제목: 선으로 나누고 제목 크기는 한 단계 작게 */
+html.mk .settings-card .flat-tool-body>.mk-sub{margin:16px -12px 10px;padding:14px 12px 0;font-size:12.5px}
+html.mk .settings-card #backgroundToggleStack>.mk-sub,html.mk .settings-card #saveIdentityToggles>.mk-sub{margin:0;padding:9px 0 4px;border-top:0}
+html.mk .settings-card .flat-tool-body>.mk-divider{margin:14px -12px 4px;border-top:1px solid var(--mk-line);height:0}
+
+/* ---- 스위치 한 줄: 회색 상자 대신 목록 줄 ---- */
+html.mk .settings-card .toggle:not(.compact),html.mk .settings-card :not(.toggle-grid)>.toggle.compact{background:transparent;border:0;border-radius:0;padding:10px 0;min-height:26px}
+html.mk .settings-card .toggle:not(.compact) .t-lb,html.mk .settings-card :not(.toggle-grid)>.toggle.compact .t-lb{font-size:13px;font-weight:600;color:var(--mk-ink)}
+html.mk .settings-card .toggle:not(.compact) .t-lb span:not(.bgv-beta-badge){color:var(--mk-muted);font-size:11.5px;line-height:1.4;margin-top:2px}
+html.mk .settings-card .sw{width:40px;height:24px}
+html.mk .settings-card .sw .track:before{width:18px;height:18px}
+html.mk .settings-card .sw input:checked+.track:before{transform:translateX(16px)}
+html.mk .settings-card #backgroundToggleStack>.field,html.mk .settings-card #saveIdentityToggles>.field{margin:0!important}
+html.mk .settings-card #backgroundToggleStack>.field~.field,html.mk .settings-card #saveIdentityToggles>.field~.field{border-top:1px solid var(--mk-line)}
+html.mk .settings-card #backgroundToggleStack>.flat-tool-section,html.mk .settings-card #saveIdentityToggles>.flat-tool-section{margin:0!important;border:0!important}
+/* 제목과 스위치 이름이 같은 묶음은 스위치 줄이 곧 제목 */
+html.mk .settings-card #novelSection>.flat-tool-title{display:none}
+html.mk .settings-card #novelSection>.flat-tool-body{padding-top:4px!important;padding-bottom:6px!important}
+html.mk .settings-card #novelSection .toggle .t-lb,html.mk .settings-card #messengerSettings>.toggle .t-lb{font-weight:700}
+html.mk .settings-card #accText .shadow-control-group{margin-top:0!important}
+html.mk .settings-card #accText .shadow-control-group .toggle .t-lb{font-weight:700}
+
+/* ---- 말풍선 켜고 끄기: 칩 ---- */
+@supports selector(:has(*)){
+  html.mk .settings-card #bubbleQuickToggleSection .toggle-grid{display:flex;flex-wrap:wrap;gap:6px}
+  html.mk .settings-card #bubbleQuickToggleSection .toggle-grid>.mk-sub{flex:1 0 100%;margin:10px 0 2px;padding:0;border:0;font-size:11.5px;font-weight:600;color:var(--mk-muted)}
+  html.mk .settings-card #bubbleQuickToggleSection .toggle-grid>.mk-sub.first{margin-top:2px}
+  html.mk .settings-card .toggle-grid .toggle.compact{position:relative;flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:5px 12px 5px 9px;border:1px solid var(--mk-line);border-radius:99px;background:#fff;color:var(--mk-muted);cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+  html.mk .mobile-ui .settings-card .toggle-grid .toggle.compact{min-height:38px;padding:7px 14px 7px 11px}
+  html.mk .settings-card .toggle-grid .toggle.compact::before{content:"";flex:0 0 14px;width:14px;height:14px;border-radius:50%;border:1.5px solid #C9C9C6;box-sizing:border-box;transition:.15s}
+  html.mk .settings-card .toggle-grid .toggle.compact .t-lb{font-size:12.5px;font-weight:600;color:inherit;overflow:visible;white-space:nowrap}
+  html.mk .settings-card .toggle-grid .toggle.compact .sw{position:absolute;inset:0;width:auto;height:auto;opacity:0;cursor:pointer;margin:0}
+  html.mk .settings-card .toggle-grid .toggle.compact:hover{color:var(--mk-ink);border-color:#CFCFCC}
+  html.mk .settings-card .toggle-grid .toggle.compact:has(input:checked){background:var(--mk-accent-soft);border-color:#BFD3F6;color:var(--mk-accent-ink)}
+  html.mk .settings-card .toggle-grid .toggle.compact:has(input:checked)::before{border-color:var(--mk-accent);background:var(--mk-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.2l2.2 2.2 4.6-4.8' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat}
+  html.mk .settings-card .toggle-grid .toggle.compact:has(input:focus-visible){outline:2px solid var(--mk-accent);outline-offset:2px}
+}
+html.mk .settings-card #bubbleQuickToggleSection>.flat-tool-body{padding-top:12px!important}
+/* 카드 안쪽이 조금 좁아진 만큼 슬라이더가 먼저 줄어들게 */
+html.mk body:not(.mobile-ui) .settings-card .tool-panel .colorgrid .rangewrap.has-stepper{grid-template-columns:minmax(34px,1fr) auto;gap:7px}
+html.mk .settings-card .tool-panel .colorgrid{column-gap:12px}
+</style>
+<script id="moko-tools-ui-v2-script">
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const card=document.querySelector('.settings-card'); if(!card) return;
+const safe=fn=>{ try{ return fn(); }catch(e){ try{ console.warn('[moko ui]',e); }catch(_){} } };
+const mkSub=(text,cls)=>{ const d=document.createElement('div'); d.className='mk-sub'+(cls?' '+cls:''); d.setAttribute('role','heading'); d.setAttribute('aria-level','4'); d.textContent=text; return d; };
+const toggleOf=id=>{ const i=$(id); return i?i.closest('.toggle'):null; };
+
+/* 말풍선 칩: 자동 변환 / 지우기 / 보이기 로 다시 묶는다 (요소만 옮김 — input 은 그대로) */
+safe(()=>{
+  const grid=document.querySelector('#bubbleQuickToggleSection .toggle-grid'); if(!grid) return;
+  grid.querySelectorAll(':scope>.mk-sub').forEach(n=>n.remove());
+  const pick=ids=>ids.map(toggleOf).filter(t=>t&&t.parentNode===grid);
+  const A=pick(['autoQuoteOn']), B=pick(['hideNames','stripNameTagOn','stripQuotesOn']), C=pick(['showProfile','showMyIdentity','bubbleTailOn','bubbleShadowOn']);
+  const known=new Set([...A,...B,...C]), rest=[...grid.children].filter(c=>!known.has(c));
+  [mkSub('자동 변환','first'),...A,mkSub('지우기'),...B,mkSub('보이기'),...rest,...C].forEach(n=>grid.appendChild(n));
+});
+/* 글자 탭: '그림자' 는 스위치 줄이 제목 역할을 하므로 소제목 대신 구분선만 */
+safe(()=>{
+  const g=document.querySelector('#accText .shadow-control-group'); if(!g) return;
+  const p=g.previousElementSibling;
+  if(p&&p.classList.contains('mk-sub')){ p.className='mk-divider'; p.removeAttribute('role'); p.removeAttribute('aria-level'); p.textContent=''; }
+});
+/* 이름만 고쳐 쓰기 (어디에 뭐가 있는지 이름에서 보이게) */
+safe(()=>{
+  const s=document.querySelector('#backgroundToggleStack>.mk-sub'); if(s) s.textContent='배경';
+  const setTab=(id,from,to)=>{ const b=$(id); if(!b) return; [...b.childNodes].forEach(n=>{ if(n.nodeType===3&&n.textContent.trim()===from) n.textContent=to; }); };
+  setTab('toolBtn-layout','여백','크기·여백');
+  setTab('toolBtn-export','저장','기타');
+  const h=document.querySelector('#panel-layout .tool-panel-head strong'); if(h&&h.textContent.trim()==='여백') h.textContent='크기 · 여백';
+  const e=document.querySelector('#panel-export .tool-panel-head strong'); if(e&&/투명화/.test(e.textContent)) e.textContent='저장 · 서명';
+});
+/* 배경 이미지: 쓰는 사람만 펼쳐 보게 — 이미지가 걸려 있으면 처음부터 열어 둔다 (접힘 상태를 직접 고른 적이 있으면 그대로 둔다) */
+safe(()=>{
+  let chosen=false; try{ chosen=!!localStorage.getItem('moko.tools.closed.v1'); }catch(_){}
+  const sec=$('backgroundImageSection'); if(!sec||chosen||!sec.classList.contains('mk-collapsible')) return;
+  let has=false; try{ const b=state.backgroundImage; has=!!(b&&(b.src||b.url||b.data)); }catch(_){}
+  if(!has){ sec.classList.add('mk-closed'); const t=sec.querySelector(':scope>.flat-tool-title'); if(t) t.setAttribute('aria-expanded','false'); }
+});
+/* 말풍선 탭: 대본 모드가 아니면 켜고 끄기 칩이 먼저, 이름 설정은 그 다음 (대본 모드는 이름 설정이 먼저) */
+function orderBubble(){
+  const q=$('bubbleQuickToggleSection'), n=$('scriptNameStyleSection'); if(!q||!n||q.parentNode!==n.parentNode) return;
+  let script=false; try{ script=state.mode==='script'; }catch(_){}
+  const qFirst=!!(q.compareDocumentPosition(n)&Node.DOCUMENT_POSITION_FOLLOWING);
+  if(script&&qFirst) q.parentNode.insertBefore(n,q);
+  else if(!script&&!qFirst) q.parentNode.insertBefore(q,n);
+}
+safe(orderBubble);
+safe(()=>{ const prev=window.setMode; if(typeof prev==='function') window.setMode=function(){ const r=prev.apply(this,arguments); safe(orderBubble); return r; }; });
+for(const name of ['syncControlsFromState','applyProject']){
+  safe(()=>{ const prev=window[name]; if(typeof prev==='function') window[name]=function(){ const r=prev.apply(this,arguments); safe(orderBubble); return r; }; });
+}
+/* 제목을 스위치 줄로 대신한 묶음은 접기 대상에서 뺀다 */
+safe(()=>{ const n=$('novelSection'); if(n){ n.classList.remove('mk-collapsible','mk-closed'); } });
+})();
+</script>
+
+<!-- ===================================================================
+     moko save progress v1 — 저장 진행 표시 (화면 표시만 · 저장 결과물 무변경)
+     저장 함수는 그대로 두고, 이미 쓰이는 단계(라이브러리 불러오기 → SVG 만들기 →
+     픽셀로 그리기 → PNG 만들기)가 시작될 때 표시만 바꾼다. 인자·반환값은 그대로 넘긴다.
+     =================================================================== -->
+<style id="moko-save-progress-v1">
+#mkSaveProg{display:none}
+html.mk #savingOverlay .saving-box{min-width:260px;max-width:min(320px,86vw);padding:24px 26px 22px;border-radius:18px;gap:12px}
+html.mk #savingOverlay .saving-txt{font-size:14px;font-weight:700;color:var(--mk-ink);text-align:center;line-height:1.4}
+html.mk #mkSaveProg{display:grid;gap:8px;width:100%}
+html.mk #mkSaveTrack{position:relative;height:6px;border-radius:99px;background:#ECECEA;overflow:hidden}
+html.mk #mkSaveFill{position:absolute;inset:0;border-radius:inherit;background:var(--mk-accent);transform-origin:0 50%;transform:scaleX(.02);will-change:transform}
+html.mk #mkSaveFill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-100%);animation:mkSaveShine 1.1s linear infinite;will-change:transform}
+@keyframes mkSaveShine{to{transform:translateX(100%)}}
+html.mk #mkSaveStage{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--mk-muted);line-height:1.3}
+html.mk #mkSaveStage b{font-weight:600;color:var(--mk-muted)}
+html.mk #mkSaveStage span{font-variant-numeric:tabular-nums;flex:0 0 auto}
+html.mk #mkSaveSteps{display:flex;gap:4px;margin:0;padding:0;list-style:none}
+html.mk #mkSaveSteps li{flex:1;height:3px;border-radius:99px;background:#ECECEA;transition:background .2s}
+html.mk #mkSaveSteps li.done{background:#BFD3F6}
+html.mk #mkSaveSteps li.now{background:var(--mk-accent)}
+@media(prefers-reduced-motion:reduce){html.mk #mkSaveFill::after{animation:none}html.mk #mkSaveFill{transition:none!important}}
+</style>
+<script id="moko-save-progress-v1-script">
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const box=document.querySelector('#savingOverlay .saving-box'); if(!box) return;
+
+/* 단계: 실측 비율대로 막대를 나눈다 (크롬 기준 준비 ≈5% · 그리기 ≈75% · PNG ≈20%).
+   'SVG로 옮기기'는 정밀 방식이 쓰이는 브라우저(사파리 등)에서만 거친다. */
+const STAGES=[
+  {key:'prep', label:'미리보기 그대로 맞추는 중', from:0,   to:.08},
+  {key:'svg',  label:'그림으로 옮기는 중',         from:.08, to:.22},
+  {key:'draw', label:'선명하게 그리는 중',         from:.22, to:.84},
+  {key:'png',  label:'파일로 만드는 중',           from:.84, to:1}
+];
+/* 단계별 예상 시간(ms/요소) — 실제 저장 시간을 재서 다음 저장부터 맞춘다. */
+const TKEY='moko.saveTiming.v2';
+let perNode={prep:.15,svg:.9,draw:1.7,png:.4};
+try{ const s=JSON.parse(localStorage.getItem(TKEY)||'null'); if(s&&typeof s==='object') for(const k in perNode) if(s[k]>0&&s[k]<200) perNode[k]=s[k]; }catch(_){}
+
+const prog=document.createElement('div'); prog.id='mkSaveProg';
+prog.innerHTML='<div id="mkSaveTrack" role="progressbar" aria-label="저장 진행" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="mkSaveFill"></div></div>'
+ +'<div id="mkSaveStage" aria-live="polite"><b></b><span></span></div>'
+ +'<ol id="mkSaveSteps" aria-hidden="true">'+STAGES.map(()=>'<li></li>').join('')+'</ol>';
+box.appendChild(prog);
+const fill=$('mkSaveFill'), track=$('mkSaveTrack'), stageB=prog.querySelector('#mkSaveStage b'), stageN=prog.querySelector('#mkSaveStage span'), steps=[...prog.querySelectorAll('#mkSaveSteps li')];
+const spinner=box.querySelector('.spinner');
+
+let active=false, cur=-1, t0=0, stageT=0, nodes=0, measured={}, hideTimer=0;
+function setFill(v,ms){
+  fill.style.transition=ms?('transform '+Math.max(0,ms)+'ms cubic-bezier(.22,.61,.36,1)'):'none';
+  fill.style.transform='scaleX('+Math.max(.02,Math.min(1,v))+')';
+  if(!ms) track.setAttribute('aria-valuenow',String(Math.round(v*100)));
+}
+function stage(i){
+  if(!active||i<=cur) return;
+  const now=performance.now();
+  if(cur>=0) measured[STAGES[cur].key]=(measured[STAGES[cur].key]||0)+(now-stageT);
+  cur=i; stageT=now;
+  const s=STAGES[i];
+  stageB.textContent=s.label; stageN.textContent=(i+1)+' / '+STAGES.length;
+  steps.forEach((li,k)=>{ li.classList.toggle('done',k<i); li.classList.toggle('now',k===i); });
+  /* 단계 시작점으로 즉시 → 예상 시간 동안 단계 끝 90% 지점까지 서서히 (CSS 전환이라 메인 스레드가 바빠도 움직인다) */
+  /* 막대는 뒤로 가지 않는다 */
+  const curScale=parseFloat((fill.style.transform.match(/scaleX\(([\d.]+)\)/)||[])[1])||0;
+  setFill(Math.max(s.from,Math.min(curScale,s.to*.98)),0);
+  void fill.offsetWidth;
+  const est=Math.max(250,perNode[s.key]*Math.max(60,nodes));
+  setFill(s.from+(s.to-s.from)*.9,est);
+}
+function begin(){
+  clearTimeout(hideTimer);
+  if(active) return;
+  active=true; cur=-1; t0=performance.now(); measured={}; exactInFlight=false;
+  try{ nodes=document.querySelectorAll('#canvas *').length; }catch(_){ nodes=300; }
+  if(spinner) spinner.style.display='none';
+  prog.style.display='';
+  setFill(0,0);
+  stage(0);
+}
+function finish(ok){
+  if(!active) return;
+  active=false;
+  const now=performance.now();
+  if(cur>=0) measured[STAGES[cur].key]=(measured[STAGES[cur].key]||0)+(now-stageT);
+  setFill(1,120);
+  /* 네 단계를 다 거친 저장만 학습에 쓴다 */
+  if(ok&&cur===STAGES.length-1&&nodes>0){
+    try{
+      for(const k in perNode){ if(!(k in measured)) continue; const v=measured[k]/Math.max(60,nodes); if(v>0&&v<200) perNode[k]=perNode[k]*.5+v*.5; }
+      localStorage.setItem(TKEY,JSON.stringify(perNode));
+    }catch(_){}
+  }
+}
+
+/* ---- 기존 함수 감싸기: 인자·반환값 그대로 ---- */
+const origShow=window.showSaving, origHide=window.hideSaving;
+if(typeof origShow==='function'&&typeof origHide==='function'){
+  window.showSaving=function(){ const r=origShow.apply(this,arguments); try{ begin(); }catch(_){} return r; };
+  window.hideSaving=function(){
+    const args=arguments, self=this;
+    try{ finish(true); }catch(_){}
+    /* 여러 장 저장할 때 장 사이에 창이 깜빡이지 않게 아주 잠깐만 기다렸다 닫는다 */
+    clearTimeout(hideTimer);
+    hideTimer=setTimeout(()=>{ origHide.apply(self,args); },140);
+  };
+}
+/* ---- 빠른 길: 이 브라우저에서 '정밀 SVG' 방식이 보안 오류(Tainted canvas)로 실패하는 걸
+   실제로 본 뒤에만, 다음부터 그 시도를 건너뛰고 곧장 기존 예비 방식으로 간다.
+   예비 방식은 지금도 이 브라우저에서 실제 파일을 만드는 바로 그 경로라 결과물은 같다.
+   정밀 방식이 성공하는 브라우저(사파리 등)에서는 아무것도 바뀌지 않는다. ---- */
+const TAINT_KEY='moko.exactSvgTaint.v1';
+let tainted=false, exactInFlight=false;
+try{ tainted=localStorage.getItem(TAINT_KEY)===navigator.userAgent; }catch(_){}
+function markTainted(){
+  tainted=true;
+  try{ localStorage.setItem(TAINT_KEY,navigator.userAgent); }catch(_){}
+}
+window.__mokoResetSaveFastPath=function(){ tainted=false; try{ localStorage.removeItem(TAINT_KEY); }catch(_){} };
+function wrapLib(){
+  const H=window.htmlToImage; if(!H||H.__mkWrapped) return;
+  const o=H.toSvg, oc=H.toCanvas;
+  if(typeof o==='function'){
+    H.toSvg=function(){
+      if(tainted&&active) return Promise.reject(new Error('moko: exact SVG path is blocked in this browser; using fallback'));
+      exactInFlight=true;
+      try{ stage(1); }catch(_){}
+      const p=o.apply(this,arguments);
+      try{ Promise.resolve(p).then(()=>{ try{ stage(2); }catch(_){} },()=>{}); }catch(_){}
+      return p;
+    };
+  }
+  if(typeof oc==='function'){
+    H.toCanvas=function(){ try{ stage(2); }catch(_){} return oc.apply(this,arguments); };
+  }
+  try{ Object.defineProperty(H,'__mkWrapped',{value:true}); }catch(_){ H.__mkWrapped=true; }
+}
+const origLoad=window.__loadHtmlToImage;
+if(typeof origLoad==='function'){
+  window.__loadHtmlToImage=function(){
+    const p=origLoad.apply(this,arguments);
+    try{ wrapLib(); Promise.resolve(p).then(()=>{ try{ wrapLib(); }catch(_){} },()=>{}); }catch(_){}
+    return p;
+  };
+}
+wrapLib();
+const origBlob=HTMLCanvasElement.prototype.toBlob;
+HTMLCanvasElement.prototype.toBlob=function(){
+  let r;
+  try{ r=origBlob.apply(this,arguments); }
+  catch(e){
+    if(active&&exactInFlight&&e&&e.name==='SecurityError') markTainted();
+    throw e;
+  }
+  if(active){ try{ stage(3); }catch(_){} }
+  return r;
+};
+})();
+</script>
+
+<!-- ===================================================================
+     moko cjk justify fix v1 — 일본어·중국어 양쪽 정렬 자간 벌어짐 수정
+     말풍선·글 블럭은 한국어를 위해 '어절 단위 줄바꿈(keep-all)'이다. 띄어쓰기가 없는 일본어·중국어는
+     문장 전체가 한 덩어리가 되어 줄이 일찍 끊기고, 양쪽 정렬이 그 줄을 억지로 늘려 글자 사이가 벌어졌다.
+     일본어·중국어 글자에만 글자 단위 줄바꿈 + 엄격한 금칙(。、」 등이 줄 맨 앞에 오지 않게)을 건다.
+     한국어·영어 줄바꿈은 그대로다. 저장 이미지·HTML 에도 같이 적용된다(#chat 범위).
+     =================================================================== -->
+<style id="moko-cjk-justify-fix-v1">
+#chat .cjk-auto[data-cjk-lang="ja"],#chat .cjk-auto[data-cjk-lang="zh"]{word-break:normal!important;line-break:strict!important;overflow-wrap:normal!important}
+</style>
+
+<!-- ===================================================================
+     moko sender edit fix v1 — "" 자동 말풍선의 발신자를 ✎ 수정으로 바꿀 때 한 번에 안 바뀌던 문제
+     원래 순서: 발신자 저장 → 다시 그리기(이때 '자동' 표시가 남아 있어 자동 발신자로 되돌림) → '자동' 표시 제거.
+     그래서 두 번째 수정 완료에서야 바뀌었다. '자동' 표시를 저장 '전에' 떼도록 순서만 바꾼다.
+     (원래도 수정 완료를 누르면 이 표시는 항상 떼어졌으므로 최종 데이터 모양은 같다)
+     =================================================================== -->
+<script id="moko-sender-edit-fix-v1">
+(function(){
+  const prev=window.commitComposerEdit;
+  if(typeof prev!=='function') return;
+  window.commitComposerEdit=function(){
+    try{
+      const id=composerEditId;
+      const m=id&&state.messages.find(x=>x&&x.id===id);
+      if(m) delete m.autoBubbled;
+    }catch(_){}
+    return prev.apply(this,arguments);
+  };
+})();
+</script>
+
+<!-- ===================================================================
+     moko custom canvas ratio v1 — 캔버스 비율 '직접 지정'
+     기존 비율 계산은 state.export.ratio 의 "가로:세로" 문자열을 그대로 나눠 쓰므로,
+     고른 숫자를 같은 모양의 문자열로 넣기만 한다. 여백·말풍선 등 다른 값은 건드리지 않는다.
+     ※ 기존 계산은 캔버스 크기를 '가로 숫자 px' 단위로 키우므로(1080:1350 그대로 넣으면 최소 1080px)
+        가능한 한 작은 정수비(4:5)로 줄이고, 안 줄어들면 짧은 쪽을 1로 둔 소수비(1:1.414)로 넣는다.
+     =================================================================== -->
+<style id="moko-custom-ratio-css">
+#mkRatioCustom{display:none;align-items:center;gap:8px;margin-top:10px}
+#mkRatioCustom.on{display:flex}
+#mkRatioCustom input{flex:1 1 0;min-width:0;width:0;height:38px;box-sizing:border-box;padding:0 10px;border-radius:10px;border:1px solid var(--line,#ddd);background:var(--panel2,#f4f4f2);color:inherit;font:inherit;font-size:14px;text-align:center;-moz-appearance:textfield}
+#mkRatioCustom input::-webkit-outer-spin-button,#mkRatioCustom input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+#mkRatioCustom .mk-ratio-colon{font-weight:700;opacity:.6}
+#mkRatioCustom button{flex:0 0 auto;height:38px;padding:0 12px;border-radius:10px;border:1px solid var(--line,#ddd);background:transparent;color:inherit;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+#mkRatioCustomHint{display:none;margin-top:6px;font-size:11.5px;opacity:.6;line-height:1.5}
+#mkRatioCustomHint.on{display:block}
+</style>
+<script id="moko-custom-ratio">
+(function(){
+  const sel=document.getElementById('ratioSel'); if(!sel||typeof window.setRatio!=='function') return;
+  const MIN=1/20, MAX=20;
+  const presets=()=>[...sel.options].map(o=>o.value).filter(v=>v!=='custom');
+  /* ---- 옵션 + 입력 칸 ---- */
+  const opt=new Option('직접 지정…','custom'); sel.appendChild(opt);
+  const row=document.createElement('div'); row.id='mkRatioCustom';
+  row.innerHTML='<input id="mkRatioW" type="number" inputmode="decimal" min="0" step="any" aria-label="가로 비율" placeholder="가로">'
+    +'<span class="mk-ratio-colon">:</span>'
+    +'<input id="mkRatioH" type="number" inputmode="decimal" min="0" step="any" aria-label="세로 비율" placeholder="세로">'
+    +'<button type="button" id="mkRatioSwap" title="가로·세로 바꾸기">⇄ 뒤집기</button>';
+  const hint=document.createElement('div'); hint.id='mkRatioCustomHint';
+  hint.textContent='숫자 두 개로 가로 : 세로 비율을 정해요. 픽셀 크기(1080 × 1350 등)를 넣어도 비율만 따라가요.';
+  sel.insertAdjacentElement('afterend',row); row.insertAdjacentElement('afterend',hint);
+  const W=row.querySelector('#mkRatioW'), H=row.querySelector('#mkRatioH');
+
+  const gcd=(a,b)=>{ while(b){ [a,b]=[b,a%b]; } return a; };
+  const r4=x=>Math.round(x*10000)/10000;
+  function normalize(w,h){
+    w=Number(w); h=Number(h);
+    if(!(w>0&&h>0&&isFinite(w)&&isFinite(h))) return null;
+    let q=w/h; if(q<MIN){ w=1; h=1/MIN; } else if(q>MAX){ w=MAX; h=1; }
+    if(Number.isInteger(w)&&Number.isInteger(h)){
+      const g=gcd(w,h), a=w/g, b=h/g;
+      if(Math.max(a,b)<=64) return a+':'+b;
+    }
+    return w>=h ? r4(w/h)+':1' : '1:'+r4(h/w);
+  }
+  const parse=s=>{ const p=String(s||'').split(':').map(Number); return (p.length===2&&p[0]>0&&p[1]>0)?p:null; };
+  let typed=null;         /* 사용자가 마지막으로 친 두 숫자 (보이는 값 유지용) */
+  let customUI=false;     /* 지금 '직접 지정' 화면인지 */
+
+  function show(on){ customUI=on; row.classList.toggle('on',on); hint.classList.toggle('on',on); }
+  function fill(){
+    const cur=state.export&&state.export.ratio;
+    if(typed&&normalize(typed[0],typed[1])===cur){ if(document.activeElement!==W) W.value=typed[0]; if(document.activeElement!==H) H.value=typed[1]; return; }
+    const p=parse(cur); if(!p) return;
+    if(document.activeElement!==W) W.value=p[0]; if(document.activeElement!==H) H.value=p[1];
+  }
+  function sync(){
+    try{
+      const cur=String((state.export&&state.export.ratio)||'auto');
+      const isPreset=presets().includes(cur);
+      if(isPreset&&!(customUI&&typed&&normalize(typed[0],typed[1])===cur)){
+        if(sel.value!==cur) sel.value=cur; show(false); return;
+      }
+      if(!isPreset&&!parse(cur)) return;
+      if(sel.value!=='custom') sel.value='custom';
+      show(true); fill();
+    }catch(_){}
+  }
+  function apply(){
+    const v=normalize(W.value,H.value); if(!v) return;
+    typed=[W.value,H.value];
+    if(state.export.ratio===v) return;
+    state.export.ratio=v; renderPreview();
+  }
+
+  const prevSet=window.setRatio;
+  window.setRatio=function(v){
+    if(v==='custom'){
+      /* 처음 열 때는 지금 비율(자동이면 지금 캔버스 모양에 가까운 4:5)에서 시작 */
+      const cur=parse(state.export&&state.export.ratio);
+      const start=typed&&normalize(typed[0],typed[1])?typed:(cur?cur:[4,5]);
+      typed=[String(start[0]),String(start[1])];
+      show(true);
+      return prevSet.call(this,normalize(start[0],start[1]));
+    }
+    show(false);
+    return prevSet.apply(this,arguments);
+  };
+  W.addEventListener('input',apply); H.addEventListener('input',apply);
+  [W,H].forEach(el=>el.addEventListener('blur',()=>{ if(!normalize(W.value,H.value)) fill(); }));
+  row.querySelector('#mkRatioSwap').addEventListener('click',()=>{ const a=W.value; W.value=H.value; H.value=a; apply(); });
+
+  const prevRender=window.renderPreview;
+  window.renderPreview=function(){ const r=prevRender.apply(this,arguments); sync(); return r; };
+  sync();
+})();
+</script>
+
+<!-- moko messenger hint toast v1 — 상단 [메신저] 를 눌렀을 때 테마 고르는 곳 안내 -->
+<script id="moko-messenger-hint-toast">
+(function(){
+  const b=document.getElementById('modeMsgr'); if(!b) return;
+  b.addEventListener('click',()=>{ setTimeout(()=>{ try{ if(state.mode==='messenger'&&typeof window.toast==='function') window.toast('<테마> 탭에서 메신저 테마를 고를 수 있어요!'); }catch(_){} },0); });
+})();
+</script>
+
+<!-- ===================================================================
+     moko photo size v1 — 사진 편집: 너비·높이(px) · 라운드 수치 · 여백
+     · 예전 사진(imgW/imgH 없음)은 원래 계산 그대로 그린다. 너비·높이를 '움직였을 때만' 새 방식으로 바뀐다.
+     · 너비×높이 틀에 사진을 꽉 채우고 넘치는 부분은 자른다(찌그러지지 않음).
+     · 단을 안 나누면 너비는 본문 폭을 넘지 않는다. 높이는 너비와 무관.
+     · 단을 나누면 사진 단 폭 = 너비, 높이는 다른 단과 무관. 사진이 글보다 길면 다른 단 글은 기본 가운데(단 세로 정렬로 상/하 변경).
+     · 라운드: 0 = 네모, 클수록 둥글게 (예전 '켜짐' = 10, '꺼짐' = 0)
+     =================================================================== -->
+<style id="moko-photo-size-css">
+#chat img.mimg[data-mk-fit]{object-fit:cover!important}
+html.mk #msgImgBody:not([hidden]){display:grid!important;grid-template-columns:120px minmax(0,1fr);gap:12px 14px;align-items:start}
+html.mk #msgImgBody .msg-img-thumb{width:120px;height:120px;box-sizing:border-box}
+html.mk #msgImgBody .msg-img-thumb img{width:100%!important;height:100%!important;object-fit:cover!important;display:block}
+html.mk #msgImgBody .msg-img-controls{min-width:0;overflow:hidden}
+html.mk #msgImgBody .msg-img-controls .rangewrap{display:flex;align-items:center;gap:6px;min-width:0}
+html.mk #msgImgBody .msg-img-controls .rangewrap input[type=range]{flex:1 1 0;min-width:24px;width:auto}
+html.mk #msgImgBody .msg-img-controls .rangewrap .stepper{flex:0 0 auto;min-width:0}
+html.mk #msgImgBody .mk-img-wh{grid-column:1 / -1;min-width:0}
+html.mk #msgImgBody .mk-img-wh .field{margin:0 0 8px}
+html.mk #msgImgBody .mk-img-wh .field:last-child{margin-bottom:0}
+html.mk #msgImgBody .msg-img-controls .field{margin:0 0 8px}
+html.mk #msgImgBody .msg-img-controls .field:last-child{margin-bottom:0}
+html.mk #msgImgSizeField{display:none!important}
+html.mk #msgImgBody .field.mk-off{opacity:.45}
+html.mk #msgImgBody .field.mk-off .lb:after{content:' · 단 나눔에선 단 간격으로 조절';font-weight:500;font-size:10.5px}
+html.mk #photoEditMenu label.mk-hide{display:none!important}
+</style>
+<script id="moko-photo-size">
+(function(){
+  const $=id=>document.getElementById(id);
+  const body=$('msgImgBody'), controls=body&&body.querySelector('.msg-img-controls');
+  if(!body||!controls||typeof enhanceRange!=='function') return;
+  const MAXW=1600, MAXH=2000;
+  const live=()=>{ try{ return liveImageMsg(); }catch(_){ return null; } };
+  const inSplit=m=>!!(m&&m.columnPlacement&&state.novel&&state.novel.on&&state.novel.mode!=='ratio');
+  window.__mkPhotoBox=m=>(m&&m.type==='image'&&Number(m.imgW)>0&&Number(m.imgH)>0&&!m.columnFill)?{w:Number(m.imgW),h:Number(m.imgH)}:null;
+  window.__mkAlignDefault=()=>{ try{ const n=state.novel; if(n&&n.on&&n.mode!=='ratio'&&state.messages.some(m=>m.columnPlacement&&window.__mkPhotoBox(m))) return 'middle'; }catch(_){} return 'top'; };
+
+  /* ---- 칸 만들기 ---- */
+  const sizeField=$('imgSize').closest('.field'); sizeField.id='msgImgSizeField';
+  const marginField=$('imgMargin').closest('.field'); marginField.removeAttribute('style');
+  const field=(id,label,val)=>{ const f=document.createElement('div'); f.className='field';
+    f.innerHTML='<label class="lb">'+label+'</label><div class="rangewrap"><input id="'+id+'" type="range" value="'+val+'"><span class="val" id="'+id+'V">'+val+'</span></div>'; return f; };
+  const roundField=field('mkImgRadius','이미지 라운드',10);
+  controls.insertBefore(roundField,marginField);
+  const wh=document.createElement('div'); wh.className='mk-img-wh';
+  const wField=field('mkImgW','이미지 너비',300), hField=field('mkImgH','이미지 높이',200);
+  wh.append(wField,hField); body.appendChild(wh);
+  enhanceRange('mkImgRadius','mkImgRadiusV',{min:0,max:100,step:1,nudge:1});
+  enhanceRange('mkImgW','mkImgWV',{min:20,max:MAXW,step:1,nudge:10});
+  enhanceRange('mkImgH','mkImgHV',{min:20,max:MAXH,step:1,nudge:10});
+  const R=$('mkImgRadius'), W=$('mkImgW'), H=$('mkImgH');
+  const num=id=>document.querySelector('.stepper input[data-stepper-for="'+id+'"]');
+  const setV=(el,v)=>{ el.value=String(v); const n=num(el.id); if(n) n.value=String(el.value); const t=$(el.id+'V'); if(t) t.textContent=el.value; };
+
+  /* 세부설정 메뉴: 라운드 토글은 수치로 옮겼으니 감춘다 (입력칸은 남겨 둠 — 다른 코드가 참조) */
+  const eb=$('photoEditButton'); if(eb) eb.textContent='세부설정 ▾';
+  const rl=$('msgImgRound'); if(rl&&rl.closest('label')) rl.closest('label').classList.add('mk-hide');
+
+  /* ---- 새로 넣을 사진(아직 메시지가 아님) ---- */
+  let dW=null,dH=null,dR=null;
+  /* 지금 미리보기에서 이 사진이 실제로 그려진 크기 */
+  function rendered(id){
+    const chat=$('chat'); if(!chat||!id) return null;
+    for(const row of chat.querySelectorAll('.image-row')){
+      const rid=row.dataset.fluidSource||(row.querySelector('.drag-handle[data-mid]')||{}).dataset?.mid||row.dataset.messageId;
+      if(rid!==id) continue;
+      const img=row.querySelector('img.mimg'); if(img&&img.offsetWidth) return {w:img.offsetWidth,h:img.offsetHeight};
+    }
+    return null;
+  }
+  /* 단을 안 나눴을 때 너비 한도 = 사진이 놓이는 본문 폭 */
+  function maxWidth(m){
+    if(inSplit(m)) return MAXW;
+    const chat=$('chat'); let w=0;
+    const row=chat&&[...chat.querySelectorAll('.image-row')].find(r=>(r.dataset.fluidSource||(r.querySelector('.drag-handle[data-mid]')||{}).dataset?.mid)===(m&&m.id));
+    const box=row||(chat&&chat.querySelector('.pmsg'));
+    if(box){ const cs=getComputedStyle(box); w=box.clientWidth-(parseFloat(cs.paddingLeft)||0)-(parseFloat(cs.paddingRight)||0); }
+    if(!(w>0)&&chat){ const cs=getComputedStyle(chat); w=chat.clientWidth-(parseFloat(cs.paddingLeft)||0)-(parseFloat(cs.paddingRight)||0); }
+    return Math.max(20,Math.min(MAXW,Math.floor(w)||MAXW));
+  }
+  function natural(src){ return new Promise(r=>{ const i=new Image(); i.onload=()=>r({w:i.naturalWidth,h:i.naturalHeight}); i.onerror=()=>r(null); i.src=src; }); }
+  let draftNat=null, natSrc='';
+  function current(m){
+    const mw=maxWidth(m);
+    if(m){
+      if(window.__mkPhotoBox(m)||(Number(m.imgW)>0&&Number(m.imgH)>0)) return {w:Math.round(m.imgW),h:Math.round(m.imgH),mw};
+      const r=rendered(m.id); if(r) return {w:Math.round(r.w),h:Math.round(r.h),mw};
+      return {w:mw,h:Math.round(mw*2/3),mw};
+    }
+    if(dW&&dH) return {w:dW,h:dH,mw};
+    if(draftNat&&draftNat.w){ const w=Math.min(mw,draftNat.w); return {w:Math.round(w),h:Math.round(w*draftNat.h/draftNat.w),mw}; }
+    return {w:mw,h:Math.round(mw*2/3),mw};
+  }
+  /* 사진이 든 단의 지금 너비 (개별 단 너비가 있으면 그 값, 없으면 그려진 폭에서 바깥 여백까지 번진 부분을 뺀 값) */
+  function colWidth(m){
+    const n=state.novel||{}, col=Number(m.columnPlacement&&m.columnPlacement.column)||0;
+    const v=Number((n.columnWidths||{})[col]); if(v>0) return Math.round(v);
+    const chat=$('chat'), canvas=$('canvas'), win=canvas&&canvas.querySelector('#novelWindow');
+    const row=chat&&[...chat.querySelectorAll('.image-row')].find(r=>r.dataset.fluidSource===m.id);
+    if(!row) return Math.round(Number(state.layout&&state.layout.width)||300);
+    let w=row.offsetWidth;
+    if(row.dataset.columnFill==='true'&&win){
+      const left=parseFloat(win.style.left)||0, pageW=parseFloat(chat.style.width)||0, cw=parseFloat(canvas.style.width)||canvas.offsetWidth;
+      if(col===0) w-=left; if(col===(n.cols||2)-1) w-=Math.max(0,cw-left-pageW);
+    }
+    return Math.max(20,Math.round(w));
+  }
+  /* 높이를 최대(2000)까지 올려도 다른 단 글이 더 길면 한 줄 안내 (같은 사진은 한 번만) */
+  const hinted=new Set();
+  function tallHint(m){
+    try{
+      if(hinted.has(m.id)) return;
+      const chat=$('chat'); if(!chat) return;
+      let textH=0;
+      const cols={};
+      chat.querySelectorAll(':scope > .pmsg').forEach(r=>{ if(r.classList.contains('image-row')) return; const c=r.dataset.fluidColumn; if(c==null) return; const b=(parseFloat(r.style.top)||0)+r.offsetHeight; const t=parseFloat(r.style.top)||0; const o=cols[c]||(cols[c]={t:Infinity,b:0}); o.t=Math.min(o.t,t); o.b=Math.max(o.b,b); });
+      Object.values(cols).forEach(o=>{ textH=Math.max(textH,o.b-o.t); });
+      if(textH>MAXH){ hinted.add(m.id); if(typeof window.toast==='function') window.toast('다른 단 글이 이미지 최대 길이('+MAXH+'px)보다 길어요. 이미지는 단 가운데에 놓여요.'); }
+    }catch(_){}
+  }
+  function radiusOf(m){ if(m) return m.imgRadius!=null?Number(m.imgRadius):(m.round!==false?10:0); return dR!=null?dR:(typeof draftImgRound!=='undefined'&&draftImgRound===false?0:10); }
+
+  function sync(){
+    try{
+      const m=live();
+      if(!m&&typeof draftMsgImg!=='undefined'&&draftMsgImg&&natSrc!==draftMsgImg){ natSrc=draftMsgImg; natural(draftMsgImg).then(n=>{ draftNat=n; sync(); }); }
+      const c=current(m);
+      W.max=String(c.mw>=MAXW?MAXW:c.mw);
+      if(document.activeElement!==W&&document.activeElement!==num('mkImgW')) setV(W,Math.min(c.w,Number(W.max)));
+      if(document.activeElement!==H&&document.activeElement!==num('mkImgH')) setV(H,c.h);
+      if(document.activeElement!==num('mkImgRadius')) setV(R,radiusOf(m));
+      const fill=!!(m?m.columnFill:($('photoFillToggle')||{}).checked);
+      const split=m?inSplit(m):!!(($('photoSplitToggle')||{}).checked&&state.novel&&state.novel.on&&state.novel.mode!=='ratio');
+      /* 단 나눔 + 꽉 채우기: 너비 = 사진이 든 단의 개별 단 너비, 높이는 단을 꽉 채우므로 끔 */
+      const colFill=fill&&split&&m;
+      if(colFill&&document.activeElement!==W&&document.activeElement!==num('mkImgW')){ W.max=String(MAXW); setV(W,colWidth(m)); }
+      const offW=fill&&!colFill, offH=fill;
+      [[wField,offW],[hField,offH]].forEach(([f,off])=>{ f.querySelectorAll('input,button').forEach(el=>el.disabled=off); f.style.opacity=off?'.45':''; });
+      marginField.classList.toggle('mk-off',split);
+      marginField.querySelectorAll('input,button').forEach(el=>el.disabled=split);
+    }catch(_){}
+  }
+  function applyWH(){
+    let w=Math.round(Number(W.value)||0), h=Math.round(Number(H.value)||0);
+    const m=live(), mw=maxWidth(m); if(!inSplit(m)) w=Math.min(w,mw);
+    w=Math.max(20,Math.min(MAXW,w)); h=Math.max(20,Math.min(MAXH,h));
+    if(m&&inSplit(m)){
+      const n=state.novel, col=Number(m.columnPlacement.column)||0;
+      const explicit=Number((n.columnWidths||{})[col])>0;
+      if(m.columnFill){
+        /* 꽉 채우기: 사진 너비 = 단 너비 → 개별 단 너비를 직접 움직인다 (단 너비는 120~1600) */
+        w=Math.max(120,w); setV(W,w);
+        if(Number((n.columnWidths||{})[col])===w) return;
+        try{ pushUndo('사진 단 너비'); }catch(_){}
+        n.columnWidths=n.columnWidths||{}; n.columnWidths[col]=w;
+        if(Number(m.imgW)>0) m.imgW=w;
+        renderPreview(); try{ syncControlsFromState(); }catch(_){}
+        return;
+      }
+      setV(W,w); setV(H,h);
+      if(m.imgW===w&&m.imgH===h) return;
+      try{ pushUndo('사진 크기'); }catch(_){}
+      m.imgW=w; m.imgH=h; delete m.canvasPhotoHeight; delete m.canvasPhotoScale;
+      if(h>=MAXH) setTimeout(()=>tallHint(m),0);
+      /* 이 단에 개별 단 너비가 정해져 있으면 같이 움직인다 (안 그러면 단 너비에 맞춰 사진이 줄어듦) */
+      if(explicit) n.columnWidths[col]=Math.max(120,Math.min(1600,w));
+      renderPreview(); if(explicit){ try{ syncControlsFromState(); }catch(_){} }
+      return;
+    }
+    setV(W,w); setV(H,h);
+    if(m){
+      if(m.imgW===w&&m.imgH===h) return;
+      try{ pushUndo('사진 크기'); }catch(_){}
+      m.imgW=w; m.imgH=h; delete m.canvasPhotoHeight; delete m.canvasPhotoScale;
+      renderPreview();
+    }else{ dW=w; dH=h; }
+  }
+  function applyR(){
+    const r=Math.max(0,Math.min(100,Math.round(Number(R.value)||0)));
+    const m=live();
+    if(m){ if(m.imgRadius===r) return; try{ pushUndo('사진 라운드'); }catch(_){} m.imgRadius=r; m.round=r>0; renderPreview(); }
+    else{ dR=r; try{ draftImgRound=r>0; }catch(_){} }
+  }
+  /* 너비를 움직이면 높이는 지금 값 그대로(틀만 넓어짐), 높이를 움직이면 너비 그대로 */
+  W.addEventListener('input',applyWH); H.addEventListener('input',applyWH); R.addEventListener('input',applyR);
+
+  /* 사진 추가할 때 미리 정한 값 넣기 */
+  const oldAdd=window.addImage;
+  if(typeof oldAdd==='function') window.addImage=function(){
+    const ids=new Set(state.messages.map(m=>m.id)), w=dW, h=dH, r=dR;
+    const res=oldAdd.apply(this,arguments);
+    const m=state.messages.find(x=>!ids.has(x.id)&&x.type==='image');
+    if(m&&(w||r!=null)){ if(w&&h){ m.imgW=w; m.imgH=h; } if(r!=null){ m.imgRadius=r; m.round=r>0; } renderPreview(); }
+    return res;
+  };
+  const oldReset=window.resetDraftImg;
+  if(typeof oldReset==='function') window.resetDraftImg=function(){ dW=dH=dR=null; draftNat=null; natSrc=''; const r=oldReset.apply(this,arguments); sync(); return r; };
+
+  /* 그림: 라운드 수치와 너비·높이 */
+  const oldHTML=window.msgImgHTML;
+  window.msgImgHTML=function(m){
+    let h=oldHTML.apply(this,arguments);
+    if(!m||!m.image||!h) return h;
+    if(m.imgRadius!=null) h=h.replace(/border-radius:[^;"]*/,'border-radius:'+Math.max(0,Number(m.imgRadius)||0)+'px');
+    const bx=window.__mkPhotoBox(m);
+    if(bx) h=h.replace(/width:[\d.]+%/,'width:'+bx.w+'px;height:'+bx.h+'px;max-width:100%;object-fit:cover').replace('<img ','<img data-mk-fit="1" ');
+    return h;
+  };
+  const oldRefresh=window.refreshMsgImgEditor;
+  window.refreshMsgImgEditor=function(){ const r=oldRefresh.apply(this,arguments); sync(); return r; };
+  const oldRender=window.renderPreview;
+  window.renderPreview=function(){ const r=oldRender.apply(this,arguments); sync(); return r; };
+  ['photoSplitToggle','photoFillToggle'].forEach(id=>{ const el=$(id); if(el) el.addEventListener('change',()=>setTimeout(sync,0)); });
+  sync();
+})();
+</script>
+
+<!-- ===================================================================
+     moko photo crop pan v1 — 잘린 사진(틀에 꽉 채운 사진)을 미리보기에서 끌어서 보이는 위치 조정
+     · 가로로 잘렸으면 좌우로, 세로로 잘렸으면 위아래로 끈다. 메시지에 imgPosX/imgPosY(%)로 저장.
+     · 위치를 한 번도 안 옮긴 사진은 예전처럼 가운데 그대로.
+     =================================================================== -->
+<style id="moko-photo-pan-css">
+#chat img.mimg[data-mk-pos]{object-position:var(--mk-pos,50% 50%)!important}
+html.mk #chat img.mimg.mk-pan-x{cursor:ew-resize;touch-action:pan-y}
+html.mk #chat img.mimg.mk-pan-y{cursor:ns-resize;touch-action:pan-x}
+html.mk #chat img.mimg.mk-panning{cursor:grabbing!important}
+</style>
+<script id="moko-photo-pan">
+(function(){
+  const $=id=>document.getElementById(id);
+  const idOf=img=>{ const row=img.closest('.image-row'); if(!row) return ''; return row.dataset.fluidSource||(row.querySelector('.drag-handle[data-mid]')||{}).dataset?.mid||row.dataset.messageId||''; };
+  const msgOf=img=>{ const id=idOf(img); return id?state.messages.find(m=>m.id===id&&m.type==='image'):null; };
+  const posStr=m=>(m.imgPosX!=null?m.imgPosX:50)+'% '+(m.imgPosY!=null?m.imgPosY:50)+'%';
+  /* 그리기: 위치를 옮긴 사진에만 표시 */
+  const oldHTML=window.msgImgHTML;
+  window.msgImgHTML=function(m){
+    let h=oldHTML.apply(this,arguments);
+    if(h&&m&&(m.imgPosX!=null||m.imgPosY!=null)) h=h.replace('<img ','<img data-mk-pos="1" ').replace(/style="/,'style="--mk-pos:'+posStr(m)+';');
+    return h;
+  };
+  /* 어느 쪽으로 잘렸는지 (그린 뒤) */
+  function overflow(img){
+    const nw=img.naturalWidth, nh=img.naturalHeight, bw=img.offsetWidth, bh=img.offsetHeight;
+    if(!nw||!nh||!bw||!bh) return null;
+    if(getComputedStyle(img).objectFit!=='cover') return null;
+    const sc=Math.max(bw/nw,bh/nh), ox=nw*sc-bw, oy=nh*sc-bh;
+    if(ox>1) return {axis:'x',over:ox};
+    if(oy>1) return {axis:'y',over:oy};
+    return null;
+  }
+  function mark(){
+    const chat=$('chat'); if(!chat) return;
+    chat.querySelectorAll('img.mimg').forEach(img=>{
+      const go=()=>{ const o=overflow(img); img.classList.toggle('mk-pan-x',!!o&&o.axis==='x'); img.classList.toggle('mk-pan-y',!!o&&o.axis==='y');
+        if(o&&!img.title) img.title=o.axis==='x'?'좌우로 끌어서 보이는 위치 조정':'위아래로 끌어서 보이는 위치 조정'; };
+      if(img.complete) go(); else img.addEventListener('load',go,{once:true});
+    });
+  }
+  const oldRender=window.renderPreview;
+  window.renderPreview=function(){ const r=oldRender.apply(this,arguments); try{ mark(); }catch(_){} return r; };
+
+  let drag=null, swallowClick=false;
+  document.addEventListener('pointerdown',e=>{
+    if(e.button!==0) return;
+    const img=e.target.closest&&e.target.closest('#chat img.mimg'); if(!img) return;
+    if(!img.classList.contains('mk-pan-x')&&!img.classList.contains('mk-pan-y')) return;
+    if(document.body.classList.contains('bulk-mode')||document.querySelector('.bulk-active')) return;
+    const m=msgOf(img), o=overflow(img); if(!m||!o) return;
+    const r=img.getBoundingClientRect(), scale=img.offsetWidth?r.width/img.offsetWidth:1;
+    drag={img,m,axis:o.axis,over:o.over*scale,sx:e.clientX,sy:e.clientY,start:o.axis==='x'?(m.imgPosX!=null?m.imgPosX:50):(m.imgPosY!=null?m.imgPosY:50),moved:false,id:e.pointerId,val:null};
+  },true);
+  document.addEventListener('pointermove',e=>{
+    if(!drag||e.pointerId!==drag.id) return;
+    const d=drag.axis==='x'?e.clientX-drag.sx:e.clientY-drag.sy;
+    if(!drag.moved){ if(Math.abs(d)<4) return; drag.moved=true; drag.img.classList.add('mk-panning'); try{ drag.img.setPointerCapture(e.pointerId); }catch(_){} }
+    e.preventDefault();
+    /* 사진을 오른쪽으로 끌면 왼쪽 부분이 보이도록 (위치 % 가 줄어듦) */
+    const v=Math.max(0,Math.min(100,drag.start-d/drag.over*100));
+    drag.val=Math.round(v*10)/10;
+    const x=drag.axis==='x'?drag.val:(drag.m.imgPosX!=null?drag.m.imgPosX:50), y=drag.axis==='y'?drag.val:(drag.m.imgPosY!=null?drag.m.imgPosY:50);
+    drag.img.setAttribute('data-mk-pos','1'); drag.img.style.setProperty('--mk-pos',x+'% '+y+'%');
+  },{capture:true,passive:false});
+  function end(e){
+    if(!drag||(e&&e.pointerId!==drag.id)) return;
+    const d=drag; drag=null; d.img.classList.remove('mk-panning');
+    if(!d.moved||d.val==null) return;
+    swallowClick=true; setTimeout(()=>swallowClick=false,250);
+    try{ pushUndo('사진 위치'); }catch(_){}
+    if(d.axis==='x') d.m.imgPosX=d.val; else d.m.imgPosY=d.val;
+    renderPreview();
+  }
+  document.addEventListener('pointerup',end,true);
+  document.addEventListener('pointercancel',end,true);
+  document.addEventListener('click',e=>{ if(swallowClick&&e.target.closest&&e.target.closest('#chat')){ e.preventDefault(); e.stopPropagation(); swallowClick=false; } },true);
+  document.addEventListener('dragstart',e=>{ if(e.target.closest&&e.target.closest('#chat img.mk-pan-x,#chat img.mk-pan-y')) e.preventDefault(); },true);
+  try{ mark(); }catch(_){}
+})();
+</script>
+
+<!-- ===================================================================
+     moko spacing fix v2 — 말풍선 탭 '이름'·'자동 변환' 위 여백, 서명·페이지 번호 칸 간격 정리
+     서명: '서식' 줄을 서명 표시 바로 아래(세부 칸 맨 위)로 옮김. 화면 배치만 바뀌고 설정 값·저장 결과는 그대로.
+     =================================================================== -->
+<style id="moko-spacing-fix-v2">
+html.mk #scriptNameStyleSection{padding-top:0!important}
+html.mk #scriptNameStyleSection>.flat-tool-body>.mk-sub.first{margin-top:0!important;padding-top:12px!important}
+html.mk #bubbleQuickToggleSection,html.mk #scriptNameStyleSection+#bubbleQuickToggleSection{padding-top:0!important}
+html.mk #bubbleQuickToggleSection>.flat-tool-body{padding-top:12px!important}
+html.mk #creditDetails>.acc-inner,html.mk #pageNumberDetails>.acc-inner{display:flex;flex-direction:column;gap:14px;padding-top:0}
+html.mk #creditDetails>.acc-inner>*,html.mk #pageNumberDetails>.acc-inner>*{margin:0!important}
+html.mk #pageNumberDetails>.acc-inner>.field:has(>#splitCountHelp[hidden]:only-child){display:none}
+html.mk #creditDetails .colorgrid,html.mk #pageNumberDetails .colorgrid{row-gap:14px}
+html.mk #pageNumberDetails .colorgrid>.field{margin:0!important}
+</style>
+<script id="moko-spacing-fix-v2-js">
+(function(){
+  const inner=document.querySelector('#creditDetails>.acc-inner'), fmt=document.getElementById('creditFormatRow');
+  const field=fmt&&fmt.closest('.field'); if(inner&&field&&field.parentNode===inner) inner.insertBefore(field,inner.firstElementChild);
+})();
+</script>
+
+<!-- ===================================================================
+     moko messenger skins v1 — 메신저 모드 전용 스킨 (LINE · 카카오톡 · iMessage)
+     · 설정은 state.layout.msgSkin / msgSkinOpts 에 담긴다 (기본값 'none').
+       스킨이 생기기 전에 저장한 테마·프로젝트를 불러오면 'none' 으로 돌아가 예전 모습 그대로다.
+     · 스킨이 'none' 이거나 메신저 모드가 아니면 아무 것도 그리지 않는다.
+     · 말풍선 꼬리·시간·읽음 표시는 미리보기 DOM 에 함께 그려져 PNG·HTML 저장에도 그대로 담긴다.
+     =================================================================== -->
+<style id="moko-msg-skin-v1">
+/* ---------- 공통 배치: 이름 / [꼬리][말풍선][시간] ---------- */
+#chat.mk-skin .m-msg{display:flex;flex-wrap:wrap;align-items:flex-start;text-align:left}
+#chat.mk-skin .m-msg.mine{justify-content:flex-end}
+#chat.mk-skin .m-msg>.m-name{flex:0 0 100%;order:0;box-sizing:border-box}
+#chat.mk-skin .m-msg>.m-bubble{order:2;flex:0 0 auto;left:0!important;right:0!important;top:0!important;margin:0!important;max-width:var(--mk-bmax,72%)}
+#chat.mk-skin .m-msg>.mk-tail{order:1;flex:0 0 auto;display:block;overflow:visible;pointer-events:none;position:relative;z-index:0}
+#chat.mk-skin .m-msg>.m-bubble{position:relative;z-index:1}
+#chat.mk-skin .m-msg.mine>.mk-tail{order:3}
+#chat.mk-skin .m-msg>.mk-meta{order:3;align-self:flex-end;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;margin:0 0 1px 5px;font-size:calc(var(--mk-fs,16px)*.66);line-height:1.22;color:var(--mk-meta);white-space:nowrap;letter-spacing:-.2px;font-weight:400}
+#chat.mk-skin .m-msg.mine>.mk-meta{order:1;align-items:flex-end;margin:0 5px 1px 0}
+#chat.mk-skin .m-msg>.mk-status{order:9;flex:0 0 100%;text-align:right;margin-top:3px;padding-right:2px;font-size:calc(var(--mk-fs,16px)*.68);line-height:1.3;font-weight:600;color:var(--mk-meta)}
+#chat.mk-skin .mk-read{color:var(--mk-read,var(--mk-meta))}
+#chat.mk-skin .mk-unread{color:var(--mk-unread);font-weight:700;font-size:1.04em}
+
+/* 기존 꼬리·반투명 배경층은 스킨이 대신한다 */
+#chat.mk-skin .m-msg .m-bubble:before,#chat.mk-skin .m-msg .m-bubble:after,
+#chat.mk-skin .m-msg .m-bubble .bubble-bg:before,#chat.mk-skin .m-msg .m-bubble .bubble-bg:after{content:none!important}
+#chat.mk-skin .m-msg .m-bubble .bubble-bg{display:none!important}
+#chat.mk-skin .m-msg .m-bubble{background:var(--mk-ot)!important;color:var(--mk-ot-text)!important;border-radius:var(--mk-r)!important;border:0!important;opacity:1!important}
+#chat.mk-skin .m-msg.mine .m-bubble{background:var(--mk-my)!important;color:var(--mk-my-text)!important}
+#chat.mk-skin.mk-member-colors .m-msg .m-bubble{background:var(--bubble-bg)!important}
+#chat.mk-skin .m-msg>.mk-tail path{fill:var(--mk-ot)}
+#chat.mk-skin .m-msg.mine>.mk-tail path{fill:var(--mk-my)}
+
+/* 표시 옵션 */
+#chat.mk-hide-name .m-msg>.m-name{display:none}
+#chat.mk-hide-av .m-msg>.av{display:none}
+#chat.mk-hide-av .m-msg{padding-left:0!important;padding-right:0!important}
+
+/* 배경 */
+#canvas.mk-bg,#chat.mk-skin.mk-bg{background:var(--mk-bg)!important}
+#canvas.mk-bg{border-radius:0!important}
+
+/* ---------- LINE ---------- */
+#chat.mk-skin-line .m-msg .av{border-radius:50%!important}
+#chat.mk-skin-line .m-msg>.m-name{color:var(--mk-name)!important;font-size:calc(var(--mk-fs,16px)*.72)!important;margin-bottom:4px}
+#chat.mk-skin-line .divider-pill{background:var(--mk-pill)!important;color:var(--mk-pill-text)!important;border-radius:999px!important}
+
+/* ---------- 카카오톡 ---------- */
+#chat.mk-skin-kakao .m-msg .av{border-radius:38%!important}
+#chat.mk-skin-kakao .m-msg>.m-name{color:var(--mk-name)!important;font-size:calc(var(--mk-fs,16px)*.76)!important;margin-bottom:5px}
+#chat.mk-skin-kakao .divider-pill{background:var(--mk-pill)!important;color:var(--mk-pill-text)!important;border-radius:999px!important}
+
+/* ---------- iMessage ---------- */
+#chat.mk-skin-imessage .m-msg .av{border-radius:50%!important}
+#chat.mk-skin-imessage .m-msg>.m-name{color:var(--mk-name)!important;font-size:calc(var(--mk-fs,16px)*.7)!important;margin:0 0 2px 12px}
+#chat.mk-skin-imessage .m-msg.mk-run-cont{margin-bottom:2px!important}
+/* iMessage: 프로필 사진은 묶음의 마지막 말풍선 옆, 꼬리 높이(아래)에 */
+#chat.mk-skin-imessage .m-msg>.av{top:auto!important;bottom:var(--mk-av-b,0px)!important}
+#chat.mk-skin .m-msg>.av.mk-av-moved{visibility:hidden!important}
+#chat.mk-skin-imessage .divider-pill{background:transparent!important;color:var(--mk-meta)!important;font-weight:500!important;font-size:calc(var(--mk-fs,16px)*.72)!important}
+
+/* 편집 화면에서만: 시간을 눌러 바꿀 수 있다는 표시 */
+html.mk #chat.mk-skin .mk-time{cursor:pointer;border-radius:3px}
+html.mk #chat.mk-skin .mk-time:hover{background:rgba(0,0,0,.08)}
+html.mk #chat.mk-skin .mk-time.mk-time-editing{outline:1.5px solid #5B8DEF;outline-offset:1px;background:rgba(91,141,239,.12);cursor:text;min-width:1.5em;display:inline-block;user-select:text;-webkit-user-select:text}
+</style>
+<style id="moko-msg-skin-dyn"></style>
+
+<style id="moko-msg-skin-ui">
+#mkSkinSection{display:none}
+html.mk #mkSkinSection.show{display:block}
+html.mk .mk-skin-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+html.mk .mk-skin-tile{display:grid;gap:5px;padding:5px 5px 7px;border:1.5px solid var(--mk-line);border-radius:12px;background:#fff;cursor:pointer;font:600 11.5px/1.2 inherit;color:var(--mk-ink);text-align:center;transition:border-color .15s,box-shadow .15s}
+html.mk .mk-skin-tile:hover{border-color:#CFCFCC}
+html.mk .mk-skin-tile[aria-checked="true"]{border-color:var(--mk-accent);box-shadow:0 0 0 3px var(--mk-accent-soft)}
+html.mk .mk-skin-thumb{position:relative;height:58px;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:0 7px}
+html.mk .mk-skin-thumb.none{background:repeating-linear-gradient(45deg,#F3F3F1 0 6px,#FAFAF9 6px 12px);align-items:center;color:var(--mk-muted);font-size:18px}
+html.mk .mk-skin-thumb .tb{display:flex;align-items:flex-start}
+html.mk .mk-skin-thumb .tb.me{justify-content:flex-end}
+html.mk .mk-skin-thumb .tb i{display:block;height:13px;border-radius:var(--tr,7px)}
+html.mk .mk-skin-thumb .tb svg{flex:0 0 auto}
+html.mk .mk-skin-note{display:none;margin-top:10px;padding:8px 10px;border-radius:10px;background:#FFF7E6;color:#7A5B12;font-size:12px;line-height:1.45}
+html.mk .mk-skin-note.show{display:block}
+html.mk #mkSkinDetail{margin:12px -12px 0;padding:4px 12px 0;border-top:1px solid var(--mk-line)}
+html.mk #mkSkinDetail[hidden]{display:none}
+html.mk #mkSkinDetail .mk-sub{margin:12px 0 4px!important;padding:0!important;border:0!important;font-size:11.5px!important;font-weight:600!important;color:var(--mk-muted)!important}
+html.mk .mk-skin-colors{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin:6px 0 4px}
+html.mk .mk-skin-color{display:flex;align-items:center;gap:7px;min-width:0}
+html.mk .mk-skin-color input[type=color]{flex:0 0 30px;width:30px;height:30px;padding:0;border:1px solid var(--mk-line);border-radius:9px;background:none;cursor:pointer}
+html.mk .mk-skin-color input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+html.mk .mk-skin-color input[type=color]::-webkit-color-swatch{border:0;border-radius:6px}
+html.mk .mk-skin-color input[type=color]::-moz-color-swatch{border:0;border-radius:6px}
+html.mk .mk-skin-color span{font-size:12px;color:var(--mk-ink);font-weight:600;line-height:1.25;min-width:0}
+html.mk .mk-skin-color span small{display:block;font-weight:500;color:var(--mk-muted);font-size:11px;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+html.mk .mk-skin-inline{display:grid;grid-template-columns:1fr 92px;gap:8px;margin:2px 0 6px}
+html.mk .mk-skin-inline .field{margin:0}
+html.mk .mk-skin-inline input{width:100%;box-sizing:border-box}
+html.mk #mkSkinDetail .field input{height:38px;width:100%;box-sizing:border-box;border:1px solid var(--mk-line);border-radius:10px;background:#FAFAF9;padding:0 11px;font:500 13px/1 inherit;color:var(--mk-ink);outline:0}
+html.mk #mkSkinDetail .field input:focus{background:#fff;border-color:var(--mk-accent);box-shadow:0 0 0 3px var(--mk-accent-soft)}
+html.mk #mkSkinDetail .field{margin:0 0 6px}
+html.mk .mk-skin-help{font-size:11.5px;color:var(--mk-muted);line-height:1.45;margin:2px 0 6px}
+html.mk .mk-skin-chips{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 8px}
+html.mk .mk-skin-chips button{border:1px solid var(--mk-line);background:#fff;border-radius:99px;padding:4px 10px;font:600 11.5px/1.2 inherit;color:var(--mk-muted);cursor:pointer}
+html.mk .mk-skin-chips button:hover{color:var(--mk-ink);border-color:#CFCFCC}
+html.mk .mk-skin-chips button[aria-pressed="true"]{color:var(--mk-accent-ink);border-color:#BFD3F6;background:var(--mk-accent-soft)}
+html.mk .mk-skin-actions{display:flex;gap:6px;justify-content:flex-end;margin:10px 0 12px;flex-wrap:wrap}
+html.mk .mk-skin-actions button{border:1px solid var(--mk-line);background:#fff;border-radius:9px;padding:6px 10px;font:600 11.5px/1.2 inherit;color:var(--mk-muted);cursor:pointer}
+html.mk .mk-skin-actions button:hover{color:var(--mk-ink)}
+html.mk .mk-skin-sub[data-off="true"]{opacity:.45;pointer-events:none}
+/* 말풍선 탭의 '메신저 모드' 묶음은 테마 탭(메신저 스킨)으로 옮겼다 */
+html.mk #messengerSettings.mk-moved{display:none!important}
+html.mk #mkMeField{margin:0 0 12px}
+html.mk #mkMeField .field{margin:0}
+html.mk #mkMeField select{width:100%}
+html.mk #mkBasicColors{margin:12px -12px 0;padding:4px 12px 2px;border-top:1px solid var(--mk-line)}
+html.mk #mkBasicColors[hidden]{display:none}
+html.mk #mkBasicColors .colorgrid{margin-top:6px}
+html.mk #mkBasicColors .mk-sub{margin:12px 0 4px!important;padding:0!important;border:0!important;font-size:11.5px!important;font-weight:600!important;color:var(--mk-muted)!important}
+</style>
+
+<script id="moko-msg-skin-v1-script">
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const safe=fn=>{ try{ return fn(); }catch(e){ try{ console.warn('[moko skin]',e); }catch(_){} } };
+const ST=()=>{ try{ return state; }catch(_){ return window.state; } };
+
+/* ================= 스킨 정의 ================= */
+const SKINS={
+  line:{
+    name:'LINE', r:20, tail:'top', bmax:'70%',
+    meta:'#E2E8F0', metaLight:'rgba(0,0,0,.45)', read:null, name_:'#F3F6FA', nameLight:'#3D4650', pill:'rgba(0,0,0,.17)', pillText:'#FFFFFF',
+    def:{bg:true,bgColor:'#849EBF',my:'#B4E68C',myText:'#111111',ot:'#FFFFFF',otText:'#111111',memberColors:false,
+         time:true,timeStart:'오후 3:18',timeStep:0,read:true,readText:'읽음',showName:true,showAvatar:true}
+  },
+  kakao:{
+    name:'카카오톡', r:17, tail:'top', bmax:'70%',
+    meta:'#55626D', metaLight:'#55626D', unread:'#FFE01B', name_:'#44505B', nameLight:'#44505B', pill:'rgba(0,0,0,.15)', pillText:'#FFFFFF',
+    def:{bg:true,bgColor:'#ABC1D1',my:'#FEE500',myText:'#191919',ot:'#FFFFFF',otText:'#191919',memberColors:false,
+         time:true,timeStart:'오후 2:03',timeStep:0,unreadOn:true,unread:'1',unreadOthers:false,showName:true,showAvatar:true}
+  },
+  imessage:{
+    name:'iMessage', r:18, tail:'bottom', bmax:'75%',
+    meta:'#8E8E93', metaLight:'#8E8E93', name_:'#8E8E93', nameLight:'#8E8E93', pill:'transparent', pillText:'#8E8E93',
+    def:{bg:true,bgColor:'#FFFFFF',my:'#1D8BFE',myText:'#FFFFFF',ot:'#E9E9EB',otText:'#000000',memberColors:false,
+         status:true,statusText:'전송됨',showName:false,showAvatar:false}
+  }
+};
+const SKIN_KEYS=['none','line','kakao','imessage'];
+
+/* ================= 저장값 (state.layout 안) ================= */
+function L(){ const s=ST(); return (s&&s.layout)||{}; }
+function curSkin(){ const k=L().msgSkin; return SKINS[k]?k:'none'; }
+function opts(skin){
+  const def=SKINS[skin]?SKINS[skin].def:{};
+  const all=L().msgSkinOpts; const o=(all&&typeof all==='object'&&all[skin]&&typeof all[skin]==='object')?all[skin]:{};
+  return Object.assign({},def,o);
+}
+function setOpt(skin,key,val){
+  const lay=L();
+  if(!lay.msgSkinOpts||typeof lay.msgSkinOpts!=='object') lay.msgSkinOpts={};
+  if(!lay.msgSkinOpts[skin]||typeof lay.msgSkinOpts[skin]!=='object') lay.msgSkinOpts[skin]={};
+  lay.msgSkinOpts[skin][key]=val;
+  refresh();
+}
+function timeMap(){ const lay=L(); if(!lay.msgSkinTimes||typeof lay.msgSkinTimes!=='object') lay.msgSkinTimes={}; return lay.msgSkinTimes; }
+function refresh(){
+  safe(()=>window.renderPreview());
+  safe(()=>{ if(typeof scheduleAutosave==='function') scheduleAutosave(); });
+}
+
+/* 옛 테마·프로젝트에는 스킨 칸이 없다 → 'none' 으로 돌아가게 기본값에 넣는다 */
+safe(()=>{
+  const prev=window.defaultLayout;
+  if(typeof prev==='function') window.defaultLayout=function(){ const d=prev.apply(this,arguments); if(d&&typeof d==='object'){ d.msgSkin='none'; d.msgSkinOpts={}; } return d; };
+});
+safe(()=>{
+  const api=window.__modeDefaultsProjectAPI; if(!api) return;
+  const prev=api.apply;
+  if(typeof prev==='function') api.apply=function(d){
+    const r=prev.apply(this,arguments);
+    safe(()=>{
+      if(d&&typeof d==='object'&&d.layout&&typeof d.layout==='object'){
+        const lay=L();
+        if(!Object.prototype.hasOwnProperty.call(d.layout,'msgSkin')) lay.msgSkin='none';
+        if(!Object.prototype.hasOwnProperty.call(d.layout,'msgSkinOpts')) lay.msgSkinOpts={};
+        if(!Object.prototype.hasOwnProperty.call(d.layout,'msgSkinTimes')) lay.msgSkinTimes={};
+        safe(()=>window.renderPreview());
+      }
+    });
+    return r;
+  };
+});
+safe(()=>{ const lay=L(); if(!lay.msgSkin) lay.msgSkin='none'; });
+
+/* ================= 색 도우미 ================= */
+function hexRgb(h){ const m=String(h||'').trim().match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i); if(!m) return null; let s=m[1]; if(s.length===3) s=s.split('').map(c=>c+c).join(''); return [0,2,4].map(i=>parseInt(s.slice(i,i+2),16)); }
+function lum(h){ const c=hexRgb(h); if(!c) return 1; const f=v=>{ v/=255; return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4); }; return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2]); }
+function same(a,b){ return String(a||'').toLowerCase()===String(b||'').toLowerCase(); }
+function cssColor(v,fb){ return hexRgb(v)?('#'+hexRgb(v).map(x=>x.toString(16).padStart(2,'0')).join('')):fb; }
+
+/* ================= 시간 ================= */
+function parseTime(s){
+  const t=String(s||'').trim(); if(!t) return null;
+  const m=t.match(/^(오전|오후|AM|PM)?\s*(\d{1,2})\s*[:：]\s*(\d{2})\s*(AM|PM|오전|오후)?$/i);
+  if(!m) return null;
+  let h=+m[2], mi=+m[3]; if(h>23||mi>59) return null;
+  const ap=(m[1]||m[4]||'').toUpperCase();
+  if(ap==='오후'||ap==='PM'){ if(h<12) h+=12; }
+  else if(ap==='오전'||ap==='AM'){ if(h===12) h=0; }
+  return h*60+mi;
+}
+function fmtTime(min,skin){
+  min=((min%1440)+1440)%1440;
+  const h=Math.floor(min/60), mi=min%60, h12=h%12||12;
+  const hh=skin==='kakao'?String(h12).padStart(2,'0'):String(h12);
+  return (h<12?'오전 ':'오후 ')+hh+':'+String(mi).padStart(2,'0');
+}
+
+/* ================= 꼬리 SVG ================= */
+/* 꼬리 윤곽 — 캡처본 말풍선 실루엣을 1/8px 단위로 읽어 각 변에 3차 곡선을 최소제곱으로 맞춘 값(오차 0.25px 이하).
+   좌표: (안쪽으로 x, 아래로 y). 원점 = 말풍선 바깥 사각형의 꼬리 쪽 위 모서리. 단위 = 캡처본 px, ref = 캡처본 모서리 반지름.
+   d 는 path 명령 목록: ['M',x,y] ['L',x,y] ['C',x1,y1,x2,y2,x,y]. 마지막 몇 점은 말풍선 안쪽이라 이음매가 생기지 않는다. */
+const TAIL_SHAPES={
+  /* LINE: 모서리 꼭짓점에 선 귀. 옆변은 거의 수직으로 서고, 윗변은 완만하게 홈으로 내려간다 */
+  line:{ref:31, d:[
+    ['M',-1.20,-1.20],
+    ['C',9.10,6.18, 13.32,4.68, 19.50,2.21],
+    ['L',22,22],['L',5.01,14.10],
+    ['C',3.87,13.35, -1.73,3.44, -1.20,-1.20]]},
+  /* 카카오톡: 윗면이 평평하게 옆으로 나온 지느러미. 윗변은 깊은 홈으로 떨어지고, 바깥 변은 옆면으로 오목하게 스며든다 */
+  kakao:{ref:28, d:[
+    ['M',-5.70,1.55],
+    ['C',-1.20,1.50, 5.60,2.60, 9.00,7.70],
+    ['L',10.5,8.2],['L',16,16],['L',0.6,28.5],['L',0,28.5],['L',0,18.50],
+    ['C',-0.38,12.58, -2.85,7.60, -5.70,1.55]]}
+};
+function smoothPath(){ return ''; }
+function tailSVG(skin,mine,k,r){
+  const S=SKINS[skin];
+  r=r||S.r*k;
+  const n=v=>Math.round(v*100)/100;
+  const top=S.tail==='top';
+  const sx=mine?1:-1, sy=top?1:-1;
+  let d;
+  if(top){
+    const T=TAIL_SHAPES[skin], u=r/T.ref;
+    /* (안쪽 x, 아래 y) → 화면 좌표: 바깥쪽이 +X 가 되도록 부호를 뒤집는다 */
+    const f=(x,y)=>n(-sx*x*u)+' '+n(y*u);
+    d=T.d.map(c=>{
+      if(c[0]==='C') return 'C'+f(c[1],c[2])+' '+f(c[3],c[4])+' '+f(c[5],c[6]);
+      return c[0]+f(c[1],c[2]);
+    }).join('')+'Z';
+  }else{
+    /* iMessage: 옆면을 그대로 타고 내려오다 바닥에서 바깥으로 휘어 나간다.
+       시작점을 둥근 모서리가 시작되는 높이(r)로 둬서 옆면과 꼬리가 한 줄로 이어진다. */
+    const P=(x,y)=>n(sx*x)+' '+n(sy*y);
+    d='M'+P(0,r)+'L'+P(0,7*k)+'C'+P(0,3.0*k)+' '+P(.8*k,.9*k)+' '+P(2.6*k,0)
+     +'C'+P(.6*k,.1*k)+' '+P(-3.6*k,.9*k)+' '+P(-8*k,3.6*k)+'L'+P(-.9*r,.9*r)+'Z';
+  }
+  /* 상자를 꼬리 모양에 딱 맞게: 넉넉한 상자는 캔버스 밖으로 삐져나가 저장 크기를 바꾼다 */
+  const nums=(d.match(/-?\d+(?:\.\d+)?/g)||[]).map(Number);
+  let x0=0,y0=0,x1=0,y1=0;
+  for(let i=0;i+1<nums.length;i+=2){ x0=Math.min(x0,nums[i]); x1=Math.max(x1,nums[i]); y0=Math.min(y0,nums[i+1]); y1=Math.max(y1,nums[i+1]); }
+  x0=Math.floor(x0)-1; y0=Math.floor(y0)-1; x1=Math.ceil(x1)+1; y1=Math.ceil(y1)+1;
+  const W=x1-x0, H=y1-y0;
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','mk-tail'); svg.setAttribute('aria-hidden','true');
+  svg.setAttribute('width',W); svg.setAttribute('height',H); svg.setAttribute('viewBox',x0+' '+y0+' '+W+' '+H);
+  /* (0,0)이 말풍선 모서리에 오도록 놓고, 자리는 차지하지 않는다 */
+  svg.style.cssText='flex:0 0 auto;align-self:'+(top?'flex-start':'flex-end')+';margin:'+y0+'px '+(-x1)+'px '+(-y1)+'px '+x0+'px;overflow:visible;';
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path'); p.setAttribute('d',d);
+  svg.appendChild(p);
+  return svg;
+}
+
+/* ================= 그리기 ================= */
+let lastDyn='';
+function applyClasses(){
+  const s=ST(), chat=$('chat'), canvas=$('canvas'); if(!s||!chat) return false;
+  const skin=curSkin();
+  const active=skin!=='none'&&s.mode==='messenger'&&s.bubbleTheme!=='quote';
+  const all=['mk-skin','mk-skin-line','mk-skin-kakao','mk-skin-imessage','mk-member-colors','mk-hide-name','mk-hide-av','mk-bg'];
+  if(!active){
+    if(chat.classList.contains('mk-skin')) all.forEach(c=>chat.classList.remove(c));
+    if(canvas) canvas.classList.remove('mk-bg','mk-skin-on');
+    setDyn('');
+    return false;
+  }
+  const o=opts(skin), S=SKINS[skin];
+  chat.classList.add('mk-skin','mk-skin-'+skin);
+  ['line','kakao','imessage'].forEach(k=>{ if(k!==skin) chat.classList.remove('mk-skin-'+k); });
+  chat.classList.toggle('mk-member-colors',!!o.memberColors);
+  chat.classList.toggle('mk-hide-name',!o.showName);
+  chat.classList.toggle('mk-hide-av',!o.showAvatar);
+  const bgOn=!!o.bg&&!s.transparentBg;
+  chat.classList.toggle('mk-bg',bgOn);
+  if(canvas){ canvas.classList.toggle('mk-bg',bgOn); canvas.classList.add('mk-skin-on'); }
+  /* 색은 스타일 블록 하나에 모아 둔다 → HTML 저장에도 그대로 실린다 */
+  const bg=cssColor(o.bgColor,S.def.bgColor);
+  const dark=lum(bg)<.32;
+  const meta=same(bg,S.def.bgColor)?S.meta:(dark?'rgba(255,255,255,.8)':'rgba(0,0,0,.5)');
+  const name=same(bg,S.def.bgColor)?S.name_:(dark?'rgba(255,255,255,.88)':S.nameLight);
+  const fs=Number(s.layout.bubbleFs)||Number(s.layout.fs)||16;
+  const vars='--mk-bg:'+bg+';--mk-my:'+cssColor(o.my,S.def.my)+';--mk-my-text:'+cssColor(o.myText,S.def.myText)+';--mk-ot:'+cssColor(o.ot,S.def.ot)+';--mk-ot-text:'+cssColor(o.otText,S.def.otText)
+    +';--mk-r:'+(Math.round(S.r*Math.max(.7,Math.min(1.6,fs/16))*100)/100)+'px;--mk-bmax:'+S.bmax+';--mk-fs:'+fs+'px;--mk-meta:'+meta+';--mk-name:'+name+';--mk-unread:'+(S.unread||meta)+';--mk-pill:'+S.pill+';--mk-pill-text:'+S.pillText+';';
+  setDyn('#canvas.mk-skin-on,#chat.mk-skin{'+vars+'}'+(bgOn?'body:has(>#canvas.mk-bg){background:'+bg+'!important}':''));
+  return true;
+}
+function setDyn(txt){ if(txt===lastDyn) return; lastDyn=txt; const el=$('moko-msg-skin-dyn'); if(el) el.textContent=txt; }
+
+function decorate(){
+  const chat=$('chat'); if(!chat) return;
+  chat.querySelectorAll('.mk-tail,.mk-meta,.mk-status').forEach(n=>n.remove());
+  chat.querySelectorAll('.mk-run-cont').forEach(n=>n.classList.remove('mk-run-cont'));
+  chat.querySelectorAll('.av.mk-av-clone').forEach(n=>n.remove());
+  chat.querySelectorAll('.av.mk-av-moved').forEach(n=>n.classList.remove('mk-av-moved'));
+  chat.querySelectorAll('.m-msg').forEach(n=>n.style.removeProperty('--mk-av-b'));
+  if(!chat.classList.contains('mk-skin')) return;
+  const s=ST(), skin=curSkin(), o=opts(skin), S=SKINS[skin];
+  const fs=Number(s.layout.bubbleFs)||Number(s.layout.fs)||16;
+  const k=Math.max(.7,Math.min(1.6,fs/16));
+  const tailsOn=!chat.classList.contains('bubble-tail-off');
+  const rows=[...chat.querySelectorAll('.m-msg')];
+  const start=parseTime(o.timeStart), step=Number(o.timeStep)||0;
+  const tmap=timeMap(), seen={};
+  const info=rows.map((row,i)=>{
+    const mid=row.getAttribute('data-message-id')||('row'+i);
+    seen[mid]=(seen[mid]||0)+1;
+    const key=seen[mid]>1?mid+'#'+(seen[mid]-1):mid;
+    const auto=start==null?String(o.timeStart||''):fmtTime(start+i*step,skin);
+    return {row,key,mine:row.classList.contains('mine'),cont:row.classList.contains('continuation'),time:(tmap[key]!=null&&tmap[key]!=='')?String(tmap[key]):auto};
+  });
+  info.forEach((it,i)=>{
+    const next=info[i+1];
+    const nextCont=!!(next&&next.cont);
+    const firstOfRun=!it.cont, lastOfRun=!nextCont;
+    const bubble=it.row.querySelector(':scope>.m-bubble'); if(!bubble) return;
+    /* 꼬리 */
+    if(tailsOn){
+      const want=S.tail==='top'?firstOfRun:lastOfRun;
+      if(want){
+        const rr=Math.max(4,Math.min(S.r*k,bubble.offsetHeight/2,bubble.offsetWidth/2));
+        const t=tailSVG(skin,it.mine,k,rr);
+        if(chat.classList.contains('mk-member-colors')){ const c=getComputedStyle(bubble).backgroundColor; if(c) t.querySelector('path').style.fill=c; }
+        bubble.after(t);
+      }
+    }
+    if(skin==='imessage'&&nextCont) it.row.classList.add('mk-run-cont');
+    /* 시간 · 읽음 */
+    if(skin==='line'||skin==='kakao'){
+      let showTime=!!o.time&&!!it.time;
+      if(skin==='kakao'&&showTime) showTime=lastOfRun||(next&&next.time!==it.time);
+      let readTxt='', unreadTxt='';
+      if(skin==='line'&&o.read&&it.mine&&String(o.readText||'').trim()&&(showTime||!o.time)) readTxt=String(o.readText).trim();
+      if(skin==='kakao'&&o.unreadOn&&String(o.unread||'').trim()&&(it.mine||o.unreadOthers)&&(showTime||!o.time)) unreadTxt=String(o.unread).trim();
+      if(showTime||readTxt||unreadTxt){
+        const meta=document.createElement('div'); meta.className='mk-meta';
+        if(readTxt){ const r=document.createElement('span'); r.className='mk-read'; r.textContent=readTxt; meta.appendChild(r); }
+        if(unreadTxt){ const u=document.createElement('span'); u.className='mk-unread'; u.textContent=unreadTxt; meta.appendChild(u); }
+        if(showTime){ const t=document.createElement('span'); t.className='mk-time'; t.textContent=it.time; t.setAttribute('data-mk-key',it.key); t.title='눌러서 이 시간만 바꾸기'; meta.appendChild(t); }
+        it.row.appendChild(meta);
+      }
+    }
+  });
+  if(skin==='imessage'){
+    /* 묶음 첫 줄의 프로필 사진을 마지막 줄로 옮긴다(복제해 붙이고 원래 것은 숨김) */
+    let first=null;
+    info.forEach((it,i)=>{
+      if(!it.cont) first=it;
+      const next=info[i+1], last=!(next&&next.cont);
+      if(!last||!first) return;
+      const av=first.row.querySelector(':scope>.av');
+      if(av&&first!==it&&!it.row.querySelector(':scope>.av')){
+        const c=av.cloneNode(true); c.classList.add('mk-av-clone'); it.row.insertBefore(c,it.row.firstChild);
+        av.classList.add('mk-av-moved');
+      }
+    });
+  }
+  if(skin==='imessage'&&o.status&&String(o.statusText||'').trim()){
+    const mine=info.filter(x=>x.mine); const last=mine[mine.length-1];
+    if(last){ const st=document.createElement('div'); st.className='mk-status'; st.textContent=String(o.statusText).trim(); last.row.appendChild(st); }
+  }
+  if(skin==='imessage'){
+    chat.querySelectorAll('.m-msg').forEach(row=>{
+      const av=row.querySelector(':scope>.av:not(.mk-av-moved)'), b=row.querySelector(':scope>.m-bubble');
+      if(!av||!b) return;
+      const gap=row.clientHeight-(b.offsetTop+b.offsetHeight);
+      if(gap>0.5) row.style.setProperty('--mk-av-b',gap+'px');
+    });
+  }
+}
+function sameRun(a,b){
+  /* 페이지가 나뉘어 DOM 형제가 아니어도, 다음 줄이 이어지는 말풍선이면 같은 묶음으로 본다 */
+  return b.classList.contains('continuation')&&a.classList.contains('mine')===b.classList.contains('mine');
+}
+
+let busy=false;
+function afterRender(){
+  if(busy) return; busy=true;
+  try{
+    const on=applyClasses();
+    decorate();
+    if(on||lastHadSkin){ safe(()=>{ if(typeof applyCanvas==='function') applyCanvas(); }); }
+    lastHadSkin=on;
+    safe(syncUI);
+  }finally{ busy=false; }
+}
+let lastHadSkin=false;
+
+/* renderPreview 감싸기: 그리기 전에 클래스(크기 계산에 쓰이는 CSS)를 먼저 달고, 그린 뒤 꼬리·시간을 붙인다 */
+safe(()=>{
+  const prev=window.renderPreview;
+  if(typeof prev!=='function') return;
+  window.renderPreview=function(){
+    safe(applyClasses);
+    const r=prev.apply(this,arguments);
+    afterRender();
+    return r;
+  };
+});
+safe(()=>{
+  const prev=window.setMode;
+  if(typeof prev==='function') window.setMode=function(){ const r=prev.apply(this,arguments); safe(afterRender); return r; };
+});
+
+/* 저장: 저장 함수는 배경색을 state.colors.bg 로 넘긴다 → 스킨 배경을 쓰는 중이면 그 색으로만 바꿔 넘긴다 */
+function wrapLibForSkin(){
+  const H=window.htmlToImage; if(!H||H.__mkSkinWrapped) return;
+  ['toSvg','toCanvas','toPng','toBlob','toJpeg','toPixelData'].forEach(k=>{
+    const o=H[k]; if(typeof o!=='function') return;
+    H[k]=function(node,opt){
+      const args=[].slice.call(arguments);
+      try{
+        if(node&&node.classList&&node.classList.contains('mk-bg')&&opt&&typeof opt==='object'&&opt.backgroundColor){
+          const c=getComputedStyle(node).backgroundColor;
+          if(c) args[1]=Object.assign({},opt,{backgroundColor:c});
+        }
+      }catch(_){}
+      return o.apply(this,args);
+    };
+  });
+  try{ Object.defineProperty(H,'__mkSkinWrapped',{value:true}); }catch(_){ H.__mkSkinWrapped=true; }
+}
+safe(()=>{
+  const prev=window.__loadHtmlToImage;
+  if(typeof prev==='function') window.__loadHtmlToImage=function(){
+    const p=prev.apply(this,arguments);
+    safe(wrapLibForSkin);
+    try{ Promise.resolve(p).then(()=>safe(wrapLibForSkin),()=>{}); }catch(_){}
+    return p;
+  };
+  safe(wrapLibForSkin);
+});
+
+/* 시간 하나만 바꾸기 (편집 화면에서만) — 창을 띄우지 않고 미리보기의 시간 글자를 그 자리에서 고친다.
+   Enter·바깥 누르기 = 저장, Esc = 취소, 비우면 자동 시간으로 */
+let editingTime=null;
+function finishTime(t,save){
+  if(!t||editingTime!==t) return;
+  editingTime=null;
+  const key=t.getAttribute('data-mk-key'), v=(t.textContent||'').replace(/\s+/g,' ').trim();
+  t.removeAttribute('contenteditable'); t.classList.remove('mk-time-editing');
+  if(!save||!key){ refresh(); return; }
+  const m=timeMap();
+  if(v==='') delete m[key]; else m[key]=v;
+  refresh();
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest&&e.target.closest('#chat.mk-skin .mk-time'); if(!t) return;
+  if(document.body.classList.contains('bulk-mode')||document.querySelector('.bulk-active')) return;
+  e.preventDefault(); e.stopPropagation();
+  if(editingTime===t) return;
+  if(editingTime) finishTime(editingTime,true);
+  const key=t.getAttribute('data-mk-key'); if(!key) return;
+  editingTime=t; t.setAttribute('contenteditable','plaintext-only'); if(t.contentEditable!=='plaintext-only') t.setAttribute('contenteditable','true');
+  t.classList.add('mk-time-editing'); t.spellcheck=false; t.focus();
+  try{ const r=document.createRange(); r.selectNodeContents(t); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(r); }catch(_){}
+},true);
+document.addEventListener('keydown',e=>{
+  if(!editingTime||e.target!==editingTime) return;
+  if(e.key==='Enter'){ e.preventDefault(); finishTime(editingTime,true); }
+  else if(e.key==='Escape'){ e.preventDefault(); finishTime(editingTime,false); }
+  e.stopPropagation();
+},true);
+document.addEventListener('focusout',e=>{ if(editingTime&&e.target===editingTime) finishTime(editingTime,true); },true);
+
+/* ================= 설정 UI (테마·배경 탭) ================= */
+const panelBody=document.querySelector('#panel-style .tool-panel-body');
+let section=null, detail=null, builtFor=null;
+function thumb(skin){
+  const w=document.createElement('div');
+  if(skin==='none'){ w.className='mk-skin-thumb none'; w.textContent='—'; return w; }
+  const S=SKINS[skin], d=S.def;
+  w.className='mk-skin-thumb'; w.style.background=d.bgColor;
+  if(skin==='imessage') w.style.boxShadow='inset 0 0 0 1px #ECECEA';
+  const row=(mine,len)=>{
+    const r=document.createElement('div'); r.className='tb'+(mine?' me':'');
+    const b=document.createElement('i'); b.style.width=len+'px'; b.style.background=mine?d.my:d.ot; b.style.setProperty('--tr',Math.min(6.5,S.r*.42)+'px');
+    const t=tailSVG(skin,mine,.42,Math.min(6.5,S.r*.42)); t.querySelector('path').setAttribute('fill',mine?d.my:d.ot);
+    if(mine){ r.append(b,t); } else { r.append(t,b); }
+    return r;
+  };
+  w.append(row(false,30),row(true,24));
+  return w;
+}
+function el(tag,cls,txt){ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+function toggleRow(label,sub,checked,on){
+  const wrap=el('div','toggle');
+  const lb=el('div','t-lb',label); if(sub){ const s=el('span',null,sub); lb.appendChild(s); }
+  const sw=el('label','sw'); const inp=document.createElement('input'); inp.type='checkbox'; inp.checked=!!checked;
+  inp.addEventListener('change',()=>on(inp.checked));
+  const tr=el('span','track'); sw.append(inp,tr); wrap.append(lb,sw);
+  return wrap;
+}
+function colorField(label,value,on){
+  const w=el('label','mk-skin-color');
+  const inp=document.createElement('input'); inp.type='color'; inp.value=cssColor(value,'#000000');
+  const tx=el('span',null,label); const hx=el('small',null,inp.value.toUpperCase()); tx.appendChild(hx);
+  inp.addEventListener('input',()=>{ hx.textContent=inp.value.toUpperCase(); on(inp.value); });
+  w.append(inp,tx);
+  return w;
+}
+function textField(label,value,placeholder,on,type){
+  const f=el('div','field'); const lb=el('label','lb',label);
+  const inp=document.createElement('input'); inp.type=type||'text'; inp.value=value==null?'':value; if(placeholder) inp.placeholder=placeholder;
+  if(type==='number'){ inp.min='0'; inp.max='240'; inp.step='1'; inp.inputMode='numeric'; }
+  inp.addEventListener('input',()=>on(type==='number'?Math.max(0,Math.min(240,Number(inp.value)||0)):inp.value));
+  f.append(lb,inp);
+  return f;
+}
+function sub(txt){ const d=el('div','mk-sub',txt); d.setAttribute('role','heading'); d.setAttribute('aria-level','4'); return d; }
+function chips(list,cur,on){
+  const w=el('div','mk-skin-chips');
+  list.forEach(([label,val])=>{ const b=el('button',null,label); b.type='button'; b.setAttribute('aria-pressed',String(cur===val)); b.addEventListener('click',()=>on(val)); w.appendChild(b); });
+  return w;
+}
+function buildDetail(skin){
+  detail.innerHTML='';
+  if(skin==='none'){ detail.hidden=true; builtFor=skin; return; }
+  detail.hidden=false;
+  const o=opts(skin), S=SKINS[skin];
+  const set=(k)=>(v)=>setOpt(skin,k,v);
+
+  detail.appendChild(sub('배경'));
+  detail.appendChild(toggleRow(S.name+' 배경 쓰기','끄면 테마·배경에서 고른 배경이 보여요',o.bg,v=>{ setOpt(skin,'bg',v); }));
+  const bgRow=el('div','mk-skin-colors mk-skin-sub'); bgRow.dataset.k='bg';
+  bgRow.appendChild(colorField('배경색',o.bgColor,set('bgColor')));
+  detail.appendChild(bgRow);
+
+  detail.appendChild(sub('말풍선 색'));
+  const cols=el('div','mk-skin-colors');
+  cols.append(colorField('내 말풍선',o.my,set('my')),colorField('내 글자',o.myText,set('myText')),colorField('상대 말풍선',o.ot,set('ot')),colorField('상대 글자',o.otText,set('otText')));
+  detail.appendChild(cols);
+  if(skin==='imessage') detail.appendChild(chips([['iMessage 파랑','#1D8BFE'],['문자 초록','#34C759']],String(o.my).toUpperCase()==='#34C759'?'#34C759':(String(o.my).toUpperCase()==='#1D8BFE'?'#1D8BFE':''),v=>{ setOpt(skin,'my',v); builtFor=null; syncUI(); }));
+  detail.appendChild(toggleRow('멤버별 말풍선 색 쓰기','멤버에 정해 둔 말풍선 색이 있으면 그 색으로',o.memberColors,set('memberColors')));
+
+  if(skin==='line'||skin==='kakao'){
+    detail.appendChild(sub('시간'));
+    detail.appendChild(toggleRow('시간 표시',skin==='kakao'?'같은 사람·같은 시간 묶음의 마지막에만 나와요':'말풍선마다 옆에 나와요',o.time,set('time')));
+    const tr=el('div','mk-skin-inline mk-skin-sub'); tr.dataset.k='time';
+    tr.append(textField('시작 시간',o.timeStart,'오후 3:18',set('timeStart')),textField('간격(분)',o.timeStep,'0',set('timeStep'),'number'));
+    detail.appendChild(tr);
+    const help=el('div','mk-skin-help mk-skin-sub','미리보기에서 시간을 누르면 그 자리에서 바로 고칠 수 있어요. (Enter 저장 · Esc 취소 · 비우면 자동)'); help.dataset.k='time';
+    detail.appendChild(help);
+  }
+  if(skin==='line'){
+    detail.appendChild(sub('읽음'));
+    detail.appendChild(toggleRow('읽음 표시','내 말풍선 시간 위에 나와요',o.read,set('read')));
+    const rr=el('div','mk-skin-sub'); rr.dataset.k='read';
+    rr.appendChild(textField('문구',o.readText,'읽음',set('readText')));
+    rr.appendChild(chips([['읽음','읽음'],['읽음 2','읽음 2'],['既読','既読'],['Read','Read']],o.readText,v=>{ setOpt(skin,'readText',v); builtFor=null; syncUI(); }));
+    detail.appendChild(rr);
+  }
+  if(skin==='kakao'){
+    detail.appendChild(sub('안 읽음 숫자'));
+    detail.appendChild(toggleRow('숫자 표시','노란 숫자가 시간 위에 나와요',o.unreadOn,set('unreadOn')));
+    const ur=el('div','mk-skin-sub'); ur.dataset.k='unreadOn';
+    ur.appendChild(textField('숫자',o.unread,'1',set('unread')));
+    ur.appendChild(toggleRow('상대 말풍선에도','단톡방처럼 양쪽 모두에',o.unreadOthers,set('unreadOthers')));
+    detail.appendChild(ur);
+  }
+  if(skin==='imessage'){
+    detail.appendChild(sub('전송 상태'));
+    detail.appendChild(toggleRow('상태 표시','마지막 내 말풍선 아래에 작게',o.status,set('status')));
+    const sr=el('div','mk-skin-sub'); sr.dataset.k='status';
+    sr.appendChild(textField('문구',o.statusText,'전송됨',set('statusText')));
+    sr.appendChild(chips([['전송됨','전송됨'],['읽음','읽음'],['Delivered','Delivered'],['Read','Read']],o.statusText,v=>{ setOpt(skin,'statusText',v); builtFor=null; syncUI(); }));
+    detail.appendChild(sr);
+  }
+
+  detail.appendChild(sub('보이기'));
+  detail.appendChild(toggleRow('이름',null,o.showName,set('showName')));
+  detail.appendChild(toggleRow('프로필 사진','말풍선 탭에서 프로필을 켜 둔 경우에만 보여요',o.showAvatar,set('showAvatar')));
+
+  const act=el('div','mk-skin-actions');
+  const tm=timeMap();
+  if(Object.keys(tm).length){
+    const b=el('button',null,'따로 바꾼 시간 되돌리기'); b.type='button';
+    b.addEventListener('click',()=>{ const lay=L(); lay.msgSkinTimes={}; builtFor=null; refresh(); });
+    act.appendChild(b);
+  }
+  const reset=el('button',null,S.name+' 기본값으로'); reset.type='button';
+  reset.addEventListener('click',()=>{ const lay=L(); if(lay.msgSkinOpts&&lay.msgSkinOpts[skin]) delete lay.msgSkinOpts[skin]; builtFor=null; refresh(); });
+  act.appendChild(reset);
+  detail.appendChild(act);
+  builtFor=skin;
+  dimSubs();
+}
+function dimSubs(){
+  if(!detail) return;
+  const skin=curSkin(); if(skin==='none') return;
+  const o=opts(skin);
+  detail.querySelectorAll('.mk-skin-sub[data-k]').forEach(n=>{ n.setAttribute('data-off',String(!o[n.dataset.k])); });
+}
+function buildSection(){
+  if(!panelBody||$('mkSkinSection')) return;
+  section=el('div','flat-tool-section'); section.id='mkSkinSection';
+  const title=el('div','flat-tool-title'); const strong=el('strong',null,'메신저 스킨'); title.appendChild(strong);
+  const body=el('div','flat-tool-body');
+  const grid=el('div','mk-skin-grid'); grid.setAttribute('role','radiogroup'); grid.setAttribute('aria-label','메신저 스킨');
+  SKIN_KEYS.forEach(k=>{
+    const b=el('button','mk-skin-tile'); b.type='button'; b.dataset.skin=k; b.setAttribute('role','radio');
+    b.append(thumb(k),el('span',null,k==='none'?'기본':SKINS[k].name));
+    b.addEventListener('click',()=>{ L().msgSkin=k; refresh(); });
+    grid.appendChild(b);
+  });
+  const note=el('div','mk-skin-note'); note.id='mkSkinNote';
+  detail=el('div'); detail.id='mkSkinDetail'; detail.hidden=true;
+  body.append(grid,note,detail);
+  section.append(title,body);
+  panelBody.insertBefore(section,panelBody.firstChild);
+  /* 말풍선 탭 '메신저 모드' 묶음에서 내 계정·기본 색 칸을 그대로(요소째) 옮겨 온다 — 이벤트·저장값은 그대로 */
+  safe(()=>{
+    const ms=$('messengerSettings'); if(!ms) return;
+    const me=$('meSelect'), meField=me&&me.closest('.field');
+    const colors=ms.querySelector('.colorgrid');
+    if(meField){
+      const w=el('div'); w.id='mkMeField'; w.appendChild(meField);
+      const lb=meField.querySelector('label.lb'); if(lb) lb.textContent='내 계정 (오른쪽에 보일 사람)';
+      body.insertBefore(w,grid);
+    }
+    if(colors){
+      const w=el('div'); w.id='mkBasicColors'; w.hidden=true;
+      w.appendChild(sub('말풍선 색'));
+      w.appendChild(colors);
+      body.insertBefore(w,detail);
+    }
+    ms.classList.add('mk-moved');
+  });
+}
+function syncUI(){
+  if(!section) return;
+  const s=ST(); if(!s) return;
+  section.classList.toggle('show',s.mode==='messenger');
+  const skin=curSkin();
+  section.querySelectorAll('.mk-skin-tile').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.skin===skin)));
+  const note=$('mkSkinNote');
+  if(note){
+    const q=skin!=='none'&&s.bubbleTheme==='quote';
+    note.classList.toggle('show',q);
+    note.textContent=q?'말풍선 탭의 말풍선 테마가 ‘인용’이면 스킨이 적용되지 않아요. ‘기본’으로 바꿔 주세요.':'';
+  }
+  { const bc=$('mkBasicColors'); if(bc) bc.hidden=skin!=='none'; }
+  if(builtFor!==skin){
+    const a=document.activeElement;
+    if(!(a&&detail&&detail.contains(a)&&builtFor===skin)) buildDetail(skin);
+  }else dimSubs();
+}
+
+buildSection();
+safe(afterRender);
 })();
 </script>
 </body>
