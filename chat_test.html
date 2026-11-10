@@ -25448,6 +25448,7 @@ safe(()=>{
   const s=document.querySelector('#backgroundToggleStack>.mk-sub'); if(s) s.textContent='배경';
   const setTab=(id,from,to)=>{ const b=$(id); if(!b) return; [...b.childNodes].forEach(n=>{ if(n.nodeType===3&&n.textContent.trim()===from) n.textContent=to; }); };
   setTab('toolBtn-layout','여백','크기·여백');
+  setTab('toolBtn-export','저장','기타');
   const h=document.querySelector('#panel-layout .tool-panel-head strong'); if(h&&h.textContent.trim()==='여백') h.textContent='크기 · 여백';
   const e=document.querySelector('#panel-export .tool-panel-head strong'); if(e&&/투명화/.test(e.textContent)) e.textContent='저장 · 서명';
 });
@@ -25635,6 +25636,692 @@ HTMLCanvasElement.prototype.toBlob=function(){
   if(active){ try{ stage(3); }catch(_){} }
   return r;
 };
+})();
+</script>
+
+<!-- ===================================================================
+     moko cjk justify fix v1 — 일본어·중국어 양쪽 정렬 자간 벌어짐 수정
+     말풍선·글 블럭은 한국어를 위해 '어절 단위 줄바꿈(keep-all)'이다. 띄어쓰기가 없는 일본어·중국어는
+     문장 전체가 한 덩어리가 되어 줄이 일찍 끊기고, 양쪽 정렬이 그 줄을 억지로 늘려 글자 사이가 벌어졌다.
+     일본어·중국어 글자에만 글자 단위 줄바꿈 + 엄격한 금칙(。、」 등이 줄 맨 앞에 오지 않게)을 건다.
+     한국어·영어 줄바꿈은 그대로다. 저장 이미지·HTML 에도 같이 적용된다(#chat 범위).
+     =================================================================== -->
+<style id="moko-cjk-justify-fix-v1">
+#chat .cjk-auto[data-cjk-lang="ja"],#chat .cjk-auto[data-cjk-lang="zh"]{word-break:normal!important;line-break:strict!important;overflow-wrap:normal!important}
+</style>
+
+<!-- ===================================================================
+     moko sender edit fix v1 — "" 자동 말풍선의 발신자를 ✎ 수정으로 바꿀 때 한 번에 안 바뀌던 문제
+     원래 순서: 발신자 저장 → 다시 그리기(이때 '자동' 표시가 남아 있어 자동 발신자로 되돌림) → '자동' 표시 제거.
+     그래서 두 번째 수정 완료에서야 바뀌었다. '자동' 표시를 저장 '전에' 떼도록 순서만 바꾼다.
+     (원래도 수정 완료를 누르면 이 표시는 항상 떼어졌으므로 최종 데이터 모양은 같다)
+     =================================================================== -->
+<script id="moko-sender-edit-fix-v1">
+(function(){
+  const prev=window.commitComposerEdit;
+  if(typeof prev!=='function') return;
+  window.commitComposerEdit=function(){
+    try{
+      const id=composerEditId;
+      const m=id&&state.messages.find(x=>x&&x.id===id);
+      if(m) delete m.autoBubbled;
+    }catch(_){}
+    return prev.apply(this,arguments);
+  };
+})();
+</script>
+
+<!-- ===================================================================
+     moko messenger skins v1 — 메신저 모드 전용 스킨 (LINE · 카카오톡 · iMessage)
+     · 설정은 state.layout.msgSkin / msgSkinOpts 에 담긴다 (기본값 'none').
+       스킨이 생기기 전에 저장한 테마·프로젝트를 불러오면 'none' 으로 돌아가 예전 모습 그대로다.
+     · 스킨이 'none' 이거나 메신저 모드가 아니면 아무 것도 그리지 않는다.
+     · 말풍선 꼬리·시간·읽음 표시는 미리보기 DOM 에 함께 그려져 PNG·HTML 저장에도 그대로 담긴다.
+     =================================================================== -->
+<style id="moko-msg-skin-v1">
+/* ---------- 공통 배치: 이름 / [꼬리][말풍선][시간] ---------- */
+#chat.mk-skin .m-msg{display:flex;flex-wrap:wrap;align-items:flex-start;text-align:left}
+#chat.mk-skin .m-msg.mine{justify-content:flex-end}
+#chat.mk-skin .m-msg>.m-name{flex:0 0 100%;order:0;box-sizing:border-box}
+#chat.mk-skin .m-msg>.m-bubble{order:2;flex:0 0 auto;left:0!important;right:0!important;top:0!important;margin:0!important;max-width:var(--mk-bmax,72%)}
+#chat.mk-skin .m-msg>.mk-tail{order:1;flex:0 0 auto;display:block;overflow:visible;pointer-events:none;position:relative;z-index:0}
+#chat.mk-skin .m-msg>.m-bubble{position:relative;z-index:1}
+#chat.mk-skin .m-msg.mine>.mk-tail{order:3}
+#chat.mk-skin .m-msg>.mk-meta{order:3;align-self:flex-end;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;margin:0 0 1px 5px;font-size:calc(var(--mk-fs,16px)*.66);line-height:1.22;color:var(--mk-meta);white-space:nowrap;letter-spacing:-.2px;font-weight:400}
+#chat.mk-skin .m-msg.mine>.mk-meta{order:1;align-items:flex-end;margin:0 5px 1px 0}
+#chat.mk-skin .m-msg>.mk-status{order:9;flex:0 0 100%;text-align:right;margin-top:3px;padding-right:2px;font-size:calc(var(--mk-fs,16px)*.68);line-height:1.3;font-weight:600;color:var(--mk-meta)}
+#chat.mk-skin .mk-read{color:var(--mk-read,var(--mk-meta))}
+#chat.mk-skin .mk-unread{color:var(--mk-unread);font-weight:700;font-size:1.04em}
+
+/* 기존 꼬리·반투명 배경층은 스킨이 대신한다 */
+#chat.mk-skin .m-msg .m-bubble:before,#chat.mk-skin .m-msg .m-bubble:after,
+#chat.mk-skin .m-msg .m-bubble .bubble-bg:before,#chat.mk-skin .m-msg .m-bubble .bubble-bg:after{content:none!important}
+#chat.mk-skin .m-msg .m-bubble .bubble-bg{display:none!important}
+#chat.mk-skin .m-msg .m-bubble{background:var(--mk-ot)!important;color:var(--mk-ot-text)!important;border-radius:var(--mk-r)!important;border:0!important;opacity:1!important}
+#chat.mk-skin .m-msg.mine .m-bubble{background:var(--mk-my)!important;color:var(--mk-my-text)!important}
+#chat.mk-skin.mk-member-colors .m-msg .m-bubble{background:var(--bubble-bg)!important}
+#chat.mk-skin .m-msg>.mk-tail path{fill:var(--mk-ot)}
+#chat.mk-skin .m-msg.mine>.mk-tail path{fill:var(--mk-my)}
+
+/* 표시 옵션 */
+#chat.mk-hide-name .m-msg>.m-name{display:none}
+#chat.mk-hide-av .m-msg>.av{display:none}
+#chat.mk-hide-av .m-msg{padding-left:0!important;padding-right:0!important}
+
+/* 배경 */
+#canvas.mk-bg,#chat.mk-skin.mk-bg{background:var(--mk-bg)!important}
+#canvas.mk-bg{border-radius:0!important}
+
+/* ---------- LINE ---------- */
+#chat.mk-skin-line .m-msg .av{border-radius:50%!important}
+#chat.mk-skin-line .m-msg>.m-name{color:var(--mk-name)!important;font-size:calc(var(--mk-fs,16px)*.72)!important;margin-bottom:4px}
+#chat.mk-skin-line .divider-pill{background:var(--mk-pill)!important;color:var(--mk-pill-text)!important;border-radius:999px!important}
+
+/* ---------- 카카오톡 ---------- */
+#chat.mk-skin-kakao .m-msg .av{border-radius:38%!important}
+#chat.mk-skin-kakao .m-msg>.m-name{color:var(--mk-name)!important;font-size:calc(var(--mk-fs,16px)*.76)!important;margin-bottom:5px}
+#chat.mk-skin-kakao .divider-pill{background:var(--mk-pill)!important;color:var(--mk-pill-text)!important;border-radius:999px!important}
+
+/* ---------- iMessage ---------- */
+#chat.mk-skin-imessage .m-msg .av{border-radius:50%!important}
+#chat.mk-skin-imessage .m-msg>.m-name{color:var(--mk-name)!important;font-size:calc(var(--mk-fs,16px)*.7)!important;margin:0 0 2px 12px}
+#chat.mk-skin-imessage .m-msg.mk-run-cont{margin-bottom:2px!important}
+/* iMessage: 프로필 사진은 묶음의 마지막 말풍선 옆, 꼬리 높이(아래)에 */
+#chat.mk-skin-imessage .m-msg>.av{top:auto!important;bottom:var(--mk-av-b,0px)!important}
+#chat.mk-skin .m-msg>.av.mk-av-moved{visibility:hidden!important}
+#chat.mk-skin-imessage .divider-pill{background:transparent!important;color:var(--mk-meta)!important;font-weight:500!important;font-size:calc(var(--mk-fs,16px)*.72)!important}
+
+/* 편집 화면에서만: 시간을 눌러 바꿀 수 있다는 표시 */
+html.mk #chat.mk-skin .mk-time{cursor:pointer;border-radius:3px}
+html.mk #chat.mk-skin .mk-time:hover{background:rgba(0,0,0,.08)}
+</style>
+<style id="moko-msg-skin-dyn"></style>
+
+<style id="moko-msg-skin-ui">
+#mkSkinSection{display:none}
+html.mk #mkSkinSection.show{display:block}
+html.mk .mk-skin-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+html.mk .mk-skin-tile{display:grid;gap:5px;padding:5px 5px 7px;border:1.5px solid var(--mk-line);border-radius:12px;background:#fff;cursor:pointer;font:600 11.5px/1.2 inherit;color:var(--mk-ink);text-align:center;transition:border-color .15s,box-shadow .15s}
+html.mk .mk-skin-tile:hover{border-color:#CFCFCC}
+html.mk .mk-skin-tile[aria-checked="true"]{border-color:var(--mk-accent);box-shadow:0 0 0 3px var(--mk-accent-soft)}
+html.mk .mk-skin-thumb{position:relative;height:58px;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:0 7px}
+html.mk .mk-skin-thumb.none{background:repeating-linear-gradient(45deg,#F3F3F1 0 6px,#FAFAF9 6px 12px);align-items:center;color:var(--mk-muted);font-size:18px}
+html.mk .mk-skin-thumb .tb{display:flex;align-items:flex-start}
+html.mk .mk-skin-thumb .tb.me{justify-content:flex-end}
+html.mk .mk-skin-thumb .tb i{display:block;height:13px;border-radius:var(--tr,7px)}
+html.mk .mk-skin-thumb .tb svg{flex:0 0 auto}
+html.mk .mk-skin-note{display:none;margin-top:10px;padding:8px 10px;border-radius:10px;background:#FFF7E6;color:#7A5B12;font-size:12px;line-height:1.45}
+html.mk .mk-skin-note.show{display:block}
+html.mk #mkSkinDetail{margin:12px -12px 0;padding:4px 12px 0;border-top:1px solid var(--mk-line)}
+html.mk #mkSkinDetail[hidden]{display:none}
+html.mk #mkSkinDetail .mk-sub{margin:12px 0 4px!important;padding:0!important;border:0!important;font-size:11.5px!important;font-weight:600!important;color:var(--mk-muted)!important}
+html.mk .mk-skin-colors{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin:6px 0 4px}
+html.mk .mk-skin-color{display:flex;align-items:center;gap:7px;min-width:0}
+html.mk .mk-skin-color input[type=color]{flex:0 0 30px;width:30px;height:30px;padding:0;border:1px solid var(--mk-line);border-radius:9px;background:none;cursor:pointer}
+html.mk .mk-skin-color input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+html.mk .mk-skin-color input[type=color]::-webkit-color-swatch{border:0;border-radius:6px}
+html.mk .mk-skin-color input[type=color]::-moz-color-swatch{border:0;border-radius:6px}
+html.mk .mk-skin-color span{font-size:12px;color:var(--mk-ink);font-weight:600;line-height:1.25;min-width:0}
+html.mk .mk-skin-color span small{display:block;font-weight:500;color:var(--mk-muted);font-size:11px;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+html.mk .mk-skin-inline{display:grid;grid-template-columns:1fr 92px;gap:8px;margin:2px 0 6px}
+html.mk .mk-skin-inline .field{margin:0}
+html.mk .mk-skin-inline input{width:100%;box-sizing:border-box}
+html.mk #mkSkinDetail .field input{height:38px;width:100%;box-sizing:border-box;border:1px solid var(--mk-line);border-radius:10px;background:#FAFAF9;padding:0 11px;font:500 13px/1 inherit;color:var(--mk-ink);outline:0}
+html.mk #mkSkinDetail .field input:focus{background:#fff;border-color:var(--mk-accent);box-shadow:0 0 0 3px var(--mk-accent-soft)}
+html.mk #mkSkinDetail .field{margin:0 0 6px}
+html.mk .mk-skin-help{font-size:11.5px;color:var(--mk-muted);line-height:1.45;margin:2px 0 6px}
+html.mk .mk-skin-chips{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 8px}
+html.mk .mk-skin-chips button{border:1px solid var(--mk-line);background:#fff;border-radius:99px;padding:4px 10px;font:600 11.5px/1.2 inherit;color:var(--mk-muted);cursor:pointer}
+html.mk .mk-skin-chips button:hover{color:var(--mk-ink);border-color:#CFCFCC}
+html.mk .mk-skin-chips button[aria-pressed="true"]{color:var(--mk-accent-ink);border-color:#BFD3F6;background:var(--mk-accent-soft)}
+html.mk .mk-skin-actions{display:flex;gap:6px;justify-content:flex-end;margin:10px 0 12px;flex-wrap:wrap}
+html.mk .mk-skin-actions button{border:1px solid var(--mk-line);background:#fff;border-radius:9px;padding:6px 10px;font:600 11.5px/1.2 inherit;color:var(--mk-muted);cursor:pointer}
+html.mk .mk-skin-actions button:hover{color:var(--mk-ink)}
+html.mk .mk-skin-sub[data-off="true"]{opacity:.45;pointer-events:none}
+/* 말풍선 탭의 '메신저 모드' 묶음은 테마 탭(메신저 스킨)으로 옮겼다 */
+html.mk #messengerSettings.mk-moved{display:none!important}
+html.mk #mkMeField{margin:0 0 12px}
+html.mk #mkMeField .field{margin:0}
+html.mk #mkMeField select{width:100%}
+html.mk #mkBasicColors{margin:12px -12px 0;padding:4px 12px 2px;border-top:1px solid var(--mk-line)}
+html.mk #mkBasicColors[hidden]{display:none}
+html.mk #mkBasicColors .colorgrid{margin-top:6px}
+html.mk #mkBasicColors .mk-sub{margin:12px 0 4px!important;padding:0!important;border:0!important;font-size:11.5px!important;font-weight:600!important;color:var(--mk-muted)!important}
+</style>
+
+<script id="moko-msg-skin-v1-script">
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const safe=fn=>{ try{ return fn(); }catch(e){ try{ console.warn('[moko skin]',e); }catch(_){} } };
+const ST=()=>{ try{ return state; }catch(_){ return window.state; } };
+
+/* ================= 스킨 정의 ================= */
+const SKINS={
+  line:{
+    name:'LINE', r:20, tail:'top', bmax:'70%',
+    meta:'#E2E8F0', metaLight:'rgba(0,0,0,.45)', read:null, name_:'#F3F6FA', nameLight:'#3D4650', pill:'rgba(0,0,0,.17)', pillText:'#FFFFFF',
+    def:{bg:true,bgColor:'#849EBF',my:'#B4E68C',myText:'#111111',ot:'#FFFFFF',otText:'#111111',memberColors:false,
+         time:true,timeStart:'오후 3:18',timeStep:0,read:true,readText:'읽음',showName:true,showAvatar:true}
+  },
+  kakao:{
+    name:'카카오톡', r:17, tail:'top', bmax:'70%',
+    meta:'#55626D', metaLight:'#55626D', unread:'#FFE01B', name_:'#44505B', nameLight:'#44505B', pill:'rgba(0,0,0,.15)', pillText:'#FFFFFF',
+    def:{bg:true,bgColor:'#ABC1D1',my:'#FEE500',myText:'#191919',ot:'#FFFFFF',otText:'#191919',memberColors:false,
+         time:true,timeStart:'오후 2:03',timeStep:0,unreadOn:true,unread:'1',unreadOthers:false,showName:true,showAvatar:true}
+  },
+  imessage:{
+    name:'iMessage', r:18, tail:'bottom', bmax:'75%',
+    meta:'#8E8E93', metaLight:'#8E8E93', name_:'#8E8E93', nameLight:'#8E8E93', pill:'transparent', pillText:'#8E8E93',
+    def:{bg:true,bgColor:'#FFFFFF',my:'#1D8BFE',myText:'#FFFFFF',ot:'#E9E9EB',otText:'#000000',memberColors:false,
+         status:true,statusText:'전송됨',showName:false,showAvatar:false}
+  }
+};
+const SKIN_KEYS=['none','line','kakao','imessage'];
+
+/* ================= 저장값 (state.layout 안) ================= */
+function L(){ const s=ST(); return (s&&s.layout)||{}; }
+function curSkin(){ const k=L().msgSkin; return SKINS[k]?k:'none'; }
+function opts(skin){
+  const def=SKINS[skin]?SKINS[skin].def:{};
+  const all=L().msgSkinOpts; const o=(all&&typeof all==='object'&&all[skin]&&typeof all[skin]==='object')?all[skin]:{};
+  return Object.assign({},def,o);
+}
+function setOpt(skin,key,val){
+  const lay=L();
+  if(!lay.msgSkinOpts||typeof lay.msgSkinOpts!=='object') lay.msgSkinOpts={};
+  if(!lay.msgSkinOpts[skin]||typeof lay.msgSkinOpts[skin]!=='object') lay.msgSkinOpts[skin]={};
+  lay.msgSkinOpts[skin][key]=val;
+  refresh();
+}
+function timeMap(){ const lay=L(); if(!lay.msgSkinTimes||typeof lay.msgSkinTimes!=='object') lay.msgSkinTimes={}; return lay.msgSkinTimes; }
+function refresh(){
+  safe(()=>window.renderPreview());
+  safe(()=>{ if(typeof scheduleAutosave==='function') scheduleAutosave(); });
+}
+
+/* 옛 테마·프로젝트에는 스킨 칸이 없다 → 'none' 으로 돌아가게 기본값에 넣는다 */
+safe(()=>{
+  const prev=window.defaultLayout;
+  if(typeof prev==='function') window.defaultLayout=function(){ const d=prev.apply(this,arguments); if(d&&typeof d==='object'){ d.msgSkin='none'; d.msgSkinOpts={}; } return d; };
+});
+safe(()=>{
+  const api=window.__modeDefaultsProjectAPI; if(!api) return;
+  const prev=api.apply;
+  if(typeof prev==='function') api.apply=function(d){
+    const r=prev.apply(this,arguments);
+    safe(()=>{
+      if(d&&typeof d==='object'&&d.layout&&typeof d.layout==='object'){
+        const lay=L();
+        if(!Object.prototype.hasOwnProperty.call(d.layout,'msgSkin')) lay.msgSkin='none';
+        if(!Object.prototype.hasOwnProperty.call(d.layout,'msgSkinOpts')) lay.msgSkinOpts={};
+        if(!Object.prototype.hasOwnProperty.call(d.layout,'msgSkinTimes')) lay.msgSkinTimes={};
+        safe(()=>window.renderPreview());
+      }
+    });
+    return r;
+  };
+});
+safe(()=>{ const lay=L(); if(!lay.msgSkin) lay.msgSkin='none'; });
+
+/* ================= 색 도우미 ================= */
+function hexRgb(h){ const m=String(h||'').trim().match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i); if(!m) return null; let s=m[1]; if(s.length===3) s=s.split('').map(c=>c+c).join(''); return [0,2,4].map(i=>parseInt(s.slice(i,i+2),16)); }
+function lum(h){ const c=hexRgb(h); if(!c) return 1; const f=v=>{ v/=255; return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4); }; return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2]); }
+function same(a,b){ return String(a||'').toLowerCase()===String(b||'').toLowerCase(); }
+function cssColor(v,fb){ return hexRgb(v)?('#'+hexRgb(v).map(x=>x.toString(16).padStart(2,'0')).join('')):fb; }
+
+/* ================= 시간 ================= */
+function parseTime(s){
+  const t=String(s||'').trim(); if(!t) return null;
+  const m=t.match(/^(오전|오후|AM|PM)?\s*(\d{1,2})\s*[:：]\s*(\d{2})\s*(AM|PM|오전|오후)?$/i);
+  if(!m) return null;
+  let h=+m[2], mi=+m[3]; if(h>23||mi>59) return null;
+  const ap=(m[1]||m[4]||'').toUpperCase();
+  if(ap==='오후'||ap==='PM'){ if(h<12) h+=12; }
+  else if(ap==='오전'||ap==='AM'){ if(h===12) h=0; }
+  return h*60+mi;
+}
+function fmtTime(min,skin){
+  min=((min%1440)+1440)%1440;
+  const h=Math.floor(min/60), mi=min%60, h12=h%12||12;
+  const hh=skin==='kakao'?String(h12).padStart(2,'0'):String(h12);
+  return (h<12?'오전 ':'오후 ')+hh+':'+String(mi).padStart(2,'0');
+}
+
+/* ================= 꼬리 SVG ================= */
+/* 꼬리 윤곽 — 캡처본 말풍선 실루엣을 1/8px 단위로 읽어 각 변에 3차 곡선을 최소제곱으로 맞춘 값(오차 0.25px 이하).
+   좌표: (안쪽으로 x, 아래로 y). 원점 = 말풍선 바깥 사각형의 꼬리 쪽 위 모서리. 단위 = 캡처본 px, ref = 캡처본 모서리 반지름.
+   d 는 path 명령 목록: ['M',x,y] ['L',x,y] ['C',x1,y1,x2,y2,x,y]. 마지막 몇 점은 말풍선 안쪽이라 이음매가 생기지 않는다. */
+const TAIL_SHAPES={
+  /* LINE: 모서리 꼭짓점에 선 귀. 옆변은 거의 수직으로 서고, 윗변은 완만하게 홈으로 내려간다 */
+  line:{ref:31, d:[
+    ['M',-1.20,-1.20],
+    ['C',9.10,6.18, 13.32,4.68, 19.50,2.21],
+    ['L',22,22],['L',5.01,14.10],
+    ['C',3.87,13.35, -1.73,3.44, -1.20,-1.20]]},
+  /* 카카오톡: 윗면이 평평하게 옆으로 나온 지느러미. 윗변은 깊은 홈으로 떨어지고, 바깥 변은 옆면으로 오목하게 스며든다 */
+  kakao:{ref:28, d:[
+    ['M',-5.70,1.55],
+    ['C',-1.20,1.50, 5.60,2.60, 9.00,7.70],
+    ['L',10.5,8.2],['L',16,16],['L',0.6,28.5],['L',0,28.5],['L',0,18.50],
+    ['C',-0.38,12.58, -2.85,7.60, -5.70,1.55]]}
+};
+function smoothPath(){ return ''; }
+function tailSVG(skin,mine,k,r){
+  const S=SKINS[skin];
+  r=r||S.r*k;
+  const n=v=>Math.round(v*100)/100;
+  const top=S.tail==='top';
+  const sx=mine?1:-1, sy=top?1:-1;
+  let d;
+  if(top){
+    const T=TAIL_SHAPES[skin], u=r/T.ref;
+    /* (안쪽 x, 아래 y) → 화면 좌표: 바깥쪽이 +X 가 되도록 부호를 뒤집는다 */
+    const f=(x,y)=>n(-sx*x*u)+' '+n(y*u);
+    d=T.d.map(c=>{
+      if(c[0]==='C') return 'C'+f(c[1],c[2])+' '+f(c[3],c[4])+' '+f(c[5],c[6]);
+      return c[0]+f(c[1],c[2]);
+    }).join('')+'Z';
+  }else{
+    /* iMessage: 옆면을 그대로 타고 내려오다 바닥에서 바깥으로 휘어 나간다.
+       시작점을 둥근 모서리가 시작되는 높이(r)로 둬서 옆면과 꼬리가 한 줄로 이어진다. */
+    const P=(x,y)=>n(sx*x)+' '+n(sy*y);
+    d='M'+P(0,r)+'L'+P(0,7*k)+'C'+P(0,3.0*k)+' '+P(.8*k,.9*k)+' '+P(2.6*k,0)
+     +'C'+P(.6*k,.1*k)+' '+P(-3.6*k,.9*k)+' '+P(-8*k,3.6*k)+'L'+P(-.9*r,.9*r)+'Z';
+  }
+  /* 상자를 꼬리 모양에 딱 맞게: 넉넉한 상자는 캔버스 밖으로 삐져나가 저장 크기를 바꾼다 */
+  const nums=(d.match(/-?\d+(?:\.\d+)?/g)||[]).map(Number);
+  let x0=0,y0=0,x1=0,y1=0;
+  for(let i=0;i+1<nums.length;i+=2){ x0=Math.min(x0,nums[i]); x1=Math.max(x1,nums[i]); y0=Math.min(y0,nums[i+1]); y1=Math.max(y1,nums[i+1]); }
+  x0=Math.floor(x0)-1; y0=Math.floor(y0)-1; x1=Math.ceil(x1)+1; y1=Math.ceil(y1)+1;
+  const W=x1-x0, H=y1-y0;
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','mk-tail'); svg.setAttribute('aria-hidden','true');
+  svg.setAttribute('width',W); svg.setAttribute('height',H); svg.setAttribute('viewBox',x0+' '+y0+' '+W+' '+H);
+  /* (0,0)이 말풍선 모서리에 오도록 놓고, 자리는 차지하지 않는다 */
+  svg.style.cssText='flex:0 0 auto;align-self:'+(top?'flex-start':'flex-end')+';margin:'+y0+'px '+(-x1)+'px '+(-y1)+'px '+x0+'px;overflow:visible;';
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path'); p.setAttribute('d',d);
+  svg.appendChild(p);
+  return svg;
+}
+
+/* ================= 그리기 ================= */
+let lastDyn='';
+function applyClasses(){
+  const s=ST(), chat=$('chat'), canvas=$('canvas'); if(!s||!chat) return false;
+  const skin=curSkin();
+  const active=skin!=='none'&&s.mode==='messenger'&&s.bubbleTheme!=='quote';
+  const all=['mk-skin','mk-skin-line','mk-skin-kakao','mk-skin-imessage','mk-member-colors','mk-hide-name','mk-hide-av','mk-bg'];
+  if(!active){
+    if(chat.classList.contains('mk-skin')) all.forEach(c=>chat.classList.remove(c));
+    if(canvas) canvas.classList.remove('mk-bg','mk-skin-on');
+    setDyn('');
+    return false;
+  }
+  const o=opts(skin), S=SKINS[skin];
+  chat.classList.add('mk-skin','mk-skin-'+skin);
+  ['line','kakao','imessage'].forEach(k=>{ if(k!==skin) chat.classList.remove('mk-skin-'+k); });
+  chat.classList.toggle('mk-member-colors',!!o.memberColors);
+  chat.classList.toggle('mk-hide-name',!o.showName);
+  chat.classList.toggle('mk-hide-av',!o.showAvatar);
+  const bgOn=!!o.bg&&!s.transparentBg;
+  chat.classList.toggle('mk-bg',bgOn);
+  if(canvas){ canvas.classList.toggle('mk-bg',bgOn); canvas.classList.add('mk-skin-on'); }
+  /* 색은 스타일 블록 하나에 모아 둔다 → HTML 저장에도 그대로 실린다 */
+  const bg=cssColor(o.bgColor,S.def.bgColor);
+  const dark=lum(bg)<.32;
+  const meta=same(bg,S.def.bgColor)?S.meta:(dark?'rgba(255,255,255,.8)':'rgba(0,0,0,.5)');
+  const name=same(bg,S.def.bgColor)?S.name_:(dark?'rgba(255,255,255,.88)':S.nameLight);
+  const fs=Number(s.layout.bubbleFs)||Number(s.layout.fs)||16;
+  const vars='--mk-bg:'+bg+';--mk-my:'+cssColor(o.my,S.def.my)+';--mk-my-text:'+cssColor(o.myText,S.def.myText)+';--mk-ot:'+cssColor(o.ot,S.def.ot)+';--mk-ot-text:'+cssColor(o.otText,S.def.otText)
+    +';--mk-r:'+(Math.round(S.r*Math.max(.7,Math.min(1.6,fs/16))*100)/100)+'px;--mk-bmax:'+S.bmax+';--mk-fs:'+fs+'px;--mk-meta:'+meta+';--mk-name:'+name+';--mk-unread:'+(S.unread||meta)+';--mk-pill:'+S.pill+';--mk-pill-text:'+S.pillText+';';
+  setDyn('#canvas.mk-skin-on,#chat.mk-skin{'+vars+'}'+(bgOn?'body:has(>#canvas.mk-bg){background:'+bg+'!important}':''));
+  return true;
+}
+function setDyn(txt){ if(txt===lastDyn) return; lastDyn=txt; const el=$('moko-msg-skin-dyn'); if(el) el.textContent=txt; }
+
+function decorate(){
+  const chat=$('chat'); if(!chat) return;
+  chat.querySelectorAll('.mk-tail,.mk-meta,.mk-status').forEach(n=>n.remove());
+  chat.querySelectorAll('.mk-run-cont').forEach(n=>n.classList.remove('mk-run-cont'));
+  chat.querySelectorAll('.av.mk-av-clone').forEach(n=>n.remove());
+  chat.querySelectorAll('.av.mk-av-moved').forEach(n=>n.classList.remove('mk-av-moved'));
+  chat.querySelectorAll('.m-msg').forEach(n=>n.style.removeProperty('--mk-av-b'));
+  if(!chat.classList.contains('mk-skin')) return;
+  const s=ST(), skin=curSkin(), o=opts(skin), S=SKINS[skin];
+  const fs=Number(s.layout.bubbleFs)||Number(s.layout.fs)||16;
+  const k=Math.max(.7,Math.min(1.6,fs/16));
+  const tailsOn=!chat.classList.contains('bubble-tail-off');
+  const rows=[...chat.querySelectorAll('.m-msg')];
+  const start=parseTime(o.timeStart), step=Number(o.timeStep)||0;
+  const tmap=timeMap(), seen={};
+  const info=rows.map((row,i)=>{
+    const mid=row.getAttribute('data-message-id')||('row'+i);
+    seen[mid]=(seen[mid]||0)+1;
+    const key=seen[mid]>1?mid+'#'+(seen[mid]-1):mid;
+    const auto=start==null?String(o.timeStart||''):fmtTime(start+i*step,skin);
+    return {row,key,mine:row.classList.contains('mine'),cont:row.classList.contains('continuation'),time:(tmap[key]!=null&&tmap[key]!=='')?String(tmap[key]):auto};
+  });
+  info.forEach((it,i)=>{
+    const next=info[i+1];
+    const nextCont=!!(next&&next.cont);
+    const firstOfRun=!it.cont, lastOfRun=!nextCont;
+    const bubble=it.row.querySelector(':scope>.m-bubble'); if(!bubble) return;
+    /* 꼬리 */
+    if(tailsOn){
+      const want=S.tail==='top'?firstOfRun:lastOfRun;
+      if(want){
+        const rr=Math.max(4,Math.min(S.r*k,bubble.offsetHeight/2,bubble.offsetWidth/2));
+        const t=tailSVG(skin,it.mine,k,rr);
+        if(chat.classList.contains('mk-member-colors')){ const c=getComputedStyle(bubble).backgroundColor; if(c) t.querySelector('path').style.fill=c; }
+        bubble.after(t);
+      }
+    }
+    if(skin==='imessage'&&nextCont) it.row.classList.add('mk-run-cont');
+    /* 시간 · 읽음 */
+    if(skin==='line'||skin==='kakao'){
+      let showTime=!!o.time&&!!it.time;
+      if(skin==='kakao'&&showTime) showTime=lastOfRun||(next&&next.time!==it.time);
+      let readTxt='', unreadTxt='';
+      if(skin==='line'&&o.read&&it.mine&&String(o.readText||'').trim()&&(showTime||!o.time)) readTxt=String(o.readText).trim();
+      if(skin==='kakao'&&o.unreadOn&&String(o.unread||'').trim()&&(it.mine||o.unreadOthers)&&(showTime||!o.time)) unreadTxt=String(o.unread).trim();
+      if(showTime||readTxt||unreadTxt){
+        const meta=document.createElement('div'); meta.className='mk-meta';
+        if(readTxt){ const r=document.createElement('span'); r.className='mk-read'; r.textContent=readTxt; meta.appendChild(r); }
+        if(unreadTxt){ const u=document.createElement('span'); u.className='mk-unread'; u.textContent=unreadTxt; meta.appendChild(u); }
+        if(showTime){ const t=document.createElement('span'); t.className='mk-time'; t.textContent=it.time; t.setAttribute('data-mk-key',it.key); t.title='눌러서 이 시간만 바꾸기'; meta.appendChild(t); }
+        it.row.appendChild(meta);
+      }
+    }
+  });
+  if(skin==='imessage'){
+    /* 묶음 첫 줄의 프로필 사진을 마지막 줄로 옮긴다(복제해 붙이고 원래 것은 숨김) */
+    let first=null;
+    info.forEach((it,i)=>{
+      if(!it.cont) first=it;
+      const next=info[i+1], last=!(next&&next.cont);
+      if(!last||!first) return;
+      const av=first.row.querySelector(':scope>.av');
+      if(av&&first!==it&&!it.row.querySelector(':scope>.av')){
+        const c=av.cloneNode(true); c.classList.add('mk-av-clone'); it.row.insertBefore(c,it.row.firstChild);
+        av.classList.add('mk-av-moved');
+      }
+    });
+  }
+  if(skin==='imessage'&&o.status&&String(o.statusText||'').trim()){
+    const mine=info.filter(x=>x.mine); const last=mine[mine.length-1];
+    if(last){ const st=document.createElement('div'); st.className='mk-status'; st.textContent=String(o.statusText).trim(); last.row.appendChild(st); }
+  }
+  if(skin==='imessage'){
+    chat.querySelectorAll('.m-msg').forEach(row=>{
+      const av=row.querySelector(':scope>.av:not(.mk-av-moved)'), b=row.querySelector(':scope>.m-bubble');
+      if(!av||!b) return;
+      const gap=row.clientHeight-(b.offsetTop+b.offsetHeight);
+      if(gap>0.5) row.style.setProperty('--mk-av-b',gap+'px');
+    });
+  }
+}
+function sameRun(a,b){
+  /* 페이지가 나뉘어 DOM 형제가 아니어도, 다음 줄이 이어지는 말풍선이면 같은 묶음으로 본다 */
+  return b.classList.contains('continuation')&&a.classList.contains('mine')===b.classList.contains('mine');
+}
+
+let busy=false;
+function afterRender(){
+  if(busy) return; busy=true;
+  try{
+    const on=applyClasses();
+    decorate();
+    if(on||lastHadSkin){ safe(()=>{ if(typeof applyCanvas==='function') applyCanvas(); }); }
+    lastHadSkin=on;
+    safe(syncUI);
+  }finally{ busy=false; }
+}
+let lastHadSkin=false;
+
+/* renderPreview 감싸기: 그리기 전에 클래스(크기 계산에 쓰이는 CSS)를 먼저 달고, 그린 뒤 꼬리·시간을 붙인다 */
+safe(()=>{
+  const prev=window.renderPreview;
+  if(typeof prev!=='function') return;
+  window.renderPreview=function(){
+    safe(applyClasses);
+    const r=prev.apply(this,arguments);
+    afterRender();
+    return r;
+  };
+});
+safe(()=>{
+  const prev=window.setMode;
+  if(typeof prev==='function') window.setMode=function(){ const r=prev.apply(this,arguments); safe(afterRender); return r; };
+});
+
+/* 저장: 저장 함수는 배경색을 state.colors.bg 로 넘긴다 → 스킨 배경을 쓰는 중이면 그 색으로만 바꿔 넘긴다 */
+function wrapLibForSkin(){
+  const H=window.htmlToImage; if(!H||H.__mkSkinWrapped) return;
+  ['toSvg','toCanvas','toPng','toBlob','toJpeg','toPixelData'].forEach(k=>{
+    const o=H[k]; if(typeof o!=='function') return;
+    H[k]=function(node,opt){
+      const args=[].slice.call(arguments);
+      try{
+        if(node&&node.classList&&node.classList.contains('mk-bg')&&opt&&typeof opt==='object'&&opt.backgroundColor){
+          const c=getComputedStyle(node).backgroundColor;
+          if(c) args[1]=Object.assign({},opt,{backgroundColor:c});
+        }
+      }catch(_){}
+      return o.apply(this,args);
+    };
+  });
+  try{ Object.defineProperty(H,'__mkSkinWrapped',{value:true}); }catch(_){ H.__mkSkinWrapped=true; }
+}
+safe(()=>{
+  const prev=window.__loadHtmlToImage;
+  if(typeof prev==='function') window.__loadHtmlToImage=function(){
+    const p=prev.apply(this,arguments);
+    safe(wrapLibForSkin);
+    try{ Promise.resolve(p).then(()=>safe(wrapLibForSkin),()=>{}); }catch(_){}
+    return p;
+  };
+  safe(wrapLibForSkin);
+});
+
+/* 시간 하나만 바꾸기 (편집 화면에서만) */
+document.addEventListener('click',e=>{
+  const t=e.target.closest&&e.target.closest('#chat.mk-skin .mk-time'); if(!t) return;
+  if(document.body.classList.contains('bulk-mode')||document.querySelector('.bulk-active')) return;
+  e.preventDefault(); e.stopPropagation();
+  const key=t.getAttribute('data-mk-key'); if(!key) return;
+  const v=prompt('이 말풍선의 시간을 바꿔 주세요\n(비우면 자동 시간으로 돌아가요)',t.textContent);
+  if(v===null) return;
+  const m=timeMap();
+  if(v.trim()==='') delete m[key]; else m[key]=v.trim();
+  refresh();
+},true);
+
+/* ================= 설정 UI (테마·배경 탭) ================= */
+const panelBody=document.querySelector('#panel-style .tool-panel-body');
+let section=null, detail=null, builtFor=null;
+function thumb(skin){
+  const w=document.createElement('div');
+  if(skin==='none'){ w.className='mk-skin-thumb none'; w.textContent='—'; return w; }
+  const S=SKINS[skin], d=S.def;
+  w.className='mk-skin-thumb'; w.style.background=d.bgColor;
+  if(skin==='imessage') w.style.boxShadow='inset 0 0 0 1px #ECECEA';
+  const row=(mine,len)=>{
+    const r=document.createElement('div'); r.className='tb'+(mine?' me':'');
+    const b=document.createElement('i'); b.style.width=len+'px'; b.style.background=mine?d.my:d.ot; b.style.setProperty('--tr',Math.min(6.5,S.r*.42)+'px');
+    const t=tailSVG(skin,mine,.42,Math.min(6.5,S.r*.42)); t.querySelector('path').setAttribute('fill',mine?d.my:d.ot);
+    if(mine){ r.append(b,t); } else { r.append(t,b); }
+    return r;
+  };
+  w.append(row(false,30),row(true,24));
+  return w;
+}
+function el(tag,cls,txt){ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+function toggleRow(label,sub,checked,on){
+  const wrap=el('div','toggle');
+  const lb=el('div','t-lb',label); if(sub){ const s=el('span',null,sub); lb.appendChild(s); }
+  const sw=el('label','sw'); const inp=document.createElement('input'); inp.type='checkbox'; inp.checked=!!checked;
+  inp.addEventListener('change',()=>on(inp.checked));
+  const tr=el('span','track'); sw.append(inp,tr); wrap.append(lb,sw);
+  return wrap;
+}
+function colorField(label,value,on){
+  const w=el('label','mk-skin-color');
+  const inp=document.createElement('input'); inp.type='color'; inp.value=cssColor(value,'#000000');
+  const tx=el('span',null,label); const hx=el('small',null,inp.value.toUpperCase()); tx.appendChild(hx);
+  inp.addEventListener('input',()=>{ hx.textContent=inp.value.toUpperCase(); on(inp.value); });
+  w.append(inp,tx);
+  return w;
+}
+function textField(label,value,placeholder,on,type){
+  const f=el('div','field'); const lb=el('label','lb',label);
+  const inp=document.createElement('input'); inp.type=type||'text'; inp.value=value==null?'':value; if(placeholder) inp.placeholder=placeholder;
+  if(type==='number'){ inp.min='0'; inp.max='240'; inp.step='1'; inp.inputMode='numeric'; }
+  inp.addEventListener('input',()=>on(type==='number'?Math.max(0,Math.min(240,Number(inp.value)||0)):inp.value));
+  f.append(lb,inp);
+  return f;
+}
+function sub(txt){ const d=el('div','mk-sub',txt); d.setAttribute('role','heading'); d.setAttribute('aria-level','4'); return d; }
+function chips(list,cur,on){
+  const w=el('div','mk-skin-chips');
+  list.forEach(([label,val])=>{ const b=el('button',null,label); b.type='button'; b.setAttribute('aria-pressed',String(cur===val)); b.addEventListener('click',()=>on(val)); w.appendChild(b); });
+  return w;
+}
+function buildDetail(skin){
+  detail.innerHTML='';
+  if(skin==='none'){ detail.hidden=true; builtFor=skin; return; }
+  detail.hidden=false;
+  const o=opts(skin), S=SKINS[skin];
+  const set=(k)=>(v)=>setOpt(skin,k,v);
+
+  detail.appendChild(sub('배경'));
+  detail.appendChild(toggleRow(S.name+' 배경 쓰기','끄면 테마·배경에서 고른 배경이 보여요',o.bg,v=>{ setOpt(skin,'bg',v); }));
+  const bgRow=el('div','mk-skin-colors mk-skin-sub'); bgRow.dataset.k='bg';
+  bgRow.appendChild(colorField('배경색',o.bgColor,set('bgColor')));
+  detail.appendChild(bgRow);
+
+  detail.appendChild(sub('말풍선 색'));
+  const cols=el('div','mk-skin-colors');
+  cols.append(colorField('내 말풍선',o.my,set('my')),colorField('내 글자',o.myText,set('myText')),colorField('상대 말풍선',o.ot,set('ot')),colorField('상대 글자',o.otText,set('otText')));
+  detail.appendChild(cols);
+  if(skin==='imessage') detail.appendChild(chips([['iMessage 파랑','#1D8BFE'],['문자 초록','#34C759']],String(o.my).toUpperCase()==='#34C759'?'#34C759':(String(o.my).toUpperCase()==='#1D8BFE'?'#1D8BFE':''),v=>{ setOpt(skin,'my',v); builtFor=null; syncUI(); }));
+  detail.appendChild(toggleRow('멤버별 말풍선 색 쓰기','멤버에 정해 둔 말풍선 색이 있으면 그 색으로',o.memberColors,set('memberColors')));
+
+  if(skin==='line'||skin==='kakao'){
+    detail.appendChild(sub('시간'));
+    detail.appendChild(toggleRow('시간 표시',skin==='kakao'?'같은 사람·같은 시간 묶음의 마지막에만 나와요':'말풍선마다 옆에 나와요',o.time,set('time')));
+    const tr=el('div','mk-skin-inline mk-skin-sub'); tr.dataset.k='time';
+    tr.append(textField('시작 시간',o.timeStart,'오후 3:18',set('timeStart')),textField('간격(분)',o.timeStep,'0',set('timeStep'),'number'));
+    detail.appendChild(tr);
+    const help=el('div','mk-skin-help mk-skin-sub','미리보기에서 시간을 누르면 그 말풍선만 따로 바꿀 수 있어요.'); help.dataset.k='time';
+    detail.appendChild(help);
+  }
+  if(skin==='line'){
+    detail.appendChild(sub('읽음'));
+    detail.appendChild(toggleRow('읽음 표시','내 말풍선 시간 위에 나와요',o.read,set('read')));
+    const rr=el('div','mk-skin-sub'); rr.dataset.k='read';
+    rr.appendChild(textField('문구',o.readText,'읽음',set('readText')));
+    rr.appendChild(chips([['읽음','읽음'],['읽음 2','읽음 2'],['既読','既読'],['Read','Read']],o.readText,v=>{ setOpt(skin,'readText',v); builtFor=null; syncUI(); }));
+    detail.appendChild(rr);
+  }
+  if(skin==='kakao'){
+    detail.appendChild(sub('안 읽음 숫자'));
+    detail.appendChild(toggleRow('숫자 표시','노란 숫자가 시간 위에 나와요',o.unreadOn,set('unreadOn')));
+    const ur=el('div','mk-skin-sub'); ur.dataset.k='unreadOn';
+    ur.appendChild(textField('숫자',o.unread,'1',set('unread')));
+    ur.appendChild(toggleRow('상대 말풍선에도','단톡방처럼 양쪽 모두에',o.unreadOthers,set('unreadOthers')));
+    detail.appendChild(ur);
+  }
+  if(skin==='imessage'){
+    detail.appendChild(sub('전송 상태'));
+    detail.appendChild(toggleRow('상태 표시','마지막 내 말풍선 아래에 작게',o.status,set('status')));
+    const sr=el('div','mk-skin-sub'); sr.dataset.k='status';
+    sr.appendChild(textField('문구',o.statusText,'전송됨',set('statusText')));
+    sr.appendChild(chips([['전송됨','전송됨'],['읽음','읽음'],['Delivered','Delivered'],['Read','Read']],o.statusText,v=>{ setOpt(skin,'statusText',v); builtFor=null; syncUI(); }));
+    detail.appendChild(sr);
+  }
+
+  detail.appendChild(sub('보이기'));
+  detail.appendChild(toggleRow('이름',null,o.showName,set('showName')));
+  detail.appendChild(toggleRow('프로필 사진','말풍선 탭에서 프로필을 켜 둔 경우에만 보여요',o.showAvatar,set('showAvatar')));
+
+  const act=el('div','mk-skin-actions');
+  const tm=timeMap();
+  if(Object.keys(tm).length){
+    const b=el('button',null,'따로 바꾼 시간 되돌리기'); b.type='button';
+    b.addEventListener('click',()=>{ const lay=L(); lay.msgSkinTimes={}; builtFor=null; refresh(); });
+    act.appendChild(b);
+  }
+  const reset=el('button',null,S.name+' 기본값으로'); reset.type='button';
+  reset.addEventListener('click',()=>{ const lay=L(); if(lay.msgSkinOpts&&lay.msgSkinOpts[skin]) delete lay.msgSkinOpts[skin]; builtFor=null; refresh(); });
+  act.appendChild(reset);
+  detail.appendChild(act);
+  builtFor=skin;
+  dimSubs();
+}
+function dimSubs(){
+  if(!detail) return;
+  const skin=curSkin(); if(skin==='none') return;
+  const o=opts(skin);
+  detail.querySelectorAll('.mk-skin-sub[data-k]').forEach(n=>{ n.setAttribute('data-off',String(!o[n.dataset.k])); });
+}
+function buildSection(){
+  if(!panelBody||$('mkSkinSection')) return;
+  section=el('div','flat-tool-section'); section.id='mkSkinSection';
+  const title=el('div','flat-tool-title'); const strong=el('strong',null,'메신저 스킨'); title.appendChild(strong);
+  const body=el('div','flat-tool-body');
+  const grid=el('div','mk-skin-grid'); grid.setAttribute('role','radiogroup'); grid.setAttribute('aria-label','메신저 스킨');
+  SKIN_KEYS.forEach(k=>{
+    const b=el('button','mk-skin-tile'); b.type='button'; b.dataset.skin=k; b.setAttribute('role','radio');
+    b.append(thumb(k),el('span',null,k==='none'?'기본':SKINS[k].name));
+    b.addEventListener('click',()=>{ L().msgSkin=k; refresh(); });
+    grid.appendChild(b);
+  });
+  const note=el('div','mk-skin-note'); note.id='mkSkinNote';
+  detail=el('div'); detail.id='mkSkinDetail'; detail.hidden=true;
+  body.append(grid,note,detail);
+  section.append(title,body);
+  panelBody.insertBefore(section,panelBody.firstChild);
+  /* 말풍선 탭 '메신저 모드' 묶음에서 내 계정·기본 색 칸을 그대로(요소째) 옮겨 온다 — 이벤트·저장값은 그대로 */
+  safe(()=>{
+    const ms=$('messengerSettings'); if(!ms) return;
+    const me=$('meSelect'), meField=me&&me.closest('.field');
+    const colors=ms.querySelector('.colorgrid');
+    if(meField){
+      const w=el('div'); w.id='mkMeField'; w.appendChild(meField);
+      const lb=meField.querySelector('label.lb'); if(lb) lb.textContent='내 계정 (오른쪽에 보일 사람)';
+      body.insertBefore(w,grid);
+    }
+    if(colors){
+      const w=el('div'); w.id='mkBasicColors'; w.hidden=true;
+      w.appendChild(sub('말풍선 색'));
+      w.appendChild(colors);
+      body.insertBefore(w,detail);
+    }
+    ms.classList.add('mk-moved');
+  });
+}
+function syncUI(){
+  if(!section) return;
+  const s=ST(); if(!s) return;
+  section.classList.toggle('show',s.mode==='messenger');
+  const skin=curSkin();
+  section.querySelectorAll('.mk-skin-tile').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.skin===skin)));
+  const note=$('mkSkinNote');
+  if(note){
+    const q=skin!=='none'&&s.bubbleTheme==='quote';
+    note.classList.toggle('show',q);
+    note.textContent=q?'말풍선 탭의 말풍선 테마가 ‘인용’이면 스킨이 적용되지 않아요. ‘기본’으로 바꿔 주세요.':'';
+  }
+  { const bc=$('mkBasicColors'); if(bc) bc.hidden=skin!=='none'; }
+  if(builtFor!==skin){
+    const a=document.activeElement;
+    if(!(a&&detail&&detail.contains(a)&&builtFor===skin)) buildDetail(skin);
+  }else dimSubs();
+}
+
+buildSection();
+safe(afterRender);
 })();
 </script>
 </body>
