@@ -10373,6 +10373,149 @@ stage.addEventListener('touchend',e=>{
     return new XMLSerializer().serializeToString(svg);
   }
 
+  /* Messenger skins: repair compositor tile seams in a flat, opaque bubble.
+     Unlike the old one-pixel / whole-row heuristic, this handles short, faint,
+     intermittent and 2-3px seams. The body fill is sampled per bubble; text,
+     emojis, embedded images, outlines and transparent bubbles remain untouched. */
+  function repairMessengerCaptureSeams(canvas,node,logicalW,logicalH){
+    try{
+      const chat=node.matches?.('#chat.mk-skin')?node:node.querySelector('#chat.mk-skin');
+      if(!chat || !canvas?.width || !canvas?.height) return;
+      const ctx=canvas.getContext('2d',{willReadFrequently:true});
+      if(!ctx) return;
+      const root=node.getBoundingClientRect();
+      const sx=canvas.width/logicalW,sy=canvas.height/logicalH;
+      const W=canvas.width,H=canvas.height;
+      const image=ctx.getImageData(0,0,W,H),d=image.data;
+      let changed=false;
+      const distance=(p,c)=>Math.max(Math.abs(d[p]-c[0]),Math.abs(d[p+1]-c[1]),Math.abs(d[p+2]-c[2]));
+      const pixel=(x,y)=>4*(y*W+x);
+      const candidate=(x,y,c,vertical)=>{
+        if(x<0||x>=W||y<0||y>=H)return false;
+        const p=pixel(x,y),delta=distance(p,c);
+        if(delta<3||delta>88||d[p+3]<245)return false;
+        // Real text strokes and glyph antialiasing aren't surrounded by clean fill.
+        // Sample 4-6 device pixels away on both sides of a suspected seam.
+        for(const gap of [4,6]){
+          const ax=vertical?x-gap:x, ay=vertical?y:y-gap;
+          const bx=vertical?x+gap:x, by=vertical?y:y+gap;
+          if(ax<0||bx>=W||ay<0||by>=H)continue;
+          if(distance(pixel(ax,ay),c)<11 && distance(pixel(bx,by),c)<11)return true;
+        }
+        return false;
+      };
+      const write=(x,y,c)=>{
+        const p=pixel(x,y);d[p]=c[0];d[p+1]=c[1];d[p+2]=c[2];d[p+3]=255;changed=true;
+      };
+      for(const bubble of chat.querySelectorAll('.m-msg > .m-bubble')){
+        if(bubble.querySelector('.mimg,img,video,canvas,svg'))continue;
+        const css=getComputedStyle(bubble);
+        const matches=css.backgroundColor.match(/^rgba?\(\s*(\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)(?:[, /]+([\d.]+))?\s*\)$/i);
+        if(!matches||(matches[4]!=null&&Number(matches[4])<.999))continue;
+        const color=[+matches[1],+matches[2],+matches[3]];
+        const r=bubble.getBoundingClientRect();
+        // Extra inset protects rounded corners and their antialiasing.
+        const inset=Math.max(4,Math.ceil(4*Math.min(sx,sy)));
+        const x0=Math.max(0,Math.floor((r.left-root.left)*sx)+inset);
+        const y0=Math.max(0,Math.floor((r.top-root.top)*sy)+inset);
+        const x1=Math.min(W,Math.ceil((r.right-root.left)*sx)-inset);
+        const y1=Math.min(H,Math.ceil((r.bottom-root.top)*sy)-inset);
+        if(x1-x0<22||y1-y0<18)continue;
+        // Detect straight compositor boundaries independently in each direction.
+        // A line can terminate early at an emoji or text stroke.
+        for(const vertical of [false,true]){
+          const start=vertical?x0:y0,end=vertical?x1:y1;
+          const crossStart=vertical?y0:x0,crossEnd=vertical?y1:x1;
+          const threshold=Math.max(10,Math.floor((crossEnd-crossStart)*.18));
+          for(let v=start;v<end;v++){
+            let count=0;
+            for(let u=crossStart;u<crossEnd;u++){
+              const x=vertical?v:u,y=vertical?u:v;
+              if(candidate(x,y,color,vertical))count++;
+            }
+            if(count<threshold)continue;
+            for(let u=crossStart;u<crossEnd;u++){
+              const x=vertical?v:u,y=vertical?u:v;
+              if(candidate(x,y,color,vertical))write(x,y,color);
+            }
+          }
+        }
+      }
+      // Correct tiny isolated export specks *inside* the rounded ends.
+      // Never alter the outer silhouette, SVG tails, or regular antialiased edges.
+      // Only a pixel surrounded on all four sides by the exact bubble fill is safe.
+      for(const bubble of chat.querySelectorAll('.m-msg > .m-bubble')){
+        if(bubble.querySelector('.mimg,img,video,canvas,svg'))continue;
+        const css=getComputedStyle(bubble);
+        const m=css.backgroundColor.match(/^rgba?\(\s*(\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)(?:[, /]+([\d.]+))?\s*\)$/i);
+        if(!m||(m[4]!=null&&Number(m[4])<.999))continue;
+        const c=[+m[1],+m[2],+m[3]],r=bubble.getBoundingClientRect();
+        const left=Math.max(2,Math.floor((r.left-root.left)*sx));
+        const right=Math.min(W-2,Math.ceil((r.right-root.left)*sx));
+        const top=Math.max(2,Math.floor((r.top-root.top)*sy));
+        const bottom=Math.min(H-2,Math.ceil((r.bottom-root.top)*sy));
+        const radius=parseFloat(css.borderTopLeftRadius)||20;
+        const cornerW=Math.min(Math.round(radius*sx*1.3),Math.floor((right-left)/3));
+        const cornerH=Math.min(Math.round(radius*sy*1.3),Math.floor((bottom-top)/3));
+        const nearFill=(x,y)=>{const i=pixel(x,y);return d[i+3]>250&&distance(i,c)<=4;};
+        const replacements=[];
+        for(let y=top+2;y<bottom-2;y++){
+          if(y>top+cornerH && y<bottom-cornerH)continue;
+          for(let x=left+2;x<right-2;x++){
+            if(x>left+cornerW && x<right-cornerW)continue;
+            const i=pixel(x,y);
+            if(d[i+3]<245||distance(i,c)<5||distance(i,c)>100)continue;
+            if(nearFill(x-1,y)&&nearFill(x+1,y)&&nearFill(x,y-1)&&nearFill(x,y+1))
+              replacements.push([x,y]);
+          }
+        }
+        for(const [x,y] of replacements)write(x,y,c);
+      }
+      // v4: The preceding seam pass intentionally excludes curved borders. The
+      // remaining fringe is a thin raster tile discontinuity *inside* those
+      // borders. Restore only fully covered, flat-color pixels in a narrow
+      // interior rim. Never paint the antialiased outside edge, the tail or text.
+      for(const bubble of chat.querySelectorAll('.m-msg > .m-bubble')){
+        if(bubble.querySelector('.mimg,img,video,canvas,svg'))continue;
+        const css=getComputedStyle(bubble);
+        const m=css.backgroundColor.match(/^rgba?\(\s*(\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)(?:[, /]+([\d.]+))?\s*\)$/i);
+        if(!m||(m[4]!=null&&Number(m[4])<.999))continue;
+        const color=[+m[1],+m[2],+m[3]];
+        const b=bubble.getBoundingClientRect();
+        const L=(b.left-root.left)*sx,T=(b.top-root.top)*sy;
+        const R=(b.right-root.left)*sx,B=(b.bottom-root.top)*sy;
+        if(R-L<16||B-T<16)continue;
+        // Match CSS rounded corners; adapt the radius to the capture scale.
+        const rr=(parseFloat(css.borderTopLeftRadius)||0)*Math.min(sx,sy);
+        const radius=Math.max(0,Math.min(rr,(R-L)/2,(B-T)/2));
+        const cx=(L+R)/2,cy=(T+B)/2;
+        const hw=(R-L)/2,hh=(B-T)/2;
+        const l=Math.max(1,Math.floor(L)),t=Math.max(1,Math.floor(T));
+        const r=Math.min(W-1,Math.ceil(R)),bot=Math.min(H-1,Math.ceil(B));
+        // Signed distance to the ideal rounded-rectangle outer contour.
+        // d < -1.25 guarantees the actual antialiased edge stays untouched.
+        for(let y=t;y<bot;y++){
+          for(let x=l;x<r;x++){
+            const qx=Math.abs(x+.5-cx)-(hw-radius);
+            const qy=Math.abs(y+.5-cy)-(hh-radius);
+            const edge=Math.hypot(Math.max(qx,0),Math.max(qy,0))+
+              Math.min(Math.max(qx,qy),0)-radius;
+            if(edge>=-1.35||edge < -Math.max(7,6*Math.min(sx,sy)))continue;
+            const at=pixel(x,y),dif=distance(at,color);
+            // Font strokes are much darker than a fractional renderer seam.
+            if(d[at+3]<245||dif<3||dif>75)continue;
+            // Only repair light, isolated artifacts, not a real ink stroke.
+            const a=pixel(x-1,y),z=pixel(x+1,y);
+            const up=pixel(x,y-1),dn=pixel(x,y+1);
+            const near=(i)=>d[i+3]>245&&distance(i,color)<13;
+            if((near(a)||near(z))&&(near(up)||near(dn)))write(x,y,color);
+          }
+        }
+      }
+      if(changed)ctx.putImageData(image,0,0);
+    }catch(err){console.warn('Messenger seam clean-up skipped',err);}
+  }
+
   async function renderExactScaled(node,width,height,scale,fontCss,overlays){
     const outWidth=Math.max(1,Math.floor(width*scale));
     const outHeight=Math.max(1,Math.floor(height*scale));
@@ -10413,6 +10556,7 @@ stage.addEventListener('touchend',e=>{
         }
         if(overlays&&overlays.imgs&&overlays.imgs.length) await drawOverlayImages(ctx,overlays.imgs,scale);
         if(overlays&&overlays.cardBorders&&overlays.cardBorders.length) drawOverlayCardBorders(ctx,overlays.cardBorders,scale);
+        repairMessengerCaptureSeams(canvas,node,width,height);
         const blob=await canvasBlob(canvas);
         canvas.width=1;canvas.height=1;
         return blob;
@@ -10481,6 +10625,7 @@ stage.addEventListener('touchend',e=>{
           canvas.width=1;canvas.height=1;
           canvas=out;
         }
+        repairMessengerCaptureSeams(canvas,node,width,height);
         const blob=await canvasBlob(canvas);
         canvas.width=1;canvas.height=1;
         return blob;
@@ -26099,6 +26244,25 @@ html.mk #pageNumberDetails .colorgrid>.field{margin:0!important}
 (function(){
   const inner=document.querySelector('#creditDetails>.acc-inner'), fmt=document.getElementById('creditFormatRow');
   const field=fmt&&fmt.closest('.field'); if(inner&&field&&field.parentNode===inner) inner.insertBefore(field,inner.firstElementChild);
+})();
+</script>
+
+
+<!-- moko identity transform strip v1 — 장평 100% 일 때 글자 상자에 남는 'scaleX(1)'(아무 변화 없는 변형)을 지운다.
+     변형이 걸려 있으면 크롬(그래픽카드 그리기)이 글자 상자를 따로 떼어 그리면서 상자 테두리에 배경색이 비치는 실선이 생겼다.
+     scaleX(1) 은 모양을 전혀 바꾸지 않으므로 지워도 글자·줄바꿈·저장 결과는 같다. -->
+<script id="moko-identity-transform-strip">
+(function(){
+  function strip(){
+    const chat=document.getElementById('chat'); if(!chat) return;
+    chat.querySelectorAll('.glyph-scale,.glyph-inline').forEach(g=>{
+      const t=g.style.transform; if(!t) return;
+      if(/^scaleX\(\s*1(\.0+)?\s*\)$/.test(t.trim())||/^scale\(\s*1(\.0+)?\s*(,\s*1(\.0+)?\s*)?\)$/.test(t.trim())||t.trim()==='none'){ g.style.removeProperty('transform'); g.style.removeProperty('transform-origin'); }
+    });
+  }
+  const wrap=name=>{ const f=window[name]; if(typeof f!=='function'||f.__mkStrip) return; const w=function(){ const r=f.apply(this,arguments); try{ strip(); }catch(_){} return r; }; w.__mkStrip=true; window[name]=w; };
+  wrap('applyGlyphScale'); wrap('renderPreview');
+  try{ strip(); }catch(_){}
 })();
 </script>
 
