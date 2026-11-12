@@ -10174,7 +10174,11 @@ stage.addEventListener('touchend',e=>{
       row.style.setProperty('text-align-last',line.soft?'justify':'left','important');
       row.style.setProperty('-moz-text-align-last',line.soft?'justify':'left','important');
       if(line.frag&&line.frag.childNodes.length) row.appendChild(line.frag);
-      else row.appendChild(document.createElement('br'));
+      /* [#색]\n[/] 처럼 색 span 안에 든 빈 줄은 잘라낸 조각이 '빈 span 껍데기'만 남아
+         줄 상자 높이가 0이 된다(저장본에서 빈 줄이 사라짐). 글자·이미지가 없으면 <br>로 한 줄 높이를 지킨다. */
+      const __hasVisible=line.frag&&(String(line.frag.textContent||'').length
+        ||(line.frag.querySelector&&line.frag.querySelector('img,svg,canvas,video,picture,iframe,input')));
+      if(!__hasVisible) row.appendChild(document.createElement('br'));
       cloneRoot.appendChild(row);
     });
   }
