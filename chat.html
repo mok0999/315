@@ -10110,7 +10110,7 @@ stage.addEventListener('touchend',e=>{
     }
     const cuts=[];
     (softPoints||[]).forEach(point=>{
-      const node=nodeAtPath(cloneRoot,point.path);
+      const node=point.node||nodeAtPath(cloneRoot,point.path);
       if(node&&node.nodeType===Node.TEXT_NODE&&point.offset>=0&&point.offset<=node.length){
         cuts.push({kind:'soft',before:{node,offset:point.offset},after:{node,offset:point.offset}});
       }
@@ -10268,6 +10268,24 @@ stage.addEventListener('touchend',e=>{
     for(let i=0;i<Math.min(cloneFlows.length,breakSets.length);i++){
       if(cloneFlows[i].querySelector('.text-paragraph')) continue;
       if(justifySets[i]){
+        /* 마크다운 목록·인용 등 블럭 요소가 든 글은 글 전체를 줄 상자로 자르면
+           목록 구조(ul/li)가 줄마다 복제돼 빈 줄과 가짜 글머리표가 생긴다.
+           이때는 가장 안쪽 블럭(li 등)마다 따로 줄을 고정한다. */
+        const __BLOCK_SEL='ul,ol,li,p,blockquote,pre,table,h1,h2,h3,h4,h5,h6,dl,dd,dt,hr';
+        if(cloneFlows[i].querySelector(__BLOCK_SEL)){
+          const flowEl=cloneFlows[i];
+          const resolved=(breakSets[i]||[]).map(pt=>{
+            if(!pt||pt.beforeElement) return null;
+            const node=nodeAtPath(flowEl,pt.path);
+            return (node&&node.nodeType===Node.TEXT_NODE)?{node,offset:pt.offset}:null;
+          }).filter(Boolean);
+          const leaves=[...flowEl.querySelectorAll('li,p,blockquote,h1,h2,h3,h4,h5,h6,dd,dt,td,th')]
+            .filter(el=>!el.querySelector(__BLOCK_SEL)&&String(el.textContent||'').length);
+          leaves.forEach(leaf=>{
+            freezeJustifiedFlow(leaf,resolved.filter(pt=>leaf.contains(pt.node)));
+          });
+          continue;
+        }
         /* justify는 강제 <br>가 들어가면 줄 끝 정렬 규칙이 바뀌므로 줄 상자로 고정한다. */
         freezeJustifiedFlow(cloneFlows[i],breakSets[i]);
         continue;
