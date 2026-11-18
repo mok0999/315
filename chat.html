@@ -20460,6 +20460,16 @@ function columnTextBounds(row){
   if(!(scale>0))return null;
   const margin=parseFloat(getComputedStyle(row).marginTop)||0;
   let top=Infinity,bottom=-Infinity;
+  /* 사용자 지정 스킨 템플릿 블럭: 글자 위아래의 장식(라벨·테두리·그림자 상자)까지 보이는 영역으로 친다 */
+  if(row.classList&&row.classList.contains('sk-tpl')){
+    for(const el of row.querySelectorAll('*')){
+      if(el.closest('.ctrl,.bulk-select-mark,.divider-hit-area'))continue;
+      const r=el.getBoundingClientRect();if(r.width<=0||r.height<=0)continue;
+      top=Math.min(top,(r.top-origin.top)/scale+margin);
+      bottom=Math.max(bottom,(r.bottom-origin.top)/scale+margin);
+    }
+    return Number.isFinite(top)&&bottom>top?{top,bottom}:null;
+  }
   const walker=document.createTreeWalker(row,NodeFilter.SHOW_TEXT);
   for(let node=walker.nextNode();node;node=walker.nextNode()){
     const parent=node.parentElement;
@@ -26970,5 +26980,1057 @@ buildSection();
 safe(afterRender);
 })();
 </script>
+
+<!-- ===================================================================
+     moko custom skin pack v1 — 사용자 지정 스킨 팩 (CSS + HTML 템플릿)
+     · 상태: state.layout.customSkin = { on:boolean, pack:{…정화된 팩…} }
+       (프로젝트 스냅샷 키 목록이 닫힌 스코프 안에 있어서 layout 안에 담는다 →
+        프로젝트 저장·자동 저장·실행 취소·테마에 그대로 따라간다. 칸이 없는 옛 파일은 지금 스킨을 유지)
+     · CSS 는 모두 #chat.sk-on / #canvas.sk-on 안쪽으로 범위를 좁혀서 편집 화면을 건드리지 않는다.
+     · 템플릿은 원래 그림이 다 그려진 뒤(renderPreview 끝) 각 블럭을 다시 짜는 방식이다.
+       본문 상자(.editable)·프로필(.av)·이름표는 '복사'가 아니라 '이동'하므로
+       편집·블러·이동·저장 줄 고정 같은 기존 기능이 그대로 붙어 있다.
+     · 팩을 끄면(on:false) 원래 화면과 완전히 같다.
+     =================================================================== -->
+<style id="moko-custom-skin-base">
+#chat.sk-on .pmsg.sk-tpl{display:block!important;flex:none!important;grid-template-columns:none!important;padding-left:0!important;padding-right:0!important;text-align:left}
+#chat.sk-on .pmsg.sk-tpl>.ctrl{z-index:30}
+#chat.sk-on .sk-tpl .sk-text:not(.sk-keep){background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;border-radius:0!important;max-width:none!important;min-width:0!important;left:auto!important;right:auto!important;top:auto!important;position:relative!important;color:inherit!important;-webkit-text-fill-color:currentColor!important;filter:none!important;opacity:1!important}
+#chat.sk-on .sk-tpl .sk-text:not(.sk-keep)::before,#chat.sk-on .sk-tpl .sk-text:not(.sk-keep)::after{content:none!important;display:none!important}
+#chat.sk-on .sk-tpl .sk-text:not(.sk-keep)>.bubble-bg{display:none!important}
+/* 장평 보정용 음수 여백이 있으면 너비 고정이 풀린 단 나누기 복제본에서 글자보다 상자가 좁게 잡혀 단어마다 줄이 바뀐다 */
+#chat.sk-on .sk-tpl .sk-text>.glyph-scale{margin-right:0!important}
+#chat.sk-on .sk-tpl .sk-avatar{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;margin:0!important;flex:0 0 auto}
+#chat.sk-on .sk-tpl .sk-name{margin:0!important;padding:0!important;position:static!important;width:auto!important;max-width:none!important}
+#chat.sk-on .sk-tpl .sk-name.is-hidden{visibility:visible!important}
+#chat.sk-on .sk-header,#chat.sk-on .sk-footer{position:relative}
+/* 단 나누기(비율 방식)에서 템플릿 블럭이 단 경계에서 두 동강 나지 않게 */
+#chat.sk-on .pmsg.sk-tpl{break-inside:avoid;-webkit-column-break-inside:avoid;page-break-inside:avoid}
+/* 비율 방식(CSS 단)에서 위로 튀어나온 장식(테이프 등)이 이전 단에 그려지지 않게,
+   블럭을 쪼개지지 않는 한 덩어리(inline-block)로 만든다 */
+#chat.sk-on.novel-mode:not(.variable-columns) .pmsg.sk-tpl{display:inline-block!important;width:100%!important;vertical-align:top;box-sizing:border-box}
+/* 사용자 지정 패널 */
+#skSection>.flat-tool-title{display:none!important}
+#skSection .sk-status{margin-top:0}
+#skSection .sk-row{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+#skSection .sk-row>.btn{flex:1 1 auto;text-align:center}
+#skSection .sk-status{font-size:12px;line-height:1.5;margin:2px 0 6px;color:var(--muted)}
+#skSection .sk-status b{color:var(--text,#222)}
+#skSection textarea{width:100%;box-sizing:border-box;min-height:140px;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical;border:1px solid var(--line,#ddd);border-radius:10px;padding:8px;background:var(--bg2,#fff);color:inherit}
+#skSection input[type=text]{width:100%;box-sizing:border-box}
+#skSection details{margin-top:8px}
+#skSection details>summary{cursor:pointer;font-size:12px;font-weight:700;padding:6px 0}
+#skSection .sk-report{font-size:11px;line-height:1.5;margin-top:6px;white-space:pre-wrap;border-radius:8px;padding:0}
+#skSection .sk-report:not(:empty){padding:7px 9px;background:rgba(0,0,0,.04)}
+#skSection .sk-report .ok{color:#2f8a4c}
+#skSection .sk-report .warn{color:#b26a00}
+#skSection .sk-report .err{color:#c0392b}
+#skSection .sk-lb{display:block;font-size:11px;font-weight:700;margin:8px 0 4px}
+#skSection .sk-check{display:flex;align-items:center;gap:6px;font-size:12px;margin:6px 0}
+</style>
+
+<script type="text/plain" id="skGuideText">
+# moko 발췌기 스킨 팩 제작 설명서 (AI용)
+
+너는 지금부터 "moko 채팅 발췌기"에서 쓰는 **스킨 팩 JSON 파일**을 만든다.
+아래 규칙을 정확히 지켜서, 사용자가 원하는 분위기의 스킨 팩을 **JSON 코드 블럭 하나로** 출력해라.
+JSON 바깥에 설명을 길게 붙이지 말고, 필요한 안내는 JSON 아래에 2~3줄로만 적어라.
+
+---
+
+## 0. 발췌기가 하는 일 (배경 지식)
+- 채팅/롤플레이 로그를 블럭 단위로 예쁘게 배치해서 **PNG 이미지로 저장**하는 웹 도구다.
+- 블럭 종류: **말풍선(chat)** = 캐릭터 대사 / **글(narration)** = 지문·서술 / **가름선(divider)** = 장면 구분선 / 사진 / HTML 블럭(사진·HTML 블럭은 스킨 대상 아님).
+- 모드 4가지: `normal`(일반) · `messenger`(메신저) · `log`(로그) · `script`(대본).
+- 캐릭터마다 이름, 프로필 사진, 닉네임 색, 말풍선 색이 있다. 그중 한 명을 "나(mine)"로 지정할 수 있다.
+- 스킨 팩은 **CSS(모양)** 와 **HTML 템플릿(구조)** 두 가지로 화면을 바꾼다. 둘 중 하나만 써도 되고 둘 다 써도 된다.
+
+---
+
+## 1. 팩 파일 형식
+
+```json
+{
+  "format": "moko-skin",
+  "version": 1,
+  "name": "스킨 이름",
+  "author": "만든 사람",
+  "description": "한 줄 설명",
+  "css": "CSS 문자열",
+  "templates": {
+    "chat": "<div>…{{{text}}}…</div>",
+    "chat.mine": "…",
+    "narration": "…",
+    "divider": "…",
+    "header": "…",
+    "footer": "…"
+  },
+  "assets": {
+    "ribbon": "data:image/png;base64,...."
+  },
+  "options": {
+    "keepBubbleStyle": false
+  },
+  "settings": {
+    "colors": { "bg": "#FFFFFF" },
+    "layout": { "width": 440, "fs": 16 }
+  }
+}
+```
+
+- `format`은 반드시 `"moko-skin"`, `version`은 `1`.
+- `css`, `templates`, `assets`, `options`, `settings`는 전부 **선택**이다. 필요 없는 칸은 빼라.
+- JSON 문자열 안의 줄바꿈은 `\n`, 큰따옴표는 `\"`로 이스케이프해야 한다. **HTML 속성에는 작은따옴표(')를 쓰면** 이스케이프가 줄어서 실수가 적다.
+
+---
+
+## 2. CSS 규칙
+
+- 네가 쓴 CSS는 발췌기가 자동으로 **미리보기 영역 안쪽으로만** 적용되게 범위를 좁힌다.
+  - 그냥 `.n-bubble { … }` 이라고 쓰면 → 자동으로 `#chat.sk-on .n-bubble`이 된다.
+  - `:root`, `html`, `body`, `#chat`으로 시작하는 선택자 → 대화 영역 전체(`#chat.sk-on`)를 뜻한다.
+  - `#canvas`로 시작하는 선택자 → 저장되는 이미지 전체 틀(배경 포함, `#canvas.sk-on`)을 뜻한다.
+- `@media`, `@keyframes`, `@font-face`, `@supports`는 써도 된다. **`@import`는 금지**(지워진다).
+- **CSS 중첩 문법(nesting)은 쓰지 마라.** 평범한 선택자만 써라.
+- 이미지는 반드시 `assets`에 넣고 CSS에서 `url(asset:이름)` 으로 불러라.
+  - 예: `background-image: url(asset:ribbon);`
+  - 외부 링크(https://…)는 저장할 때 빠질 수 있다. 그래서 발췌기가 불러올 때 받아서 넣어보지만, 실패할 수 있다.
+- 웹폰트는 `@font-face`에 `src: url(asset:폰트이름)` (assets에 `data:font/woff2;base64,...`)를 쓰거나, 외부 woff2 주소를 쓴다. 외부 주소는 발췌기가 불러올 때 받아서 넣어본다.
+- 애니메이션은 이미지로 저장되면 멈춘 한 장면만 남는다.
+- `!important`를 써도 된다. 기본 모양이 인라인 스타일로 들어간 곳이 많아서, **색·배경·여백을 덮으려면 `!important`가 필요한 경우가 많다.**
+
+### 2-1. 쓸 수 있는 CSS 변수
+대화 영역(`#chat`)에 항상 들어 있다:
+- `--sk-bg` 배경색, `--sk-text` 기본 글자색
+- `--sk-my-bubble`, `--sk-my-text` (나 말풍선/글자색), `--sk-ot-bubble`, `--sk-ot-text` (상대 말풍선/글자색)
+- `--sk-fs` 본문 글자 크기(px 포함), `--sk-lh` 행간(숫자), `--sk-radius` 말풍선 둥글기(px 포함)
+- `--sk-font` 본문 글꼴
+
+템플릿이 적용된 블럭 하나하나에도 들어 있다:
+- `--sk-color` 그 캐릭터의 닉네임 색, `--sk-bubble` 그 캐릭터의 말풍선 색
+
+### 2-2. 템플릿 없이 CSS만 쓸 때 — 원래 구조 (모드별)
+각 블럭의 바깥 상자는 모두 `.pmsg`이다. 원래 구조는 아래와 같다.
+
+**normal (일반) 모드 말풍선**
+```html
+<div class="pmsg n-msg [mine] [continuation] [no-av]">
+  <div class="av">프로필</div>
+  <div class="n-body">
+    <div class="n-name">이름</div>
+    <div class="n-bubble editable"><div class="glyph-scale">본문</div></div>
+  </div>
+</div>
+```
+**messenger (메신저) 모드 말풍선**
+```html
+<div class="pmsg m-msg [mine] [continuation] [no-av]">
+  <div class="av">프로필</div>
+  <div class="m-name">이름</div>
+  <div class="m-bubble editable"><div class="glyph-scale">본문</div></div>
+</div>
+```
+**log (로그) 모드**: normal과 같고, `.n-msg`에 `log-row`가 붙고 `.n-bubble` 대신 `.n-plain`(배경 없는 본문)을 쓴다.
+**script (대본) 모드**
+```html
+<div class="pmsg script-row [continuation]">
+  <div class="script-name [is-hidden]">이름</div>
+  <div class="script-dialogue editable"><div class="glyph-scale">대사</div></div>
+</div>
+```
+**글(narration) 블럭**: `<div class="pmsg t-block"><div class="t-inner editable"><div class="glyph-scale">글</div></div></div>`
+**가름선**: `<div class="pmsg divider-row"><span class="divider-pill">텍스트</span></div>` (텍스트 없으면 `.divider-row.line-only` 안에 `.divider-line`)
+**서명**: `.credit`
+
+- `mine` = "나"로 지정한 캐릭터, `continuation` = 같은 캐릭터가 연달아 말한 두 번째 이후 말풍선, `no-av` = 프로필 없음.
+- `.glyph-scale`, `.editable`, `.ctrl`, `.bulk-select-mark`의 크기·위치는 **건드리지 마라**(줄바꿈 고정·편집 기능용).
+
+---
+
+## 3. HTML 템플릿 규칙
+
+### 3-1. 템플릿 이름(키)과 적용 순서
+| 키 | 적용 대상 |
+|---|---|
+| `chat` | 모든 모드의 말풍선 |
+| `chat.mine` / `chat.other` | "나" / 나머지 캐릭터의 말풍선 |
+| `narration` | 글(지문) 블럭 |
+| `divider` | 가름선 |
+| `header` | 대화 맨 위에 한 번 붙는 장식 |
+| `footer` | 대화 맨 아래(서명 위)에 한 번 붙는 장식 |
+
+- 키 앞에 모드를 붙이면 그 모드에서만 쓴다: `normal.chat`, `messenger.chat.mine`, `log.narration`, `script.chat` …
+- 말풍선은 이 순서로 찾아서 **처음 찾은 것**을 쓴다:
+  `{모드}.chat.{mine|other}` → `{모드}.chat` → `chat.{mine|other}` → `chat`
+- 글·가름선: `{모드}.narration` → `narration`, `{모드}.divider` → `divider`
+- 해당 키가 없으면 **원래 모양 그대로** 나온다. (예: `chat`만 만들면 글·가름선은 기본 모양)
+- 여러 단(단 나누기) 모드에서는 `header`/`footer`가 **각 페이지(저장되는 이미지 한 장)의 맨 위/맨 아래에, 모든 단에 걸친 폭으로** 붙는다. 그러니 header/footer는 폭이 넓어져도 어색하지 않게 만들어라(가운데 정렬·flex 등).
+- 여러 단(단 나누기) 모드에서는 블럭이 단 폭에 맞춰 따로따로 배치된다. 블럭 상자 **바깥으로 튀어나오는 장식**(음수 top의 ::before 등)은 단 맨 위에서 조금 잘릴 수 있으니 8px 이내로만 써라.
+
+### 3-2. 자리표시자
+**HTML 요소가 통째로 들어가는 자리 (중괄호 3개)** — 각 템플릿에서 **한 번씩만** 써라.
+| 자리 | 들어가는 것 |
+|---|---|
+| `{{{text}}}` | **본문 상자 (필수!)** — 말풍선/글/가름선의 실제 내용. 굵게·블러·색 등 서식이 다 살아 있다. |
+| `{{{avatar}}}` | 원래 프로필 요소 (`.av`). 프로필이 꺼져 있거나 연속 말풍선이면 비어 있다. |
+| `{{{name}}}` | 원래 이름표 요소. 연속 말풍선이나 "나"는 비어 있을 수 있다. |
+
+- `{{{text}}}`가 없으면 발췌기가 템플릿 맨 끝에 본문을 붙이고 경고를 띄운다.
+- `{{{text}}}`로 들어오는 본문 상자는 **기본 말풍선 모양(배경·테두리·여백·꼬리)이 지워진 채로** 들어온다. 그러니 말풍선 모양은 **템플릿에서 감싸는 요소에 직접** 줘라.
+  - 원래 말풍선 모양을 유지하고 싶으면 `"options": {"keepBubbleStyle": true}`.
+- 본문 상자에는 `sk-text` 클래스, 이름표에는 `sk-name` 클래스가 붙는다. CSS로 꾸밀 때 써라.
+
+**글자 값 (중괄호 2개)** — 몇 번이든 써도 되고, 속성 안에도 쓸 수 있다.
+| 값 | 내용 |
+|---|---|
+| `{{name}}` | 캐릭터 이름 (글자) |
+| `{{initial}}` | 이름 첫 글자 |
+| `{{color}}` | 닉네임 색 `#RRGGBB` |
+| `{{bubbleColor}}` | 말풍선 색 `#RRGGBB` |
+| `{{avatarUrl}}` | 프로필 사진 주소 (없으면 빈 칸) |
+| `{{plainText}}` | 본문을 서식 없는 글자로 (본문 상자 대신 쓰면 편집 기능이 안 붙으니, 장식용으로만) |
+| `{{index}}` | 몇 번째 블럭인지 (1부터) |
+| `{{mode}}` | normal / messenger / log / script |
+| `{{side}}` | mine / other / narration / divider |
+| `{{asset:이름}}` | assets에 넣은 이미지의 data 주소 (`<img src='{{asset:ribbon}}'>`) |
+| `{{memberNames}}` | (header/footer 전용) 등장 캐릭터 이름들 "A · B" |
+| `{{messageCount}}` | (header/footer 전용) 블럭 수 |
+
+**조건부 구역**
+- `{{#조건}} … {{/조건}}` 조건이 참일 때만 보임
+- `{{^조건}} … {{/조건}}` 조건이 거짓일 때만 보임
+- 조건 목록: `mine`, `other`, `continued`(연속 말풍선), `first`(연속이 아닌 첫 말풍선), `hasAvatar`(이 블럭에 프로필 요소가 있음 = `{{{avatar}}}`가 비어 있지 않음), `hasPhoto`(캐릭터에 프로필 사진이 등록돼 있음), `hasName`(이름표가 있음), `normal`, `messenger`, `log`, `script`, `narration`, `divider`
+- 같은 이름의 구역을 겹쳐 넣지는 마라. 다른 이름끼리는 겹쳐도 된다.
+
+### 3-3. 금지 사항 (발췌기가 자동으로 지운다)
+- `<script>`, `<iframe>`, `<object>`, `<embed>`, `<link>`, `<meta>`, `<base>`, `<form>`
+- `onclick` 같은 `on…` 속성, `javascript:` 주소
+- 템플릿 안의 `<style>`은 지워지는 대신 CSS로 옮겨진다. 그래도 **CSS는 `css` 칸에 쓰는 것을 원칙**으로 해라.
+- 외부 이미지 주소 대신 `assets`를 써라.
+
+### 3-4. 바깥 상자
+- 템플릿 결과는 원래의 `.pmsg` 상자 안에 들어간다. `.pmsg`에는 `sk-tpl`과 함께 `sk-mine` / `sk-other` / `sk-cont`(연속) / `sk-narration` / `sk-divider` 클래스가 붙는다.
+- `.pmsg`의 아래쪽 여백(블럭 간격)은 발췌기 설정을 따른다. 템플릿에서 따로 바깥 여백을 크게 주지 마라.
+- 대화 영역 폭은 사용자가 정한다(기본 440px). **고정 폭(px)보다 %나 max-width를 써라.**
+
+---
+
+## 4. 좋은 스킨을 위한 팁
+- **말풍선 상자 크기 잡기:** 말풍선 상자에 `display:inline-block`과 `max-width:%`를 같이 쓰면 줄바꿈이 꼬여 글자가 삐져나올 수 있다. 대신 이렇게 써라:
+  바깥 칸에 `max-width:78%; min-width:0;`, 말풍선 상자에 `display:block; width:fit-content; max-width:100%; box-sizing:border-box;`
+- 프로필(`{{{avatar}}}`)은 원래 위치 지정이 풀린 채로 들어온다. 크기·모양은 `.sk-avatar` 또는 감싸는 요소로 정해라.
+- 연속 말풍선(`continued`)에서는 이름·프로필을 숨기고 간격을 좁히면 자연스럽다.
+- `mine`은 오른쪽 정렬, `other`는 왼쪽 정렬이 일반적이다(대본·로그 모드는 보통 정렬을 바꾸지 않는다).
+- 글(narration)은 읽기 편하게 장식을 적게.
+- 색은 가능하면 `{{color}}`, `{{bubbleColor}}`, `var(--sk-...)`를 써서 사용자가 정한 캐릭터 색이 반영되게 해라.
+- `settings`에는 꼭 필요한 값만 넣어라. 넣은 값은 사용자의 현재 설정을 덮어쓴다.
+  - 자주 쓰는 `colors` 키: `bg`(배경), `nText`(글 블럭 글자색), `nBubble`/`otBubble`(상대 말풍선), `myBubble`/`myText`, `credit`(서명색)
+  - 자주 쓰는 `layout` 키: `width`(대화 폭 px), `fs`(글자 크기 px), `lh`(행간), `gap`(말풍선 간격), `textGap`, `radius`(말풍선 둥글기)
+
+---
+
+## 5. 예시 1 — CSS만 쓴 팩 (점선 메모장)
+```json
+{
+  "format": "moko-skin",
+  "version": 1,
+  "name": "점선 메모장",
+  "author": "moko",
+  "css": ":root{--memo:#FFFBEA}\n#canvas{background:#FFFBEA!important}\n.n-bubble,.m-bubble{background:#fff!important;border:1.5px dashed #C9B37E!important;border-radius:4px!important;box-shadow:2px 2px 0 #EADFB8!important}\n.n-bubble::before,.n-bubble::after,.m-bubble::before,.m-bubble::after{display:none!important}\n.n-name,.m-name{font-weight:700;letter-spacing:.04em}\n.t-inner{border-left:3px solid #E5D7A8;padding-left:10px!important}",
+  "settings": { "colors": { "bg": "#FFFBEA" } }
+}
+```
+
+## 6. 예시 2 — 템플릿 팩 (편지지)
+```json
+{
+  "format": "moko-skin",
+  "version": 1,
+  "name": "편지지",
+  "author": "moko",
+  "css": ".letter{position:relative;background:#FFFDF7;border:1px solid #E8DCC6;border-radius:6px;padding:12px 14px 10px;box-shadow:0 1px 0 #F1E7D3}\n.letter.mine{background:#F4F8FF;border-color:#CBD8EE;margin-left:18%}\n.letter.other{margin-right:18%}\n.letter .to{font-size:.78em;font-weight:700;letter-spacing:.06em;margin-bottom:6px;color:var(--sk-color)}\n.letter .stamp{position:absolute;top:-9px;right:10px;width:26px;height:26px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 0 0 1px #E8DCC6}\n.letter .stamp .av{width:100%!important;height:100%!important;margin:0!important}\n.letter.cont{padding-top:8px}\n.note{font-style:italic;opacity:.85;padding:0 6px}\n.cut{display:flex;align-items:center;gap:8px;font-size:.8em;opacity:.7}\n.cut::before,.cut::after{content:'';flex:1;border-top:1px dashed currentColor}",
+  "templates": {
+    "chat": "<div class='letter {{#mine}}mine{{/mine}}{{#other}}other{{/other}} {{#continued}}cont{{/continued}}'>{{#first}}<div class='to'>From. {{name}}</div>{{/first}}{{#hasAvatar}}<div class='stamp'>{{{avatar}}}</div>{{/hasAvatar}}{{{text}}}</div>",
+    "narration": "<div class='note'>{{{text}}}</div>",
+    "divider": "<div class='cut'>{{{text}}}</div>",
+    "script.chat": "<div class='letter'><div class='to'>{{name}}</div>{{{text}}}</div>"
+  }
+}
+```
+
+---
+
+## 7. 출력 전 스스로 확인할 것
+1. `format`이 `"moko-skin"`이고 `version`이 `1`인가?
+2. 모든 템플릿에 `{{{text}}}`가 **정확히 한 번** 들어 있는가? (header/footer는 제외)
+3. JSON이 문법적으로 올바른가? (문자열 안 큰따옴표 이스케이프, 마지막 쉼표 없음)
+4. `<script>`, `on…` 속성, `@import`, 외부 이미지 주소를 쓰지 않았는가?
+5. 고정 px 폭 대신 %/max-width를 썼는가?
+
+이제 사용자가 원하는 스킨을 말하면, 위 규칙대로 팩 JSON을 만들어라.
+</script>
+
+<script type="text/plain" id="skExamplePack">
+{
+  "format": "moko-skin",
+  "version": 1,
+  "name": "편지지",
+  "author": "moko",
+  "description": "줄 쳐진 크림색 편지지 위에 대사를 쪽지처럼 붙인 스킨 — 머리말·맺음말·실링 왁스 포함",
+  "css": "#canvas{background-color:#F8F1E3!important;background-image:radial-gradient(ellipse at 50% 40%,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 70%),radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 60%,rgba(120,84,40,.16) 100%),repeating-linear-gradient(180deg,rgba(0,0,0,0) 0,rgba(0,0,0,0) 27px,rgba(150,170,200,.38) 27px,rgba(150,170,200,.38) 28px)!important}\n#chat{background:transparent!important;color:#4A3B2C;position:relative}\n#chat::before{content:'';position:absolute;top:0;bottom:0;left:34px;width:1.5px;background:rgba(214,120,120,.45);pointer-events:none}\n#canvas .canvas-bg-overlay{display:none!important}\n.lt-head{position:relative;padding:4px 4px 14px 30px;margin-bottom:6px}\n.lt-head .date{font-size:.72em;letter-spacing:.18em;color:#9C8468;text-transform:uppercase}\n.lt-head .dear{font-size:1.25em;font-style:italic;font-weight:700;color:#6B4F33;margin-top:4px}\n.lt-head .seal{position:absolute;right:6px;top:-2px;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#D8645A 0%,#A8322B 55%,#7E1F1A 100%);box-shadow:0 2px 3px rgba(80,20,15,.35),inset 0 0 0 4px rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;color:rgba(255,235,225,.85);font-size:18px;font-weight:700;transform:rotate(-12deg)}\n.lt-foot{padding:16px 6px 2px 30px;text-align:right;color:#7A5E40}\n.lt-foot .yours{font-size:.8em;letter-spacing:.08em;color:#9C8468}\n.lt-foot .sign{font-style:italic;font-weight:700;font-size:1.05em;margin-top:2px}\n.note{position:relative;margin-left:30px;max-width:calc(100% - 48px);width:fit-content;min-width:0;box-sizing:border-box;padding:12px 15px 11px;background:rgba(255,253,247,.88);border:1px solid #E6D6BC;border-radius:3px;box-shadow:0 1px 0 #EADCC2,2px 3px 6px rgba(120,84,40,.10)}\n.note.mine{margin-left:auto;margin-right:4px;background:rgba(244,248,255,.9);border-color:#CBD8EE;box-shadow:0 1px 0 #DCE5F3,-2px 3px 6px rgba(60,80,120,.10)}\n.note.first::before{content:'';position:absolute;top:-8px;left:18px;width:54px;height:16px;background:rgba(232,214,170,.75);border-left:1px dashed rgba(160,130,80,.4);border-right:1px dashed rgba(160,130,80,.4);transform:rotate(-4deg)}\n.note.mine.first::before{left:auto;right:18px;transform:rotate(5deg);background:rgba(190,210,235,.7)}\n.note.cont{padding-top:9px}\n.note .from{display:flex;align-items:center;gap:7px;margin-bottom:6px;font-size:.76em;font-weight:700;letter-spacing:.06em;color:var(--sk-color,#8A6A48)}\n.note .from .av{width:22px!important;height:22px!important;min-width:22px!important;font-size:10px!important;border-radius:50%!important;box-shadow:0 0 0 2px #fff,0 0 0 3px #E6D6BC}\n.note .from .av img{width:100%;height:100%;object-fit:cover;border-radius:50%}\n.narr{margin-left:30px;padding:2px 6px 2px 0;color:#5C4A36}\n.cut{display:flex;align-items:center;gap:10px;margin-left:30px;font-size:.78em;letter-spacing:.12em;color:#A88C6C}\n.cut::before,.cut::after{content:'';flex:1;border-top:1.5px dashed #CDB898}\n.cut .divider-pill,.cut .divider-line{background:none!important;color:inherit!important;padding:0!important;border:0!important;width:auto!important}\n.cut .divider-line{display:none!important}\n.scr{display:flex;gap:10px;align-items:baseline;margin-left:30px}\n.scr .who{flex:0 0 auto;min-width:4.5em;font-weight:700;font-style:italic;color:var(--sk-color,#6B4F33)}\n.scr .sk-text{flex:1 1 auto;min-width:0}\n.credit{margin-left:30px}",
+  "templates": {
+    "header": "<div class='lt-head'><div class='date'>a letter</div><div class='dear'>Dear. {{memberNames}}</div><div class='seal'>✉</div></div>",
+    "footer": "<div class='lt-foot'><div class='yours'>with all my heart,</div><div class='sign'>— yours</div></div>",
+    "chat": "<div class='note {{#mine}}mine{{/mine}} {{#first}}first{{/first}}{{#continued}}cont{{/continued}}'>{{#first}}<div class='from'>{{#hasAvatar}}{{{avatar}}}{{/hasAvatar}}<span>From. {{name}}</span></div>{{/first}}{{{text}}}</div>",
+    "script.chat": "<div class='scr'><span class='who'>{{#first}}{{name}}{{/first}}</span>{{{text}}}</div>",
+    "narration": "<div class='narr'>{{{text}}}</div>",
+    "divider": "<div class='cut'>{{{text}}}</div>"
+  },
+  "settings": {
+    "colors": { "bg": "#F8F1E3", "nText": "#4A3B2C", "credit": "#9C8468" }
+  }
+}
+</script>
+
+<script>
+(function(){
+'use strict';
+const ST=()=> (typeof state!=='undefined'?state:null);
+const $=id=>document.getElementById(id);
+const FORMAT='moko-skin';
+const BAD_TAGS=new Set(['SCRIPT','IFRAME','FRAME','FRAMESET','OBJECT','EMBED','APPLET','LINK','META','BASE','FORM','NOSCRIPT','PORTAL','TEMPLATE','TITLE','HEAD']);
+const URL_ATTRS=new Set(['href','src','xlink:href','action','formaction','background','poster','data','srcset','lowsrc','dynsrc','ping','cite','longdesc','usemap','codebase','manifest']);
+const MODES=['normal','messenger','log','script'];
+const DATA_URL_RE=/^data:(?:image|font|application\/(?:font|x-font|octet-stream))[\w.+\/-]*(?:;[\w=.+-]+)*;base64,[A-Za-z0-9+\/=\s]+$/i;
+
+function escHTML(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function hex(v,fb){return /^#[0-9a-f]{6}$/i.test(String(v||''))?String(v).toUpperCase():(fb||'');}
+function safeUrl(u){u=String(u||'').trim();if(DATA_URL_RE.test(u))return u;if(/^https?:\/\//i.test(u))return u;return '';}
+function clone(o){return JSON.parse(JSON.stringify(o));}
+
+/* ---------- 정화(sanitize) ---------- */
+function sanitizeFragment(root,report){
+  const extracted=[];
+  const walk=node=>{
+    [...node.children].forEach(el=>{
+      const tag=el.tagName.toUpperCase();
+      if(tag==='STYLE'){extracted.push(el.textContent||'');el.remove();report&&report.moved++;return;}
+      if(BAD_TAGS.has(tag)){el.remove();report&&report.removed.push('<'+tag.toLowerCase()+'>');return;}
+      [...el.attributes].forEach(a=>{
+        const n=a.name.toLowerCase(),v=a.value||'';
+        if(n.startsWith('on')){el.removeAttribute(a.name);report&&report.removed.push(n+' 속성');return;}
+        if(n==='srcdoc'){el.removeAttribute(a.name);report&&report.removed.push('srcdoc 속성');return;}
+        if(URL_ATTRS.has(n)&&/^\s*(?:javascript|vbscript|data:(?!image|font))/i.test(v.replace(/[\s\u0000-\u001f]+/g,''))){el.removeAttribute(a.name);report&&report.removed.push(n+'="'+v.slice(0,20)+'…"');return;}
+        if(n==='style'&&/expression\s*\(|javascript:|@import|behavior\s*:/i.test(v)){el.removeAttribute(a.name);report&&report.removed.push('위험한 style 속성');return;}
+      });
+      walk(el);
+    });
+  };
+  walk(root);
+  return extracted.join('\n');
+}
+function sanitizeTemplateString(html,report){
+  const t=document.createElement('template');
+  t.innerHTML=String(html||'');
+  const css=sanitizeFragment(t.content,report);
+  return {html:t.innerHTML,css};
+}
+
+/* ---------- CSS 범위 제한 ---------- */
+function splitSelectors(sel){
+  const out=[];let depth=0,cur='',q=null;
+  for(const ch of sel){
+    if(q){cur+=ch;if(ch===q)q=null;continue;}
+    if(ch==='"'||ch==="'"){q=ch;cur+=ch;continue;}
+    if(ch==='('||ch==='[')depth++;
+    if(ch===')'||ch===']')depth--;
+    if(ch===','&&depth===0){out.push(cur);cur='';continue;}
+    cur+=ch;
+  }
+  if(cur.trim())out.push(cur);
+  return out.map(s=>s.trim()).filter(Boolean);
+}
+function scopeSelector(s){
+  let m;
+  if((m=s.match(/^(?::root|html|body)(?![\w-])(.*)$/i))) return '#chat.sk-on'+m[1].replace(/^\s*body(?![\w-])/i,'');
+  if((m=s.match(/^#chat(?![\w-])(.*)$/))) return '#chat.sk-on'+m[1];
+  if((m=s.match(/^#canvas(?![\w-])(.*)$/))) return '#canvas.sk-on'+m[1];
+  return '#chat.sk-on '+s;
+}
+function replaceAssetRefs(css,assets,report){
+  return String(css||'').replace(/url\(\s*(['"]?)asset:([\w-]+)\1\s*\)/gi,(w,q,name)=>{
+    const d=assets&&assets[name];
+    if(d&&DATA_URL_RE.test(d)) return 'url("'+d+'")';
+    report&&report.warn.push('CSS의 asset:'+name+' 이미지를 assets에서 찾지 못했어요');
+    return 'none';
+  });
+}
+function serializeRules(rules,out,report){
+  for(const r of rules){
+    if(r.type===1){ /* style rule */
+      const sel=splitSelectors(r.selectorText).map(scopeSelector).join(',');
+      let body=r.style.cssText;
+      if(r.cssRules&&r.cssRules.length) report&&report.warn.push('CSS 중첩 문법은 지원하지 않아서 일부 규칙이 빠졌어요');
+      out.push(sel+'{'+body+'}');
+    }else if(r.type===4){ /* @media */
+      const inner=[];serializeRules(r.cssRules,inner,report);out.push('@media '+r.media.mediaText+'{'+inner.join('\n')+'}');
+    }else if(r.type===12){ /* @supports */
+      const inner=[];serializeRules(r.cssRules,inner,report);out.push('@supports '+r.conditionText+'{'+inner.join('\n')+'}');
+    }else if(r.type===7||r.type===5){ /* keyframes, font-face */
+      out.push(r.cssText);
+    }else if(r.type===3){ report&&report.removed.push('@import'); }
+    else if(r.cssRules&&typeof r.conditionText==='string'){ /* @container 등 */
+      const inner=[];serializeRules(r.cssRules,inner,report);
+      const head=(r.cssText.split('{')[0]||'').trim();
+      out.push(head+'{'+inner.join('\n')+'}');
+    }
+  }
+}
+function scopeCSS(css,assets,report){
+  let src=replaceAssetRefs(css,assets,report);
+  if(/@import/i.test(src)){report&&report.removed.push('@import');src=src.replace(/@import[^;]*;?/gi,'');}
+  if(/expression\s*\(|javascript:|behavior\s*:/i.test(src)){report&&report.removed.push('위험한 CSS 코드');src=src.replace(/expression\s*\(|javascript:|behavior\s*:/gi,'invalid(');}
+  let sheet;
+  try{sheet=new CSSStyleSheet();sheet.replaceSync(src);}
+  catch(e){
+    /* 구형 브라우저: style 태그로 파싱 */
+    const st=document.createElement('style');st.media='not all';st.textContent=src;document.head.appendChild(st);
+    sheet=st.sheet;st.remove();
+  }
+  const out=[];
+  try{serializeRules(sheet.cssRules,out,report);}catch(_){}
+  return out.join('\n');
+}
+
+/* ---------- 팩 검사 ---------- */
+function newReport(){return {removed:[],warn:[],err:[],moved:0};}
+function normalizePack(raw,report){
+  let p=raw;
+  if(typeof p==='string'){try{p=JSON.parse(p);}catch(e){report.err.push('JSON 문법이 잘못됐어요: '+e.message);return null;}}
+  if(!p||typeof p!=='object'||Array.isArray(p)){report.err.push('팩 파일이 아니에요');return null;}
+  if(p.format!==FORMAT){
+    if(p.__type==='chat-extractor-project'){report.err.push('이건 프로젝트 파일이에요. 프로젝트는 저장 탭의 "프로젝트 불러오기"로 열어 주세요');return null;}
+    report.warn.push('format이 "moko-skin"이 아니에요 — 그래도 읽어 볼게요');
+  }
+  const pack={format:FORMAT,version:1,name:String(p.name||'이름 없는 스킨').slice(0,80),author:String(p.author||'').slice(0,60),description:String(p.description||'').slice(0,200),
+    css:typeof p.css==='string'?p.css:'',templates:{},assets:{},options:{},settings:null};
+  if(/@import/i.test(pack.css)){pack.css=pack.css.replace(/@import[^;]*;?/gi,'');report.removed.push('@import');}
+  if(p.assets&&typeof p.assets==='object'){
+    Object.keys(p.assets).forEach(k=>{
+      const v=String(p.assets[k]||'');
+      if(!/^[\w-]+$/.test(k)){report.warn.push('asset 이름 "'+k+'"은 영문·숫자·-·_만 쓸 수 있어서 뺐어요');return;}
+      if(DATA_URL_RE.test(v)) pack.assets[k]=v.replace(/\s+/g,'');
+      else if(/^https?:\/\//i.test(v)) pack.assets[k]=v;   /* 불러올 때 받아서 넣어 본다 */
+      else report.warn.push('asset "'+k+'"이 data 주소가 아니라서 뺐어요');
+    });
+  }
+  const extraCss=[];
+  if(p.templates&&typeof p.templates==='object'){
+    Object.keys(p.templates).forEach(k=>{
+      const key=String(k).trim();
+      if(!/^(?:(?:normal|messenger|log|script)\.)?(?:chat(?:\.(?:mine|other))?|narration|divider|header|footer)$/.test(key)){report.warn.push('알 수 없는 템플릿 이름 "'+key+'"은 무시했어요');return;}
+      const s=sanitizeTemplateString(p.templates[k],report);
+      if(s.css)extraCss.push(s.css);
+      pack.templates[key]=s.html;
+      const isDeco=/(?:^|\.)(?:header|footer)$/.test(key);
+      const n=(s.html.match(/\{\{\{\s*text\s*\}\}\}/g)||[]).length;
+      if(!isDeco&&n===0) report.warn.push('"'+key+'" 템플릿에 {{{text}}}가 없어서 본문을 맨 끝에 붙일게요');
+      if(n>1) report.warn.push('"'+key+'" 템플릿에 {{{text}}}가 '+n+'번 있어요 — 첫 번째만 써요');
+    });
+  }
+  if(extraCss.length){pack.css+=(pack.css?'\n':'')+extraCss.join('\n');report.warn.push('템플릿 안의 <style>을 CSS 칸으로 옮겼어요');}
+  if(p.options&&typeof p.options==='object') pack.options={keepBubbleStyle:!!p.options.keepBubbleStyle};
+  if(p.settings&&typeof p.settings==='object'){
+    const st={};
+    if(p.settings.colors&&typeof p.settings.colors==='object')st.colors=p.settings.colors;
+    if(p.settings.layout&&typeof p.settings.layout==='object')st.layout=p.settings.layout;
+    if(Object.keys(st).length)pack.settings=st;
+  }
+  if(/https?:\/\//i.test(pack.css)||Object.values(pack.templates).some(h=>/(?:src|href)\s*=\s*['"]?https?:/i.test(h)))
+    report.warn.push('외부 주소(https://…)가 들어 있어요. 받아서 파일 안에 넣어 보고, 안 되면 저장 이미지에서 빠질 수 있어요');
+  /* 검사용으로 한 번 범위 제한을 돌려 본다 */
+  try{scopeCSS(pack.css,pack.assets,report);}catch(_){}
+  return pack;
+}
+
+/* 외부 이미지·폰트를 받아서 data 주소로 넣어 본다 (CORS 허용된 곳만 성공) */
+async function fetchDataURL(url){
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null;
+  const timer=setTimeout(()=>ctl&&ctl.abort(),12000);
+  try{
+    const r=await fetch(url,{mode:'cors',signal:ctl&&ctl.signal});
+    if(!r.ok)throw new Error(r.status);
+    const b=await r.blob();
+    return await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b);});
+  }finally{clearTimeout(timer);}
+}
+async function inlineExternal(pack,report){
+  const urls=new Set();
+  (pack.css.match(/url\(\s*['"]?(https?:\/\/[^'")\s]+)['"]?\s*\)/gi)||[]).forEach(m=>{const u=m.replace(/^url\(\s*['"]?|['"]?\s*\)$/g,'');urls.add(u);});
+  Object.values(pack.templates).forEach(h=>{(h.match(/(?:src|href)\s*=\s*['"]?(https?:\/\/[^'"\s>]+)/gi)||[]).forEach(m=>urls.add(m.replace(/^(?:src|href)\s*=\s*['"]?/i,'')));});
+  Object.keys(pack.assets).forEach(k=>{if(/^https?:/i.test(pack.assets[k]))urls.add(pack.assets[k]);});
+  if(!urls.size)return;
+  const map=new Map();
+  for(const u of urls){
+    try{const d=await fetchDataURL(u);if(DATA_URL_RE.test(d))map.set(u,d);else throw 0;}
+    catch(_){report.warn.push('외부 주소를 받지 못했어요: '+u.slice(0,60)+(u.length>60?'…':''));}
+  }
+  if(!map.size)return;
+  const rep=s=>{let o=s;map.forEach((d,u)=>{o=o.split(u).join(d);});return o;};
+  pack.css=rep(pack.css);
+  Object.keys(pack.templates).forEach(k=>{pack.templates[k]=rep(pack.templates[k]);});
+  Object.keys(pack.assets).forEach(k=>{if(map.has(pack.assets[k]))pack.assets[k]=map.get(pack.assets[k]);});
+  Object.keys(pack.assets).forEach(k=>{if(!DATA_URL_RE.test(pack.assets[k]))delete pack.assets[k];});
+  report.okNote=(report.okNote||'')+'외부 파일 '+map.size+'개를 팩 안에 넣었어요. ';
+}
+
+/* ---------- 상태 ---------- */
+/* '팩 지우기'에서 되돌릴 기본값 — 이 스크립트가 실행되는 시점(프로젝트 복원 전)의 처음 색과 기본 레이아웃 */
+const DEFAULT_COLORS=(()=>{try{return JSON.parse(JSON.stringify(state.colors));}catch(_){return null;}})();
+const DEFAULT_LAYOUT=(()=>{try{return typeof defaultLayout==='function'?defaultLayout():null;}catch(_){return null;}})();
+/* 파일·테마·실행 취소 등 어디서 들어온 팩이든, 처음 볼 때 한 번 다시 정화한다 */
+const verified=new WeakSet();
+function setSkin(v){const s=ST();if(!s||!s.layout)return;if(v){s.layout.customSkin=v;verified.add(v);}else delete s.layout.customSkin;}
+function skin(){
+  const s=ST();if(!s||!s.layout)return null;
+  const c=s.layout.customSkin;
+  if(!c||typeof c!=='object'||!c.pack||typeof c.pack!=='object')return null;
+  if(!verified.has(c)){
+    const p=normalizePack(c.pack,newReport());
+    if(!p){delete s.layout.customSkin;return null;}
+    const v={on:c.on!==false,pack:p,touched:Array.isArray(c.touched)?c.touched.filter(x=>typeof x==='string').slice(0,200):[]};
+    s.layout.customSkin=v;verified.add(v);return v;
+  }
+  return c;
+}
+function active(){const c=skin();return !!(c&&c.on);}
+
+let scopedCache={key:'',css:''};
+function applySkinStyle(){
+  let el=$('moko-custom-skin-user');
+  const c=skin();
+  const css=(c&&c.on)?(()=>{const key=c.pack.css+'|'+Object.keys(c.pack.assets||{}).join(',');if(scopedCache.key!==key){scopedCache={key,css:scopeCSS(c.pack.css,c.pack.assets,null)};}return scopedCache.css;})():'';
+  if(!el){el=document.createElement('style');el.id='moko-custom-skin-user';document.body.appendChild(el);}
+  if(el.textContent!==css)el.textContent=css;
+}
+
+/* ---------- 템플릿 엔진 ---------- */
+function findTemplate(pack,mode,kind,side){
+  const T=pack.templates||{};
+  const keys=kind==='chat'
+    ?[mode+'.chat.'+side,mode+'.chat','chat.'+side,'chat']
+    :[mode+'.'+kind,kind];
+  for(const k of keys) if(typeof T[k]==='string'&&T[k].trim()) return T[k];
+  return null;
+}
+function renderSections(tpl,flags){
+  let out=tpl,guard=0,prev;
+  do{
+    prev=out;
+    out=out.replace(/\{\{([#^])\s*([\w]+)\s*\}\}([\s\S]*?)\{\{\/\s*\2\s*\}\}/g,(w,kind,name,body)=>{
+      const v=!!flags[name];
+      return (kind==='#'?v:!v)?body:'';
+    });
+  }while(out!==prev&&++guard<20);
+  return out;
+}
+function fillTemplate(tpl,flags,values,assets){
+  let s=renderSections(tpl,flags);
+  s=s.replace(/\{\{\{\s*(text|avatar|name)\s*\}\}\}/g,(w,k)=>'<sk-slot data-k="'+k+'"></sk-slot>');
+  s=s.replace(/\{\{\s*asset:([\w-]+)\s*\}\}/g,(w,k)=>{const d=assets&&assets[k];return d&&DATA_URL_RE.test(d)?escHTML(d):'';});
+  s=s.replace(/\{\{\s*([\w]+)\s*\}\}/g,(w,k)=>Object.prototype.hasOwnProperty.call(values,k)?escHTML(values[k]):'');
+  return s;
+}
+function buildFromTemplate(row,tpl,flags,values,slots,pack){
+  const t=document.createElement('template');
+  t.innerHTML=fillTemplate(tpl,flags,values,pack.assets);
+  sanitizeFragment(t.content,null);
+  const used=new Set();
+  t.content.querySelectorAll('sk-slot').forEach(sl=>{
+    const k=sl.getAttribute('data-k');
+    const node=slots[k];
+    if(node&&!used.has(k)){used.add(k);sl.replaceWith(node);}
+    else sl.remove();
+  });
+  if(slots.text&&!used.has('text')) t.content.appendChild(slots.text);
+  return t.content;
+}
+function plainOf(el){return el?String(el.innerText||el.textContent||'').trim():'';}
+
+function msgById(id){const s=ST();return s&&s.messages.find(m=>String(m.id)===String(id));}
+function memberOf(m){const s=ST();return (m&&s&&s.members.find(x=>x.id===m.senderId))||{};}
+
+function rowId(row){
+  const a=row.getAttribute('data-message-id');if(a)return a;
+  const d=row.querySelector('[data-id]');return d?d.getAttribute('data-id'):'';
+}
+function transformRow(row,pack,mode,idx){
+  const id=rowId(row);
+  const m=msgById(id);
+  if(!m)return;
+  const type=m.type||'chat';
+  let kind=null;
+  if(type==='chat')kind='chat';
+  else if(type==='text')kind='narration';
+  else if(type==='divider')kind='divider';
+  if(!kind)return;
+  const s=ST();
+  const mine=kind==='chat'&&!!s.meId&&m.senderId===s.meId;
+  const side=kind==='chat'?(mine?'mine':'other'):kind;
+  const tpl=findTemplate(pack,mode,kind,side);
+  if(!tpl)return;
+  const continued=row.classList.contains('continuation');
+  const textEl=kind==='divider'
+    ?row.querySelector('.divider-pill,.divider-line')
+    :row.querySelector('.editable[data-id]');
+  if(!textEl)return;
+  const avEl=kind==='chat'?row.querySelector('.av'):null;
+  let nameEl=kind==='chat'?row.querySelector('.n-name,.m-name,.script-name,.q-name,.msg-name'):null;
+  if(nameEl&&(nameEl.classList.contains('is-hidden')||!plainOf(nameEl)))nameEl=null;
+  const mem=memberOf(m);
+  const memName=String(mem.name||'');
+  const flags={mine,other:kind==='chat'&&!mine,continued,first:kind==='chat'&&!continued,
+    hasAvatar:!!avEl,hasPhoto:!!(mem.image),hasName:!!nameEl,narration:kind==='narration',divider:kind==='divider',
+    normal:mode==='normal',messenger:mode==='messenger',log:mode==='log',script:mode==='script',chat:kind==='chat'};
+  const values={name:memName,initial:Array.from(memName)[0]||'',color:hex(mem.color,''),bubbleColor:hex(mem.bubbleColor,''),
+    avatarUrl:safeUrl(mem.image),plainText:plainOf(textEl),index:String(idx+1),mode,side,id:String(id||'')};
+  const keep=new Set();
+  [...row.children].forEach(ch=>{if(ch.matches('.ctrl,.bulk-select-mark,.divider-hit-area'))keep.add(ch);});
+  textEl.classList.add('sk-text');
+  if(pack.options&&pack.options.keepBubbleStyle)textEl.classList.add('sk-keep');
+  if(nameEl)nameEl.classList.add('sk-name');
+  if(avEl)avEl.classList.add('sk-avatar');
+  const frag=buildFromTemplate(row,tpl,flags,values,{text:textEl,avatar:avEl,name:nameEl},pack);
+  [...row.childNodes].forEach(n=>{if(!keep.has(n))n.remove();});
+  row.appendChild(frag);
+  row.classList.add('sk-tpl','sk-'+(kind==='chat'?side:kind));
+  if(continued)row.classList.add('sk-cont');
+  if(values.color)row.style.setProperty('--sk-color',values.color);
+  if(values.bubbleColor)row.style.setProperty('--sk-bubble',values.bubbleColor);
+}
+
+function buildDeco(kind,pack,mode){
+  const s=ST();
+  const tpl=findTemplate(pack,mode,kind,'');
+  if(!tpl)return null;
+  const names=[...new Set(s.messages.filter(m=>(m.type||'chat')==='chat').map(m=>memberOf(m).name).filter(Boolean))];
+  const values={memberNames:names.join(' · '),messageCount:String(s.messages.length),mode};
+  const flags={normal:mode==='normal',messenger:mode==='messenger',log:mode==='log',script:mode==='script'};
+  const box=document.createElement('div');
+  box.className='sk-'+kind;
+  box.setAttribute('aria-hidden','true');
+  const t=document.createElement('template');
+  t.innerHTML=fillTemplate(tpl,flags,values,pack.assets);
+  sanitizeFragment(t.content,null);
+  t.content.querySelectorAll('sk-slot').forEach(x=>x.remove());
+  box.appendChild(t.content);
+  return box;
+}
+function insertDeco(chat,pack,mode){
+  const s=ST();
+  if(s.novel&&s.novel.on)return;
+  const names=[...new Set(s.messages.filter(m=>(m.type||'chat')==='chat').map(m=>memberOf(m).name).filter(Boolean))];
+  const values={memberNames:names.join(' · '),messageCount:String(s.messages.length),mode};
+  const flags={normal:mode==='normal',messenger:mode==='messenger',log:mode==='log',script:mode==='script'};
+  ['header','footer'].forEach(kind=>{
+    const tpl=findTemplate(pack,mode,kind,'');
+    if(!tpl)return;
+    const box=document.createElement('div');
+    box.className='sk-'+kind;
+    box.setAttribute('aria-hidden','true');
+    const t=document.createElement('template');
+    t.innerHTML=fillTemplate(tpl,flags,values,pack.assets);
+    sanitizeFragment(t.content,null);
+    t.content.querySelectorAll('sk-slot').forEach(x=>x.remove());
+    box.appendChild(t.content);
+    if(kind==='header')chat.insertBefore(box,chat.firstChild);
+    else{const credit=chat.querySelector(':scope > .credit');chat.insertBefore(box,credit||null);}
+  });
+}
+
+function setChatVars(chat){
+  const s=ST(),C=s.colors||{},L=s.layout||{};
+  const set=(k,v)=>{if(v!=null&&v!=='')chat.style.setProperty(k,String(v));};
+  set('--sk-bg',C.bg);set('--sk-text',C.nText);
+  set('--sk-my-bubble',C.myBubble);set('--sk-my-text',C.myText);
+  set('--sk-ot-bubble',C.otBubble||C.nBubble);set('--sk-ot-text',C.otText||C.nText);
+  set('--sk-fs',(Number(L.fs)||16)+'px');set('--sk-lh',Number(L.lh)||1.55);
+  set('--sk-radius',(Number(L.radius)||0)+'px');set('--sk-font',L.font);
+}
+
+/* 블럭들을 템플릿으로 다시 짠다. 이미 짠 블럭(sk-tpl)과 단 나누기용 복제본(data-fluid-source)은 건너뛴다.
+   반환값: 바뀐 것이 있는지 */
+function transformAll(){
+  const chat=$('chat'),canvas=$('canvas');
+  if(!chat)return false;
+  const on=active();
+  chat.classList.toggle('sk-on',on);
+  if(canvas)canvas.classList.toggle('sk-on',on);
+  applySkinStyle();
+  if(!on)return false;
+  const pack=skin().pack;
+  setChatVars(chat);
+  const s=ST();
+  const mode=MODES.includes(s.mode)?s.mode:'normal';
+  const order=new Map(s.messages.map((m,i)=>[String(m.id),i]));
+  let changed=false;
+  chat.querySelectorAll('.pmsg').forEach(row=>{
+    if(row.classList.contains('sk-tpl')||row.hasAttribute('data-fluid-source'))return;
+    try{transformRow(row,pack,mode,order.get(rowId(row))||0);if(row.classList.contains('sk-tpl'))changed=true;}
+    catch(e){console.warn('custom skin row failed',e);}
+  });
+  const novel=!!(s.novel&&s.novel.on);
+  if(!novel&&!chat.querySelector(':scope > .sk-header,:scope > .sk-footer')&&s.messages.length){
+    try{insertDeco(chat,pack,mode);changed=true;}catch(e){console.warn('custom skin deco failed',e);}
+  }
+  if(changed){try{if(typeof window.applyGlyphScale==='function')window.applyGlyphScale();}catch(_){}}
+  return changed;
+}
+
+/* ---------- 렌더링 연결 ----------
+   단 나누기(여러 단)는 applyCanvas 안에서 블럭을 복제해 단마다 배치한다.
+   그 전에 템플릿이 적용돼 있어야 복제본·높이 계산이 스킨 모양 기준이 되므로,
+   applyCanvas 바로 앞에서 먼저 짠다. renderPreview 끝에서도 한 번 더 확인한다. */
+let inCanvas=false;
+
+/* ---------- 여러 단(단 나누기)에서의 머리말·맺음말 ----------
+   단 배치는 #chat 의 위·아래 안쪽 여백(padding)을 기준으로 블럭을 놓고 이미지 크기를 잰다.
+   그래서 머리말·맺음말 높이만큼 여백을 늘려 자리를 비워 두고, 배치가 끝난 뒤
+   보이는 페이지 폭 전체에 걸쳐 그 자리에 얹는다. (비율 방식은 #chat 을 왼쪽으로 밀어
+   페이지를 넘기므로 그만큼 반대로 옮긴다) */
+function clearNovelDeco(chat){
+  chat.querySelectorAll(':scope > .sk-novel-deco').forEach(e=>e.remove());
+  const p=chat.__skPad;
+  if(p){
+    if(chat.style.paddingTop===p.adjT)chat.style.paddingTop=p.t;
+    if(chat.style.paddingBottom===p.adjB)chat.style.paddingBottom=p.b;
+    chat.__skPad=null;
+  }
+}
+function measureDeco(chat,el,w){
+  el.classList.add('sk-novel-deco');
+  el.style.cssText='position:absolute;left:0;top:0;width:'+w+'px;box-sizing:border-box;visibility:hidden;z-index:5;margin:0';
+  chat.appendChild(el);
+  const h=el.offsetHeight;
+  el.remove();
+  return h;
+}
+function setDecoPad(chat,plan){
+  const t=chat.style.paddingTop,b=chat.style.paddingBottom;
+  chat.style.paddingTop=(plan.baseT+plan.hH)+'px';
+  chat.style.paddingBottom=(plan.baseB+plan.fH)+'px';
+  chat.__skPad={t,b,adjT:chat.style.paddingTop,adjB:chat.style.paddingBottom};
+}
+function planNovelDeco(){
+  const chat=$('chat');if(!chat)return null;
+  clearNovelDeco(chat);
+  const s=ST();
+  if(!active()||!(s.novel&&s.novel.on)||!s.messages.length)return null;
+  const pack=skin().pack;
+  const mode=MODES.includes(s.mode)?s.mode:'normal';
+  const header=buildDeco('header',pack,mode),footer=buildDeco('footer',pack,mode);
+  if(!header&&!footer)return null;
+  const cs=getComputedStyle(chat);
+  const baseT=parseFloat(cs.paddingTop)||0,baseB=parseFloat(cs.paddingBottom)||0;
+  const win=chat.parentElement&&chat.parentElement.id==='novelWindow'?chat.parentElement:null;
+  const n=s.novel,cols=Math.max(1,Number(n.cols)||1),gap=Number(n.gap)||0;
+  const w=win&&win.offsetWidth?win.offsetWidth:(Number(s.layout.width)||440)*cols+gap*(cols-1);
+  const plan={header,footer,baseT,baseB,hH:header?measureDeco(chat,header,w):0,fH:footer?measureDeco(chat,footer,w):0};
+  setDecoPad(chat,plan);
+  return plan;
+}
+/* 배치가 끝난 뒤 얹는다. 실제 폭에서 잰 높이가 비워 둔 자리와 다르면 true(다시 배치 필요) */
+function placeNovelDeco(plan,final){
+  const chat=$('chat');if(!chat)return false;
+  chat.querySelectorAll(':scope > .sk-novel-deco').forEach(e=>e.remove());
+  const win=chat.parentElement&&chat.parentElement.id==='novelWindow'?chat.parentElement:null;
+  const W=win?win.offsetWidth:chat.offsetWidth,H=win?win.offsetHeight:chat.offsetHeight;
+  const left=-(parseFloat(chat.style.marginLeft)||0);
+  let hH=plan.hH,fH=plan.fH;
+  const put=(el,top)=>{
+    el.classList.add('sk-novel-deco');
+    el.style.cssText='position:absolute;left:'+left+'px;top:'+top+'px;width:'+W+'px;box-sizing:border-box;z-index:5;margin:0';
+    chat.appendChild(el);
+    return el.offsetHeight;
+  };
+  if(plan.header)hH=put(plan.header,plan.baseT);
+  if(plan.footer){fH=plan.footer.offsetHeight||plan.fH;fH=put(plan.footer,Math.max(0,H-plan.baseB-plan.fH));}
+  if(!final&&(Math.abs(hH-plan.hH)>.5||Math.abs(fH-plan.fH)>.5)){
+    chat.querySelectorAll(':scope > .sk-novel-deco').forEach(e=>e.remove());
+    clearNovelDeco(chat);
+    plan.hH=hH;plan.fH=fH;setDecoPad(chat,plan);
+    return true;
+  }
+  return false;
+}
+
+const prevCanvas=window.applyCanvas;
+if(typeof prevCanvas==='function'){
+  window.applyCanvas=function(){
+    if(inCanvas)return prevCanvas.apply(this,arguments);
+    inCanvas=true;
+    try{
+      try{transformAll();}catch(e){console.warn('custom skin failed',e);}
+      let plan=null;
+      try{plan=planNovelDeco();}catch(e){console.warn('custom skin novel deco failed',e);plan=null;}
+      let r=prevCanvas.apply(this,arguments);
+      if(plan){
+        try{
+          if(placeNovelDeco(plan,false)){r=prevCanvas.apply(this,arguments);placeNovelDeco(plan,true);}
+        }catch(e){console.warn('custom skin novel deco failed',e);}
+      }
+      return r;
+    }finally{inCanvas=false;}
+  };
+}
+function afterRender(){
+  let changed=false;
+  inCanvas=true;
+  try{changed=transformAll();}catch(e){console.warn('custom skin failed',e);}
+  finally{inCanvas=false;}
+  if(changed){try{if(typeof applyCanvas==='function')applyCanvas();}catch(_){}}
+}
+const prevRender=window.renderPreview;
+if(typeof prevRender==='function'){
+  window.renderPreview=function(){
+    const r=prevRender.apply(this,arguments);
+    try{afterRender();}catch(e){console.warn('custom skin failed',e);}
+    return r;
+  };
+}
+
+/* ---------- 프로젝트 불러오기 후 패널 갱신 ---------- */
+try{
+  const api=window.__modeDefaultsProjectAPI;
+  if(api&&typeof api.apply==='function'){
+    const prev=api.apply;
+    api.apply=function(){const r=prev.apply(this,arguments);try{syncUI();}catch(_){}return r;};
+  }
+}catch(_){}
+
+/* ---------- 설정(색·레이아웃) 적용 ---------- */
+function applySettings(settings,touched){
+  const s=ST();if(!s||!settings)return 0;let n=0;
+  ['colors','layout'].forEach(k=>{
+    const src=settings[k];if(!src||typeof src!=='object')return;
+    const dst=s[k];if(!dst)return;
+    Object.keys(src).forEach(key=>{
+      if(key==='customSkin'||!Object.prototype.hasOwnProperty.call(dst,key))return;
+      const v=src[key],cur=dst[key];
+      if(k==='colors'){if(typeof v==='string'&&/^#[0-9a-f]{6}$/i.test(v)){dst[key]=v.toUpperCase();n++;}return;}
+      if(cur&&typeof cur==='object'&&v&&typeof v==='object'&&!Array.isArray(v)){Object.keys(v).forEach(sk=>{if(typeof v[sk]===typeof cur[sk]){cur[sk]=v[sk];n++;if(touched&&!touched.includes(key))touched.push(key);}});return;}
+      if(typeof v===typeof cur||cur==null&&(typeof v==='number'||typeof v==='string'||typeof v==='boolean')){dst[key]=v;n++;if(touched&&!touched.includes(key))touched.push(key);}
+    });
+  });
+  try{syncControlsFromState();}catch(_){}
+  try{if(typeof refreshColorRows==='function')refreshColorRows();}catch(_){}
+  return n;
+}
+
+/* ---------- 패널 UI ---------- */
+let section=null;
+let panelOpen=false;
+/* 팩 지우기: 팩을 없애고 색은 전부 기본값으로, 레이아웃은 팩이 바꾼 항목만 기본값으로 되돌린다 */
+function clearToDefault(c){
+  const s=ST();
+  const touched=c&&Array.isArray(c.touched)?c.touched:[];
+  setSkin(null);
+  if(DEFAULT_COLORS)Object.keys(DEFAULT_COLORS).forEach(k=>{s.colors[k]=DEFAULT_COLORS[k];});
+  if(DEFAULT_LAYOUT)touched.forEach(k=>{
+    if(k==='customSkin'||!Object.prototype.hasOwnProperty.call(DEFAULT_LAYOUT,k))return;
+    const v=DEFAULT_LAYOUT[k];
+    s.layout[k]=(v&&typeof v==='object')?JSON.parse(JSON.stringify(v)):v;
+  });
+  try{syncControlsFromState();}catch(_){}
+  try{if(typeof refreshColorRows==='function')refreshColorRows();}catch(_){}
+  try{renderPreview();}catch(_){}
+  editorDirty=false;
+  syncUI();
+  const el=$('skReport');if(el)el.innerHTML='<span class="ok">✓ 팩을 지우고 기본 모양으로 되돌렸어요</span>';
+  try{if(typeof scheduleAutosave==='function')scheduleAutosave();}catch(_){}
+}
+function reportHTML(rep,okMsg){
+  const lines=[];
+  if(rep.err.length)rep.err.forEach(x=>lines.push('<span class="err">✕ '+escHTML(x)+'</span>'));
+  else lines.push('<span class="ok">✓ '+escHTML(okMsg||'적용했어요')+'</span>');
+  if(rep.okNote)lines.push('<span class="ok">✓ '+escHTML(rep.okNote.trim())+'</span>');
+  const rm=[...new Set(rep.removed)];
+  if(rm.length)lines.push('<span class="warn">⚠ 위험할 수 있는 코드를 지웠어요: '+escHTML(rm.join(', '))+'</span>');
+  [...new Set(rep.warn)].forEach(x=>lines.push('<span class="warn">⚠ '+escHTML(x)+'</span>'));
+  return lines.join('\n');
+}
+function showReport(rep,ok){const el=$('skReport');if(el)el.innerHTML=reportHTML(rep,ok);}
+
+async function installPack(raw,opts){
+  opts=opts||{};
+  const rep=newReport();
+  const pack=normalizePack(raw,rep);
+  if(!pack){showReport(rep);return false;}
+  await inlineExternal(pack,rep);
+  const prev=skin();
+  const touched=prev&&Array.isArray(prev.touched)?prev.touched.slice():[];
+  setSkin({on:true,pack,touched});
+  panelOpen=true;
+  let applied=0;
+  if(opts.applySettings&&pack.settings)applied=applySettings(pack.settings,touched);
+  try{renderPreview();}catch(_){}
+  syncUI();
+  showReport(rep,'"'+pack.name+'"을(를) 적용했어요'+(applied?' (색·레이아웃 '+applied+'개 반영)':''));
+  try{if(typeof scheduleAutosave==='function')scheduleAutosave();}catch(_){}
+  return true;
+}
+
+function download(name,text,type){
+  const blob=new Blob([text],{type:type||'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),20000);
+}
+function safeName(s){return String(s||'skin').replace(/[\\/:*?"<>|]+/g,'_').slice(0,60)||'skin';}
+async function copyText(text){
+  try{await navigator.clipboard.writeText(text);return true;}
+  catch(_){
+    const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();
+    let ok=false;try{ok=document.execCommand('copy');}catch(__){}ta.remove();return ok;
+  }
+}
+function note(msg){try{if(typeof toast==='function'){toast(msg,{duration:2600});return;}}catch(_){}alert(msg);}
+
+function currentPackForExport(includeSettings){
+  const c=skin();
+  const base=c?clone(c.pack):{format:FORMAT,version:1,name:'내 스킨',author:'',description:'',css:'',templates:{},assets:{},options:{}};
+  const out={format:FORMAT,version:1,name:base.name,author:base.author,description:base.description||'',css:base.css||''};
+  if(base.templates&&Object.keys(base.templates).length)out.templates=base.templates;
+  if(base.assets&&Object.keys(base.assets).length)out.assets=base.assets;
+  if(base.options&&base.options.keepBubbleStyle)out.options={keepBubbleStyle:true};
+  if(includeSettings){const s=ST();out.settings={colors:clone(s.colors),layout:clone(s.layout)};['font','customSkin','msgSkinOpts','msgSkinTimes'].forEach(k=>delete out.settings.layout[k]);}
+  else if(base.settings)out.settings=base.settings;
+  return out;
+}
+
+/* 팩 편집 칸: 지금 팩을 JSON으로 보여 준다. 이미지는 긴 data 주소 대신 짧은 표시로 줄인다 */
+const KEEP_MARK=' — 그대로 두면 유지)';
+function assetLabel(d){const kb=Math.max(1,Math.round(String(d).length*3/4/1024));const kind=/^data:font/i.test(d)?'글꼴':'이미지';return '('+kind+' '+kb+'KB'+KEEP_MARK;}
+let editorDirty=false;
+function editorJSON(){
+  const c=skin();
+  if(!c)return '';
+  const out=currentPackForExport(false);
+  if(out.assets){const a={};Object.keys(out.assets).forEach(k=>{a[k]=assetLabel(out.assets[k]);});out.assets=a;}
+  return JSON.stringify(out,null,2);
+}
+function fillEditor(force){
+  const ta=$('skJson');if(!ta)return;
+  if(editorDirty&&!force)return;
+  ta.value=editorJSON();editorDirty=false;
+}
+function syncUI(){
+  if(!section)return;
+  const c=skin();
+  const st=$('skStatus');
+  if(st){
+    if(!c)st.innerHTML='적용된 팩이 없어요. 팩을 불러오거나 예시 팩을 써 보세요.';
+    else st.innerHTML=(c.on?'적용 중: ':'꺼 둠: ')+'<b>'+escHTML(c.pack.name)+'</b>'+(c.pack.author?' · '+escHTML(c.pack.author):'')
+      +' <span style="opacity:.75">(템플릿 '+Object.keys(c.pack.templates||{}).length+'개 · 이미지 '+Object.keys(c.pack.assets||{}).length+'개)</span>';
+  }
+  const on=$('skOn');const isOn=c?!!c.on:panelOpen;
+  if(on)on.checked=isOn;
+  const panel=$('skPanel');if(panel)panel.classList.toggle('open',isOn);
+  const ex=$('skExport');if(ex)ex.disabled=!c;
+  ['skExport','skClear'].forEach(id=>{const b=$(id);if(b)b.disabled=!c;});
+  fillEditor(false);
+}
+
+function buildSection(){
+  const body=document.querySelector('#panel-export .tool-panel-body');
+  if(!body||$('skSection'))return;
+  section=document.createElement('div');
+  section.className='flat-tool-section';section.id='skSection';
+  section.innerHTML=
+    '<div class="flat-tool-title"><strong>사용자 지정</strong></div>'
+   +'<div class="flat-tool-body">'
+   +'<div class="field" style="margin-bottom:0"><div class="toggle">'
+   +'<div class="t-lb">사용자 지정<span class="bgv-beta-badge">BETA</span></div>'
+   +'<label class="sw"><input id="skOn" type="checkbox"><span class="track"></span></label>'
+   +'</div></div>'
+   +'<div class="acc-panel" id="skPanel"><div class="acc-inner">'
+   +'<div class="sk-status" id="skStatus"></div>'
+   +'<div class="sk-row">'
+   +'<label class="btn sm" style="cursor:pointer">↑ 팩 불러오기<input id="skFile" type="file" accept="application/json,.json" hidden></label>'
+   +'<button class="btn sm" id="skExport" type="button">↓ 팩 내보내기</button>'
+   +'<button class="btn sm" id="skClear" type="button">팩 지우기</button>'
+   +'</div>'
+   +'<div class="sk-row">'
+   +'<button class="btn sm" id="skExample" type="button">예시 팩 (편지지)</button>'
+   +'<button class="btn sm" id="skGuideCopy" type="button">📋 AI 가이드라인</button>'
+   +'</div>'
+   +'<label class="sk-check"><input type="checkbox" id="skApplySettings" checked> 불러올 때 팩에 든 색·레이아웃 설정도 적용</label>'
+   +'<label class="sk-check"><input type="checkbox" id="skExportSettings"> 내보낼 때 지금 색·레이아웃 설정을 함께 담기</label>'
+   +'<details id="skEditor"><summary>팩 편집 (JSON)</summary>'
+   +'<textarea id="skJson" spellcheck="false" style="min-height:260px" placeholder="AI가 만든 팩 JSON을 통째로 붙여넣거나, 지금 팩을 고친 뒤 [적용]을 누르세요"></textarea>'
+   +'<div class="field-help">· AI 답변을 설명까지 통째로 붙여도 코드 블럭만 골라내요.<br>· 이미지는 “(이미지 12KB — 그대로 두면 유지)”처럼 줄여서 보여 줘요. 그대로 두면 원래 이미지가 유지되고, 새 data 주소를 넣으면 바뀌어요. 줄을 지우면 그 이미지도 빠져요.<br>· settings(색·레이아웃)는 내용이 바뀌었을 때만, 위 체크가 켜져 있으면 다시 적용돼요.</div>'
+   +'<div class="sk-row"><button class="btn sm primary" id="skJsonApply" type="button">✓ 적용</button><button class="btn sm" id="skJsonReset" type="button">되돌리기</button></div>'
+   +'</details>'
+   +'<div class="sk-report" id="skReport"></div>'
+   +'</div></div>'
+   +'</div>';
+  body.appendChild(section);
+
+  $('skOn').addEventListener('change',e=>{
+    const v=!!e.target.checked;panelOpen=v;
+    const c=skin();
+    if(c){c.on=v;renderPreview();try{scheduleAutosave();}catch(_){}}
+    syncUI();
+  });
+  $('skFile').addEventListener('change',e=>{
+    const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+    const r=new FileReader();r.onload=()=>installPack(String(r.result||''),{applySettings:$('skApplySettings').checked});r.readAsText(f);
+  });
+  $('skExport').addEventListener('click',()=>{const p=currentPackForExport($('skExportSettings').checked);download(safeName(p.name)+'.moko-skin.json',JSON.stringify(p,null,2));});
+  $('skClear').addEventListener('click',()=>{
+    const c=skin();
+    if(!c){note('지울 팩이 없어요');return;}
+    if(!confirm('팩을 지우고 색·레이아웃을 기본으로 되돌릴까요?\n(배경색·글자색 등 색은 전부 기본값으로 돌아가요)'))return;
+    clearToDefault(c);
+  });
+  $('skGuideCopy').addEventListener('click',async()=>{const ok=await copyText(guideText());note(ok?'AI 가이드라인을 복사했어요 — AI 채팅에 붙여넣으세요':'복사하지 못했어요. 브라우저의 클립보드 권한을 확인해 주세요');});
+  $('skExample').addEventListener('click',()=>{const t=$('skExamplePack');if(t)installPack(t.textContent,{applySettings:$('skApplySettings').checked});});
+  $('skJson').addEventListener('input',()=>{editorDirty=true;});
+  $('skJsonReset').addEventListener('click',()=>{fillEditor(true);const el=$('skReport');if(el)el.innerHTML='';});
+  $('skJsonApply').addEventListener('click',async()=>{
+    let txt=String($('skJson').value||'').trim();
+    const m=txt.match(/```(?:json)?\s*([\s\S]*?)```/);if(m)txt=m[1].trim();   /* AI 답변을 통째로 붙여도 코드 블럭만 꺼낸다 */
+    if(!txt){note('편집 칸이 비어 있어요');return;}
+    let data;
+    try{data=JSON.parse(txt);}
+    catch(e){const r=newReport();r.err.push('JSON 문법이 잘못됐어요: '+e.message);showReport(r);return;}
+    const c=skin();
+    /* 줄여 보여 준 이미지 표시는 원래 data 주소로 되돌린다 */
+    if(data&&data.assets&&typeof data.assets==='object'){
+      Object.keys(data.assets).forEach(k=>{
+        const v=String(data.assets[k]||'');
+        if(v.endsWith(KEEP_MARK)||(!/^(?:data:|https?:)/i.test(v)&&c&&c.pack.assets&&c.pack.assets[k])){
+          if(c&&c.pack.assets&&c.pack.assets[k])data.assets[k]=c.pack.assets[k];else delete data.assets[k];
+        }
+      });
+    }
+    const prevSettings=c&&c.pack.settings?JSON.stringify(c.pack.settings):'';
+    const changedSettings=!!(data&&data.settings)&&JSON.stringify(data.settings)!==prevSettings;
+    const ok=await installPack(data,{applySettings:changedSettings&&$('skApplySettings').checked});
+    if(ok)fillEditor(true);
+  });
+  syncUI();
+}
+function guideText(){const t=$('skGuideText');return t?t.textContent.replace(/^\s+/,''):'';}
+
+window.mokoCustomSkin={install:installPack,normalize:p=>{const r=newReport();return {pack:normalizePack(p,r),report:r};},scopeCSS:(c,a)=>scopeCSS(c,a||{},null),guide:guideText,refresh:()=>{try{renderPreview();}catch(_){}}};
+
+function init(){
+  try{buildSection();}catch(e){console.warn('custom skin ui failed',e);}
+  try{afterRender();}catch(_){}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
 </body>
 </html>
