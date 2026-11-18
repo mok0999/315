@@ -1571,7 +1571,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 <span class="fmt-grp" data-lb="인용구"><span class="fmt-pair"><button class="qt" onclick="wrapFmt('%%')" title="인용구"><svg aria-hidden="true" viewBox="0 0 18 16" width="18" height="16" fill="none"><line x1="3" y1="2" x2="3" y2="14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><line x1="7" y1="5" x2="15" y2="5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><line x1="7" y1="10" x2="13" y2="10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
 <span class="swatch fmt-swatch" style="background:#8A8F98" title="인용구 선 색 선택"><input id="quoteColor" class="color-proxy" oninput="setQuoteColor(this.value)" type="text" value="#8A8F98" readonly inputmode="none" aria-label="인용구 선 색 선택"/></span></span></span>
 <span class="fmt-grp" data-lb="형광펜"><span class="fmt-pair"><button class="hl" onclick="wrapFmt('==')" title="형광펜">✎</button>
-<span class="swatch fmt-swatch" style="background:#E4E4E6" title="형광펜 색 선택"><input id="highlightColor" class="color-proxy" oninput="setHighlightColor(this.value)" type="text" value="#E4E4E6" readonly inputmode="none" aria-label="형광펜 색 선택"/></span></span></span>
+<span class="swatch fmt-swatch" style="background:#E4E4E6" title="형광펜 색 선택"><input id="highlightColor" class="color-proxy" oninput="setHighlightColor(this.value)" type="text" value="#E4E4E6" readonly inputmode="none" aria-label="형광펜 색 선택"/></span>
+<span class="fmt-swatch hl-kind-swatch" id="hlKindBtn" role="button" tabindex="0" onclick="toggleHlMenu(event)" title="형광펜 모양 고르기" aria-label="형광펜 모양 고르기"></span></span></span>
 <span class="fmt-grp fmt-grp-dquote" data-lb="&quot;&quot; 안 색"><span class="fmt-pair"><button class="paren-fmt-btn" id="quoteFmtBtn" onclick="toggleQuoteQuick()" title="따옴표 안 글자 자동 색칠 켜기/끄기">&quot;&quot;</button>
 <span class="swatch fmt-swatch quote-color-swatch" style="background:#5B7FA8" title="따옴표 안 글자 색 선택"><input id="dquoteColor" class="color-proxy" oninput="setDQuoteColor(this.value)" type="text" value="#5B7FA8" readonly inputmode="none" aria-label="따옴표 안 글자 색 선택"/></span></span></span>
 <span class="fmt-grp" data-lb="( ) 안 색"><span class="fmt-pair"><button class="paren-fmt-btn" id="parenFmtBtn" onclick="toggleParenQuick()" title="괄호 ( ) 안 글자 자동 색칠 켜기/끄기">( )</button>
@@ -3966,6 +3967,50 @@ function delMsg(id){ if(composerEditId===id) cancelComposerEdit(); state.message
 
 /* ================= inline editing ================= */
 let editingId=null;
+/* ================================================================
+   형광펜 모양 (전체 칠 / 반만 / 아래만 + 둥근 끝)
+   · 마크업: ==[#RRGGBB~half~round]글자==  (모양 표시는 색 괄호 안 ~뒤에 붙는다)
+     ~half(반만) ~under(아래만) ~round(둥근 끝). 아무것도 없으면 예전과 같은 전체 칠.
+   · 화면: <mark class="hl-half hl-round" style="background:#hex;--hl:#hex">
+     모양은 CSS 클래스가 그리고, 색은 --hl 변수로 넘긴다.
+   ================================================================ */
+const __HL_KIND_RE='(?:~(?:half|under|round))*';
+function __hlNormKind(raw){
+  const t=String(raw||'').toLowerCase();
+  const shape=/~under\b/.test(t)?'under':(/~half\b/.test(t)?'half':'');
+  return (shape?'~'+shape:'')+(/~round\b/.test(t)?'~round':'');
+}
+function __hlClassOf(kind){
+  kind=__hlNormKind(kind);const c=[];
+  if(/~half/.test(kind))c.push('hl-half');
+  if(/~under/.test(kind))c.push('hl-under');
+  if(/~round/.test(kind))c.push('hl-round');
+  return c.join(' ');
+}
+function __hlMarkOpen(hex,kind){
+  const col=hex?('#'+String(hex).replace('#','').toUpperCase()):(state.colors.highlight||'#E4E4E6');
+  const cls=__hlClassOf(kind);
+  return '<mark'+(cls?' class="'+cls+'"':'')+' style="background:'+col+';--hl:'+col+';color:inherit;padding:0 2px;border-radius:0">';
+}
+function __hlKindOfEl(el){
+  if(!el||!el.classList)return '';
+  return (el.classList.contains('hl-under')?'~under':(el.classList.contains('hl-half')?'~half':''))+(el.classList.contains('hl-round')?'~round':'');
+}
+function __hlSyncVar(el){
+  if(!el||!el.style)return;
+  const bg=el.style.backgroundColor||'';
+  if(bg&&el.style.getPropertyValue('--hl')!==bg)el.style.setProperty('--hl',bg);
+}
+function __hlSetKind(el,kind){
+  if(!el||!el.classList)return;
+  el.classList.remove('hl-half','hl-under','hl-round');
+  const cls=__hlClassOf(kind);if(cls)cls.split(' ').forEach(c=>el.classList.add(c));
+  if(!el.getAttribute('class'))el.removeAttribute('class');
+  __hlSyncVar(el);
+}
+/* 지금 고른 모양 — 형광펜 버튼을 누르면 이 모양으로 칠한다 */
+window.__hlCurrent=(function(){try{const v=JSON.parse(localStorage.getItem('moko.hlKind')||'null');if(v&&typeof v==='object')return {shape:['full','half','under'].includes(v.shape)?v.shape:'full',round:!!v.round};}catch(_){}return {shape:'full',round:false};})();
+function __hlCurrentKind(){const c=window.__hlCurrent||{};return (c.shape==='half'?'~half':c.shape==='under'?'~under':'')+(c.round?'~round':'');}
 function rgbToHex(c){
   c=(c||'').trim();
   if(c.startsWith('#')){ return c.length===7?c.toUpperCase():null; }
@@ -4014,7 +4059,9 @@ function htmlToMarkup(node){
     }
     if(tag==='mark'||/background(-color)?:\s*(?!transparent|none)[^;]+/.test(style)){
       const hhex=rgbToHex((ch.style&&(ch.style.backgroundColor||ch.style.background))||'');
-      out+=hhex?('==[#'+hhex.slice(1)+']'+inner+'=='):('=='+inner+'==');
+      const hk=__hlKindOfEl(ch);
+      if(hk&&!hhex) out+='==[#'+String(state.colors.highlight||'#E4E4E6').replace('#','').toUpperCase()+hk+']'+inner+'==';
+      else out+=hhex?('==[#'+hhex.slice(1)+hk+']'+inner+'=='):('=='+inner+'==');
       return;
     }
     let hex=null;
@@ -4170,7 +4217,7 @@ function normalizeTintMarkup(s){
     normalized+=s.slice(pos,start);
 
     let bodyStart=start+2;
-    const colorPrefix=s.slice(bodyStart).match(/^\[#[0-9A-Fa-f]{6}\]/);
+    const colorPrefix=s.slice(bodyStart).match(/^\[#[0-9A-Fa-f]{6}(?:~(?:half|under|round))*\]/);
     const prefix=colorPrefix?colorPrefix[0]:'[#'+hl+']';
     if(colorPrefix) bodyStart+=colorPrefix[0].length;
 
@@ -4221,7 +4268,7 @@ function fmtText(raw,edit){
   t=t.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<i>$1</i>');
   t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
   t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
-  t=t.replace(/==(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)==/g,(w,hhex,body)=>`<mark style="background:${hhex?('#'+hhex.toUpperCase()):state.colors.highlight};color:inherit;padding:0 2px;border-radius:0">${body}</mark>`);
+  t=t.replace(/==(?:\[#([0-9A-Fa-f]{6})((?:~(?:half|under|round))*)\])?([\s\S]+?)==/g,(w,hhex,hkind,body)=>__hlMarkOpen(hhex,hkind)+body+'</mark>');
   // 인용구: %%[#RRGGBB]텍스트%% → 인용 블럭. 색이 저장돼 있으면 그 색, 없으면 전역 인용구 색
   t=t.replace(/%%(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)%%/g,(w,qhex,body)=>`<span class="quote-fmt" style="border-left:3.5px solid ${qhex?('#'+qhex.toUpperCase()):(state.colors.quote||'#8A8F98')}">${body}</span>`);
   // partial text color: [#RRGGBB]text[/]
@@ -5085,7 +5132,7 @@ function wrapRichSelection(tag,styleText,className,dataAttrs){
 }
 wrapFmt=function(mark){
   if(mark==='%%'){wrapRichSelection('span','border-left:3.5px solid '+(state.colors.quote||'#8A8F98')+';display:block;padding:4px 0 4px 17px','quote-fmt');return;}
-  const spec={'**':['strong',''],'*':['em',''],'~~':['s',''],'++':['u',''],'==':['mark','background:'+state.colors.highlight+';color:inherit;padding:0 2px;border-radius:0']};
+  const spec={'**':['strong',''],'*':['em',''],'~~':['s',''],'++':['u',''],'==':['mark','background:'+state.colors.highlight+';--hl:'+state.colors.highlight+';color:inherit;padding:0 2px;border-radius:0']};
   const [tag,style]=spec[mark]||spec['**'];wrapRichSelection(tag,style);
 };
 wrapColor=function(){wrapRichSelection('span','color:'+state.colors.partial);};
@@ -6907,6 +6954,7 @@ else setTimeout(__idleLoadRenderer,1200);
     else if(type==='highlight'){
       el=document.createElement('mark');
       el.style.background=options.color;el.style.color='inherit';el.style.padding='0 2px';el.style.borderRadius='0';
+      __hlSetKind(el,options.hlKind!=null?options.hlKind:__hlCurrentKind());
     }else if(type==='quote'){
       el=document.createElement('span');
       el.className='quote-fmt';
@@ -7020,17 +7068,19 @@ else setTimeout(__idleLoadRenderer,1200);
     const found=ensureEditorSelection(root),range=found.sel.getRangeAt(0);
     const active=commonFormat(range,root,type);
     if(active){
-      if(elementTint(active,type)===color){
+      /* 형광펜: 같은 색·같은 모양이면 지우고, 모양만 다르면 모양을 바꾼다 */
+      const sameKind=type!=='highlight'||__hlKindOfEl(active)===__hlCurrentKind();
+      if(elementTint(active,type)===color&&sameKind){
         transformKeepingSelection(root,()=>unwrapElement(active));
       }else{
-        if(type==='highlight') active.style.background=color;
+        if(type==='highlight'){active.style.background=color;__hlSetKind(active,__hlCurrentKind());}
         else active.style.borderLeftColor=color;
       }
       root.focus();return;
     }
     const hits=range.collapsed?[]:intersectingFormats(range,root,type);
     if(hits.length){
-      const allSame=hits.every(el=>elementTint(el,type)===color);
+      const allSame=hits.every(el=>elementTint(el,type)===color&&(type!=='highlight'||__hlKindOfEl(el)===__hlCurrentKind()));
       transformKeepingSelection(root,()=>hits.forEach(unwrapElement));
       if(allSame){root.focus();return;}
     }
@@ -11998,8 +12048,8 @@ window.fmtText=function(raw,edit){
   t=t.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<i>$1</i>');
   t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
   t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
-  t=t.replace(/==(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)==/g,(w,hhex,body)=>
-    `<mark style="background:${hhex?('#'+hhex.toUpperCase()):state.colors.highlight};color:inherit;padding:0 2px;border-radius:0">${body}</mark>`);
+  t=t.replace(/==(?:\[#([0-9A-Fa-f]{6})((?:~(?:half|under|round))*)\])?([\s\S]+?)==/g,(w,hhex,hkind,body)=>
+    __hlMarkOpen(hhex,hkind)+body+'</mark>');
   t=t.replace(/%%(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)%%/g,(w,qhex,body)=>
     `<span class="quote-fmt" style="border-left:3.5px solid ${qhex?('#'+qhex.toUpperCase()):(state.colors.quote||'#8A8F98')}">${body}</span>`);
   /* 직접 지정한 글자 색 → 자리표시자로 보호 */
@@ -12198,7 +12248,7 @@ window.commitComposerEdit=function(){
    서식 기호(**, ==[#hex], %%, [#hex]…[/] 등)는 건드리지 않고
    실제 글자 부분에만 적용한다.
    ================================================================ */
-const MARK_TOKEN=/(\*\*|~~|\+\+|==\[#[0-9A-Fa-f]{6}\]|==|%%\[#[0-9A-Fa-f]{6}\]|%%|\[#[0-9A-Fa-f]{6}\]|\[\/\]|\[##\]|\[\/##\]|\[#\]|\[\/#\]|\*)/g;
+const MARK_TOKEN=/(\*\*|~~|\+\+|==\[#[0-9A-Fa-f]{6}(?:~(?:half|under|round))*\]|==|%%\[#[0-9A-Fa-f]{6}\]|%%|\[#[0-9A-Fa-f]{6}\]|\[\/\]|\[##\]|\[\/##\]|\[#\]|\[\/#\]|\*)/g;
 let frUndo=null;
 
 function frExpand(tpl,match,groups){
@@ -12441,7 +12491,7 @@ stitchConsecutiveRowQuotes();
 'use strict';
 
 /* 서식 마크업 토큰 (긴 것부터 — [#RRGGBB] 가 [#] 보다 먼저 와야 한다) */
-const FMT_TOKEN=/%%\[#[0-9A-Fa-f]{6}\]|==\[#[0-9A-Fa-f]{6}\]|\[#[0-9A-Fa-f]{6}\]|\[\/##\]|\[##\]|\[\/#\]|\[#\]|\[\/\]|%%|==|\*\*|~~|\+\+|\*/g;
+const FMT_TOKEN=/%%\[#[0-9A-Fa-f]{6}\]|==\[#[0-9A-Fa-f]{6}(?:~(?:half|under|round))*\]|\[#[0-9A-Fa-f]{6}\]|\[\/##\]|\[##\]|\[\/#\]|\[#\]|\[\/\]|%%|==|\*\*|~~|\+\+|\*/g;
 const NAME_RE=/^\s*\[?([^\[\]｜|]{1,40})[｜|]\s*([\s\S]*)$/;
 const QUOTE_CH=/["“”「」]/;
 
@@ -12918,8 +12968,8 @@ window.fmtText=function(raw,edit){
   t=t.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g,'<i>$1</i>');
   t=t.replace(/~~([^~]+)~~/g,'<s>$1</s>');
   t=t.replace(/\+\+([^+]+)\+\+/g,'<u>$1</u>');
-  t=t.replace(/==(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)==/g,(w,hhex,body)=>
-    '<mark style="background:'+(hhex?('#'+hhex.toUpperCase()):state.colors.highlight)+';color:inherit;padding:0 2px;border-radius:0">'+body+'</mark>');
+  t=t.replace(/==(?:\[#([0-9A-Fa-f]{6})((?:~(?:half|under|round))*)\])?([\s\S]+?)==/g,(w,hhex,hkind,body)=>
+    __hlMarkOpen(hhex,hkind)+body+'</mark>');
   t=t.replace(/%%(?:\[#([0-9A-Fa-f]{6})\])?([\s\S]+?)%%/g,(w,qhex,body)=>
     '<span class="quote-fmt" style="border-left:3.5px solid '+(qhex?('#'+qhex.toUpperCase()):(state.colors.quote||'#8A8F98'))+'">'+body+'</span>');
   /* 직접 지정한 글자 색은 자리표시자 없이 그대로 둔다 —
@@ -13429,7 +13479,7 @@ const FMT_RULES=[
   [/\[##\]([\s\S]*?)\[\/##\]/g,'$1'],                       /* 큰 제목 */
   [/\[#\]([\s\S]*?)\[\/#\]/g,'$1'],                         /* 제목 */
   [/\[#[0-9A-Fa-f]{6}\]([\s\S]*?)\[\/\]/g,'$1'],            /* 부분 글자색 */
-  [/==(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)==/g,'$1'],         /* 형광펜 */
+  [/==(?:\[#[0-9A-Fa-f]{6}(?:~(?:half|under|round))*\])?([\s\S]+?)==/g,'$1'],         /* 형광펜 */
   [/%%(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)%%/g,'$1'],         /* 인용구 */
   [/\*\*([^*]+)\*\*/g,'$1'],                                /* 굵게 */
   [/(?<!\*)\*([^*]+)\*(?!\*)/g,'$1'],                       /* 기울임 */
@@ -14609,6 +14659,7 @@ const KIND={
   highlight:{name:'형광펜',sel:'mark',make:()=>{
     const e=document.createElement('mark');
     e.style.background=(state.colors&&state.colors.highlight)||'#E4E4E6';
+    __hlSetKind(e,__hlCurrentKind());
     return e;
   }},
   quote:{name:'인용구',sel:'.quote-fmt',make:()=>{
@@ -14711,7 +14762,7 @@ const STRIP_RULES=[
   [/\[##\]([\s\S]*?)\[\/##\]/g,'$1'],
   [/\[#\]([\s\S]*?)\[\/#\]/g,'$1'],
   [/\[#[0-9A-Fa-f]{6}\]([\s\S]*?)\[\/\]/g,'$1'],
-  [/==(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)==/g,'$1'],
+  [/==(?:\[#[0-9A-Fa-f]{6}(?:~(?:half|under|round))*\])?([\s\S]+?)==/g,'$1'],
   [/%%(?:\[#[0-9A-Fa-f]{6}\])?([\s\S]+?)%%/g,'$1'],
   [/\*\*([^*]+)\*\*/g,'$1'],
   [/(?<!\*)\*([^*]+)\*(?!\*)/g,'$1'],
@@ -15182,7 +15233,7 @@ try{ if(document.fonts&&document.fonts.ready) document.fonts.ready.then(function
    서식 기호(**, ==[#hex], [#hex]…[/] 등)는 건드리지 않고 글자에만 적용한다.
    (기존 찾기·바꾸기와 같은 원리로 기호 사이 조각만 골라 바꾼다)
    ===================================================================== */
-const FR_MARK_TOKEN=/(\*\*|~~|\+\+|==\[#[0-9A-Fa-f]{6}\]|==|%%\[#[0-9A-Fa-f]{6}\]|%%|\[#[0-9A-Fa-f]{6}\]|\[\/\]|\[##\]|\[\/##\]|\[#\]|\[\/#\]|\*)/g;
+const FR_MARK_TOKEN=/(\*\*|~~|\+\+|==\[#[0-9A-Fa-f]{6}(?:~(?:half|under|round))*\]|==|%%\[#[0-9A-Fa-f]{6}\]|%%|\[#[0-9A-Fa-f]{6}\]|\[\/\]|\[##\]|\[\/##\]|\[#\]|\[\/#\]|\*)/g;
 const FR_PRESET_KEY='moko.fr.presets.v2';
 const FR_PRESET_OPEN_KEY='moko.fr.presets.open.v1';
 const FR_PRESET_RAW_KEY='moko.fr.presets.raw.v1';
@@ -22035,6 +22086,7 @@ function applyToSelection(kind,color){
   const el=document.createElement(kind==='highlight'?'mark':'span');
   if(kind==='highlight'){
     el.style.background=color; el.style.color='inherit'; el.style.padding='0 2px'; el.style.borderRadius='0';
+    __hlSetKind(el,__hlCurrentKind());
   }else el.style.color=color;
   try{
     el.appendChild(range.extractContents());
@@ -23891,12 +23943,16 @@ sync();
   let textSizeRaf=0;
   function queueTextSize(){if(!textSizeRaf)textSizeRaf=requestAnimationFrame(()=>{textSizeRaf=0;positionMobileTextSize();});}
   const previousType=window.setMsgType;
-  window.setMsgType=function(){const result=previousType.apply(this,arguments);queueTextSize();setTimeout(queueTextSize,50);return result;};
+  let __hbeRestoring=false,__hbeLastType='chat';
+  window.setMsgType=function(){
+    if(!__hbeRestoring){__hbeLastType=arguments[0]||__hbeLastType;try{if(modal&&modal.classList.contains('show')){__hbeRestoring=true;close();__hbeRestoring=false;}}catch(_){__hbeRestoring=false;}}
+    const result=previousType.apply(this,arguments);queueTextSize();setTimeout(queueTextSize,50);return result;};
   window.addEventListener('resize',queueTextSize,{passive:true});
   document.addEventListener('click',queueTextSize,true);
   setTimeout(queueTextSize,350);
   const button=document.createElement('button');
   button.type='button';button.textContent='HTML';button.title='HTML·CSS·JavaScript 블록';
+  button.id='htmlTypeBtn';
   button.onclick=()=>window.openHtmlBlockEditor(null);
   document.getElementById('msgTypeSeg').appendChild(button);
   const modal=document.createElement('div');modal.id='htmlBlockEditor';
@@ -23948,9 +24004,16 @@ sync();
   window.openHtmlBlockEditor=function(id){
     const m=id?state.messages.find(x=>x.id===id&&x.type==='html'):null;
     editing=m?m.id:null;source.value=m?m.htmlSource||'':defaultSource;
-    modal.classList.add('show');modal.querySelector('#hbeSave').textContent=m?'✓ 수정 완료':'✓ 블록으로 넣기';run();
+    modal.classList.add('show');modal.querySelector('#hbeSave').textContent=m?'✓ 수정 완료':'✓ 블록으로 넣기';
+    try{if(window.__hbeOnOpen)window.__hbeOnOpen(modal,!!m);}catch(e){console.warn(e);}
+    run();
   };
-  function close(){clearTimeout(runTimer);modal.classList.remove('show');frame.removeAttribute('srcdoc');editing=null;}
+  function close(){
+    clearTimeout(runTimer);modal.classList.remove('show');frame.removeAttribute('srcdoc');editing=null;
+    try{if(window.__hbeOnClose)window.__hbeOnClose(modal);}catch(e){console.warn(e);}
+    /* HTML 칸을 닫으면 종류 버튼을 직전 종류로 되돌린다 (다른 종류를 눌러 닫힌 경우는 그쪽에서 처리) */
+    if(!__hbeRestoring){__hbeRestoring=true;try{previousType.call(window,__hbeLastType);}catch(_){}__hbeRestoring=false;}
+  }
   modal.querySelector('#hbeCancel').onclick=close;
   modal.addEventListener('click',e=>{if(e.target===modal)close();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('show'))close();});
@@ -24015,9 +24078,12 @@ sync();
       const m=editing?state.messages.find(x=>x.id===editing):null;
       if(m)Object.assign(m,{htmlSource:code,htmlStill:still,htmlWidth:w,htmlHeight:h});
       else state.messages.push({id:uid(),type:'html',htmlSource:code,htmlStill:still,htmlWidth:w,htmlHeight:h});
-      close();renderPreview();
+      /* 입력칸 안에서 새 블록을 넣었으면 칸을 비우고 계속 쓸 수 있게 열어 둔다. 수정이었으면 닫는다 */
+      if(!m&&modal.classList.contains('hbe-inline')){source.value='';run();try{window.__hbeSetTab&&window.__hbeSetTab('code');}catch(_){}}
+      else close();
+      renderPreview();
     }catch(err){console.error('HTML block capture failed',err);alert('HTML 첫 화면을 만들지 못했어요. 코드를 확인해 주세요.');}
-    finally{saving=false;btn.disabled=false;btn.textContent='✓ 블록으로 넣기';}
+    finally{saving=false;btn.disabled=false;btn.textContent=editing?'✓ 수정 완료':'✓ 블록으로 넣기';}
   };
 })();
 </script>
@@ -26978,6 +27044,444 @@ function syncUI(){
 
 buildSection();
 safe(afterRender);
+})();
+</script>
+
+
+<style id="highlight-shape-style">
+/* 형광펜 모양 — 색은 --hl 로 받는다 (없으면 기본 형광펜 색) */
+mark.hl-half{background:linear-gradient(to bottom,transparent 52%,var(--hl,#E4E4E6) 52%)!important}
+mark.hl-under{background:linear-gradient(to bottom,transparent 74%,var(--hl,#E4E4E6) 74%)!important}
+mark.hl-round{border-radius:.42em!important;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.fmt-pair>.fmt-swatch.hl-kind-swatch{background:#8A8F98;cursor:pointer}
+.hl-kind-menu .bk-demo.hl{background:none;color:#424448;font-weight:700;font-size:9px;line-height:12px;width:28px;padding:0 1px;box-sizing:border-box}
+.hl-kind-menu .bk-demo.hl.full{background:var(--hl-demo,#FFE36E)}
+.hl-kind-menu .bk-demo.hl.half{background:linear-gradient(to bottom,transparent 52%,var(--hl-demo,#FFE36E) 52%)}
+.hl-kind-menu .bk-demo.hl.under{background:linear-gradient(to bottom,transparent 74%,var(--hl-demo,#FFE36E) 74%)}
+.hl-kind-menu .bk-demo.hl.round{border-radius:6px}
+.hl-kind-menu .bk-demo.hl.hl-chip{background:var(--hl-demo,#FFE36E);border-radius:50%;width:12px;height:12px;margin:0 8px;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+.hl-kind-menu .hl-sep{height:1px;background:var(--line,#E4E4E6);margin:4px 2px}
+.hl-kind-menu button .hl-check{margin-left:auto;padding-left:10px;font-size:11px;opacity:0}
+.hl-kind-menu button.on .hl-check{opacity:1}
+</style>
+<script id="highlight-shape-script">
+(function(){
+'use strict';
+const SHAPES={full:'전체 칠',half:'반만',under:'아래만'};
+function save(){try{localStorage.setItem('moko.hlKind',JSON.stringify(window.__hlCurrent));}catch(_){}}
+function cur(){return window.__hlCurrent||(window.__hlCurrent={shape:'full',round:false});}
+
+/* 형광펜 색을 바꾸는 경로가 여러 곳이라, 모양이 쓰는 --hl 색은 바뀔 때마다 자동으로 맞춘다 */
+try{
+  new MutationObserver(list=>{
+    for(const m of list){
+      const el=m.target;
+      if(el&&el.tagName==='MARK'&&el.classList&&(el.classList.contains('hl-half')||el.classList.contains('hl-under')))__hlSyncVar(el);
+    }
+  }).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['style','class']});
+}catch(_){}
+
+function editRoot(){
+  const sel=window.getSelection&&window.getSelection();
+  if(!sel||!sel.rangeCount)return null;
+  let n=sel.getRangeAt(0).commonAncestorContainer;
+  if(n&&n.nodeType===3)n=n.parentElement;
+  return n&&n.closest?n.closest('#msgContent, .editable.editing'):null;
+}
+function marksInSelection(root){
+  const sel=window.getSelection();if(!sel||!sel.rangeCount)return [];
+  const r=sel.getRangeAt(0);
+  let n=r.startContainer;if(n&&n.nodeType===3)n=n.parentElement;
+  const own=n&&n.closest?n.closest('mark'):null;
+  const out=new Set();
+  if(own&&root.contains(own))out.add(own);
+  if(!r.collapsed)root.querySelectorAll('mark').forEach(m=>{try{if(r.intersectsNode(m))out.add(m);}catch(_){}});
+  return [...out];
+}
+function touched(root){
+  try{root.dispatchEvent(new Event('input',{bubbles:true}));}catch(_){}
+}
+/* 고른 모양을 지금 선택한 형광펜에 바로 입힌다. 선택한 글자에 형광펜이 없으면 새로 칠한다 */
+function applyToSelection(allowWrap){
+  let root=editRoot();
+  /* 모바일은 메뉴를 누르는 사이 선택이 풀리기도 한다 — 기억해 둔 선택을 되살려 본다 */
+  if(!root&&typeof window.__restoreComposerSelection==='function'){try{window.__restoreComposerSelection();}catch(_){}root=editRoot();}
+  if(!root)return;
+  const marks=marksInSelection(root);
+  if(marks.length){
+    const k=__hlCurrentKind();
+    marks.forEach(m=>__hlSetKind(m,k));
+    touched(root);
+  }else if(allowWrap){
+    const sel=window.getSelection();
+    if(!sel||!sel.rangeCount||sel.getRangeAt(0).collapsed)return;
+    if(root.id==='msgContent'){try{window.wrapFmt('==');}catch(e){console.error(e);}}
+    else{try{window.fmtSel({preventDefault(){}},'hilite');}catch(e){console.error(e);}}
+    touched(root);
+  }
+  if(root.classList&&root.classList.contains('editing'))return; /* 바로 고치는 중이면 끝낼 때 다시 그린다 */
+  try{if(typeof window.renderPreview==='function')window.renderPreview();}catch(_){}
+}
+
+function syncMenu(){
+  const m=document.getElementById('hlKindMenu');if(!m)return;
+  const c=cur();
+  m.style.setProperty('--hl-demo',(state.colors&&state.colors.highlight)||'#FFE36E');
+  m.querySelectorAll('button[data-shape]').forEach(b=>b.classList.toggle('on',b.dataset.shape===c.shape));
+  const r=m.querySelector('button[data-round]');if(r)r.classList.toggle('on',!!c.round);
+  m.querySelectorAll('.bk-demo.hl').forEach(d=>d.classList.toggle('round',!!c.round));
+  const b=document.getElementById('hlKindBtn');
+  if(b)b.title='형광펜 모양: '+SHAPES[c.shape]+(c.round?' · 둥근 끝':'')+' — 눌러서 바꾸기';
+}
+function menuEl(){
+  let m=document.getElementById('hlKindMenu');
+  if(m)return m;
+  m=document.createElement('div');
+  m.id='hlKindMenu';m.className='blur-kind-menu hl-kind-menu';
+  m.innerHTML=
+     '<button type="button" data-shape="full"><span class="bk-demo hl full">가나</span>전체 칠<span class="hl-check">✓</span></button>'
+    +'<button type="button" data-shape="half"><span class="bk-demo hl half">가나</span>반만<span class="hl-check">✓</span></button>'
+    +'<button type="button" data-shape="under"><span class="bk-demo hl under">가나</span>아래만<span class="hl-check">✓</span></button>'
+    +'<div class="hl-sep"></div>'
+    +'<button type="button" data-round="1"><span class="bk-demo hl full round">가나</span>둥근 끝<span class="hl-check">✓</span></button>'
+    +'<div class="hl-sep"></div>'
+    +'<button type="button" data-hlcolor="1"><span class="bk-demo hl hl-chip"></span>색 바꾸기</button>';
+  m.addEventListener('mousedown',e=>e.preventDefault());
+  m.querySelectorAll('button[data-shape]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.preventDefault();e.stopPropagation();
+      cur().shape=btn.dataset.shape;save();syncMenu();closeMenu();
+      applyToSelection(true);
+    });
+  });
+  m.querySelector('button[data-round]').addEventListener('click',e=>{
+    e.preventDefault();e.stopPropagation();
+    cur().round=!cur().round;save();syncMenu();
+    applyToSelection(false);   /* 둥근 끝은 켜고 끄는 것 — 이미 칠한 형광펜에만 반영하고 메뉴는 열어 둔다 */
+  });
+  m.querySelector('button[data-hlcolor]').addEventListener('click',e=>{
+    e.preventDefault();e.stopPropagation();closeMenu();
+    const proxy=document.getElementById('highlightColor');
+    if(proxy)try{proxy.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));}catch(_){proxy.click();}
+  });
+  document.body.appendChild(m);
+  return m;
+}
+function closeMenu(){const m=document.getElementById('hlKindMenu');if(m)m.classList.remove('show');}
+window.closeHlMenu=closeMenu;
+window.toggleHlMenu=function(ev){
+  if(ev){ev.preventDefault();ev.stopPropagation();}
+  try{if(typeof window.closeBlurMenu==='function')window.closeBlurMenu();}catch(_){}
+  const m=menuEl();
+  if(m.classList.contains('show')){closeMenu();return;}
+  syncMenu();
+  m.classList.add('show');
+  const anchor=document.getElementById('hlKindBtn');
+  if(anchor){
+    const box=anchor.closest('.fmt-grp')||anchor;
+    const r=box.getBoundingClientRect(),w=m.offsetWidth||130,h=m.offsetHeight||120;
+    let left=Math.min(Math.max(8,r.left+r.width/2-w/2),window.innerWidth-w-8);
+    let top=r.bottom+4;
+    if(top+h>window.innerHeight-8)top=Math.max(8,r.top-h-4);
+    m.style.left=left+'px';m.style.top=top+'px';
+  }
+};
+document.addEventListener('pointerdown',e=>{
+  const m=document.getElementById('hlKindMenu');
+  if(!m||!m.classList.contains('show'))return;
+  if(m.contains(e.target)||e.target.closest&&e.target.closest('#hlKindBtn'))return;
+  closeMenu();
+},true);
+const kb=document.getElementById('hlKindBtn');
+if(kb){
+  kb.addEventListener('mousedown',e=>e.preventDefault());   /* 선택한 글자가 풀리지 않게 */
+  kb.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')window.toggleHlMenu(e);});
+}
+syncMenu();
+})();
+</script>
+
+
+<style id="composer-toolbar-v2-style">
+/* ================================================================
+   서식 줄 v2 (PC 화면) — 이름표를 없애고 역할별 묶음 + 세로선으로 정리.
+   · 묶음: [B I S U] | [형광펜][글자색][인용구][블러] | ["" ( )] | [지우기]
+   · 버튼마다 ▾ 는 하나. 지금 색은 버튼 아래 색 줄로 보여 준다.
+   · 모바일 독(#mDock)은 따로 맞춰 둔 배치가 있어 건드리지 않는다.
+   ================================================================ */
+.fmt-v2 .fmt-sep{display:none}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2{display:flex!important;flex-wrap:wrap!important;row-gap:2px!important;align-items:center!important;gap:1px!important;padding:4px 5px!important;
+  border:1px solid var(--line,#E4E4E6);border-radius:10px;background:var(--panel-2,#F6F6F8);margin-bottom:8px;box-sizing:border-box}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fmt-grp{display:inline-flex!important;align-items:center!important;gap:0!important;column-gap:0!important;padding:0!important;margin:0!important;flex:0 0 auto!important;position:static}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fmt-grp::before{content:none!important;display:none!important}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fmt-sep{display:block;flex:0 0 1px;width:1px;height:18px;background:var(--line,#DADAE0);margin:0 3px}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fmt-spacer{flex:1 1 0;min-width:0;width:auto;background:none;margin:0}
+/* 보이는 순서 (PC 에서만) */
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2>[data-fo="10"]{order:10}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2>[data-fo="20"]{order:20}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2>[data-fo="30"]{order:30}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2>[data-fo="40"]{order:40}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2>[data-fo="50"]{order:50}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2>[data-fo="60"]{order:60}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2>[data-fo="70"]{order:70}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2>[data-fo="80"]{order:80}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2>[data-fo="90"]{order:90}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2>[data-fo="110"]{order:110}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2>[data-fo="120"]{order:120}
+/* 버튼 공통 */
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 button{width:25px!important;min-width:25px!important;height:28px!important;border:0!important;border-radius:7px!important;background:transparent!important;
+  color:var(--ink,#424448);display:inline-flex;align-items:center;justify-content:center;padding:0!important;margin:0!important;cursor:pointer;box-shadow:none}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 button:hover{background:rgba(0,0,0,.06)!important}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 button.on,
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 button.active,
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 button[aria-pressed="true"]{background:var(--panel,#fff)!important;box-shadow:0 0 0 1px var(--line,#D8D8DE),0 1px 2px rgba(0,0,0,.06)}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 button.paren-fmt-btn.on{background:var(--accent,#424448)!important;color:#fff!important;box-shadow:none!important}
+/* 버튼 + ▾ 한 쌍 */
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fmt-pair{display:inline-flex!important;align-items:center!important;border:0!important;border-radius:7px!important;background:transparent!important;overflow:visible!important;box-shadow:none!important;position:relative}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fmt-pair:hover{background:rgba(0,0,0,.04)!important}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fmt-pair>button{width:24px!important;min-width:24px!important;position:relative}
+/* 지금 색 — 버튼 아래 색 줄 */
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fmt-pair.has-fc>button::after{content:"";position:absolute;left:5px;right:5px;bottom:2px;height:3px;border-radius:2px;background:var(--fc,#8A8F98);box-shadow:0 0 0 .5px rgba(0,0,0,.12)}
+/* ▾ 띠: 전부 같은 중립 모양 */
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fmt-pair>.fmt-swatch{width:11px!important;min-width:11px!important;height:28px!important;align-self:center!important;background:transparent!important;border:0!important;border-radius:5px!important;
+  box-shadow:none!important;position:relative;cursor:pointer;flex:0 0 11px!important}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fmt-pair>.fmt-swatch:hover{background:rgba(0,0,0,.08)!important}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fmt-pair>.fmt-swatch::after{content:"▾"!important;color:var(--muted,#8A8F98)!important;font-size:9px!important;text-shadow:none!important;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+/* 형광펜: 색 고르기는 ▾ 메뉴 안으로 — 색 띠는 자리만 남긴다(색 고르는 창이 이 자리에 뜬다) */
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fg-hl .fmt-pair>.fmt-swatch:not(.hl-kind-swatch){width:0!important;min-width:0!important;flex:0 0 0!important;overflow:hidden!important;pointer-events:none}
+body:not(.mobile-ui) .composer-card .fmt.fmt-v2 .fg-hl .fmt-pair>.fmt-swatch:not(.hl-kind-swatch)::after{content:none!important}
+</style>
+<script id="composer-toolbar-v2-script">
+(function(){
+'use strict';
+const fmt=document.querySelector('.composer-card .fmt')||document.querySelector('#composerTextField .fmt');
+if(!fmt||fmt.classList.contains('fmt-v2'))return;
+fmt.classList.add('fmt-v2');
+const groups=[...fmt.querySelectorAll(':scope > .fmt-grp')];
+const find=sel=>groups.find(g=>g.querySelector(sel));
+const G={
+  text:groups[0],
+  hl:find('button.hl'),
+  color:find('#colorBtn'),
+  quote:find('button.qt'),
+  blur:fmt.querySelector(':scope > .fmt-grp-blur'),
+  dq:find('#quoteFmtBtn'),
+  paren:find('#parenFmtBtn'),
+  clear:fmt.querySelector(':scope > .fmt-grp-clear')
+};
+/* 보이는 순서는 CSS order 로만 바꾼다 (요소 자체는 옮기지 않아 다른 기능의 순서 가정이 그대로다) */
+const ORDER={text:10,hl:30,color:40,quote:50,blur:60,dq:80,paren:90,clear:120};
+Object.keys(G).forEach(k=>{const g=G[k];if(!g)return;g.classList.add('fg-'+k);g.dataset.fo=String(ORDER[k]);});
+const sep=(order,cls)=>{const e=document.createElement('span');e.className=cls||'fmt-sep';e.setAttribute('aria-hidden','true');e.dataset.fo=String(order);fmt.appendChild(e);};
+sep(20);sep(70);
+const sp=document.createElement('span');sp.className='fmt-sep fmt-spacer';sp.setAttribute('aria-hidden','true');sp.dataset.fo='110';fmt.appendChild(sp);
+
+
+/* 색 띠의 색을 버튼 아래 색 줄(--fc)로 옮겨 보여 준다 */
+fmt.querySelectorAll('.fmt-pair').forEach(pair=>{
+  const sw=pair.querySelector('.fmt-swatch:not(.blur-kind-swatch):not(.hl-kind-swatch)');
+  if(!sw)return;
+  pair.classList.add('has-fc');
+  const sync=()=>{const c=sw.style.backgroundColor||sw.style.background||'';if(c)pair.style.setProperty('--fc',c);};
+  sync();
+  try{new MutationObserver(sync).observe(sw,{attributes:true,attributeFilter:['style']});}catch(_){}
+});
+/* 이름표가 없어졌으니 설명은 버튼 말풍선(title)으로 */
+const tip=(sel,t)=>{const e=fmt.querySelector(sel);if(e&&!e.title)e.title=t;};
+tip('button.b','굵게');tip('button.i','기울임');tip('button.s','취소선');tip('button.u','밑줄');
+const T={'#quoteColor':'인용구 선 색','#partialColor':'글자 색 고르기','#dquoteColor':'따옴표 안 글자 색','#parenColor':'괄호 안 글자 색'};
+Object.keys(T).forEach(id=>{const i=fmt.querySelector(id);if(i&&i.parentElement)i.parentElement.title=T[id];});
+})();
+</script>
+
+<style id="composer-toolbar-v2-mobile-style">
+/* ================================================================
+   서식 줄 v2 — 모바일 독. 이름표를 없애고 두 줄로 나눠 버튼을 키운다.
+   1줄(#mPriorityFormatRow): [B I S U] │ ["" ▾] [( ) ▾] │ [지우기]
+   2줄(.fmt):               [형광펜 ▾] [글자색 ▾] [인용구 ▾] [블러 ▾]
+   ================================================================ */
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow{grid-row:2!important;grid-column:1/-1!important;display:flex!important;align-items:stretch!important;justify-content:flex-start!important;gap:6px!important;height:40px!important;min-height:40px!important;max-height:40px!important;padding:0!important;margin:0!important;width:auto!important;overflow:visible!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2{grid-row:3!important;grid-column:1/-1!important;display:flex!important;flex-wrap:nowrap!important;align-items:stretch!important;gap:6px!important;height:40px!important;min-height:40px!important;max-height:40px!important;padding:0!important;margin:0!important;border:0!important;background:none!important;overflow:visible!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-card.divider-mode #mPriorityFormatRow#mPriorityFormatRow,
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-card[data-mobile-composer-type="divider"] #mPriorityFormatRow#mPriorityFormatRow,
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-card[data-mobile-composer-type="image"] #mPriorityFormatRow#mPriorityFormatRow{display:none!important}
+/* 묶음: 이름표 없음 */
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow .fmt-grp,html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2>.fmt-grp{display:flex!important;align-items:stretch!important;gap:3px!important;column-gap:3px!important;padding:0!important;margin:0!important;min-width:0!important;width:auto!important;max-width:none!important;height:40px!important;position:static!important;order:0}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow .fmt-grp::before,html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2>.fmt-grp::before{content:none!important;display:none!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2>.fmt-sep{display:none!important}
+/* 1줄 배분 */
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow>.fg-text{flex:4 1 0!important;order:1!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow>.fmt-grp-dquote{flex:1.45 1 0!important;order:2!important;margin-left:4px!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow>.fg-paren{flex:1.45 1 0!important;order:3!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow>.fmt-grp-clear{flex:1 1 0!important;order:4!important;margin-left:4px!important}
+/* 2줄 배분 + 순서 */
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2>.fmt-grp{flex:1 1 0!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2>.fg-hl{order:1!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2>.fg-color{order:2!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2>.fg-quote{order:3!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2>.fmt-grp-blur{order:4!important}
+/* 버튼 */
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow button,html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2 button{flex:1 1 0!important;width:auto!important;min-width:0!important;max-width:none!important;height:40px!important;min-height:40px!important;margin:0!important;padding:0!important;
+  border:1px solid var(--line,#E0E0E4)!important;border-radius:10px!important;background:var(--panel-2,#F4F4F6)!important;color:var(--ink,#424448)!important;box-shadow:none!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:14px!important;position:relative!important;outline-offset:0}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow button.paren-fmt-btn{font-size:12px!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow button.paren-fmt-btn.on{background:var(--accent,#424448)!important;border-color:var(--accent,#424448)!important;color:#fff!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow button.b{font-weight:800!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow button.i{font-style:italic!important;font-family:Georgia,'Times New Roman',serif!important;font-size:15px!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow button.s{text-decoration:line-through!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow button.u{text-decoration:underline!important;text-underline-offset:2px}
+/* 버튼 + ▾ 한 쌍 */
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow .fmt-pair,html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2 .fmt-pair{flex:1 1 0!important;display:flex!important;align-items:stretch!important;width:auto!important;min-width:0!important;max-width:none!important;height:40px!important;
+  border:1px solid var(--line,#E0E0E4)!important;border-radius:10px!important;background:var(--panel-2,#F4F4F6)!important;overflow:hidden!important;box-shadow:none!important;position:relative!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow .fmt-pair>button,html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2 .fmt-pair>button{border:0!important;border-radius:0!important;background:transparent!important;height:38px!important;min-height:38px!important;flex:1 1 0!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow .fmt-pair>button.paren-fmt-btn.on{background:var(--accent,#424448)!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow .fmt-pair.has-fc>button::after,html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2 .fmt-pair.has-fc>button::after{content:"";position:absolute;left:22%;right:22%;bottom:5px;height:3px;border-radius:2px;background:var(--fc,#8A8F98);box-shadow:0 0 0 .5px rgba(0,0,0,.12)}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow .fmt-pair>button.paren-fmt-btn.on::after{box-shadow:0 0 0 1px rgba(255,255,255,.7)}
+/* ▾ 띠 — 전부 같은 중립 모양, 손가락으로 누르기 쉬운 폭 */
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow .fmt-pair>.fmt-swatch,html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2 .fmt-pair>.fmt-swatch{flex:0 0 26px!important;width:26px!important;min-width:26px!important;max-width:26px!important;height:38px!important;min-height:38px!important;max-height:38px!important;align-self:stretch!important;margin:0!important;top:auto!important;transform:none!important;
+  background:transparent!important;border:0!important;border-left:1px solid var(--line,#E0E0E4)!important;border-radius:0!important;box-shadow:none!important;position:relative!important;cursor:pointer}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow .fmt-pair>.fmt-swatch{flex-basis:20px!important;width:20px!important;min-width:20px!important;max-width:20px!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock #mPriorityFormatRow#mPriorityFormatRow .fmt-pair>.fmt-swatch::after,html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2 .fmt-pair>.fmt-swatch::after{content:"▾"!important;color:var(--muted,#8A8F98)!important;font-size:11px!important;text-shadow:none!important;position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;pointer-events:none;background:none!important}
+/* 형광펜: 색은 ▾ 메뉴 안에서 고른다 */
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2 .fg-hl .fmt-pair>.fmt-swatch:not(.hl-kind-swatch){flex:0 0 0!important;width:0!important;min-width:0!important;max-width:0!important;border:0!important;overflow:hidden!important;pointer-events:none!important}
+html body.mobile-ui.m-tools-open #mDock#mDock#mDock .composer-top-grid>.fmt.fmt-v2 .fg-hl .fmt-pair>.fmt-swatch:not(.hl-kind-swatch)::after{content:none!important}
+/* 모양 메뉴: 손가락으로 누르기 쉽게 */
+body.mobile-ui .blur-kind-menu button{padding:11px 14px 11px 10px!important;font-size:14px!important;gap:10px!important}
+body.mobile-ui .blur-kind-menu{padding:6px!important;border-radius:14px!important}
+</style>
+<script id="composer-toolbar-v2-mobile-script">
+(function(){
+'use strict';
+/* 모바일에서는 글자 모양(B I S U) 묶음을 자동 색·지우기가 있는 줄로 옮겨 한 줄을 이룬다.
+   PC 로 돌아오면 서식 줄 맨 앞으로 되돌린다. (자동 색·지우기를 옮기는 기존 함수 뒤에 실행) */
+/* 묶음은 처음에 잡아 둔다 — 자동 색 줄이 통째로 지워질 때 같이 떨어져 나가도 다시 붙일 수 있게 */
+const TEXT=document.querySelector('.fmt-grp.fg-text');
+const CLEAR=document.querySelector('.fmt-grp-clear');
+function place(){
+  const text=TEXT;
+  const fmt=document.querySelector('.fmt.fmt-v2');
+  if(!text||!fmt)return;
+  const paren=document.getElementById('parenFmtBtn');const pg=paren&&paren.closest('.fmt-grp');if(pg)pg.classList.add('fg-paren');
+  if(document.body.classList.contains('mobile-ui')){
+    const row=document.getElementById('mPriorityFormatRow');
+    if(row&&row.firstElementChild!==text)row.insertBefore(text,row.firstChild);
+  }else{
+    if(text.parentNode!==fmt||fmt.firstElementChild!==text)fmt.insertBefore(text,fmt.firstChild);
+    if(CLEAR&&!CLEAR.isConnected)fmt.appendChild(CLEAR);
+  }
+}
+let q=0;
+function queue(){if(q)return;q=requestAnimationFrame(()=>{requestAnimationFrame(()=>{q=0;try{place();}catch(e){console.warn(e);}});});}
+try{new MutationObserver(queue).observe(document.body,{attributes:true,attributeFilter:['class']});}catch(_){}
+window.addEventListener('resize',queue,{passive:true});
+[120,400,900].forEach(t=>setTimeout(queue,t));
+/* 자동 색 줄이 새로 만들어지거나 다시 붙을 때도 따라간다 */
+const dock=document.getElementById('mDock')||document.body;
+try{new MutationObserver(list=>{for(const m of list){for(const n of m.addedNodes){if(n.nodeType===1&&(n.id==='mPriorityFormatRow'||n.classList&&n.classList.contains('fmt-grp')&&!n.classList.contains('fg-text'))){queue();return;}}}}).observe(dock,{childList:true,subtree:true});}catch(_){}
+})();
+</script>
+
+<style id="html-block-inline-style">
+/* ================================================================
+   HTML 블록 — 따로 뜨는 창 대신 '메시지 작성' 칸 안에서 쓴다 (PC).
+   [코드 | 미리보기] 탭으로 넣기 전에 그 자리에서 확인한다.
+   모바일은 화면이 좁아 전체 화면 창을 유지하되 같은 탭을 쓴다.
+   ================================================================ */
+#htmlBlockEditor .hbe-tabs{display:inline-flex;gap:2px;padding:3px;border-radius:9px;background:var(--panel-2,#F1F1F4);margin-right:auto}
+#htmlBlockEditor .hbe-tabs button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--muted,#8A8F98);padding:5px 12px;border-radius:7px;cursor:pointer}
+#htmlBlockEditor .hbe-tabs button.on{background:var(--panel,#fff);color:var(--ink,#424448);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+#htmlBlockEditor .hbe-head>strong{margin-right:0!important;font-size:12px;order:2;color:var(--muted,#8A8F98)}
+#htmlBlockEditor .hbe-main{grid-template-columns:1fr!important;grid-template-rows:1fr!important}
+#htmlBlockEditor.tab-code .hbe-view{display:none!important}
+#htmlBlockEditor.tab-view .hbe-code{display:none!important}
+#htmlBlockEditor .hbe-code{border:0!important}
+#htmlBlockEditor .hbe-code>b{display:none}
+#htmlBlockEditor .hbe-code textarea{background:#1F2126;color:#E6E7EB;border:0;border-radius:10px;padding:12px 14px;caret-color:#fff;outline:0}
+#htmlBlockEditor .hbe-code textarea::placeholder{color:#7C808A}
+#htmlBlockEditor .hbe-code textarea:focus{box-shadow:0 0 0 2px var(--accent,#424448)}
+/* 입력칸 안에 들어간 모습 */
+#htmlBlockEditor.hbe-inline{position:static!important;inset:auto!important;z-index:auto!important;background:none!important;padding:0!important;display:none}
+#htmlBlockEditor.hbe-inline.show{display:block!important;flex:1 1 auto;min-height:220px}
+#htmlBlockEditor.hbe-inline .hbe-panel{display:grid;grid-template-rows:auto minmax(0,1fr) auto;width:auto;height:100%;border-radius:0;box-shadow:none;background:none;overflow:visible}
+#htmlBlockEditor.hbe-inline .hbe-head{padding:0 0 8px;border:0}
+#htmlBlockEditor.hbe-inline .hbe-main{display:block;min-height:0;height:100%}
+#htmlBlockEditor.hbe-inline .hbe-code{padding:0;display:block;height:100%}
+#htmlBlockEditor.hbe-inline .hbe-code textarea{display:block;height:100%;resize:none}
+#htmlBlockEditor.hbe-inline .hbe-view{padding:0;display:block;height:100%;box-sizing:border-box;border:1px solid var(--line,#E4E4E6);border-radius:10px;overflow:hidden}
+/* HTML 을 쓰는 동안은 작성 칸을 넓힌다 */
+.composer-card.html-mode #mkAuto{display:none!important}
+html.mk body:not(.mobile-ui) .editor-pane:has(.composer-card.html-mode){grid-template-rows:minmax(0,1.7fr) minmax(0,1fr)!important}
+.composer-card.html-mode>.bd{display:flex;flex-direction:column}
+#htmlBlockEditor.hbe-inline .hbe-actions{padding:10px 0 0;border:0}
+#htmlBlockEditor.hbe-inline .hbe-actions .primary{flex:1 1 auto}
+.composer-card.html-mode .bd>*:not(.composer-top-grid):not(#htmlBlockEditor){display:none!important}
+.composer-card.html-mode .composer-top-grid>*:not(.composer-type-field){display:none!important}
+.composer-card.html-mode .composer-hint{visibility:hidden}
+.composer-card.html-mode #msgTypeSeg button.on:not(#htmlTypeBtn){background:transparent;box-shadow:none;border-color:transparent;color:inherit}
+</style>
+<script id="html-block-inline-script">
+(function(){
+'use strict';
+const modal=document.getElementById('htmlBlockEditor');
+if(!modal)return;
+const head=modal.querySelector('.hbe-head');
+const tabs=document.createElement('div');
+tabs.className='hbe-tabs';tabs.setAttribute('role','tablist');
+tabs.innerHTML='<button type="button" data-tab="code" role="tab">코드</button><button type="button" data-tab="view" role="tab">미리보기</button>';
+head.insertBefore(tabs,head.firstChild);
+const ta=modal.querySelector('#hbeSource');
+if(ta)ta.placeholder='HTML · CSS · JavaScript 코드를 입력하세요\n\n예) <div style="padding:16px;background:#FFF3C4">안녕!</div>';
+function setTab(t){
+  modal.classList.toggle('tab-code',t!=='view');
+  modal.classList.toggle('tab-view',t==='view');
+  tabs.querySelectorAll('button').forEach(b=>{const on=b.dataset.tab===(t==='view'?'view':'code');b.classList.toggle('on',on);b.setAttribute('aria-selected',on?'true':'false');});
+  if(t==='view'){
+    const f=modal.querySelector('#hbeFrame'),v=modal.querySelector('.hbe-view');
+    /* 숨겨져 있던 미리보기 틀은 다시 보여도 안쪽 화면이 안 그려질 때가 있어, 한 번 접었다 펴서 새로 그리게 한다 */
+    if(v){void v.offsetHeight;v.style.display='none';void v.offsetHeight;v.style.display='';void v.offsetHeight;}
+    if(f&&ta)requestAnimationFrame(()=>{f.srcdoc=ta.value;});
+  }
+}
+window.__hbeSetTab=setTab;
+tabs.addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)setTab(b.dataset.tab);});
+setTab('code');
+
+const card=document.querySelector('.composer-card');
+const bd=card&&card.querySelector('.bd');
+const home=modal.parentNode;
+const mobile=()=>document.body.classList.contains('mobile-ui');
+window.__hbeOnOpen=function(el,isEdit){
+  setTab('code');
+  const btn=document.getElementById('htmlTypeBtn');
+  if(!mobile()&&bd){
+    const grid=bd.querySelector('.composer-top-grid');
+    if(grid)grid.after(modal);else bd.insertBefore(modal,bd.firstChild);
+    modal.classList.add('hbe-inline');
+    card.classList.add('html-mode');
+    try{card.scrollIntoView({block:'nearest'});}catch(_){}
+  }else{
+    modal.classList.remove('hbe-inline');
+    if(modal.parentNode!==home)home.appendChild(modal);
+  }
+  if(btn)btn.classList.add('on');
+  const cancel=modal.querySelector('#hbeCancel');
+  if(cancel)cancel.textContent=isEdit?'수정 취소':'닫기';
+  setTimeout(()=>{try{ta&&ta.focus({preventScroll:true});}catch(_){}},30);
+};
+window.__hbeOnClose=function(){
+  if(card)card.classList.remove('html-mode');
+  const btn=document.getElementById('htmlTypeBtn');
+  if(btn)btn.classList.remove('on');
+};
+/* 코드 칸에서 Tab 은 들여쓰기 */
+if(ta)ta.addEventListener('keydown',e=>{
+  if(e.key!=='Tab'||e.shiftKey||e.ctrlKey||e.metaKey||e.altKey)return;
+  e.preventDefault();
+  const s=ta.selectionStart,en=ta.selectionEnd;
+  ta.value=ta.value.slice(0,s)+'  '+ta.value.slice(en);
+  ta.selectionStart=ta.selectionEnd=s+2;
+  ta.dispatchEvent(new Event('input',{bubbles:true}));
+});
 })();
 </script>
 
