@@ -10144,6 +10144,12 @@ stage.addEventListener('touchend',e=>{
      이 처리는 저장용 clone에만 적용되므로 실제 편집 DOM/여백/말풍선 폭은 건드리지 않는다. */
   function freezeJustifiedFlow(cloneRoot,softPoints){
     if(!cloneRoot) return;
+    /* 단 나누기로 잘린 조각: 끝의 빈 상자와 그 높이 보정을 걷어 내고, 마지막 줄도 양쪽 정렬로 둔다 */
+    const __cutLast=!!(cloneRoot.classList&&cloneRoot.classList.contains('fluid-justify-last'));
+    if(__cutLast){
+      cloneRoot.querySelectorAll('.fluid-justify-tail').forEach(e=>e.remove());
+      if(cloneRoot.dataset&&cloneRoot.dataset.fluidTailLh)cloneRoot.style.marginBottom='';
+    }
 
     function posRange(pos){
       const r=document.createRange();
@@ -10217,6 +10223,7 @@ stage.addEventListener('touchend',e=>{
       }catch(_){}
     }
     if(!lines.length) return;
+    if(__cutLast) lines[lines.length-1].soft=true;
 
     const firstLineIndent=getComputedStyle(cloneRoot).textIndent;
     while(cloneRoot.firstChild) cloneRoot.removeChild(cloneRoot.firstChild);
@@ -20448,15 +20455,16 @@ function flowColumnItems(items,widths,height,measure,maxColumns){
     if(item.forced&&placements.length&&y>0&&!next())return null;
     while(start<item.length){
       const width=widths[col%widths.length],available=height-y;
-      let end=item.length,h=measure(index,start,end,width);
+      const atTop=y<=.01;
+      let end=item.length,h=measure(index,start,end,width,atTop);
       if(h>available+.1){
         if(!item.splittable){if(y>0){if(!next())return null;continue;}return null;}
         let lo=start,hi=item.length;
-        while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(measure(index,start,mid,width)<=available+.1)lo=mid;else hi=mid-1;}
+        while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(measure(index,start,mid,width,atTop)<=available+.1)lo=mid;else hi=mid-1;}
         end=lo;
         if(end===start){if(y>0){if(!next())return null;continue;}return null;}
         if(item.wordEnds){for(let k=end;k>start&&k>end-24;k--){if(item.wordEnds.has(k)){end=k;break;}}}
-        h=measure(index,start,end,width);
+        h=measure(index,start,end,width,atTop);
       }
       placements.push({index,start,end,col,y,h});y+=h;start=end;
       if(start<item.length&&!next())return null;
@@ -20499,7 +20507,8 @@ function balanceBlockColumns(items,widths,measure,maxColumns){
   const ranges=[];let end=count;
   for(let c=cols;c>0;c--){const start=dp[c][end].start;ranges.unshift({start,end});end=start;}
   const placements=[];
-  ranges.forEach((range,col)=>{let y=0;for(let i=range.start;i<range.end;i++){const h=hs[col][i];placements.push({index:i,start:0,end:items[i].length,col,y,h});y+=h;}});
+  /* 단 맨 위 블럭은 (연속 말풍선이어도) 이름·프로필이 붙어 높이가 달라질 수 있어 다시 잰다 */
+  ranges.forEach((range,col)=>{let y=0;for(let i=range.start;i<range.end;i++){const h=y<=.01?measure(i,0,items[i].length,widths[col%widths.length],true):hs[col][i];placements.push({index:i,start:0,end:items[i].length,col,y,h});y+=h;}});
   return {height:dp[cols][count].peak,placements,columns:cols};
 }
 // Side photos derive their width from the text height and their own aspect ratio.
@@ -20559,13 +20568,17 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
   function rawText(node){if(node.nodeType===3)return node.data;if(node.nodeType!==1)return '';if(node.tagName==='BR')return '\n';return [...node.childNodes].map(rawText).join('');}
   const segmenter=typeof Intl.Segmenter==='function'?new Intl.Segmenter(undefined,{granularity:'grapheme'}):null;
   const items=rows.map(row=>{
-    const inner=row.matches('.t-block')?row.querySelector('.t-inner'):null;
+    /* 지문(.t-block)과 말풍선(일반·메신저·로그·대본)을 문장 단위로 나눌 수 있다.
+       인용 말풍선 테마·사용자 지정 스킨 템플릿 블럭은 구조가 달라 통째로 옮긴다. */
+    const isSkin=row.matches('.sk-tpl')&&typeof window.__skinRetemplate==='function';
+    const isChatRow=row.matches('.n-msg,.m-msg,.script-row')&&!row.matches('.quote-row,.q-msg')&&(!row.matches('.sk-tpl')||isSkin);
+    const inner=isSkin?row.querySelector('.sk-text.editable'):row.matches('.t-block')?row.querySelector('.t-inner'):(isChatRow?row.querySelector('.n-bubble.editable,.m-bubble.editable,.n-plain.editable,.script-dialogue.editable'):null);
     const splittable=n.splitMode!=='block'&&!!(inner&&!inner.querySelector('table,img,svg,video'));
     const text=splittable?rawText(inner):'';
     const units=segmenter?[...segmenter.segment(text)].map(x=>x.segment):[];
     if(!segmenter){let regional=0;for(const cp of Array.from(text)){const code=cp.codePointAt(0),flag=code>=0x1F1E6&&code<=0x1F1FF;const join=units.length&&(/\p{Mark}/u.test(cp)||cp==='\u200d'||cp==='\ufe0f'||(code>=0x1F3FB&&code<=0x1F3FF)||units[units.length-1].endsWith('\u200d')||(flag&&regional%2===1));if(join)units[units.length-1]+=cp;else units.push(cp);regional=flag?regional+1:0;}}
     const offsets=[0];units.forEach(x=>offsets.push(offsets[offsets.length-1]+x.length));
-    return {row,inner,text,offsets,length:splittable&&units.length?units.length:1,splittable:splittable&&units.length>0,forced:!!(state.messages.find(m=>m.id===novelRowId(row))||{}).splitBefore,wordEnds:new Set(units.map((x,i)=>/\s/.test(x)?i+1:-1))};
+    return {row,inner,isChatRow,isSkin,text,offsets,length:splittable&&units.length?units.length:1,splittable:splittable&&units.length>0,forced:!!(state.messages.find(m=>m.id===novelRowId(row))||{}).splitBefore,wordEnds:new Set(units.map((x,i)=>/\s/.test(x)?i+1:-1))};
   });
   const msgById=new Map(state.messages.map(m=>[m.id,m]));
   const reserved=new Set(), pinned=[];
@@ -20600,28 +20613,80 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
     }
     trim(root);
   }
-  function makePiece(index,start,end,width){
+  /* 연속 말풍선(continuation)이 단 맨 위에 오면 묶음 첫 말풍선의 프로필·이름을 빌려 와 다시 보여 준다 */
+  function groupHead(index){
+    for(let k=index;k>=0;k--){const r=items[k].row;if(!r.matches('.n-msg,.m-msg,.script-row'))return null;if(!r.classList.contains('continuation'))return r;}
+    return null;
+  }
+  function showHead(row,index){
+    if(!items[index].isChatRow||!row.classList.contains('continuation'))return;
+    if(items[index].isSkin)return;   /* 스킨 템플릿 블럭은 makePiece 에서 템플릿째 다시 그린다 */
+    const head=groupHead(index);if(!head)return;
+    if(row.matches('.script-row')){
+      const nm=row.querySelector(':scope > .script-name'),hn=head.querySelector(':scope > .script-name');
+      if(nm&&hn&&!hn.classList.contains('is-hidden')){nm.innerHTML=hn.innerHTML;nm.classList.remove('is-hidden');}
+      row.classList.remove('continuation');row.classList.add('fluid-head');return;
+    }
+    const av=head.querySelector(':scope > .av');
+    const spacer=row.querySelector(':scope > .av-continuation-spacer');
+    if(av){const c=av.cloneNode(true);if(spacer)spacer.replaceWith(c);else{const ctrl=row.querySelector(':scope > .ctrl');if(ctrl)ctrl.after(c);else row.insertBefore(c,row.firstChild);}}
+    const hn=head.querySelector('.n-name,.m-name');
+    if(hn){
+      const c=hn.cloneNode(true);
+      if(row.matches('.m-msg')){const b=row.querySelector(':scope > .m-bubble');if(b)b.before(c);}
+      else{const body=row.querySelector(':scope > .n-body');if(body)body.insertBefore(c,body.firstChild);}
+    }
+    row.classList.remove('continuation');row.classList.add('fluid-head');
+  }
+  /* 다음 단으로 이어지는 조각의 마지막 줄도 양쪽 정렬을 지킨다 */
+  function justifyCutLine(row,inner){
+    const gs=inner.querySelector('.glyph-scale')||inner;
+    let al='';try{al=getComputedStyle(gs).textAlign;}catch(_){}
+    if(al!=='justify')return;
+    gs.classList.add('fluid-justify-last');
+    if(!gs.querySelector('br')){gs.style.setProperty('text-align-last','justify');return;}
+    /* 줄바꿈(<br>)이 있으면 text-align-last 가 그 앞줄까지 늘리므로, 끝에 폭 100% 빈 상자를 붙여
+       잘린 줄을 '마지막 줄이 아닌 줄'로 만들고, 늘어난 한 줄 높이는 아래 여백으로 되돌린다 */
+    const tail=document.createElement('span');tail.className='fluid-justify-tail';tail.setAttribute('aria-hidden','true');
+    tail.style.cssText='display:inline-block;width:100%;height:0;vertical-align:top;overflow:hidden';
+    gs.appendChild(tail);
+    let lh=0;try{const cs=getComputedStyle(gs);lh=parseFloat(cs.lineHeight);if(!Number.isFinite(lh))lh=(parseFloat(cs.fontSize)||16)*1.2;}catch(_){}
+    if(lh>0){gs.style.marginBottom=(-lh)+'px';gs.dataset.fluidTailLh=String(lh);}
+  }
+  function makePiece(index,start,end,width,atTop){
     const item=items[index],row=item.row.cloneNode(true);row.classList.remove('col-break');row.dataset.fluidSource=novelRowId(item.row);
+    if(atTop)showHead(row,index);
     Object.assign(row.style,{position:'absolute',boxSizing:'border-box',width:width+'px',minWidth:'0',maxWidth:width+'px',left:'0px',top:'0px',display:'',visibility:'hidden'});
     row.style.setProperty('position','absolute','important');
     row.dataset.fluidStart=String(start);row.dataset.fluidEnd=String(end);
-    if(item.splittable){const inner=row.querySelector('.t-inner');sliceInner(inner,item.offsets[start],item.offsets[end]);if(start){row.style.marginTop='0px';inner.style.textIndent='0';}if(end<item.length)row.style.marginBottom='0px';}
+    let cutInner=null;
+    if(item.splittable){
+      const inner=item.isSkin?row.querySelector('.sk-text.editable'):item.isChatRow?row.querySelector('.n-bubble.editable,.m-bubble.editable,.n-plain.editable,.script-dialogue.editable'):row.querySelector('.t-inner');
+      sliceInner(inner,item.offsets[start],item.offsets[end]);
+      if(start){row.style.marginTop='0px';inner.style.textIndent='0';row.classList.add('fluid-cont-piece');}
+      if(end<item.length){row.style.marginBottom='0px';cutInner=inner;}
+    }
+    if(item.isSkin){
+      const cont=start>0,cut=end<item.length,head=atTop&&row.classList.contains('continuation')&&item.isChatRow;
+      if(cont||cut||head)window.__skinRetemplate(row,{pieceCont:cont,pieceCut:cut,forceHead:head||(cont&&item.isChatRow),headRow:groupHead(index)});
+    }
     row.querySelectorAll('.glyph-scale,.t-inner,.n-bubble,.m-bubble,.n-plain').forEach(el=>{el.style.width='';el.style.minWidth='';el.style.maxWidth='';});
     chat.appendChild(row);
+    if(cutInner)justifyCutLine(row,cutInner);
     const gs=typeof gsScale==='function'?gsScale():1;
     row.querySelectorAll('.t-inner > .glyph-scale').forEach(el=>{el.style.width=(100/gs)+'%';el.style.maxWidth='none';});
     return row;
   }
   const cache=new Map();
-  function measure(index,start,end,width){
-    const key=[index,start,end,width].join(':');if(cache.has(key))return cache.get(key);
-    const row=makePiece(index,start,end,width),cs=getComputedStyle(row);
+  function measure(index,start,end,width,atTop){
+    const key=[index,start,end,width,atTop?1:0].join(':');if(cache.has(key))return cache.get(key);
+    const row=makePiece(index,start,end,width,atTop),cs=getComputedStyle(row);
     const h=Math.max(1,row.offsetHeight)+(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0);row.remove();cache.set(key,h);return h;
   }
   let flow;
   const textColumnBounds=new Map();
   try{
-    flow=(n.splitMode==='block'?balanceBlockColumns:balanceColumnItems)(textItems,slots.map(i=>widths[i]),(i,a,b,w)=>measure(textIndices[i],a,b,w),maxColumns);
+    flow=(n.splitMode==='block'?balanceBlockColumns:balanceColumnItems)(textItems,slots.map(i=>widths[i]),(i,a,b,w,t)=>measure(textIndices[i],a,b,w,t),maxColumns);
     flow.placements=flow.placements.map(p=>({...p,index:textIndices[p.index],col:Math.floor(p.col/slots.length)*n.cols+slots[p.col%slots.length]}));
     const anchorPlacements=new Map();
     flow.placements.forEach(p=>{const id=novelRowId(items[p.index].row);if(!anchorPlacements.has(id))anchorPlacements.set(id,p);});
@@ -20631,7 +20696,7 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
     const textColumnHeights=new Map(),textPageBounds=new Map();
     flow.placements.forEach(p=>textColumnHeights.set(p.col,Math.max(textColumnHeights.get(p.col)||0,p.y+p.h)));
     flow.placements.forEach(p=>{
-      const row=makePiece(p.index,p.start,p.end,widths[p.col%n.cols]);
+      const row=makePiece(p.index,p.start,p.end,widths[p.col%n.cols],p.y<=.01);
       const bounds=columnTextBounds(row);row.remove();if(!bounds)return;
       const current=textColumnBounds.get(p.col)||{top:Infinity,bottom:-Infinity};
       current.top=Math.min(current.top,p.y+bounds.top);current.bottom=Math.max(current.bottom,p.y+bounds.bottom);
@@ -20705,7 +20770,7 @@ function drawVariableColumns(chat,canvas,n,base,gap,firstCol,hMargin,vMargin,pag
   for(const p of flow.placements){
     const id=novelRowId(items[p.index].row);if(id){const rec=map[id]||(map[id]={col:p.col,page:Math.floor(p.col/n.cols),cols:[],pages:[]});if(!rec.cols.includes(p.col))rec.cols.push(p.col);const pg=Math.floor(p.col/n.cols);if(!rec.pages.includes(pg))rec.pages.push(pg);}
     if(p.col<firstCol||p.col>=firstCol+n.cols)continue;
-    const local=p.col-firstCol,row=makePiece(p.index,p.start,p.end,widths[local]);row.style.visibility='';row.style.left=(widths.slice(0,local).reduce((a,b)=>a+b,0)+local*gap)+'px';const align=(n.columnAlign||{})[local]||(p.photo&&p.photo.mk?'middle':'top');
+    const local=p.col-firstCol,row=makePiece(p.index,p.start,p.end,widths[local],!p.photo&&p.y<=.01);row.style.visibility='';row.style.left=(widths.slice(0,local).reduce((a,b)=>a+b,0)+local*gap)+'px';const align=(n.columnAlign||{})[local]||(p.photo&&p.photo.mk?'middle':'top');
     const free=p.photo?p.photo.free:Math.max(0,pageHeight-(heights.get(p.col)||0));
     const shift=Number.isFinite(p.textShift)?p.textShift:align==='bottom'?free:align==='middle'?free/2:0;
     row.dataset.fluidColumn=String(p.col);row.style.top=(top+p.y+shift)+'px';
@@ -24570,13 +24635,14 @@ sync();
  const selected=()=>{const S=selection();if(!S?.active())return [];const ids=new Set(S.ids());return state.messages.filter(m=>ids.has(m.id));};
  const sender=document.getElementById('senderSel');
  const syncChips=()=>document.querySelectorAll('#mChips .mchip[data-id]').forEach(b=>b.classList.toggle('on',b.dataset.id===sender.value));
+ let pendingChat=false;
  let signature='';
  const previousChange=window.__onBulkSelectionChange;
  window.__onBulkSelectionChange=function(active,ids){
   const result=previousChange?.apply(this,arguments);
   const messages=active?selected():[];
   const next=JSON.stringify(messages.map(m=>[m.id,m.type||'chat',m.senderId||'']));
-  if(!messages.length){sender.querySelector('[data-bulk-mixed]')?.remove();syncChips();signature='';return result;}
+  if(!messages.length){pendingChat=false;sender.querySelector('[data-bulk-mixed]')?.remove();syncChips();signature='';return result;}
   if(next===signature)return result;
   signature=next;
   sender.querySelector('[data-bulk-mixed]')?.remove();
@@ -24595,20 +24661,43 @@ sync();
   if(!type)return;
   const changes=selected().filter(m=>['text','chat'].includes(m.type||'chat')&&(m.type||'chat')!==type);
   if(!changes.length)return;
-  const first=state.members[0];
-  if(type==='chat'&&!first){e.preventDefault();e.stopImmediatePropagation();toast('먼저 멤버를 추가해 주세요.');return;}
-  pushUndo(type==='chat'?'말풍선으로 일괄 변경':'글로 일괄 변경');
-  changes.forEach(m=>{
-   m.type=type;delete m.autoBubbled;
-   if(type==='chat'){m.senderId=first.id;delete m.align;delete m.noAutoQuote;delete m.autoSenderId;}
-   else{m.align=state.draftAlign||'left';delete m.senderId;delete m.autoSenderId;m.noAutoQuote=true;}
-  });
-  selection().exit();
-  renderPreview();
-  if(type==='chat'){sender.value=first.id;syncChips();}
+  if(type==='chat'&&!state.members.length){e.preventDefault();e.stopImmediatePropagation();toast('먼저 멤버를 추가해 주세요.');return;}
+  const apply=first=>{
+   pushUndo(type==='chat'?'말풍선으로 일괄 변경':'글로 일괄 변경');
+   changes.forEach(m=>{
+    m.type=type;delete m.autoBubbled;
+    if(type==='chat'){m.senderId=first.id;delete m.align;delete m.noAutoQuote;delete m.autoSenderId;}
+    else{m.align=state.draftAlign||'left';delete m.senderId;delete m.autoSenderId;m.noAutoQuote=true;}
+   });
+   selection().exit();
+   renderPreview();
+   if(type==='chat'){sender.value=first.id;syncChips();}
+  };
+  if(type!=='chat'){pendingChat=false;apply(null);return;}
+  if(state.members.length===1){pendingChat=false;apply(state.members[0]);return;}
+  /* 멤버가 여럿이면 바로 바꾸지 않고, 발신자 칸에서 고르는 순간 말풍선으로 바꾼다 */
+  e.preventDefault();e.stopImmediatePropagation();
+  pendingChat=true;
+  try{window.setMsgType('chat');}catch(_){}
+  sender.querySelector('[data-bulk-mixed]')?.remove();
+  const option=new Option('발신자 선택','');option.disabled=true;option.dataset.bulkMixed='1';sender.append(option);sender.value='';syncChips();
+  try{toast('발신자를 고르면 말풍선으로 바뀌어요');}catch(_){}
  },true);
  document.getElementById('senderSel').addEventListener('change',function(){
   const id=this.value;if(!state.members.some(m=>m.id===id))return;
+  /* 글 → 말풍선 대기 중: 고른 발신자로 선택한 글 블럭을 말풍선으로 바꾼다 */
+  if(pendingChat&&selection()?.active()){
+   const texts=selected().filter(m=>(m.type||'chat')==='text');
+   pendingChat=false;
+   if(texts.length){
+    pushUndo('말풍선으로 일괄 변경');
+    texts.forEach(m=>{m.type='chat';m.senderId=id;delete m.autoBubbled;delete m.align;delete m.noAutoQuote;delete m.autoSenderId;});
+    selected().filter(m=>(m.type||'chat')==='chat').forEach(m=>{m.senderId=id;delete m.autoSenderId;delete m.autoBubbled;});
+    sender.querySelector('[data-bulk-mixed]')?.remove();
+    selection().exit();renderPreview();sender.value=id;syncChips();
+    return;
+   }
+  }
   const changes=selected().filter(m=>(m.type||'chat')==='chat'&&(m.senderId!==id||m.autoBubbled));
   if(!changes.length)return;
   pushUndo('발신자 일괄 변경');
@@ -27216,6 +27305,47 @@ syncMenu();
 </script>
 
 
+
+
+
+<script id="text-to-bubble-sender">
+(function(){
+'use strict';
+/* 글 블럭을 수정하다가 종류를 '말풍선'으로 바꾸면, 전에 쓰던 발신자가 그대로 남지 않게
+   발신자 칸을 '발신자 선택'으로 비워 둔다 (멤버가 한 명이면 그 멤버로 바로 채운다). */
+const sel=document.getElementById('senderSel');
+const chips=()=>document.querySelectorAll('#mChips .mchip[data-id]').forEach(b=>b.classList.toggle('on',!!sel&&b.dataset.id===sel.value));
+function clearPlaceholder(){if(sel)sel.querySelectorAll('option[data-pick-sender]').forEach(o=>o.remove());}
+if(sel)sel.addEventListener('change',()=>{if(sel.value)clearPlaceholder();});
+const prevSetType=window.setMsgType;
+if(typeof prevSetType==='function'&&sel){
+  window.setMsgType=function(type){
+    const before=state.composerType;
+    const r=prevSetType.apply(this,arguments);
+    try{
+      if(type!=='chat'){clearPlaceholder();return r;}
+      const eid=(typeof composerEditId!=='undefined')?composerEditId:null;
+      const bulk=window.__bulkSelection&&window.__bulkSelection.active&&window.__bulkSelection.active();
+      const m=eid&&state.messages.find(x=>x.id===eid);
+      if(before==='text'&&m&&(m.type||'chat')==='text'&&!bulk){
+        const list=state.members||[];
+        if(list.length===1){sel.value=list[0].id;}
+        else if(list.length>1){
+          clearPlaceholder();
+          const o=new Option('발신자 선택','');o.disabled=true;o.dataset.pickSender='1';
+          sel.insertBefore(o,sel.firstChild);sel.value='';
+        }
+        chips();
+      }
+    }catch(e){console.warn(e);}
+    return r;
+  };
+}
+const prevEnd=window.endComposerEdit;
+if(typeof prevEnd==='function')window.endComposerEdit=function(){const r=prevEnd.apply(this,arguments);clearPlaceholder();return r;};
+})();
+</script>
+
 <style id="composer-toolbar-v2-style">
 /* ================================================================
    서식 줄 v2 (PC 화면) — 이름표를 없애고 역할별 묶음 + 세로선으로 정리.
@@ -27683,6 +27813,9 @@ JSON 바깥에 설명을 길게 붙이지 말고, 필요한 안내는 JSON 아�
 - 글·가름선: `{모드}.narration` → `narration`, `{모드}.divider` → `divider`
 - 해당 키가 없으면 **원래 모양 그대로** 나온다. (예: `chat`만 만들면 글·가름선은 기본 모양)
 - 여러 단(단 나누기) 모드에서는 `header`/`footer`가 **각 페이지(저장되는 이미지 한 장)의 맨 위/맨 아래에, 모든 단에 걸친 폭으로** 붙는다. 그러니 header/footer는 폭이 넓어져도 어색하지 않게 만들어라(가운데 정렬·flex 등).
+- 여러 단(단 나누기) 모드에서는 말풍선·글이 문장 단위로 잘려 **두 단에 걸쳐 두 조각**이 될 수 있다. 템플릿은 **조각마다 따로** 적용된다(조각 하나하나가 완성된 말풍선 모양이어야 한다).
+  - 이어진 조각(`pieceCont`)과 단 맨 위에 온 연속 말풍선은 `first`가 참, `continued`가 거짓으로 다시 그려진다 → 이름·프로필이 다시 나온다.
+  - 잘린 쪽 끝을 표시하고 싶으면 `{{#pieceCut}}…{{/pieceCut}}`, 이어진 쪽 머리는 `{{#pieceCont}}…{{/pieceCont}}`로 꾸밀 수 있다(예: "(계속)" 표시).
 - 여러 단(단 나누기) 모드에서는 블럭이 단 폭에 맞춰 따로따로 배치된다. 블럭 상자 **바깥으로 튀어나오는 장식**(음수 top의 ::before 등)은 단 맨 위에서 조금 잘릴 수 있으니 8px 이내로만 써라.
 
 ### 3-2. 자리표시자
@@ -27718,6 +27851,7 @@ JSON 바깥에 설명을 길게 붙이지 말고, 필요한 안내는 JSON 아�
 - `{{#조건}} … {{/조건}}` 조건이 참일 때만 보임
 - `{{^조건}} … {{/조건}}` 조건이 거짓일 때만 보임
 - 조건 목록: `mine`, `other`, `continued`(연속 말풍선), `first`(연속이 아닌 첫 말풍선), `hasAvatar`(이 블럭에 프로필 요소가 있음 = `{{{avatar}}}`가 비어 있지 않음), `hasPhoto`(캐릭터에 프로필 사진이 등록돼 있음), `hasName`(이름표가 있음), `normal`, `messenger`, `log`, `script`, `narration`, `divider`
+- 단 나누기 조각 조건: `pieceCont`(앞 단에서 이어진 조각), `pieceCut`(다음 단으로 이어지는 조각), `piece`(둘 중 하나)
 - 같은 이름의 구역을 겹쳐 넣지는 마라. 다른 이름끼리는 겹쳐도 된다.
 
 ### 3-3. 금지 사항 (발췌기가 자동으로 지운다)
@@ -28082,7 +28216,8 @@ function rowId(row){
   const a=row.getAttribute('data-message-id');if(a)return a;
   const d=row.querySelector('[data-id]');return d?d.getAttribute('data-id'):'';
 }
-function transformRow(row,pack,mode,idx){
+function transformRow(row,pack,mode,idx,opts){
+  opts=opts||{};
   const id=rowId(row);
   const m=msgById(id);
   if(!m)return;
@@ -28097,19 +28232,25 @@ function transformRow(row,pack,mode,idx){
   const side=kind==='chat'?(mine?'mine':'other'):kind;
   const tpl=findTemplate(pack,mode,kind,side);
   if(!tpl)return;
-  const continued=row.classList.contains('continuation');
+  /* opts.forceHead: 단 맨 위에 온 연속 말풍선 — 첫 말풍선처럼(이름·프로필 포함) 다시 그린다 */
+  const continued=opts.forceHead?false:row.classList.contains('continuation');
   const textEl=kind==='divider'
     ?row.querySelector('.divider-pill,.divider-line')
     :row.querySelector('.editable[data-id]');
   if(!textEl)return;
-  const avEl=kind==='chat'?row.querySelector('.av'):null;
+  let avEl=kind==='chat'?row.querySelector('.av'):null;
   let nameEl=kind==='chat'?row.querySelector('.n-name,.m-name,.script-name,.q-name,.msg-name'):null;
   if(nameEl&&(nameEl.classList.contains('is-hidden')||!plainOf(nameEl)))nameEl=null;
+  if(opts.forceHead&&opts.headRow){
+    if(!avEl){const a=opts.headRow.querySelector('.sk-avatar,.av');if(a)avEl=a.cloneNode(true);}
+    if(!nameEl){const n=opts.headRow.querySelector('.sk-name');if(n&&plainOf(n))nameEl=n.cloneNode(true);}
+  }
   const mem=memberOf(m);
   const memName=String(mem.name||'');
   const flags={mine,other:kind==='chat'&&!mine,continued,first:kind==='chat'&&!continued,
     hasAvatar:!!avEl,hasPhoto:!!(mem.image),hasName:!!nameEl,narration:kind==='narration',divider:kind==='divider',
-    normal:mode==='normal',messenger:mode==='messenger',log:mode==='log',script:mode==='script',chat:kind==='chat'};
+    normal:mode==='normal',messenger:mode==='messenger',log:mode==='log',script:mode==='script',chat:kind==='chat',
+    pieceCont:!!opts.pieceCont,pieceCut:!!opts.pieceCut,piece:!!(opts.pieceCont||opts.pieceCut)};
   const values={name:memName,initial:Array.from(memName)[0]||'',color:hex(mem.color,''),bubbleColor:hex(mem.bubbleColor,''),
     avatarUrl:safeUrl(mem.image),plainText:plainOf(textEl),index:String(idx+1),mode,side,id:String(id||'')};
   const keep=new Set();
@@ -28122,11 +28263,25 @@ function transformRow(row,pack,mode,idx){
   [...row.childNodes].forEach(n=>{if(!keep.has(n))n.remove();});
   row.appendChild(frag);
   row.classList.add('sk-tpl','sk-'+(kind==='chat'?side:kind));
-  if(continued)row.classList.add('sk-cont');
+  if(continued)row.classList.add('sk-cont');else row.classList.remove('sk-cont');
+  if(opts.forceHead)row.classList.remove('continuation');
+  row.classList.toggle('sk-piece-cont',!!opts.pieceCont);row.classList.toggle('sk-piece-cut',!!opts.pieceCut);
   if(values.color)row.style.setProperty('--sk-color',values.color);
   if(values.bubbleColor)row.style.setProperty('--sk-bubble',values.bubbleColor);
 }
 
+/* 단 나누기 조각을 다시 그린다 (발췌기 본체의 단 배치 코드가 부른다).
+   row: 이미 템플릿이 적용된 블럭의 복제본. 조각마다 pieceCont/pieceCut 조건이 달라지고,
+   단 맨 위에 온 연속 말풍선은 첫 말풍선처럼 이름·프로필을 붙여 다시 그린다. */
+window.__skinRetemplate=function(row,opts){
+  try{
+    if(!active()||!row||!row.classList.contains('sk-tpl'))return false;
+    const s=ST();const mode=MODES.includes(s.mode)?s.mode:'normal';
+    const order=new Map(s.messages.map((m,i)=>[String(m.id),i]));
+    transformRow(row,skin().pack,mode,order.get(rowId(row))||0,opts||{});
+    return true;
+  }catch(e){console.warn('custom skin piece failed',e);return false;}
+};
 function buildDeco(kind,pack,mode){
   const s=ST();
   const tpl=findTemplate(pack,mode,kind,'');
