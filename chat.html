@@ -10043,7 +10043,15 @@ stage.addEventListener('touchend',e=>{
         continue;
       }
       const node=nodeAtPath(cloneRoot,point.path);
-      if(node&&node.nodeType===Node.TEXT_NODE) textResolved.push({node,offset:point.offset});
+      if(node&&node.nodeType===Node.TEXT_NODE){
+        /* 표 칸·목록 항목 등 블럭 맨 앞에서 잡힌 줄바꿈은 진짜 줄바꿈이 아니다 (새 행·새 항목의 시작).
+           여기에 <br>을 넣으면 빈 줄이 생겨 칸이 두 줄 높이가 되므로 뺀다. */
+        const blk=node.parentElement&&node.parentElement.closest('td,th,li,dd,dt,caption');
+        if(blk&&cloneRoot.contains(blk)){
+          try{const r=document.createRange();r.setStart(blk,0);r.setEnd(node,point.offset);if(!String(r.toString()).trim())continue;}catch(_){}
+        }
+        textResolved.push({node,offset:point.offset});
+      }
     }
     /* inline-block 제목이 실제 미리보기에서 새 줄로 시작했다면 제목 요소 바깥에 br을 둔다. */
     const seenElements=new Set();
@@ -10340,7 +10348,13 @@ stage.addEventListener('touchend',e=>{
           const leaves=[...flowEl.querySelectorAll('li,p,blockquote,h1,h2,h3,h4,h5,h6,dd,dt,td,th')]
             .filter(el=>!el.querySelector(__BLOCK_SEL)&&String(el.textContent||'').length);
           leaves.forEach(leaf=>{
-            freezeJustifiedFlow(leaf,resolved.filter(pt=>leaf.contains(pt.node)));
+            /* 블럭 맨 앞에서 잡힌 줄바꿈(표의 새 행 첫 칸 등)은 진짜 줄바꿈이 아니다.
+               그대로 자르면 빈 줄이 하나 생겨 칸이 두 줄 높이가 되므로 뺀다. */
+            const pts=resolved.filter(pt=>{
+              if(!leaf.contains(pt.node))return false;
+              try{const r=document.createRange();r.setStart(leaf,0);r.setEnd(pt.node,pt.offset);return String(r.toString()).trim().length>0;}catch(_){return true;}
+            });
+            freezeJustifiedFlow(leaf,pts);
           });
           continue;
         }
