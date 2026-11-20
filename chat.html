@@ -10344,7 +10344,7 @@ stage.addEventListener('touchend',e=>{
         /* 마크다운 목록·인용 등 블럭 요소가 든 글은 글 전체를 줄 상자로 자르면
            목록 구조(ul/li)가 줄마다 복제돼 빈 줄과 가짜 글머리표가 생긴다.
            이때는 가장 안쪽 블럭(li 등)마다 따로 줄을 고정한다. */
-        const __BLOCK_SEL='ul,ol,li,p,blockquote,pre,table,h1,h2,h3,h4,h5,h6,dl,dd,dt,hr';
+        const __BLOCK_SEL='ul,ol,li,p,blockquote,pre,table,h1,h2,h3,h4,h5,h6,dl,dd,dt,hr,.quote-fmt';
         if(cloneFlows[i].querySelector(__BLOCK_SEL)){
           const flowEl=cloneFlows[i];
           const resolved=(breakSets[i]||[]).map(pt=>{
@@ -10352,7 +10352,7 @@ stage.addEventListener('touchend',e=>{
             const node=nodeAtPath(flowEl,pt.path);
             return (node&&node.nodeType===Node.TEXT_NODE)?{node,offset:pt.offset}:null;
           }).filter(Boolean);
-          const leaves=[...flowEl.querySelectorAll('li,p,blockquote,h1,h2,h3,h4,h5,h6,dd,dt,td,th')]
+          const leaves=[...flowEl.querySelectorAll('li,p,blockquote,h1,h2,h3,h4,h5,h6,dd,dt,td,th,.quote-fmt')]
             .filter(el=>!el.querySelector(__BLOCK_SEL)&&String(el.textContent||'').length);
           leaves.forEach(leaf=>{
             /* 블럭 맨 앞에서 잡힌 줄바꿈(표의 새 행 첫 칸 등)은 진짜 줄바꿈이 아니다.
