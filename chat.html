@@ -28705,5 +28705,77 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<script>
+/* ===== 발췌기로 보내기 (PC) — 다른 사이트에서 드래그한 글을 받아 작성창에 넣는다 =====
+   확장 프로그램·탬퍼몽키 스크립트가 chat.html#moko-send=<번호>&text=<글> 로 열어 준다.
+   기존 기능은 건드리지 않고, 이 주소로 들어왔을 때만 동작한다. */
+(function(){
+'use strict';
+var BASE='https://mok0999.github.io/315/ext/';
+function readHash(){
+  var h=location.hash||'';
+  if(h.indexOf('#moko-send=')!==0)return null;
+  var i=h.indexOf('&text=');if(i<0)return null;
+  var t='';try{t=decodeURIComponent(h.slice(i+6));}catch(_){return null;}
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(_){}
+  return t;
+}
+function insertText(text,tries){
+  var ed=document.getElementById('msgContent');
+  if(!ed||ed.dataset.richReady!=='1'){ if((tries||0)<100)setTimeout(function(){insertText(text,(tries||0)+1);},100); return; }
+  text=String(text).replace(/\r\n?/g,'\n').replace(/ /g,' ').trim();
+  if(!text)return;
+  try{ ed.focus();
+    var sel=window.getSelection(),r=document.createRange();
+    r.selectNodeContents(ed);r.collapse(false);sel.removeAllRanges();sel.addRange(r);
+    var has=(ed.textContent||'').trim()!=='';
+    if(!document.execCommand('insertText',false,(has?'\n\n':'')+text)) throw 0;
+  }catch(_){ var cur=ed.value||''; ed.value=(cur.trim()?cur+'\n\n':'')+text; }
+  try{ ed.scrollTop=ed.scrollHeight; }catch(_){}
+  try{ if(typeof window.toast==='function')window.toast('드래그한 글을 작성창에 넣었어요'); }catch(_){}
+}
+function take(){ var t=readHash(); if(t!==null)insertText(t); }
+window.addEventListener('hashchange',take);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',take);else take();
+
+/* 사용자 지정 아래에 받기 버튼 */
+function buildSection(tries){
+  var sk=document.getElementById('skSection');
+  if(!sk){ if((tries||0)<100)setTimeout(function(){buildSection((tries||0)+1);},100); return; }
+  if(document.getElementById('mokoSendSection'))return;
+  var st=document.createElement('style');
+  st.textContent='#mokoSendSection .ms-row{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}'
+    +'#mokoSendSection .ms-row>.btn{flex:1 1 auto;text-align:center;text-decoration:none;color:inherit}'
+    +'#mokoSendSection .ms-desc{font-size:12px;line-height:1.5;color:var(--muted);margin:0 0 4px}'
+    +'#mokoSendSection details{margin-top:6px}#mokoSendSection details>summary{cursor:pointer;font-size:12px;font-weight:700;padding:4px 0}'
+    +'#mokoSendSection ol{margin:4px 0 0;padding-left:18px;font-size:12px;line-height:1.6;color:var(--muted)}';
+  document.head.appendChild(st);
+  var sec=document.createElement('div');
+  sec.className='flat-tool-section';sec.id='mokoSendSection';
+  sec.innerHTML='<div class="flat-tool-title"><strong>발췌기로 보내기 · PC</strong></div>'
+   +'<div class="flat-tool-body">'
+   +'<p class="ms-desc">다른 사이트에서 글을 드래그하면 아이콘이 떠요. 누르면 발췌기가 열리면서 글이 작성창에 들어가요. (컴퓨터 크롬·웨일·엣지)</p>'
+   +'<div class="ms-row">'
+   +'<a class="btn sm" href="'+BASE+'moko-send-extension.zip" download>↓ 확장 프로그램 파일</a>'
+   +'<a class="btn sm" href="'+BASE+'moko-send.user.js" target="_blank" rel="noopener">탬퍼몽키로 설치</a>'
+   +'</div>'
+   +'<details><summary>확장 프로그램 파일 설치 방법</summary><ol>'
+   +'<li>받은 zip 파일 압축 풀기</li>'
+   +'<li>주소창에 <b>chrome://extensions</b> 입력 (웨일은 whale://extensions)</li>'
+   +'<li>오른쪽 위 <b>개발자 모드</b> 켜기</li>'
+   +'<li><b>압축해제된 확장 프로그램을 로드합니다</b> → 압축 푼 폴더 선택</li>'
+   +'</ol></details>'
+   +'<details><summary>탬퍼몽키 설치 방법</summary><ol>'
+   +'<li>탬퍼몽키 확장 프로그램이 없으면 먼저 설치</li>'
+   +'<li>[탬퍼몽키로 설치] 누르고 나오는 화면에서 <b>설치</b></li>'
+   +'</ol></details>'
+   +'</div>';
+  sk.parentNode.insertBefore(sec,sk.nextSibling);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){buildSection();});else buildSection();
+})();
+</script>
+
 </body>
 </html>
