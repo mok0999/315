@@ -1846,7 +1846,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 </div>
 </div></div><div class="flat-tool-section" id="exportMarginSection"><div class="flat-tool-title margin-pair-head" style="display:flex;align-items:center;justify-content:space-between"><strong>캔버스 여백</strong><button aria-pressed="false" class="margin-link-btn" id="exMarginLinkBtn" onclick="toggleExportMarginLink()" type="button">🔗 연결</button></div><div class="flat-tool-body"><div class="colorgrid export-margin-grid"><div class="field" style="margin-bottom:0"><label class="lb">가로 여백</label><div class="rangewrap"><input id="exH" max="400" min="0" oninput="setExportMargin('hMargin',this.value)" type="range" value="50"/><span class="val" id="exHV">50px</span></div></div><div class="field" style="margin-bottom:0"><label class="lb">세로 여백</label><div class="rangewrap"><input id="exV" max="400" min="0" oninput="setExportMargin('vMargin',this.value)" type="range" value="24"/><span class="val" id="exVV">24px</span></div></div></div></div></div><div class="flat-tool-section" id="novelSection"><div class="flat-tool-title"><strong>여러 단으로 붙이기</strong></div><div class="flat-tool-body"><div class="toggle"><div class="t-lb">여러 단으로 붙이기</div><label class="sw"><input id="novelOn" onchange="setNovel('on',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="acc-panel" id="novelPanel"><div class="acc-inner"><div class="colorgrid"><div class="field" style="margin-bottom:0"><label class="lb">단 수</label><div class="rangewrap"><input id="novelCols" max="8" min="2" step="1" oninput="setNovel('cols',this.value)" type="range" value="2"/><span class="val" id="novelColsV">2단</span></div></div><div class="field" style="margin-bottom:0"><label class="lb" id="novelGapLb">단 간격</label><div class="rangewrap"><input id="novelGap" max="240" min="0" step="2" oninput="setNovel('gap',this.value)" type="range" value="36"/><span class="val" id="novelGapV">36px</span></div></div></div><div class="field" style="margin-top:14px;margin-bottom:0"><label class="lb">쪽 길이 기준</label><div class="seg" id="novelModeSeg"><button class="on" type="button" onclick="setNovel('mode','cols')">단 수로</button><button type="button" onclick="setNovel('mode','ratio')">소설 비율로</button></div></div><div class="field" id="novelRatioField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">판형 (2단 = 한 펼침)</label><select id="novelRatio" onchange="setNovel('ratio',this.value)"><option value="210:297">A4 · 210 × 297</option><option value="148:210">A5 · 148 × 210</option><option value="176:250">B5 · 176 × 250</option><option value="216:279">레터 · 8.5 × 11 in</option><option value="100:148">엽서 · 100 × 148</option></select></div><div class="field" id="novelGutterField" style="margin-top:12px;margin-bottom:0;display:none"><label class="lb">양쪽 본문 사이 간격</label><div class="rangewrap"><input id="novelGutter" max="360" min="0" step="4" oninput="setNovel('gutter',this.value)" type="range" value="80"/><span class="val" id="novelGutterV">80px</span></div></div><div class="toggle compact" id="novelViewField" style="margin-top:12px;display:none"><div class="t-lb">한 쪽씩 보기<span>펼침 대신 한 쪽만 — 낱쪽으로 저장돼요</span></div><label class="sw"><input id="novelSingle" onchange="setNovel('single',this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="toggle compact" id="novelTrimField" style="margin-top:12px;display:none"><div class="t-lb">빈 마지막 쪽 빼기<span>마지막 펼침의 빈 쪽을 떼고 한 쪽만 저장해요</span></div><label class="sw"><input id="novelTrimLast" onchange="setNovel('trimLast',this.checked)" type="checkbox"/><span class="track"></span></label></div>
 <div class="field-help" style="margin-top:10px" id="novelHelp">단 너비는 <strong>본문 너비</strong>를 따라가요. ✂ 를 찍은 자리는 강제로 다음 단에서 시작해요.</div></div></div></div></div></div></section><section class="tool-panel" id="panel-bubble"><div class="tool-panel-head"><div><strong>말풍선</strong></div></div><div class="tool-panel-body" tabindex="0"><div class="flat-tool-section" id="scriptNameStyleSection" style="display:none"><div class="flat-tool-title"><strong>대본 이름 스타일</strong></div><div class="flat-tool-body"><div class="toggle compact"><div class="t-lb">이름 굵게</div><label class="sw"><input checked id="scriptNameBoldOn" onchange="setScriptNameBold(this.checked)" type="checkbox"/><span class="track"></span></label></div><div class="script-highlight-box"><button aria-expanded="false" class="script-highlight-toggle" id="scriptHighlightToggle" onclick="toggleScriptHighlightPanel()" type="button"><span class="script-highlight-caret">▾</span><span class="script-highlight-title">캐릭터별 '이름' 형광펜</span><small id="scriptHighlightSummary">설정 없음</small></button><div class="script-highlight-panel" id="scriptHighlightPanel"><div class="script-highlight-list" id="scriptHighlightMemberList"></div></div></div></div></div><div class="flat-tool-section" id="bubbleQuickToggleSection"><div class="flat-tool-body"><div class="toggle-grid">
-<div class="toggle compact" title='따옴표("" 또는 「」)가 있는 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
+<div class="toggle compact" title='따옴표("" 또는 「」)가 있거나 이름｜대사 형식인 글 블럭을 통째로 말풍선으로 바꿔요 — 이름｜이 멤버와 겹치면 그 캐릭터, 아니면 첫 번째 멤버'><div class="t-lb">&quot;&quot;, 「」 자동 말풍선</div><label class="sw"><input id="autoQuoteOn" onchange="if(this.checked&amp;&amp;!(state.members&amp;&amp;state.members.length)){alert('멤버를 추가해 주세요!');this.checked=false;state.autoQuoteBubble=false;return;}state.autoQuoteBubble=this.checked;renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="말풍선 안에서만 따옴표 기호를 지워요 — 글 블럭은 건드리지 않아요"><div class="t-lb">&quot;&quot;, 「」 삭제</div><label class="sw"><input id="stripQuotesOn" onchange="state.stripQuoteMarks=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="일반·로그·메신저 모든 모드에서 말풍선 옆 아바타를 켜고 꺼요"><div class="t-lb">프로필 사진</div><label class="sw"><input checked="" id="showProfile" onchange="state.showProfile=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
 <div class="toggle compact" title="‘내 계정’으로 지정한 캐릭터의 프로필과 이름을 모든 모드에서 켜고 꺼요"><div class="t-lb">내 프로필·이름</div><label class="sw"><input id="showMyIdentity" onchange="state.showMyIdentity=this.checked; renderPreview()" type="checkbox"/><span class="track"></span></label></div>
@@ -4147,6 +4147,17 @@ function parseNamePrefix(s){
   if(/^\s*\[/.test(s||'')&&t.endsWith(']')) rest=t.slice(0,-1);
   return {name:m[1].trim(), rest:rest};
 }
+/* 자동 말풍선 대상인가 — 따옴표("" 「」)가 있거나, 따옴표가 없어도 '이름｜대사' 형식이면.
+   이름은 20자 이내, 문장부호 없이, 뒤에 대사가 있어야 한다 (지문 속 ｜ 를 이름으로 오인하지 않도록) */
+function autoBubbleTrigger(plain){
+  const s=String(plain||'');
+  if(/["“”「」]/.test(s)) return true;
+  const m=/^\s*\[?([^\[\]｜|\n]{1,20})[｜|]\s*(\S[\s\S]*)$/.exec(s);
+  if(!m) return false;
+  const nm=m[1].trim();
+  return !!nm && !/[.,!?…~。、，！？]/.test(nm);
+}
+window.autoBubbleTrigger=autoBubbleTrigger;
 function matchMemberByName(name){
   if(!name||!state.members.length) return null;
   const n=name.trim(); if(!n) return null;
@@ -4165,7 +4176,7 @@ function bubbleViewMsg(m){
   //    이후 프로필 이름을 바꿔도 첫 번째 캐릭터로 되돌아가지 않는다.
   //    아직 일치하는 멤버가 없어 첫 멤버로 임시 표시 중일 때는 고정하지 않고 계속 인식하므로,
   //    나중에 해당 멤버를 추가하면 그때 자동으로 연결·고정된다.
-  if(state.autoQuoteBubble&&baseType==='text'&&!m.noAutoQuote&&/["“”「」]/.test(content)&&state.members.length){
+  if(state.autoQuoteBubble&&baseType==='text'&&!m.noAutoQuote&&autoBubbleTrigger(content)&&state.members.length){
     let mem=null;
     if(m.autoSenderId){
       mem=state.members.find(x=>x.id===m.autoSenderId)||null;
@@ -11283,7 +11294,7 @@ window.commitComposerEdit=function(){
     m.type='text'; m.content=content; m.align=state.draftAlign||'left';
     delete m.senderId; delete m.image; delete m.imgSize; delete m.imgMargin; delete m.round;
     /* "" 자동 말풍선이 켜져 있어도, 글로 저장한 블럭은 다시 말풍선으로 바뀌지 않도록 고정 */
-    if(state.autoQuoteBubble&&/["“”「」]/.test(content)) m.noAutoQuote=true;
+    if(state.autoQuoteBubble&&autoBubbleTrigger(content)) m.noAutoQuote=true;
     else delete m.noAutoQuote;
     delete m.autoSenderId;
   }else{
@@ -12617,7 +12628,7 @@ window.bubbleViewMsg=function(m){
   const pre=namePrefixInfo(pp.plain);
 
   /* 1) "" 자동 말풍선 — 큰따옴표·이름 판정을 순수 텍스트로 (기존 고정 로직 그대로) */
-  if(state.autoQuoteBubble&&baseType==='text'&&!m.noAutoQuote&&QUOTE_CH.test(pp.plain)&&state.members.length){
+  if(state.autoQuoteBubble&&baseType==='text'&&!m.noAutoQuote&&window.autoBubbleTrigger(pp.plain)&&state.members.length){
     let mem=null;
     if(m.autoSenderId){
       mem=state.members.find(x=>x.id===m.autoSenderId)||null;
@@ -17043,7 +17054,7 @@ function effKind(m){
   const s0=ST()||{};
   if(!s0.autoQuoteBubble||m.noAutoQuote) return base;
   if(!(s0.members&&s0.members.length)) return base;
-  if(!/["“”「」]/.test(m.content||'')) return base;
+  if(!(window.autoBubbleTrigger?window.autoBubbleTrigger(m.content||''):/["“”「」]/.test(m.content||''))) return base;
   try{
     if(typeof window.bubbleViewMsg==='function'){
       const v=window.bubbleViewMsg(m);
@@ -19400,7 +19411,7 @@ syncBlurBtn();
    ===================================================================== */
 (function(){
 'use strict';
-const QUOTE=/["\u201C\u201D\u300C\u300D]/;
+const QUOTE={test:s=>window.autoBubbleTrigger?window.autoBubbleTrigger(s):/["\u201C\u201D\u300C\u300D]/.test(s)};
 const ST=()=>{ try{ return state; }catch(_){ return window.state||null; } };
 
 /* 자동 말풍선이 지금 이 블럭을 말풍선으로 볼지, 본다면 발신자는 누구인지 */
